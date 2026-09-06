@@ -75,17 +75,26 @@ export function DealRoom({
           </p>
         ) : (
           messages.map((message) => {
-            const mine = message.sender_id === currentUserId;
+            // sender_id is null for platform-authored messages: the Co-Pilot
+            // summary and offers relayed in from email (§5.5), neither of which
+            // has a Green Light account behind it.
+            const system = message.sender_id === null;
+            const mine = !system && message.sender_id === currentUserId;
+
             return (
               <div
                 key={message.id}
-                className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                className={`flex ${
+                  system ? "justify-center" : mine ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
                   className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 ${
-                    mine
-                      ? "bg-brand-green/15 text-white"
-                      : "bg-white/6 text-white/90"
+                    system
+                      ? "w-full max-w-full border border-white/8 bg-navy-dark/50 text-white/80"
+                      : mine
+                        ? "bg-brand-green/15 text-white"
+                        : "bg-white/6 text-white/90"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">
@@ -95,6 +104,11 @@ export function DealRoom({
                     <span className="text-[10px] text-white/35">
                       {formatTime(message.created_at)}
                     </span>
+                    {system ? (
+                      <span className="text-[10px] text-white/35">
+                        via Green Light
+                      </span>
+                    ) : null}
                     {message.is_masked ? (
                       <span
                         className="text-[10px] text-amber-200/70"

@@ -44,6 +44,20 @@ type Profile = {
   created_at: string | null;
 };
 
+/** §5.3 inbound-delivery trail. provider_message_id is the idempotency key. */
+type InboundEmail = {
+  id: string;
+  provider_message_id: string;
+  to_alias: string | null;
+  creator_id: string | null;
+  chat_id: string | null;
+  sender_email: string | null;
+  status: "processed" | "unknown_alias" | "rejected" | "failed";
+  /** Operator-facing note only — never the message body. */
+  detail: string | null;
+  created_at: string | null;
+};
+
 /** §6 masking-violation audit trail. Server-written, admin-readable. */
 type ViolationLog = {
   id: string;
@@ -138,6 +152,13 @@ export type Database = {
       messages: Table<
         Message,
         Optional<Message, Exclude<keyof Message, "message_text">>
+      >;
+      inbound_emails: Table<
+        InboundEmail,
+        Optional<
+          InboundEmail,
+          Exclude<keyof InboundEmail, "provider_message_id" | "status">
+        >
       >;
       violation_logs: Table<
         ViolationLog,

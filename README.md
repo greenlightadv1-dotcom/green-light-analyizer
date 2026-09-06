@@ -69,12 +69,15 @@ src/
     supabase/         browser / server / service-role clients + session guards
     ai/               deal evaluation: Gemini client, rule-based fallback,
                       and the §7.4 verification cap as a pure rule
+    email/            §5 intake: payload parsing, Svix signature
+                      verification, and the deal-room pipeline
     deals/            deal-chat reads + the §7.4 evaluation payload builder
     media-kit/        §7.3 verification matrix, §8 tier limits, audience
                       geography parsing, and the §12 disconnect
     mask.ts           contact-info stripping (§6.1) — server-side, pre-persist
     alias.ts          inbound alias generation (§5.1)
     auth.ts           requireProfile / requireRole
+  app/api/webhooks/   inbound email endpoint (§5.3) — public, signature-gated
   proxy.ts            route guards (Next 16's replacement for middleware.ts)
 supabase/migrations/  schema (§10), forced-reset column, RLS policies
 supabase/tests/       RLS + chat regression tests
@@ -262,10 +265,61 @@ app through App Review for Instagram insights, and token storage with refresh.
 The UI says the connection is waiting on platform review rather than offering a
 button that dead-ends.
 
+## Email intake (§5)
+
+`POST /api/webhooks/resend`. A creator forwards their business mail to
+`{handle}.{random}@analyze.greenlight.com` with a one-time Gmail rule; Resend
+receives it and calls this endpoint. No Google OAuth, no Gmail API, no CASA —
+that is the whole point of the design.
+
+The flow: verify signature → parse → resolve the creator by alias → mask →
+`evaluateOffer()` → create or update the deal room → post the Co-Pilot summary.
+
+**This is the only public, unauthenticated write path in the product.** Without
+a verified signature, anyone who learns the URL can mint deal rooms in any
+creator's inbox, put words in a sponsor's mouth, and bill us for a Gemini call
+per request. Verification is Svix HMAC-SHA256 over the *raw* body, with a
+five-minute replay window and a constant-time compare, implemented directly in
+`src/lib/email/verify.ts`. An unset secret returns 503 rather than falling open.
+
+Idempotency is claimed **before** any work, by inserting into `inbound_emails`
+on the provider's message id. Resend retries anything that is not 2xx, including
+requests that timed out after we already committed; without that unique key each
+retry mints a second room and a second paid Gemini call for the same offer. The
+table doubles as the answer to "my offer never arrived", which is otherwise
+unanswerable — an email for an unknown alias would leave no trace at all.
+
+Response policy: 200 for anything decided, including a refusal; non-2xx only
+where a retry could help. Returning 4xx for an unknown alias would have the
+provider redeliver a message that can never resolve.
+
+Two smaller decisions worth knowing:
+
+- **A reply appends to the open room** rather than opening a new one, matched on
+  (creator, sender) excluding `paid` — a settled deal is closed, so later mail
+  from the same sponsor is a fresh offer.
+- **`sender_email` is stored unmasked.** §6 protects the *creator's* contact
+  details from the company, not the reverse; the sponsor's address is routing
+  data that §10 requires and the §6 platform-relay reply needs. The message
+  body, subject and any text attachment all go through the mask, which is where
+  a sponsor's direct WhatsApp actually turns up.
+- **Binary attachments are catalogued, not decoded.** Text parts are read into
+  the offer (rate cards arrive as .txt and .csv); everything else is listed by
+  name and type. Parsing arbitrary binaries on an unauthenticated endpoint is a
+  much larger attack surface, and storing them needs a bucket and an AV
+  decision that do not exist yet.
+
+> ⚠️ **Unverified assumption.** Resend's inbound payload shape is not pinned
+> down here. `normalizeInboundEmail` is deliberately tolerant — `to` may be a
+> string, an array, or objects with `address`/`email`; the event may or may not
+> be wrapped in `data` — but it is a guess. Send one real delivery to a request
+> bin, compare, and delete this warning.
+
 ## Tests
 
 ```bash
-npm test        # masking, §7.4 cap, geo parsing, tier rules — 36 assertions
+npm test        # masking, §7.4 cap, geo parsing, tier rules, email
+                # parsing, webhook signatures — 70 assertions
 npm run build   # typecheck + lint + production build
 ```
 
@@ -275,12 +329,23 @@ Database-level suites run against the live project and roll back:
 psql "$DATABASE_URL" -f supabase/tests/rls_policies_test.sql          # 23
 psql "$DATABASE_URL" -f supabase/tests/chat_and_violations_test.sql   # 14
 psql "$DATABASE_URL" -f supabase/tests/media_kit_test.sql             # 12
+psql "$DATABASE_URL" -f supabase/tests/email_intake_test.sql          # 12
 ```
+
+And the webhook endpoint itself, over real HTTP with real signatures:
+
+```bash
+npm run build && npm run start -- -p 3666 &
+node scripts/webhook-e2e.mjs      # 8
+```
+
+That last one exists because a route can be entirely correct and still
+unreachable — it caught the auth proxy redirecting `/api/webhooks/*` to
+`/login`, which returned a cheerful 200 for deliveries that were never
+processed.
 
 ## Not done yet
 
-- Email intake pipeline (§5): the inbound alias, the Resend webhook, and
-  auto-creating a room from a forwarded offer. `evaluateOffer()` is ready for it.
 - The §7.3 analytics OAuth handshake — see above. Until it exists, no creator
   can reach a verified state, so in practice every high-value deal is capped at
   yellow by §7.4.
@@ -289,6 +354,11 @@ psql "$DATABASE_URL" -f supabase/tests/media_kit_test.sql             # 12
 - **TikTok.** §7.3 lists it in the verification matrix as declared-only, but the
   §10 `platform` CHECK constraint does not include it, so it cannot be stored.
   Flagged rather than silently widened — adding a platform is a product call.
+- Re-evaluation on reply. The Co-Pilot rates a room when it opens; a
+  counter-offer arriving later does not currently move the rating.
+- Outbound relay. §6 says a creator's reply reaches the company as an email from
+  the platform's own address. The inbound half is built; the outbound half is
+  not, so replies currently stay in-app.
 - Category benchmark pricing. §7.1 says `content_category` should drive
   benchmark pricing but does not say from what table; `CATEGORY_CPM` in
   `src/lib/ai/evaluate.ts` is a placeholder needing real numbers.
