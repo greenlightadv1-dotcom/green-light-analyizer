@@ -53,7 +53,7 @@ export function Sidebar({ role }: { role: Role }) {
       </nav>
 
       <div className="mt-auto px-2 pt-6">
-        <LogoMark size={22} className="opacity-30" />
+        <LogoMark size={20} className="opacity-40" />
       </div>
     </aside>
   );

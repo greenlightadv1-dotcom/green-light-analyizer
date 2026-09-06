@@ -1,6 +1,8 @@
 -- ---------------------------------------------------------------------------
 -- Green Light — forced password reset on first login (§4.2)
 --
+-- STATUS: APPLIED to project ref kpuecrvdrkhemyvibyfa.
+--
 -- The §10 schema has no field to hang this on, so it is added here as a
 -- migration rather than by editing 0001 in place.
 --

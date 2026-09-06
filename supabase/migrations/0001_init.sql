@@ -2,6 +2,9 @@
 -- Green Light — initial schema
 -- Applied verbatim from CLAUDE.md §10. Extend with new migrations rather than
 -- editing this file in place once it has been deployed.
+--
+-- STATUS: APPLIED to Supabase project `green-light` (ref kpuecrvdrkhemyvibyfa,
+-- eu-central-1). Do not edit — write a new migration.
 -- ---------------------------------------------------------------------------
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

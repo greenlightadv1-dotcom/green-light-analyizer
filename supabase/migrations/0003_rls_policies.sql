@@ -1,6 +1,14 @@
 -- ---------------------------------------------------------------------------
 -- Green Light — RLS policies. STUB. DO NOT DEPLOY WITHOUT FILLING THIS IN.
 --
+-- STATUS: NOT APPLIED — nothing to apply yet. The live database (project ref
+-- kpuecrvdrkhemyvibyfa) is currently in exactly the unsafe state described
+-- below, and Supabase's own linter reports it:
+--   ERROR rls_disabled_in_public  -> public.media_kits, public.messages
+--   INFO  rls_enabled_no_policy   -> public.profiles, public.deal_chats
+-- The tables are empty and nothing is deployed, so nothing is exposed yet.
+-- That stops being true the moment real data lands.
+--
 -- The spec (§10) leaves these explicitly as a TODO and §12 makes them a hard
 -- requirement ("Supabase RLS enforced on every table that holds user or deal
 -- data"). The full checklist is in the comment block at the end of
