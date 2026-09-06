@@ -63,14 +63,12 @@ ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 
 -- ###########################################################################
--- TODO BEFORE LAUNCH — carried over from the spec's own SQL comment (§10),
--- and NOT yet done. Right now `profiles` and `deal_chats` have RLS enabled
--- with ZERO policies, which denies all access to the anon/authenticated
--- roles; and `media_kits` / `messages` have RLS switched OFF entirely, which
--- means any authenticated user could read every creator's audience data and
--- every message in the product. Neither state is shippable.
+-- RESOLVED in 0003_rls_policies.sql + 0004_rls_helper_schema.sql. The
+-- checklist below is kept as the record of what those migrations had to
+-- cover; every item is now done and covered by
+-- supabase/tests/rls_policies_test.sql.
 --
--- Still to write (tracked in 0003_rls_policies.sql, currently a stub):
+-- What was outstanding:
 --   1. ALTER TABLE public.media_kits ENABLE ROW LEVEL SECURITY;
 --      ALTER TABLE public.messages   ENABLE ROW LEVEL SECURITY;
 --   2. profiles     — a user may read/update their own row; a company must
