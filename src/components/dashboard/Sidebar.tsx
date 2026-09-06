@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { href: "/media-kit", label: "Media kit", roles: ["creator", "admin"] },
   { href: "/settings", label: "Settings", roles: ["creator", "company", "admin"] },
   { href: "/admin/users", label: "Accounts", roles: ["admin"] },
+  { href: "/admin/violations", label: "Violations", roles: ["admin"] },
 ];
 
 export function Sidebar({ role }: { role: Role }) {

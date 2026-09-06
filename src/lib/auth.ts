@@ -33,6 +33,11 @@ export async function requireProfile(): Promise<Profile> {
     redirect("/login?error=incomplete-account");
   }
 
+  // §6, §12: off-platform contact exchange is a permanent ban. Enforced here
+  // rather than in the proxy so it costs nothing extra — the profile row is
+  // already being read — and so it holds on every authenticated render.
+  if (profile.banned_at) redirect("/suspended");
+
   return profile;
 }
 

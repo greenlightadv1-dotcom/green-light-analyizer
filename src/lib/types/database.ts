@@ -38,6 +38,24 @@ type Profile = {
   /** Creator PII — must never reach a company's client (§6, §12). */
   primary_email: string;
   must_change_password: boolean;
+  /** Non-null = permanently banned (§6, §12). Only service_role writes it. */
+  banned_at: string | null;
+  banned_reason: string | null;
+  created_at: string | null;
+};
+
+/** §6 masking-violation audit trail. Server-written, admin-readable. */
+type ViolationLog = {
+  id: string;
+  profile_id: string;
+  chat_id: string | null;
+  message_id: string | null;
+  /** Subset of 'email' | 'phone' | 'social'. */
+  matched_rules: string[];
+  /** Post-mask text. Raw contact details are never stored here. */
+  redacted_excerpt: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
   created_at: string | null;
 };
 
@@ -81,7 +99,10 @@ type Message = {
   created_at: string | null;
 };
 
-type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
+/** Columns with a database default (or that are nullable) are optional on insert. */
+type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+type Table<Row, Insert, Update = Partial<Insert>> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
@@ -93,14 +114,39 @@ export type Database = {
     Tables: {
       profiles: Table<
         Profile,
-        Omit<Profile, "created_at" | "must_change_password"> & {
-          created_at?: string;
-          must_change_password?: boolean;
-        }
+        Optional<
+          Profile,
+          | "region"
+          | "subscription_plan"
+          | "inbound_alias"
+          | "must_change_password"
+          | "banned_at"
+          | "banned_reason"
+          | "created_at"
+        >
       >;
-      media_kits: Table<MediaKit, Omit<MediaKit, "id"> & { id?: string }>;
-      deal_chats: Table<DealChat, Omit<DealChat, "id"> & { id?: string }>;
-      messages: Table<Message, Omit<Message, "id"> & { id?: string }>;
+      media_kits: Table<
+        MediaKit,
+        Optional<MediaKit, Exclude<keyof MediaKit, "platform">>
+      >;
+      deal_chats: Table<
+        DealChat,
+        Optional<DealChat, Exclude<keyof DealChat, "sender_email">>
+      >;
+      messages: Table<
+        Message,
+        Optional<Message, Exclude<keyof Message, "message_text">>
+      >;
+      violation_logs: Table<
+        ViolationLog,
+        Optional<
+          ViolationLog,
+          Exclude<
+            keyof ViolationLog,
+            "profile_id" | "matched_rules" | "redacted_excerpt"
+          >
+        >
+      >;
     };
     Views: Record<never, never>;
     Functions: Record<never, never>;

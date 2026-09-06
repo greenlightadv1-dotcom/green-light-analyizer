@@ -56,8 +56,10 @@ npm run dev
 src/
   app/
     (auth)/           login + forced first-login password reset (§4)
-    (app)/            authenticated shell: dashboard, inbox, analyzer,
-                      media kit, settings, admin accounts
+    (app)/            authenticated shell: dashboard, deal inbox + rooms,
+                      manual analyzer, media kit, settings, admin
+                      accounts + violation queue
+    suspended/        terminal state for a banned account (§6, §12)
     auth/signout/
   components/
     brand/            Logo + LogoMark, per the usage rules in §2.3
@@ -65,12 +67,15 @@ src/
     dashboard/        shell and page building blocks
   lib/
     supabase/         browser / server / service-role clients + session guards
+    ai/               deal evaluation: Gemini client, rule-based fallback,
+                      and the §7.4 verification cap as a pure rule
+    deals/            deal-chat reads + the §7.4 evaluation payload builder
     mask.ts           contact-info stripping (§6.1) — server-side, pre-persist
     alias.ts          inbound alias generation (§5.1)
     auth.ts           requireProfile / requireRole
   proxy.ts            route guards (Next 16's replacement for middleware.ts)
 supabase/migrations/  schema (§10), forced-reset column, RLS policies
-supabase/tests/       RLS regression test
+supabase/tests/       RLS + chat regression tests
 ```
 
 ## Brand assets — known issue
@@ -141,12 +146,95 @@ psql "$DATABASE_URL" -f supabase/tests/rls_policies_test.sql
 
 All 23 currently pass. Re-run it after any change to `0003`, `0004` or `0005`.
 
+## Deal Chat Room (§6)
+
+`/inbox` lists rooms; `/inbox/[chatId]` is the thread, live over Supabase
+Realtime. The room is where the anti-bypass promise is actually kept:
+
+1. `sendMessage` runs the §6.1 mask **server-side, before the insert**, so raw
+   contact details never reach the database or another party's client. There is
+   no client-side filtering, and there must not be — a client-side filter is one
+   devtools call away from being bypassed.
+2. Only the masked text is stored. The composer does not optimistically echo the
+   draft, because what gets saved is the masked version and showing the sender
+   their raw text would misrepresent what the room contains.
+3. When the filter fires, `violation_logs` records which rules matched and the
+   **already-redacted** excerpt — logging a violation by keeping the phone number
+   verbatim would defeat the point of stripping it.
+4. Writes go through the service role because RLS withholds `is_masked` from
+   `authenticated`: whether a message was masked is the server's finding about
+   the sender, not something the sender may assert.
+
+`paid` is absent from the status control: §12 puts settlement behind manual
+escrow, and the RLS `WITH CHECK` rejects a creator writing it, so offering the
+button would only produce a database error.
+
+### The permanent ban
+
+§6 and §12 make off-platform contact exchange a permanent ban, recorded in
+`profiles.banned_at` and enforced by `requireProfile()`. Blocking and logging
+are automatic and immediate. Converting a log entry into the ban is an admin
+action at `/admin/violations`, because the §6.1 phone rule matches any
+10-digit-ish run — `"my last 3 videos did 250 000 3000 views"` trips it, and
+there is a test asserting exactly that. Permanently closing a paying creator's
+account on a regex false positive is not a risk worth taking when the message
+is blocked either way.
+
+## Manual Analyzer (§5.1)
+
+`/analyzer` takes `sender_email`, `message_text`, `sponsorship_type` and
+optional `target_countries`, and calls `evaluateOffer()` — the same function the
+inbound-email webhook will use (§5.4), so a pasted offer and an auto-analysed
+one can never drift apart on price. Nothing is persisted unless the creator
+turns the result into a deal room, and the pasted text is masked before it
+becomes the opening message: an offer forwarded by hand routinely contains the
+sender's direct WhatsApp, and §6 does not exempt it for arriving manually.
+
+The §7.4 weighting rule — *unverified audience data must never by itself produce
+a green rating on a high-value deal* — lives in `src/lib/ai/rules.ts` as a pure
+function applied **after** the engine answers, not as prompt text. A model can be
+argued out of a rule by the offer it is reading; a function cannot. When it fires,
+the UI says the rating was held at yellow and why.
+
+### Engine
+
+`GEMINI_API_KEY` selects the engine. With a key, Gemini (§9 — deliberately not
+Claude, for cost on this path). Without one, a deterministic rule-based estimate
+that is labelled as such in the UI and carries `engine: "heuristic"`, because
+presenting arithmetic as the AI Co-Pilot would be a lie about the feature the
+product is sold on.
+
+> ⚠️ **§12 vs. the Gemini free tier.** §12 says AI processing is evaluation-only
+> and must not forward content anywhere it could train general-purpose models.
+> Google's terms for the *free* Gemini API tier permit submitted content to be
+> used to improve their products; the paid tier does not. Offer text is a
+> company's private correspondence. This is a billing decision, not a code one —
+> nothing here logs or persists the prompt, but the free tier and §12 are in
+> tension and someone needs to choose.
+
+## Tests
+
+```bash
+npm test        # masking + §7.4 cap, 14 assertions
+npm run build   # typecheck + lint + production build
+```
+
+Database-level suites run against the live project and roll back:
+
+```bash
+psql "$DATABASE_URL" -f supabase/tests/rls_policies_test.sql          # 23
+psql "$DATABASE_URL" -f supabase/tests/chat_and_violations_test.sql   # 14
+```
+
 ## Not done yet
 
-- Email intake pipeline (§5), Deal Chat Rooms (§6), Manual Analyzer (§5.1),
-  media kit / platform connections (§7). Routes and placeholders exist; the
-  logic does not.
-- Gemini evaluation function (§5.4, §7.4).
+- Email intake pipeline (§5): the inbound alias, the Resend webhook, and
+  auto-creating a room from a forwarded offer. `evaluateOffer()` is ready for it.
+- Media kit / platform connections (§7) — the page is still a placeholder, so
+  most creators have no reach data and pricing falls back to weak defaults.
+- Category benchmark pricing. §7.1 says `content_category` should drive
+  benchmark pricing but does not say from what table; `CATEGORY_CPM` in
+  `src/lib/ai/evaluate.ts` is a placeholder needing real numbers.
 - **Company-side access.** The `company` role has no policy on any table, so a
   signed-in company account currently reads nothing and its inbox is empty.
   That is the safe direction to be wrong in, but it needs designing. Do not fix
