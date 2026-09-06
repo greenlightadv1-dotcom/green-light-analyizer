@@ -1,0 +1,26 @@
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import { TopBar } from "@/components/dashboard/TopBar";
+import { PageTransition } from "@/components/ui/PageTransition";
+import { requireProfile } from "@/lib/auth";
+
+/**
+ * Authenticated app shell. The middleware guards the route group already; the
+ * `requireProfile()` call re-checks server-side on every render (§4, §12).
+ */
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const profile = await requireProfile();
+
+  return (
+    <div className="mx-auto flex w-full max-w-7xl gap-6 p-4">
+      <Sidebar role={profile.role} />
+      <div className="min-w-0 flex-1">
+        <TopBar profile={profile} />
+        <PageTransition>{children}</PageTransition>
+      </div>
+    </div>
+  );
+}

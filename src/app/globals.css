@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Green Light design tokens — CLAUDE.md §2.1
+   Exact hex values. Do not approximate, do not reintroduce #10B981.
+
+   Tailwind v4 is CSS-configured, so this @theme block is the equivalent of the
+   `tailwind.config.js` sketch in the spec and produces the same utility names:
+     navy        -> bg-navy / text-navy
+     navy-dark   -> bg-navy-dark
+     brand-green -> text-brand-green / bg-brand-green
+     ink         -> text-ink
+--------------------------------------------------------------------------- */
+@theme {
+  --color-navy: #293e61;
+  --color-navy-dark: #1f2e47;
+  --color-brand-green: #62e823;
+  --color-ink: #231f20;
+
+  /* Base app background — deep obsidian shell the glass panels float on (§2.2) */
+  --color-obsidian: #0a0d14;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-glass: 20px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-obsidian);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------------------------------------------------------------------------
+   "Liquid Glass" — §2.2. The recipe below is the spec's, verbatim.
+--------------------------------------------------------------------------- */
+@utility glass-panel {
+  background: rgba(41, 62, 97, 0.35); /* navy tint */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+/* Slightly denser variant for nav rails and sticky headers. */
+@utility glass-panel-solid {
+  background: rgba(31, 46, 71, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+/* Green focus ring used across inputs and interactive glass surfaces. */
+@utility focus-glow {
+  outline: none;
+  border-color: rgba(98, 232, 35, 0.5);
+  box-shadow: 0 0 0 3px rgba(98, 232, 35, 0.15);
+}
+
+::selection {
+  background: rgba(98, 232, 35, 0.3);
+  color: #ffffff;
+}
+
+/* Motion (§2.2) is Framer Motion driven, but honour reduced-motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

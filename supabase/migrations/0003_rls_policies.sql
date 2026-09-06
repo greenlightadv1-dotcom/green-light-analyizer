@@ -1,0 +1,16 @@
+-- ---------------------------------------------------------------------------
+-- Green Light — RLS policies. STUB. DO NOT DEPLOY WITHOUT FILLING THIS IN.
+--
+-- The spec (§10) leaves these explicitly as a TODO and §12 makes them a hard
+-- requirement ("Supabase RLS enforced on every table that holds user or deal
+-- data"). The full checklist is in the comment block at the end of
+-- 0001_init.sql. Until this file is written:
+--
+--   * media_kits and messages have NO row-level security at all;
+--   * profiles and deal_chats have RLS on but no policies, so the app can only
+--     reach them through the service role.
+--
+-- This is deliberately left unwritten rather than guessed at, because getting
+-- the profiles policy wrong is what leaks a creator's real email to a company
+-- (§6) — the single failure this product exists to prevent.
+-- ---------------------------------------------------------------------------
