@@ -63,6 +63,8 @@ type MediaKit = {
   id: string;
   creator_id: string | null;
   platform: Platform;
+  /** Channel/handle on the platform — needed by the §9 basic-stats APIs. */
+  platform_handle: string | null;
   avg_views: number | null;
   avg_ccv: number | null;
   engagement_rate: number | null;

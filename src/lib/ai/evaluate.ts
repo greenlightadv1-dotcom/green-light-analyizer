@@ -4,6 +4,7 @@ import type { AiEvaluation } from "@/lib/types/database";
 import type { EvaluationInput, EvaluationResult } from "./types";
 import { evaluateWithGemini } from "./gemini";
 import { capRiskByVerification } from "./rules";
+import { overlapWith } from "@/lib/media-kit/countries";
 
 export { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules";
 
@@ -42,22 +43,6 @@ const TYPE_MULTIPLIER: Record<string, number> = {
   other: 0.35,
 };
 
-/** Share of the audience that sits in the countries the company wants. */
-function geoOverlap(
-  audience: EvaluationInput["declared_top_countries"],
-  targets: string[] | null,
-): number | null {
-  if (!audience?.length) return null;
-  if (!targets?.length) return 1; // no target set -> no geo penalty
-
-  const wanted = new Set(targets.map((c) => c.toUpperCase()));
-  const matched = audience
-    .filter((a) => wanted.has(a.country.toUpperCase()))
-    .reduce((sum, a) => sum + a.pct, 0);
-
-  return Math.min(matched / 100, 1);
-}
-
 /**
  * Deterministic pricing used when GEMINI_API_KEY is absent.
  *
@@ -73,7 +58,7 @@ function heuristicEvaluate(input: EvaluationInput): EvaluationResult {
   const geoSource = input.audience_verified
     ? input.verified_top_countries
     : input.declared_top_countries;
-  const overlap = geoOverlap(geoSource, input.target_countries);
+  const overlap = overlapWith(geoSource, input.target_countries);
 
   // Engagement above ~4% is healthy; below ~1% suggests inflated followers (§7.1).
   const engagement = input.engagement_rate ?? 3;

@@ -70,6 +70,8 @@ src/
     ai/               deal evaluation: Gemini client, rule-based fallback,
                       and the §7.4 verification cap as a pure rule
     deals/            deal-chat reads + the §7.4 evaluation payload builder
+    media-kit/        §7.3 verification matrix, §8 tier limits, audience
+                      geography parsing, and the §12 disconnect
     mask.ts           contact-info stripping (§6.1) — server-side, pre-persist
     alias.ts          inbound alias generation (§5.1)
     auth.ts           requireProfile / requireRole
@@ -212,10 +214,58 @@ product is sold on.
 > nothing here logs or persists the prompt, but the free tier and §12 are in
 > tension and someone needs to choose.
 
+## Media Kit (§7)
+
+`/media-kit` is where the product's central claim is kept honest. Every number
+a sponsor eventually sees either came from a platform API or carries a
+self-reported tag, and the page cannot render audience geography without one:
+`CountryShareList` takes a `verified` prop and always draws the badge.
+
+What makes that a guarantee rather than a convention is the database.
+`saveMediaKit` deliberately uses the **creator's own Supabase client**, not the
+service role, so it travels the same path a browser would and is bound by the
+same column grants. `audience_verified`, `verified_top_countries` and
+`analytics_oauth_connected` are withheld from `authenticated`, so a creator
+cannot mark themselves verified even by crafting the request directly — and
+`media_kit_test.sql` asserts exactly that, on update *and* on insert.
+
+### Verification states (§7.3 × §8)
+
+The connection control has four states, and the last two are kept apart on
+purpose:
+
+| State | Meaning |
+|---|---|
+| connected | Verified geo is live; offers disconnect |
+| available | Platform supports it (§7.3) and the plan includes it (§8) |
+| needs-upgrade | Platform supports it, the plan does not |
+| **unsupported** | No API exists, so **no plan can deliver it** |
+
+Telling a Starter creator to upgrade for Twitch audience geography would be
+selling something upgrading cannot provide. Twitch and Kick expose no
+per-viewer country data to third parties, so those cards say so instead.
+
+### Disconnecting
+
+§12: *"disconnecting must immediately set `audience_verified = false` and clear
+`verified_top_countries`."* Immediately, in one statement — a creator who
+revokes consent and still sees a verified badge has been told a lie about their
+own data, and so has the sponsor reading it. Self-reported data survives the
+disconnect; it was never the API's to take away.
+
+### Not built: the OAuth handshake
+
+`connectAnalytics` throws rather than pretending. Completing it needs a Google
+Cloud project with a verified consent screen for `yt-analytics.readonly`
+(sensitive scope — days-to-weeks of review, but **not** a CASA audit), a Meta
+app through App Review for Instagram insights, and token storage with refresh.
+The UI says the connection is waiting on platform review rather than offering a
+button that dead-ends.
+
 ## Tests
 
 ```bash
-npm test        # masking + §7.4 cap, 14 assertions
+npm test        # masking, §7.4 cap, geo parsing, tier rules — 36 assertions
 npm run build   # typecheck + lint + production build
 ```
 
@@ -224,14 +274,21 @@ Database-level suites run against the live project and roll back:
 ```bash
 psql "$DATABASE_URL" -f supabase/tests/rls_policies_test.sql          # 23
 psql "$DATABASE_URL" -f supabase/tests/chat_and_violations_test.sql   # 14
+psql "$DATABASE_URL" -f supabase/tests/media_kit_test.sql             # 12
 ```
 
 ## Not done yet
 
 - Email intake pipeline (§5): the inbound alias, the Resend webhook, and
   auto-creating a room from a forwarded offer. `evaluateOffer()` is ready for it.
-- Media kit / platform connections (§7) — the page is still a placeholder, so
-  most creators have no reach data and pricing falls back to weak defaults.
+- The §7.3 analytics OAuth handshake — see above. Until it exists, no creator
+  can reach a verified state, so in practice every high-value deal is capped at
+  yellow by §7.4.
+- Basic stats sync. `platform_handle` is captured for it, but nothing calls the
+  YouTube Data API or Twitch Helix yet, so reach figures are creator-entered.
+- **TikTok.** §7.3 lists it in the verification matrix as declared-only, but the
+  §10 `platform` CHECK constraint does not include it, so it cannot be stored.
+  Flagged rather than silently widened — adding a platform is a product call.
 - Category benchmark pricing. §7.1 says `content_category` should drive
   benchmark pricing but does not say from what table; `CATEGORY_CPM` in
   `src/lib/ai/evaluate.ts` is a placeholder needing real numbers.
