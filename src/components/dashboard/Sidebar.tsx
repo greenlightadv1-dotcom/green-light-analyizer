@@ -22,25 +22,32 @@ const NAV: NavItem[] = [
   { href: "/admin/system", label: "System", roles: ["admin"] },
 ];
 
-export function Sidebar({ role }: { role: Role }) {
+export function Sidebar({
+  role,
+  basePath = "",
+}: {
+  role: Role;
+  /** Prefix for every link. Used by the UI preview to stay within /preview. */
+  basePath?: string;
+}) {
   const pathname = usePathname();
   const items = NAV.filter((item) => item.roles.includes(role));
 
   return (
     <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col p-4 lg:flex">
-      <Link href="/dashboard" className="mb-8 block px-2 pt-2">
+      <Link href={`${basePath}/dashboard`} className="mb-8 block px-2 pt-2">
         {/* Dark surface -> dark lockup (§2.3). */}
         <Logo variant="dark" height={30} />
       </Link>
 
       <nav className="flex flex-col gap-1">
         {items.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const href = `${basePath}${item.href}`;
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={href}
               aria-current={active ? "page" : undefined}
               className={`rounded-xl px-3 py-2.5 text-sm transition ${
                 active

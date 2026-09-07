@@ -337,6 +337,33 @@ Two smaller decisions worth knowing:
 > be wrapped in `data` — but it is a guess. Send one real delivery to a request
 > bin, compare, and delete this warning.
 
+## UI preview
+
+`/preview/*` renders the interface with an invented dataset — no database, no
+environment variables, no auth. It exists so the UI can be reviewed in a browser
+before real keys are wired up.
+
+It is **not** a second implementation. The pages were split into
+`src/components/views/*`, and both the real pages and the preview pages render
+the same components; a preview that reimplemented the UI would drift from it
+within a week and stop being worth looking at.
+
+It is also **not** an auth bypass. The routes sit outside the `(app)` group, so
+they never touch `requireProfile()` and no code path there reaches the real one.
+The correct way to preview a gated app is to render its components outside the
+gate, never to add a door inside it.
+
+Availability is self-limiting: the routes exist only while
+`NEXT_PUBLIC_SUPABASE_URL` is unset — that is, only while the real product
+cannot run anyway. Configure Supabase and every preview route returns 404, with
+nothing to remember to remove. `NEXT_PUBLIC_ENABLE_UI_PREVIEW=1` forces them on
+alongside a configured app.
+
+The mock data deliberately covers the states that are easy to get wrong: a
+masked message, a verified media kit beside a self-reported one, a rating the
+§7.4 cap pulled down from green, and a Starter plan sitting at its §8
+connection limit.
+
 ## Tests
 
 ```bash

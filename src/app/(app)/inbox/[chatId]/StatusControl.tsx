@@ -19,9 +19,12 @@ const OPTIONS: { value: DealStatus; label: string }[] = [
 export function StatusControl({
   chatId,
   current,
+  demo = false,
 }: {
   chatId: string;
   current: DealStatus;
+  /** UI preview: render the control without wiring it to a server action. */
+  demo?: boolean;
 }) {
   return (
     <GlassPanel className="p-5">
@@ -29,11 +32,14 @@ export function StatusControl({
 
       <div className="mt-3 flex flex-wrap gap-2">
         {OPTIONS.map((option) => (
-          <form key={option.value} action={updateDealStatus}>
+          <form
+            key={option.value}
+            action={demo ? undefined : updateDealStatus}
+          >
             <input type="hidden" name="chat_id" value={chatId} />
             <input type="hidden" name="deal_status" value={option.value} />
             <button
-              type="submit"
+              type={demo ? "button" : "submit"}
               disabled={current === option.value}
               className={`rounded-lg border px-2.5 py-1.5 text-xs transition ${
                 current === option.value

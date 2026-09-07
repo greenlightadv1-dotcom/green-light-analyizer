@@ -26,6 +26,18 @@ function isPublic(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // With no Supabase configuration there is no session to refresh and no data
+  // to protect — the pages themselves fail on their own database calls. Passing
+  // through beats throwing on every request, which would turn a missing
+  // environment variable into an unreadable wall of 500s. /admin/system exists
+  // to name exactly which variable is absent.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return response;
+  }
+
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

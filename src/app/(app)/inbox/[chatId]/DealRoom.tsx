@@ -27,15 +27,23 @@ export function DealRoom({
   chatId,
   initialMessages,
   currentUserId,
+  demo = false,
 }: {
   chatId: string;
   initialMessages: Message[];
   currentUserId: string;
+  /**
+   * UI preview mode. Skips the Realtime subscription, which needs Supabase
+   * credentials the preview deployment deliberately does not carry, and lets
+   * the composer echo locally so the screen is explorable rather than inert.
+   */
+  demo?: boolean;
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (demo) return;
     const supabase = createClient();
 
     const channel = supabase
@@ -60,7 +68,7 @@ export function DealRoom({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId]);
+  }, [chatId, demo]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -127,7 +135,25 @@ export function DealRoom({
       </div>
 
       <div className="border-t border-white/8 p-4">
-        <Composer chatId={chatId} />
+        <Composer
+          chatId={chatId}
+          demo={demo}
+          onDemoSend={(text) =>
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `demo-${prev.length}`,
+                chat_id: chatId,
+                sender_id: currentUserId,
+                message_text: text,
+                is_masked: false,
+                relayed_at: null,
+                relay_error: null,
+                created_at: new Date().toISOString(),
+              },
+            ])
+          }
+        />
       </div>
     </GlassPanel>
   );

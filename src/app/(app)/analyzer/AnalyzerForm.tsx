@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -35,18 +35,50 @@ function AnalyzeButton() {
   );
 }
 
-export function AnalyzerForm() {
+/**
+ * A canned result for the UI preview. Deliberately a capped one: §7.4 holding a
+ * high-value deal at yellow on self-reported geography is the behaviour most
+ * worth seeing, and the hardest to describe in words.
+ */
+const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
+  recommended_price_usd: 2100,
+  price_range_usd: { low: 1700, high: 2600 },
+  risk: "yellow",
+  risk_capped: true,
+  reasoning:
+    "Reach and engagement support a figure well above the offer, and the sponsor's target markets overlap most of the audience. The rating is held below green only because that overlap is self-reported.",
+  geo_basis: "declared",
+  engine: "heuristic",
+  sender_email: "growth@lumenapp.example",
+  sponsorship_type: "integration",
+  target_countries: ["SA"],
+  offer_text: "",
+};
+
+export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
   const [state, formAction] = useActionState<AnalyzerState, FormData>(
     analyzeOffer,
     { error: null, result: null },
   );
+  const [demoResult, setDemoResult] = useState<AnalyzerState["result"]>(null);
 
-  const r = state.result;
+  const r = demo ? demoResult : state.result;
 
   return (
     <div className="space-y-4">
       <GlassPanel className="p-6">
-        <form action={formAction} className="space-y-4">
+        <form
+          action={demo ? undefined : formAction}
+          onSubmit={
+            demo
+              ? (event) => {
+                  event.preventDefault();
+                  setDemoResult(DEMO_RESULT);
+                }
+              : undefined
+          }
+          className="space-y-4"
+        >
           <Field
             id="sender_email"
             name="sender_email"
@@ -155,7 +187,10 @@ export function AnalyzerForm() {
             </p>
           ) : null}
 
-          <form action={createDealFromAnalysis} className="mt-5">
+          <form
+            action={demo ? undefined : createDealFromAnalysis}
+            className="mt-5"
+          >
             <input type="hidden" name="sender_email" value={r.sender_email} />
             <input type="hidden" name="offer_text" value={r.offer_text} />
             <input
@@ -174,7 +209,11 @@ export function AnalyzerForm() {
               name="recommended_price_usd"
               value={r.recommended_price_usd}
             />
-            <Button type="submit" variant="ghost">
+            <Button
+              type={demo ? "button" : "submit"}
+              variant="ghost"
+              fullWidth={false}
+            >
               Open a deal room for this offer
             </Button>
           </form>
