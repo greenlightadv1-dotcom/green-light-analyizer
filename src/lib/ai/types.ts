@@ -41,7 +41,7 @@ export type EvaluationResult = {
   /** Which geo field carried the pricing — drives the UI's verified badge. */
   geo_basis: "verified" | "declared" | "none";
   /** Which engine produced this. See evaluateOffer() for why this matters. */
-  engine: "gemini" | "heuristic";
+  engine: "nvidia" | "heuristic";
   /**
    * True when the §7.4 verification cap downgraded the rating — i.e. the
    * engine said green, but the audience data behind it is self-reported and

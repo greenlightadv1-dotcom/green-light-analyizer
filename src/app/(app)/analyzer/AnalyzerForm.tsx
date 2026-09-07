@@ -174,14 +174,14 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           ) : null}
 
           {/*
-            §5.4 names Gemini as the engine. When no key is configured the
+            The engine is NVIDIA-hosted Kimi K3. When no key is configured the
             rule-based fallback answers instead, and saying so plainly is the
             point — presenting a heuristic as the AI Co-Pilot would be a lie
             about the one feature the product is sold on.
           */}
           {r.engine === "heuristic" ? (
             <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-              Rule-based estimate — the Gemini engine is not configured on this
+              Rule-based estimate — the AI engine is not configured on this
               environment, so this is arithmetic on your reach and category, not
               an AI reading of the offer.
             </p>

@@ -4,7 +4,7 @@ import "server-only";
  * Runtime configuration report.
  *
  * Every optional integration in this product degrades quietly by design — the
- * analyzer falls back to a rule-based estimate without Gemini, the webhook
+ * analyzer falls back to a rule-based estimate without an AI key configured, the webhook
  * returns 503 without a signing secret, the relay records an error without a
  * Resend key. That is the right behaviour, and it is also exactly how a
  * deployment ends up half-working with nobody able to say which half.
@@ -58,8 +58,8 @@ export function readConfigReport(): ConfigReport {
         "Falls back to analyze.greenlight.com. Wrong only if the real inbound domain differs.",
     },
     {
-      name: "GEMINI_API_KEY",
-      set: Boolean(process.env.GEMINI_API_KEY),
+      name: "NVIDIA_API_KEY",
+      set: Boolean(process.env.NVIDIA_API_KEY),
       required: false,
       impact:
         "The Deal Co-Pilot falls back to a rule-based estimate, labelled as such in the UI. Deals are still priced, just not by AI.",

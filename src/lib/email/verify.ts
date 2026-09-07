@@ -6,7 +6,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * This is the only unauthenticated, publicly reachable write path in the
  * product. Without a verified signature, anyone who learns the URL can mint
  * deal rooms in any creator's inbox, put words in a sponsor's mouth, and bill
- * us for a Gemini call on every request. The endpoint is worth exactly as much
+ * us for an AI evaluation call on every request. The endpoint is worth exactly as much
  * as this function.
  *
  * Resend signs webhooks with the Svix scheme:

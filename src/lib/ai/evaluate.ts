@@ -2,7 +2,7 @@ import "server-only";
 
 import type { AiEvaluation } from "@/lib/types/database";
 import type { EvaluationInput, EvaluationResult } from "./types";
-import { evaluateWithGemini } from "./gemini";
+import { evaluateWithNvidia } from "./nvidia";
 import { capRiskByVerification } from "./rules";
 import { overlapWith } from "@/lib/media-kit/countries";
 
@@ -11,8 +11,12 @@ export { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules";
 /**
  * Deal evaluation — CLAUDE.md §5.4, §7.4.
  *
- * One entry point, shared by the Manual Analyzer (§5.1) and, when it is built,
- * the inbound-email webhook (§5.4), so the two can never drift apart on price.
+ * One entry point, shared by the Manual Analyzer (§5.1) and the inbound-email
+ * webhook (§5.4), so the two can never drift apart on price.
+ *
+ * The engine is NVIDIA-hosted Kimi K3, on the client's explicit instruction —
+ * §9 of the spec originally named Gemini here. See nvidia.ts for the §12 data-
+ * handling analysis behind that swap.
  */
 
 // --- Heuristic fallback ----------------------------------------------------
@@ -44,7 +48,7 @@ const TYPE_MULTIPLIER: Record<string, number> = {
 };
 
 /**
- * Deterministic pricing used when GEMINI_API_KEY is absent.
+ * Deterministic pricing used when NVIDIA_API_KEY is absent.
  *
  * This is NOT the AI Co-Pilot and must never be presented as it — the result
  * carries engine: "heuristic" so the UI can say so. It exists so the whole
@@ -121,20 +125,19 @@ function heuristicEvaluate(input: EvaluationInput): EvaluationResult {
 /**
  * Price and risk-rate an offer.
  *
- * Gemini when a key is configured (§9 — deliberately Gemini, not Claude, for
- * cost on this high-volume path), otherwise the deterministic fallback above.
- * Either way the §7.4 verification cap is applied to the result, so the rule
- * holds regardless of which engine answered.
+ * NVIDIA-hosted Kimi K3 when a key is configured, otherwise the deterministic
+ * fallback above. Either way the §7.4 verification cap is applied to the
+ * result, so the rule holds regardless of which engine answered.
  */
 export async function evaluateOffer(
   input: EvaluationInput,
 ): Promise<EvaluationResult> {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.NVIDIA_API_KEY) {
     return heuristicEvaluate(input);
   }
 
   try {
-    const raw = await evaluateWithGemini(input);
+    const raw = await evaluateWithNvidia(input);
     const capped = capRiskByVerification(
       raw.risk,
       input.audience_verified,
@@ -150,7 +153,7 @@ export async function evaluateOffer(
         : input.declared_top_countries?.length
           ? "declared"
           : "none",
-      engine: "gemini",
+      engine: "nvidia",
     };
   } catch {
     // A creator waiting on an offer is better served by a rule-based number

@@ -6,7 +6,7 @@ import type { AiEvaluation } from "@/lib/types/database";
  * Kept free of "server-only" and of any I/O so it can be unit-tested directly
  * (see src/lib/ai/rules.test.ts) — these are the rules the product's
  * anti-fraud promise rests on, and they should not be reachable only through
- * a network call to Gemini.
+ * a network call to the NVIDIA API.
  */
 
 /**

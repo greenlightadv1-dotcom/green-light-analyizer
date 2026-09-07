@@ -20,7 +20,7 @@ variables under **Project Settings → Environment Variables**:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API | Nobody can sign in |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API (`service_role`) | Most of the product is inert |
 | `NEXT_PUBLIC_INBOUND_DOMAIN` | your real inbound domain | Falls back to `analyze.greenlight.com` |
-| `GEMINI_API_KEY` | Google AI Studio | Rule-based pricing, labelled as such |
+| `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com/moonshotai/kimi-k3) | Rule-based pricing, labelled as such |
 | `RESEND_API_KEY` | Resend dashboard | Replies never reach companies |
 | `RESEND_INBOUND_WEBHOOK_SECRET` | Resend → Webhooks (`whsec_…`) | Webhook returns 503 |
 | `RESEND_FROM_ADDRESS` | e.g. `Green Light <deals@…>` | Falls back to `deals@<inbound domain>` |
@@ -121,10 +121,23 @@ endpoints.
 - **The company role has no RLS policy**, so a company account reads nothing.
   Deliberate — see the note at the end of `0003_rls_policies.sql` before
   changing it.
-- **Gemini's free tier conflicts with §12**, which forbids sending content
-  anywhere it could train general-purpose models. Google's free-tier terms
-  permit exactly that; the paid tier does not. A billing decision, not a code
-  one.
+- **Verify NVIDIA's data-retention terms before production use.** §12 forbids
+  sending content anywhere it could train general-purpose models. NVIDIA's
+  Trial ToS says prompts/responses are not used for training — better than
+  Gemini's free tier, which the spec originally named and which permits
+  exactly that. But the same terms describe up to 30 days of content retention
+  on the free/trial tier for security monitoring, which is not the same as
+  "not logged/forwarded anywhere." Read the actual terms
+  ([PDF](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf))
+  before treating this as fully resolved.
+- **The exact NVIDIA response format has not been tested against a live call.**
+  Outbound access to `integrate.api.nvidia.com` is blocked from the sandbox
+  this was built in, so `response_format: {type:"json_object"}` support for
+  this specific model was verified from documentation, not a real request.
+  `nvidia.ts` parses defensively (direct JSON, then a fenced block, then a
+  balanced-brace scan) for exactly this reason. Send one real evaluation
+  through the Manual Analyzer after deploying and confirm the result looks
+  sane before relying on it.
 - **Basic stats are creator-entered.** Nothing calls the YouTube Data API or
   Twitch Helix yet, so §1's anti-fraud promise currently holds for audience
   geography and not for view counts.

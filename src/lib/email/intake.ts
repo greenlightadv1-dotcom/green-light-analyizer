@@ -76,7 +76,7 @@ function summaryMessage(
  * Idempotency is claimed *first*, by inserting into inbound_emails on the
  * provider's message id. A unique-violation there means a retry of something
  * already handled, and the whole delivery is a no-op — which is what stops a
- * provider retry minting a second room and a second Gemini call.
+ * provider retry minting a second room and a second paid AI call.
  */
 export async function processInboundEmail(
   email: NormalizedEmail,

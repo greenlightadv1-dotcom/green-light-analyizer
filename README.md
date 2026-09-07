@@ -13,7 +13,7 @@ system, data model and business logic. Read it before changing anything here.
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
 | Motion | Framer Motion |
 | Backend / DB | Supabase (Postgres + Realtime + RLS) |
-| AI engine | Google Gemini *(not yet wired up)* |
+| AI engine | NVIDIA NIM (Kimi K3 — `moonshotai/kimi-k3`) |
 | Email | Resend, inbound webhooks *(not yet wired up)* |
 
 ## Supabase project
@@ -83,7 +83,7 @@ src/
     dashboard/        shell and page building blocks
   lib/
     supabase/         browser / server / service-role clients + session guards
-    ai/               deal evaluation: Gemini client, rule-based fallback,
+    ai/               deal evaluation: NVIDIA/Kimi K3 client, rule-based fallback,
                       and the §7.4 verification cap as a pure rule
     email/            §5 intake: payload parsing, Svix signature
                       verification, and the deal-room pipeline
@@ -219,19 +219,32 @@ the UI says the rating was held at yellow and why.
 
 ### Engine
 
-`GEMINI_API_KEY` selects the engine. With a key, Gemini (§9 — deliberately not
-Claude, for cost on this path). Without one, a deterministic rule-based estimate
-that is labelled as such in the UI and carries `engine: "heuristic"`, because
-presenting arithmetic as the AI Co-Pilot would be a lie about the feature the
-product is sold on.
+`NVIDIA_API_KEY` selects the engine — NVIDIA's NIM API catalog, running Kimi K3
+(`moonshotai/kimi-k3`, a 2.8T-parameter MoE model), via an OpenAI-compatible
+chat-completions endpoint. This supersedes an earlier choice of Gemini in §9 of
+the spec, on the client's explicit instruction. Without a key, a deterministic
+rule-based estimate that is labelled as such in the UI and carries
+`engine: "heuristic"`, because presenting arithmetic as the AI Co-Pilot would be
+a lie about the feature the product is sold on.
 
-> ⚠️ **§12 vs. the Gemini free tier.** §12 says AI processing is evaluation-only
-> and must not forward content anywhere it could train general-purpose models.
-> Google's terms for the *free* Gemini API tier permit submitted content to be
-> used to improve their products; the paid tier does not. Offer text is a
-> company's private correspondence. This is a billing decision, not a code one —
-> nothing here logs or persists the prompt, but the free tier and §12 are in
-> tension and someone needs to choose.
+Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
+is an OpenAI-compatible hint, not a guarantee, and this exact model's adherence
+to it has not been verified against a live call — outbound access to NVIDIA's
+API is blocked from the sandbox this was built in. `extractJsonObject()` in
+`nvidia.ts` tries a direct parse, then a fenced-code-block extraction, then a
+balanced-brace scan, before giving up and falling back to the heuristic. Model
+is swappable via `NVIDIA_MODEL` without a code change.
+
+> ⚠️ **§12 vs. NVIDIA's terms.** §12 says AI processing is evaluation-only and
+> must not forward content anywhere it could train general-purpose models.
+> NVIDIA's published API Trial Terms of Service state prompts and responses are
+> **not** used to train models — materially better than Gemini's free tier,
+> which permitted exactly that. It is not a full clearance, though: the same
+> terms describe up to 30 days of content retention on the free/trial tier for
+> security monitoring, which is a real gap from "not logged/forwarded
+> anywhere." Read the terms before treating this as settled:
+> https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf
+> Nothing on our side logs or persists the prompt either way.
 
 ## Media Kit (§7)
 
@@ -312,7 +325,7 @@ The flow: verify signature → parse → resolve the creator by alias → mask �
 
 **This is the only public, unauthenticated write path in the product.** Without
 a verified signature, anyone who learns the URL can mint deal rooms in any
-creator's inbox, put words in a sponsor's mouth, and bill us for a Gemini call
+creator's inbox, put words in a sponsor's mouth, and bill us for an AI evaluation call
 per request. Verification is Svix HMAC-SHA256 over the *raw* body, with a
 five-minute replay window and a constant-time compare, implemented directly in
 `src/lib/email/verify.ts`. An unset secret returns 503 rather than falling open.
@@ -320,7 +333,7 @@ five-minute replay window and a constant-time compare, implemented directly in
 Idempotency is claimed **before** any work, by inserting into `inbound_emails`
 on the provider's message id. Resend retries anything that is not 2xx, including
 requests that timed out after we already committed; without that unique key each
-retry mints a second room and a second paid Gemini call for the same offer. The
+retry mints a second room and a second paid AI evaluation call for the same offer. The
 table doubles as the answer to "my offer never arrived", which is otherwise
 unanswerable — an email for an unknown alias would leave no trace at all.
 

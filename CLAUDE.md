@@ -318,10 +318,19 @@ deal, not on company seats.
 |---|---|
 | Frontend / Hosting | Next.js + Vercel (Hobby free tier) |
 | Backend / DB | Supabase free tier (Postgres + Realtime websockets + RLS) |
-| AI engine | **Google Gemini API** (AI Studio free tier) — intentionally not Claude, for cost reasons on the high-volume analysis path |
+| AI engine | **NVIDIA NIM API** running Kimi K3 (`moonshotai/kimi-k3`) — see amendment below |
 | Email | Resend free tier (3,000 emails/mo + inbound webhooks) |
 | Platform stats (basic) | YouTube Data API v3, Twitch Helix API |
 | Platform stats (verified audience geo, opt-in) | YouTube Analytics API (OAuth), Instagram Graph API insights (OAuth) |
+
+> Note: this spec originally named **Google Gemini API** here, intentionally
+> not Claude, for cost reasons on the high-volume analysis path. The client
+> explicitly instructed a switch to **NVIDIA-hosted Kimi K3** instead — an
+> NVIDIA-provided key was supplied directly for this purpose. Reasoning behind
+> the swap, and the §12 data-handling implications, are documented in
+> `src/lib/ai/nvidia.ts` and the README's Engine section. Build against Kimi
+> K3 going forward; do not reintroduce Gemini without asking first, per this
+> file's own rule at the top.
 
 ---
 
