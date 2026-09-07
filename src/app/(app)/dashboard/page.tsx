@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ComingSoonCard } from "@/components/dashboard/ComingSoonCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
+import { RiskBadge } from "@/components/deals/RiskBadge";
+import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { requireProfile } from "@/lib/auth";
+import { listDealChats } from "@/lib/deals/queries";
+import { listMediaKits } from "@/lib/media-kit/queries";
+import { canVerifyAudience } from "@/lib/media-kit/platforms";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -14,6 +20,18 @@ export const metadata: Metadata = { title: "Dashboard" };
  */
 export default async function DashboardPage() {
   const profile = await requireProfile();
+
+  const [chats, kits] = await Promise.all([
+    listDealChats(),
+    listMediaKits(profile.id),
+  ]);
+
+  const recent = chats.slice(0, 5);
+  const openDeals = chats.filter(
+    (c) => c.deal_status !== "paid" && c.deal_status !== "disputed",
+  ).length;
+  const verifiedKits = kits.filter((k) => k.audience_verified).length;
+  const plan = profile.subscription_plan ?? "Starter";
 
   return (
     <>
@@ -36,13 +54,13 @@ export default async function DashboardPage() {
 
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-white/45 uppercase">
-            Region
+            Open deals
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white">
-            {profile.region ?? "MENA"}
+          <p className="mt-1.5 text-lg font-semibold text-white tabular-nums">
+            {openDeals}
           </p>
           <p className="mt-2 text-xs text-white/40">
-            Drives which price list you are shown.
+            {profile.region ?? "MENA"} pricing · {plan} plan
           </p>
         </GlassPanel>
 
@@ -61,16 +79,82 @@ export default async function DashboardPage() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <EmptyState
-            title="Recent deals"
-            spec="§6.2"
-            body="Deal Chat Rooms created from inbound offers will be listed here with their AI risk rating and status. Nothing yet — the email intake pipeline is not wired up."
-          />
-          <EmptyState
-            title="Audience verification"
-            spec="§7"
-            body="Connect YouTube or Instagram analytics to turn self-reported audience geography into verified data. Verified audience data is what lets a high-value deal earn a green rating."
-          />
+          {recent.length === 0 ? (
+            <EmptyState
+              title="No deals yet"
+              spec="§5, §6.2"
+              body="Offers forwarded to your inbound alias turn into deal rooms here, already priced and risk-rated. Set up forwarding in Settings to start receiving them."
+            />
+          ) : (
+            <GlassPanel className="overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3.5">
+                <h2 className="text-sm font-semibold text-white">
+                  Recent deals
+                </h2>
+                <Link
+                  href="/inbox"
+                  className="text-xs text-white/45 transition hover:text-white/80"
+                >
+                  View all ({chats.length})
+                </Link>
+              </div>
+
+              <ul className="divide-y divide-white/5">
+                {recent.map((chat) => (
+                  <li key={chat.id}>
+                    <Link
+                      href={`/inbox/${chat.id}`}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-white/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-sm text-white">
+                        {chat.sender_email}
+                      </span>
+                      <span className="text-sm text-white/70 tabular-nums">
+                        {chat.offered_amount === null
+                          ? "—"
+                          : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}
+                      </span>
+                      <StatusBadge status={chat.deal_status} />
+                      <RiskBadge risk={chat.ai_evaluation} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </GlassPanel>
+          )}
+
+          {/*
+            §7.2/§7.4 made concrete: the reason to connect analytics is that
+            unverified geography caps a high-value deal at yellow. Saying that
+            beats a generic "connect your accounts" prompt.
+          */}
+          <GlassPanel className="p-5">
+            <h2 className="text-sm font-semibold text-white">
+              Audience verification
+            </h2>
+            {verifiedKits > 0 ? (
+              <p className="mt-2 text-sm leading-relaxed text-white/55">
+                {verifiedKits} of your {kits.length} connected{" "}
+                {kits.length === 1 ? "platform" : "platforms"} has verified
+                audience data. Offers against it are priced with full
+                confidence.
+              </p>
+            ) : (
+              <p className="mt-2 text-sm leading-relaxed text-white/55">
+                Your audience data is self-reported, so a high-value offer
+                can&apos;t be rated green on it alone.{" "}
+                {canVerifyAudience(plan)
+                  ? "Connecting YouTube or Instagram analytics lifts that cap."
+                  : "Verified audience data is included on Pro and Elite."}
+              </p>
+            )}
+            <Link
+              href="/media-kit"
+              className="mt-3 inline-block text-xs text-brand-green transition hover:brightness-125"
+            >
+              Open media kit →
+            </Link>
+          </GlassPanel>
         </div>
 
         <ComingSoonCard />

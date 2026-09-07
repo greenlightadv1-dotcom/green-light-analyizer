@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
+import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
 import { getDealChat } from "@/lib/deals/queries";
@@ -11,6 +12,12 @@ export type SendMessageState = {
   error: string | null;
   /** Set when the §6 filter stripped something. Shown as a hard warning. */
   violation: { rules: string[] } | null;
+  /**
+   * Set when the message was stored but could not be emailed to the company.
+   * Surfaced rather than swallowed: a creator who believes they replied, to a
+   * company that never heard from them, is how a deal dies unexplained.
+   */
+  relayFailed: boolean;
 };
 
 const MAX_MESSAGE_LENGTH = 4000;
@@ -41,20 +48,21 @@ export async function sendMessage(
   const chatId = String(formData.get("chat_id") ?? "");
   const raw = String(formData.get("message_text") ?? "").trim();
 
-  if (!chatId) return { error: "Missing conversation.", violation: null };
-  if (!raw) return { error: "Write a message first.", violation: null };
+  const fail = (error: string): SendMessageState => ({
+    error,
+    violation: null,
+    relayFailed: false,
+  });
+
+  if (!chatId) return fail("Missing conversation.");
+  if (!raw) return fail("Write a message first.");
   if (raw.length > MAX_MESSAGE_LENGTH) {
-    return {
-      error: `Messages are limited to ${MAX_MESSAGE_LENGTH} characters.`,
-      violation: null,
-    };
+    return fail(`Messages are limited to ${MAX_MESSAGE_LENGTH} characters.`);
   }
 
   // RLS already scopes this read to rooms the caller is a party to.
   const chat = await getDealChat(chatId);
-  if (!chat) {
-    return { error: "That conversation is not available.", violation: null };
-  }
+  if (!chat) return fail("That conversation is not available.");
 
   const { maskedText, isMasked, matched } = maskSensitiveData(raw);
 
@@ -71,9 +79,7 @@ export async function sendMessage(
     .select("id")
     .single();
 
-  if (error) {
-    return { error: "Your message could not be sent.", violation: null };
-  }
+  if (error) return fail("Your message could not be sent.");
 
   if (isMasked) {
     // §6: log which rule matched, redacted, for admin review — in addition to
@@ -92,11 +98,36 @@ export async function sendMessage(
     }
   }
 
+  // §6: relay the reply to the company as platform email. The masked text is
+  // what goes out — the same string that was stored, never `raw`.
+  const relay = await relayMessageToCompany({
+    to: chat.sender_email,
+    subject: relaySubject(chatId),
+    body: maskedText,
+    creatorDisplayName: profile.full_name,
+    // The reply path back into the platform. Never profile.primary_email.
+    creatorAlias: profile.inbound_alias,
+  });
+
+  await admin
+    .from("messages")
+    .update(
+      relay.ok
+        ? { relayed_at: new Date().toISOString(), relay_error: null }
+        : { relay_error: relay.error.slice(0, 500) },
+    )
+    .eq("id", inserted.id);
+
+  if (!relay.ok) {
+    console.error(`relay failed for message ${inserted.id}: ${relay.error}`);
+  }
+
   revalidatePath(`/inbox/${chatId}`);
 
   return {
     error: null,
     violation: isMasked ? { rules: matched } : null,
+    relayFailed: !relay.ok,
   };
 }
 

@@ -112,6 +112,9 @@ type Message = {
   sender_id: string | null;
   message_text: string;
   is_masked: boolean | null;
+  /** Set once the message reached the company as platform email (§6). */
+  relayed_at: string | null;
+  relay_error: string | null;
   created_at: string | null;
 };
 

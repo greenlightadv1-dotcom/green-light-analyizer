@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
+import { InboundAliasCard } from "@/components/settings/InboundAliasCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { requireProfile } from "@/lib/auth";
 
@@ -61,11 +61,7 @@ export default async function SettingsPage() {
         </GlassPanel>
 
         <div className="lg:col-span-2">
-          <EmptyState
-            title="Email intake setup"
-            spec="§5"
-            body="Your inbound alias plus step-by-step instructions for the one-time Gmail auto-forwarding rule. This is a manual Gmail setting the creator makes once — the app never connects to Gmail and never asks for Google OAuth."
-          />
+          <InboundAliasCard alias={profile.inbound_alias} />
         </div>
       </div>
     </>

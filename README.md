@@ -29,6 +29,9 @@ system, data model and business logic. Read it before changing anything here.
 All four migrations in `supabase/migrations/` are **applied**, and the Supabase
 security linter returns **zero lints**.
 
+Deploying? See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the Vercel + Resend
+setup, the first-admin bootstrap, and the pre-launch checklist.
+
 ## Getting started
 
 ```bash
@@ -256,7 +259,26 @@ revokes consent and still sees a verified badge has been told a lie about their
 own data, and so has the sponsor reading it. Self-reported data survives the
 disconnect; it was never the API's to take away.
 
-### Not built: the OAuth handshake
+### Outbound relay (§6)
+
+A creator's reply is stored, masked, and then emailed to the company from the
+platform's own address. `relayMessageToCompany()` has **no parameter that can
+carry a creator's real address** — `creatorAlias` is the §5.1 platform alias and
+`creatorDisplayName` is a name — so `primary_email` cannot leak into a header by
+accident. That is enforced by the type system on every build rather than by a
+test somebody could delete.
+
+`reply_to` is the creator's inbound alias, which closes the loop: the company
+replies, the reply lands on the alias, Resend webhooks it back, and the intake
+appends it to the same deal room. The company only ever holds a
+platform-controlled address, rotatable if abused.
+
+Delivery outcome is recorded per message (`relayed_at` / `relay_error`, both
+service-role-only). A relay that fails silently means the company never hears
+back while the creator believes they replied — so the composer says so, and the
+row records why.
+
+## Not built: the OAuth handshake
 
 `connectAnalytics` throws rather than pretending. Completing it needs a Google
 Cloud project with a verified consent screen for `yt-analytics.readonly`
@@ -319,7 +341,7 @@ Two smaller decisions worth knowing:
 
 ```bash
 npm test        # masking, §7.4 cap, geo parsing, tier rules, email
-                # parsing, webhook signatures — 70 assertions
+                # parsing, webhook signatures, HTML escaping — 79 assertions
 npm run build   # typecheck + lint + production build
 ```
 
@@ -330,6 +352,7 @@ psql "$DATABASE_URL" -f supabase/tests/rls_policies_test.sql          # 23
 psql "$DATABASE_URL" -f supabase/tests/chat_and_violations_test.sql   # 14
 psql "$DATABASE_URL" -f supabase/tests/media_kit_test.sql             # 12
 psql "$DATABASE_URL" -f supabase/tests/email_intake_test.sql          # 12
+psql "$DATABASE_URL" -f supabase/tests/outbound_relay_test.sql        # 9
 ```
 
 And the webhook endpoint itself, over real HTTP with real signatures:
@@ -356,9 +379,6 @@ processed.
   Flagged rather than silently widened — adding a platform is a product call.
 - Re-evaluation on reply. The Co-Pilot rates a room when it opens; a
   counter-offer arriving later does not currently move the rating.
-- Outbound relay. §6 says a creator's reply reaches the company as an email from
-  the platform's own address. The inbound half is built; the outbound half is
-  not, so replies currently stay in-app.
 - Category benchmark pricing. §7.1 says `content_category` should drive
   benchmark pricing but does not say from what table; `CATEGORY_CPM` in
   `src/lib/ai/evaluate.ts` is a placeholder needing real numbers.

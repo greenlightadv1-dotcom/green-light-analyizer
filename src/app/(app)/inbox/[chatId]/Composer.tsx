@@ -23,7 +23,7 @@ function SendButton() {
 export function Composer({ chatId }: { chatId: string }) {
   const [state, formAction] = useActionState<SendMessageState, FormData>(
     sendMessage,
-    { error: null, violation: null },
+    { error: null, violation: null, relayFailed: false },
   );
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -58,6 +58,16 @@ export function Composer({ chatId }: { chatId: string }) {
       {state.error ? (
         <p role="alert" className="text-xs text-red-300">
           {state.error}
+        </p>
+      ) : null}
+
+      {state.relayFailed ? (
+        <p
+          role="alert"
+          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100"
+        >
+          Saved to the conversation, but we could not email it to the company
+          just yet. Our team has been alerted — you do not need to resend.
         </p>
       ) : null}
 
