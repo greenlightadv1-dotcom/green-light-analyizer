@@ -34,8 +34,21 @@ setup, the first-admin bootstrap, and the pre-launch checklist.
 
 ## Getting started
 
+### Just looking at the UI — no keys needed
+
 ```bash
 npm install
+npm run dev
+```
+
+Open http://localhost:3000 and it lands on the interface preview with a mock
+dataset. Nothing touches a database. This works precisely *because* there is no
+configuration: the preview routes exist only while `NEXT_PUBLIC_SUPABASE_URL` is
+unset, and disappear the moment it is set.
+
+### Running the real product
+
+```bash
 cp .env.example .env.local     # fill in the two Supabase keys
 ```
 
