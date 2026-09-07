@@ -14,6 +14,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", roles: ["creator", "company", "admin"] },
   { href: "/inbox", label: "Deal inbox", roles: ["creator", "company", "admin"] },
+  { href: "/discover", label: "Discover creators", roles: ["company", "admin"] },
   { href: "/analyzer", label: "Manual analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", label: "Media kit", roles: ["creator", "admin"] },
   { href: "/settings", label: "Settings", roles: ["creator", "company", "admin"] },

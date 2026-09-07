@@ -98,28 +98,42 @@ export async function sendMessage(
     }
   }
 
-  // §6: relay the reply to the company as platform email. The masked text is
-  // what goes out — the same string that was stored, never `raw`.
-  const relay = await relayMessageToCompany({
-    to: chat.sender_email,
-    subject: relaySubject(chatId),
-    body: maskedText,
-    creatorDisplayName: profile.full_name,
-    // The reply path back into the platform. Never profile.primary_email.
-    creatorAlias: profile.inbound_alias,
-  });
+  // §6: relay the reply to the company as platform email — but only when
+  // there is actually an external inbox to relay to. The email relay exists
+  // for a sponsor who is not a Green Light account: a company_id on the room
+  // means the other party is signed in and already reading this thread here,
+  // so emailing them a copy of their own conversation would be redundant at
+  // best (and, for a message the company itself just sent, would mean
+  // emailing them their own words back). Company-side access (§3) made that
+  // case real; before it, every room's company_id was always null, and this
+  // branch always ran — this is a change in *when* it fires, not the relay
+  // logic itself.
+  const shouldRelay = chat.creator_id === profile.id && !chat.company_id;
 
-  await admin
-    .from("messages")
-    .update(
-      relay.ok
-        ? { relayed_at: new Date().toISOString(), relay_error: null }
-        : { relay_error: relay.error.slice(0, 500) },
-    )
-    .eq("id", inserted.id);
+  let relayFailed = false;
+  if (shouldRelay) {
+    const relay = await relayMessageToCompany({
+      to: chat.sender_email,
+      subject: relaySubject(chatId),
+      body: maskedText,
+      creatorDisplayName: profile.full_name,
+      // The reply path back into the platform. Never profile.primary_email.
+      creatorAlias: profile.inbound_alias,
+    });
 
-  if (!relay.ok) {
-    console.error(`relay failed for message ${inserted.id}: ${relay.error}`);
+    await admin
+      .from("messages")
+      .update(
+        relay.ok
+          ? { relayed_at: new Date().toISOString(), relay_error: null }
+          : { relay_error: relay.error.slice(0, 500) },
+      )
+      .eq("id", inserted.id);
+
+    if (!relay.ok) {
+      console.error(`relay failed for message ${inserted.id}: ${relay.error}`);
+      relayFailed = true;
+    }
   }
 
   revalidatePath(`/inbox/${chatId}`);
@@ -127,7 +141,7 @@ export async function sendMessage(
   return {
     error: null,
     violation: isMasked ? { rules: matched } : null,
-    relayFailed: !relay.ok,
+    relayFailed,
   };
 }
 

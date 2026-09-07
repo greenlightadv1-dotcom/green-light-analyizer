@@ -26,8 +26,9 @@ system, data model and business logic. Read it before changing anything here.
 | URL | `https://kpuecrvdrkhemyvibyfa.supabase.co` |
 | Plan | Free tier ($0/mo), per the zero-cost MVP constraint in §9 |
 
-All four migrations in `supabase/migrations/` are **applied**, and the Supabase
-security linter returns **zero lints**.
+All migrations in `supabase/migrations/` are **applied**. The Supabase
+security linter returns one intentional warning — see
+“Company-side access” below — and otherwise zero lints.
 
 Deploying? See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the Vercel + Resend
 setup, the first-admin bootstrap, and the pre-launch checklist.
@@ -73,8 +74,9 @@ src/
   app/
     (auth)/           login + forced first-login password reset (§4)
     (app)/            authenticated shell: dashboard, deal inbox + rooms,
-                      manual analyzer, media kit, settings, admin
-                      accounts + violation queue
+                      manual analyzer, media kit, discover (company browse +
+                      send-offer, §3), settings, admin accounts + violation
+                      queue
     suspended/        terminal state for a banned account (§6, §12)
     auth/signout/
   components/
@@ -87,7 +89,8 @@ src/
                       and the §7.4 verification cap as a pure rule
     email/            §5 intake: payload parsing, Svix signature
                       verification, and the deal-room pipeline
-    deals/            deal-chat reads + the §7.4 evaluation payload builder
+    deals/            deal-chat reads, the §7.4 evaluation payload builder,
+                      and the §3 creator directory RPC wrapper
     media-kit/        §7.3 verification matrix, §8 tier limits, audience
                       geography parsing, and the §12 disconnect
     mask.ts           contact-info stripping (§6.1) — server-side, pre-persist
@@ -119,7 +122,7 @@ utilities carrying the Liquid Glass recipe verbatim.
 
 ## Security model (§6, §12)
 
-RLS is enabled on all four tables, with 11 policies. Row policies gate *rows*;
+RLS is enabled on all four original tables. Row policies gate *rows*;
 column privileges gate *columns*, and both are needed — a row policy saying
 "a creator may update their own profile" also permits `SET role = 'admin'`
 unless the column grant says otherwise.
@@ -128,6 +131,7 @@ unless the column grant says otherwise.
 |---|---|
 | `anon` | Nothing. No policy is scoped to it, and since `0005` it holds no table grant either. |
 | creator | Own rows only. Writes limited to `full_name`, their own reach figures and `declared_top_countries`, and deal status short of `paid`. |
+| company | The rooms it's a party to (`deal_chats`/`messages` where `company_id` = itself, §6.2), every creator's `media_kits` (no PII there — §7 — and it needs this to price an offer), and the safe columns of `creator_directory()`. Never a raw row of `profiles` for anyone but itself (§10 below). |
 | admin | All rows, via `private.is_admin()`. |
 | `service_role` | Bypasses RLS. Used for account creation, the inbound-email webhook and the OAuth analytics sync. |
 
@@ -304,6 +308,77 @@ service-role-only). A relay that fails silently means the company never hears
 back while the creator believes they replied — so the composer says so, and the
 row records why.
 
+The relay only fires for a creator's reply in a room with no `company_id` —
+that is, a room whose other side is an email correspondent, not a platform
+account. Since the “Company-side access” section above, a room *can*
+have a signed-in company on the other side, and for that room the relay would
+be pointless at best (both parties already share the room) and wrong at worst
+(a message the company itself just sent would get emailed back to the company).
+`sendMessage` checks `chat.company_id` before calling `relayMessageToCompany()`
+for exactly this reason.
+
+## Company-side access (§3)
+
+Until this pass, `company` had zero RLS policies anywhere: a signed-in company
+account read an empty inbox and an empty dashboard, with no way to reach a
+single row that named it, even as `deal_chats.company_id`. `/discover` is now
+where a company browses creators and opens a room; `/dashboard` and `/inbox`
+show what §3 already implied they should.
+
+**The directory is a function, not a view.** The natural design — a
+`security_invoker` view over `profiles` — doesn't actually work here: RLS
+gates rows, and Postgres column privileges can't be scoped to "this column,
+except on someone else's row." Any row policy letting `company` read a
+creator's `profiles` row at all would hand it the *whole* row over
+PostgREST — `primary_email` and `inbound_alias` included — regardless of what
+a view built on top only bothered to select. `public.creator_directory()` is
+a `SECURITY DEFINER` function instead: its column list (`id`, `full_name`,
+`region`, plus no-PII `media_kits` fields) is fixed in the function's own SQL
+text, not in a grantable privilege, so there is no query shape that gets more
+out of it than the columns it names. It returns zero rows unless the caller's
+own profile role is `company` or `admin` — checked with `auth.uid()` inside
+the function, the same pattern `private.is_admin()` already uses. This is
+also why the security linter is not clean: `authenticated_security_definer_
+function_executable` flags exactly this function, because a `SECURITY
+DEFINER` function callable by signed-in users is unusual enough to warn about
+in general. Here it's the point.
+
+`media_kits`, unlike `profiles`, carries no contact PII — it's the creator's
+own public pitch (§7) — so it gets a normal RLS policy rather than a function:
+`media_kits_select` now also allows any `company` row to read any creator's
+kit. That one policy is also what makes offer pricing correct:
+`buildEvaluationInput()` (§7.4) already reads `media_kits` through the
+*caller's own* client, so a company's offer prices against the creator's real
+reach data, the same call a creator's own Manual Analyzer run makes on
+themselves — no separate code path needed.
+
+`deal_chats` and `messages` policies were extended, not replaced: a room and
+its messages are now visible to `company_id = auth.uid()` in addition to
+`creator_id = auth.uid()`, and either side can move `deal_status` forward
+(never to `paid` — the §12 escrow guard is untouched). `/discover`'s
+"Send an offer" control mirrors the Manual Analyzer exactly — a preview
+step that calls `evaluateOffer()` and persists nothing, then an explicit
+second submit that opens the room through `service_role`, because
+`ai_evaluation` and `offered_amount` are withheld from `authenticated` by
+column grant regardless of which side is asserting them.
+
+`supabase/tests/company_access_test.sql` is the regression suite for all of
+this (11 assertions, same role-impersonation technique as
+`rls_policies_test.sql`), covering: the company on a deal reading its room,
+messages and the creator's kit; an unrelated company reading neither the deal
+nor a raw `profiles` row; the directory listing for a company and returning
+nothing for a creator; that `primary_email` is not merely hidden but genuinely
+not a column the function returns; and the `paid` guard holding for a company
+exactly as it does for a creator.
+
+**Not done in this pass:** `/inbox` and the deal room still label a room by
+`sender_email` (the address on file, which for a company-initiated deal is
+the company's own address) rather than the counterparty's display name —
+correct but not the friendliest label when both sides are signed-in accounts.
+Fixing it means joining the other party's `full_name` into `listDealChats()` /
+`getDealChat()`, which is a small, separate change against the same tables
+this section already covers.
+
 ## Not built: the OAuth handshake
 
 `connectAnalytics` throws rather than pretending. Completing it needs a Google
@@ -406,6 +481,7 @@ psql "$DATABASE_URL" -f supabase/tests/chat_and_violations_test.sql   # 14
 psql "$DATABASE_URL" -f supabase/tests/media_kit_test.sql             # 12
 psql "$DATABASE_URL" -f supabase/tests/email_intake_test.sql          # 12
 psql "$DATABASE_URL" -f supabase/tests/outbound_relay_test.sql        # 9
+psql "$DATABASE_URL" -f supabase/tests/company_access_test.sql        # 11
 ```
 
 And the webhook endpoint itself, over real HTTP with real signatures:
@@ -435,10 +511,11 @@ processed.
 - Category benchmark pricing. §7.1 says `content_category` should drive
   benchmark pricing but does not say from what table; `CATEGORY_CPM` in
   `src/lib/ai/evaluate.ts` is a placeholder needing real numbers.
-- **Company-side access.** The `company` role has no policy on any table, so a
-  signed-in company account currently reads nothing and its inbox is empty.
-  That is the safe direction to be wrong in, but it needs designing. Do not fix
-  it by adding `company_id = auth.uid()` to `profiles_select`: one such policy
-  hands companies whole creator rows including `primary_email` and
-  `inbound_alias`. The shape that works is a column-limited creator directory
-  view with `security_invoker = on`.
+- Room/message labelling by counterparty name. See the note at the end of
+  the “Company-side access” section — `sender_email` is correct
+  but not the friendliest label once both sides can be signed-in accounts.
+- A `/preview` route for `/discover`. Every other authenticated page has a
+  no-database mock twin under `/preview/*`; `/discover` does not yet, because
+  `mockProfile.role` in `src/lib/preview/mock.ts` is fixed to `"creator"` and
+  the sidebar link only ever renders for `company`/`admin`. Reviewing the
+  Discover UI today means signing in as a real company account.

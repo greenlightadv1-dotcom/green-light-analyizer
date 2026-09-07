@@ -28,6 +28,28 @@ export type SponsorshipType =
 /** Shape stored in declared_top_countries / verified_top_countries (§10). */
 export type CountryShare = { country: string; pct: number };
 
+/**
+ * One row of `public.creator_directory()` — the company-facing browse list
+ * (migration 0010). Deliberately not a subset of Profile: the function's own
+ * SQL never selects primary_email or inbound_alias, so there is no type-level
+ * risk of a caller assuming this shape carries either.
+ */
+export type CreatorDirectoryEntry = {
+  creator_id: string;
+  full_name: string;
+  region: Region | null;
+  content_category: string | null;
+  content_language: string | null;
+  avg_views: number | null;
+  avg_ccv: number | null;
+  engagement_rate: number | null;
+  declared_top_countries: CountryShare[] | null;
+  /** Only non-null when the strongest kit is audience_verified. */
+  verified_top_countries: CountryShare[] | null;
+  audience_verified: boolean;
+  platforms: Platform[] | null;
+};
+
 type Profile = {
   id: string;
   full_name: string;
@@ -175,7 +197,13 @@ export type Database = {
       >;
     };
     Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Functions: {
+      /** SECURITY DEFINER RPC (migration 0010) — see CreatorDirectoryEntry. */
+      creator_directory: {
+        Args: Record<string, never>;
+        Returns: CreatorDirectoryEntry[];
+      };
+    };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
   };
