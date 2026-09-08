@@ -1,4 +1,7 @@
+"use client";
+
 import { VerifiedTag } from "@/components/deals/VerifiedTag";
+import { useTranslation } from "@/components/LocaleProvider";
 import type { CountryShare } from "@/lib/types/database";
 
 /**
@@ -16,11 +19,12 @@ export function CountryShareList({
   verified: boolean;
   emptyHint: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-xs font-medium tracking-wide text-fg/70 uppercase">
-          Audience geography
+          {t("mediaKit.audienceGeography")}
         </h3>
         <VerifiedTag verified={verified} />
       </div>

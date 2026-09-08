@@ -3,20 +3,22 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/Button";
+import { useTranslation } from "@/components/LocaleProvider";
 import { maskSensitiveData } from "@/lib/mask";
 import { sendMessage, type SendMessageState } from "./actions";
 
-const RULE_LABELS: Record<string, string> = {
-  email: "an email address",
-  phone: "a phone number",
-  social: "an external messaging link",
+const RULE_LABEL_KEYS: Record<string, string> = {
+  email: "inbox.ruleEmail",
+  phone: "inbox.rulePhone",
+  social: "inbox.ruleSocial",
 };
 
 function SendButton() {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <Button type="submit" disabled={pending} fullWidth={false} className="px-6">
-      {pending ? "Sending…" : "Send"}
+      {pending ? t("common.sending") : t("common.send")}
     </Button>
   );
 }
@@ -39,12 +41,17 @@ export function Composer({
   demo?: boolean;
   onDemoSend?: (maskedText: string) => void;
 }) {
+  const { t } = useTranslation();
   const [state, formAction] = useActionState<SendMessageState, FormData>(
     sendMessage,
     { error: null, violation: null, relayFailed: false },
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [demoViolation, setDemoViolation] = useState<string[] | null>(null);
+
+  function ruleList(rules: string[]) {
+    return rules.map((r) => (RULE_LABEL_KEYS[r] ? t(RULE_LABEL_KEYS[r]) : r)).join(` ${t("common.and")} `);
+  }
 
   function handleDemoSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,7 +86,7 @@ export function Composer({
 
       <div className="flex items-end gap-2">
         <label htmlFor="message_text" className="sr-only">
-          Message
+          {t("inbox.message")}
         </label>
         <textarea
           id="message_text"
@@ -87,7 +94,7 @@ export function Composer({
           rows={2}
           maxLength={4000}
           required
-          placeholder="Write a reply…"
+          placeholder={t("inbox.writeReply")}
           className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
         />
         <SendButton />
@@ -104,8 +111,7 @@ export function Composer({
           role="alert"
           className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
-          Saved to the conversation, but we could not email it to the company
-          just yet. Our team has been alerted — you do not need to resend.
+          {t("inbox.relayFailed")}
         </p>
       ) : null}
 
@@ -114,10 +120,7 @@ export function Composer({
           role="alert"
           className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
-          Contact details were removed:{" "}
-          {demoViolation.map((r) => RULE_LABELS[r] ?? r).join(" and ")}. In the
-          live product this is also logged for admin review and can permanently
-          close the account.
+          {t("inbox.contactRemovedDemo", { rules: ruleList(demoViolation) })}
         </p>
       ) : null}
 
@@ -126,19 +129,12 @@ export function Composer({
           role="alert"
           className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
-          Your message was sent, but{" "}
-          {state.violation.rules
-            .map((r) => RULE_LABELS[r] ?? r)
-            .join(" and ")}{" "}
-          was removed. Sharing direct contact details or moving a deal
-          off-platform breaches the terms and can permanently close your
-          account — this attempt has been logged for review.
+          {t("inbox.contactRemovedLive", { rules: ruleList(state.violation.rules) })}
         </p>
       ) : null}
 
       <p className="text-[11px] text-fg/30">
-        Emails, phone numbers and WhatsApp / Telegram / Discord links are removed
-        automatically before your message is saved.
+        {t("inbox.maskingFooterNote")}
       </p>
     </form>
   );

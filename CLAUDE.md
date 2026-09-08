@@ -539,13 +539,32 @@ its own native-script name and `dir`.
   {en,ar,fr,es,de}.ts`. English is the structural source of truth; the other
   four are typed against it (`Dictionary`), so a missing/extra key across
   any of them is a type error, not a silent runtime fallback.
-- **Translation scope, deliberately partial**: the shared chrome (Sidebar
-  nav labels, TopBar, the theme/language menus' own labels) and the public
-  landing page — the two surfaces that reach every screen or every visitor,
-  same reasoning as the theming rollout in this section. Page-level content
-  (dashboard cards, deal data, admin tables and forms) stays English for
-  this pass; translating that is a much larger follow-up this file doesn't
-  claim is done.
+- **Translation scope, deliberately partial.** The shared chrome (Sidebar
+  nav labels, TopBar, the theme/language menus' own labels), the public
+  landing page, and — as of a later pass — the inner content of Dashboard,
+  Manual Analyzer, Deal Inbox, Media Kit and Settings (form fields, card
+  titles, table headings, badges, empty/error states) all run through the
+  `t()` dictionaries via seven namespaces (`common`, `badges`, `dashboard`,
+  `analyzer`, `inbox`, `mediaKit`, `settings`) on top of the original
+  `nav`/`topbar`/`theme`/`language`/`landing`. Still English, disclosed
+  rather than silently missed:
+  - **Admin pages** (`/admin/*`) — not part of this pass.
+  - **Data-driven strings that live in `lib/` files, not JSX** — the
+    per-platform verification notes in `lib/media-kit/platforms.ts`
+    (`VERIFICATION_SUPPORT[...].note`, e.g. "Twitch exposes no per-viewer
+    country data…") and the `sponsorship_type` values stored in and read
+    back from the database (`chat.sponsorship_type?.replace(/_/g, " ")`).
+    Translating those means making a data module locale-aware, a real
+    follow-up this file doesn't claim is done.
+  - **User- and AI-generated content** — chat message text, the Manual
+    Analyzer's canned `reasoning` string, and anything else that is data
+    rather than UI chrome is never translated; per §12, offer/chat text is
+    evaluation-only and isn't rerouted through translation either.
+  - The `<option>` elements under the Analyzer's sponsorship-type `<select>`
+    carry an explicit `bg-slate-900 text-white dark:bg-slate-900
+    dark:text-white` class: native option popups don't reliably inherit the
+    app's `--color-fg` theme token in dark mode, so they're pinned dark and
+    readable regardless of theme rather than left to inherit.
 - **RTL layout**: the shared chrome's physical Tailwind utilities
   (`border-l-*`, `pl-*`/`pr-*`, `right-0`/`left-0`, `text-left`) were
   converted to logical ones (`border-s-*`, `ps-*`/`pe-*`, `end-0`/`start-0`,

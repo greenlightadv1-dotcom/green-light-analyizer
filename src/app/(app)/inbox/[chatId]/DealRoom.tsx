@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { useTranslation } from "@/components/LocaleProvider";
 import type { Message } from "@/lib/deals/queries";
 import { Composer } from "./Composer";
 
@@ -39,6 +40,7 @@ export function DealRoom({
    */
   demo?: boolean;
 }) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +81,7 @@ export function DealRoom({
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-fg/35">
-            No messages yet. Open the conversation below.
+            {t("inbox.noMessagesYet")}
           </p>
         ) : (
           messages.map((message) => {
@@ -121,15 +123,15 @@ export function DealRoom({
                     </span>
                     {system ? (
                       <span className="text-[10px] text-white/35">
-                        via Green Light
+                        {t("inbox.viaGreenLight")}
                       </span>
                     ) : null}
                     {message.is_masked ? (
                       <span
                         className="text-[10px] text-amber-700/70 dark:text-amber-200/70"
-                        title="Contact details were removed from this message by platform policy."
+                        title={t("inbox.filteredTitle")}
                       >
-                        filtered
+                        {t("inbox.filtered")}
                       </span>
                     ) : null}
                   </div>

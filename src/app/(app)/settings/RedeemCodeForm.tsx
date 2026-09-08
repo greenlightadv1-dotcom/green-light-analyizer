@@ -4,22 +4,25 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { useTranslation } from "@/components/LocaleProvider";
 import { redeemCode, type RedeemCodeState } from "./actions";
 
 function SubmitButton({ demo }: { demo: boolean }) {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <Button
       type={demo ? "button" : "submit"}
       fullWidth={false}
       disabled={pending}
     >
-      {pending ? "Redeeming…" : "Redeem"}
+      {pending ? t("common.redeeming") : t("common.redeem")}
     </Button>
   );
 }
 
 export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
+  const { t } = useTranslation();
   const [state, formAction] = useActionState<RedeemCodeState, FormData>(
     redeemCode,
     { error: null, success: false },
@@ -34,7 +37,7 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
         htmlFor="code"
         className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
       >
-        Have a promo code?
+        {t("settings.promoCodeLabel")}
       </label>
       <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
         <input
@@ -54,7 +57,7 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
       ) : null}
       {state.success ? (
         <p className="mt-3 text-sm text-brand-green">
-          Code redeemed — your plan has been updated.
+          {t("settings.redeemed")}
         </p>
       ) : null}
     </form>

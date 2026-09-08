@@ -1,3 +1,5 @@
+"use client";
+
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CountryShareList } from "@/components/media-kit/CountryShareList";
 import { PlatformCard } from "@/components/media-kit/PlatformCard";
@@ -7,7 +9,8 @@ import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { kitByPlatform, type MediaKit } from "@/lib/media-kit/queries";
+import { useTranslation } from "@/components/LocaleProvider";
+import { kitByPlatform, type MediaKit } from "@/lib/media-kit/helpers";
 import {
   PLATFORMS,
   PLATFORM_LABELS,
@@ -35,6 +38,7 @@ export function MediaKitView({
   oauthConnected?: string | null;
   oauthError?: string | null;
 }) {
+  const { t } = useTranslation();
   const byPlatform = kitByPlatform(kits);
   const limit = maxConnections(plan);
   const verifiedCount = kits.filter((k) => k.audience_verified).length;
@@ -42,24 +46,25 @@ export function MediaKitView({
   return (
     <>
       <SectionHeader
-        title="Media kit"
-        description="What sponsors see about your reach. Stats come from platform APIs or carry a self-reported tag — never a screenshot."
+        title={t("mediaKit.title")}
+        description={t("mediaKit.description")}
       />
 
       {oauthConnected ? (
         <div className="mb-4">
           <Alert tone="info">
-            {PLATFORM_LABELS[oauthConnected as Platform] ?? oauthConnected}{" "}
-            connected — verified audience geography will sync below.
+            {t("mediaKit.connectedNote", {
+              platform: PLATFORM_LABELS[oauthConnected as Platform] ?? oauthConnected,
+            })}
           </Alert>
         </div>
       ) : null}
       {oauthError ? (
         <div className="mb-4">
           <Alert>
-            Couldn&apos;t connect{" "}
-            {PLATFORM_LABELS[oauthError as Platform] ?? oauthError}. Try
-            again, or check that the connection hasn&apos;t already expired.
+            {t("mediaKit.connectFailedNote", {
+              platform: PLATFORM_LABELS[oauthError as Platform] ?? oauthError,
+            })}
           </Alert>
         </div>
       ) : null}
@@ -67,41 +72,41 @@ export function MediaKitView({
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
-            Platforms
+            {t("mediaKit.platforms")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {kits.length} <span className="text-sm text-fg/35">/ {limit}</span>
           </p>
           <p className="mt-2 text-xs text-fg/40">
-            {plan} plan.{" "}
+            {t("mediaKit.planLabel", { plan })}{" "}
             {canAddConnection(plan, kits.length)
-              ? "You can connect more."
-              : "Upgrade over Discord for more."}
+              ? t("mediaKit.canConnectMore")
+              : t("mediaKit.upgradeForMore")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
-            Verified audiences
+            {t("mediaKit.verifiedAudiences")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {verifiedCount}
           </p>
           <p className="mt-2 text-xs text-fg/40">
             {canVerifyAudience(plan)
-              ? "Verified geography is included on your plan."
-              : "Verified geography is a Pro and Elite feature."}
+              ? t("mediaKit.verifiedIncluded")
+              : t("mediaKit.verifiedProFeature")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
-            Pricing impact
+            {t("mediaKit.pricingImpact")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-fg/60">
             {verifiedCount > 0
-              ? "Verified data is priced with full confidence."
-              : "Without verified geography, a high-value deal can't be rated green."}
+              ? t("mediaKit.pricingImpactVerified")
+              : t("mediaKit.pricingImpactUnverified")}
           </p>
         </GlassPanel>
       </div>
@@ -118,7 +123,11 @@ export function MediaKitView({
                 platform={platform}
                 kit={kit}
                 locked={blocked}
-                lockReason={`Your ${plan} plan covers ${limit} platform connections and you have used them all. Upgrade over Discord to add ${PLATFORM_LABELS[platform]}.`}
+                lockReason={t("mediaKit.lockReason", {
+                  plan,
+                  limit,
+                  platform: PLATFORM_LABELS[platform],
+                })}
                 verifiedGeoConnected={
                   REAL_OAUTH_PLATFORMS.includes(platform) &&
                   kit?.audience_verified === true
@@ -141,7 +150,7 @@ export function MediaKitView({
                       null
                     }
                     verified={kit.audience_verified === true}
-                    emptyHint="No audience geography yet. Add it above so offers can be priced against what a sponsor is targeting."
+                    emptyHint={t("mediaKit.noAudienceGeoYet")}
                   />
 
                   <VerificationPanel
@@ -173,8 +182,7 @@ export function MediaKitView({
         product decision.
       */}
       <p className="mt-6 text-xs leading-relaxed text-fg/30">
-        TikTok is not listed here: the schema&apos;s platform set covers YouTube,
-        Twitch, Kick and Instagram only.
+        {t("mediaKit.tiktokNote")}
       </p>
 
       <div className="mt-4">

@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { useTranslation } from "@/components/LocaleProvider";
 import { saveMediaKit, type MediaKitState } from "@/lib/media-kit/actions";
 import { formatCountryShares } from "@/lib/media-kit/countries";
 import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -14,9 +15,10 @@ import type { CountryShare, Platform } from "@/lib/types/database";
 
 function SaveButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <Button type="submit" disabled={pending} className="w-auto px-5">
-      {pending ? "Saving…" : label}
+      {pending ? t("common.saving") : label}
     </Button>
   );
 }
@@ -47,6 +49,7 @@ export function PlatformCard({
    */
   verifiedGeoConnected?: boolean;
 }) {
+  const { t } = useTranslation();
   const [state, formAction] = useActionState<MediaKitState, FormData>(
     saveMediaKit,
     { error: null, savedPlatform: null },
@@ -80,7 +83,7 @@ export function PlatformCard({
           aria-expanded={open}
           className="text-xs text-fg/45 transition hover:text-fg/80"
         >
-          {open ? "Close" : kit ? "Edit" : "Add"}
+          {open ? t("common.close") : kit ? t("common.edit") : t("common.add")}
         </button>
       </div>
 
@@ -91,7 +94,7 @@ export function PlatformCard({
           <Field
             id={`${platform}-handle`}
             name="platform_handle"
-            label="Handle"
+            label={t("mediaKit.handle")}
             defaultValue={kit?.platform_handle ?? ""}
             placeholder="@yourchannel"
           />
@@ -102,7 +105,7 @@ export function PlatformCard({
               name="avg_views"
               type="number"
               min={0}
-              label="Average views"
+              label={t("mediaKit.avgViews")}
               defaultValue={kit?.avg_views ?? ""}
             />
             <Field
@@ -110,8 +113,8 @@ export function PlatformCard({
               name="avg_ccv"
               type="number"
               min={0}
-              label="Average CCV"
-              hint="Live concurrent viewers, if you stream."
+              label={t("mediaKit.avgCcv")}
+              hint={t("mediaKit.avgCcvHint")}
               defaultValue={kit?.avg_ccv ?? ""}
             />
           </div>
@@ -124,14 +127,14 @@ export function PlatformCard({
               step="0.01"
               min={0}
               max={100}
-              label="Engagement %"
-              hint="Likes + comments ÷ views."
+              label={t("mediaKit.engagementPct")}
+              hint={t("mediaKit.engagementHint")}
               defaultValue={kit?.engagement_rate ?? ""}
             />
             <Field
               id={`${platform}-category`}
               name="content_category"
-              label="Category"
+              label={t("mediaKit.category")}
               placeholder="gaming, tech, beauty…"
               defaultValue={kit?.content_category ?? ""}
             />
@@ -140,7 +143,7 @@ export function PlatformCard({
           <Field
             id={`${platform}-language`}
             name="content_language"
-            label="Language"
+            label={t("mediaKit.language")}
             placeholder="Arabic, English…"
             defaultValue={kit?.content_language ?? ""}
           />
@@ -148,8 +151,7 @@ export function PlatformCard({
           {verifiedGeoConnected ? (
             <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3">
               <p className="text-xs leading-relaxed text-brand-green">
-                Audience geography is verified via your connected account —
-                see below. Disconnect above to enter it manually again.
+                {t("mediaKit.audienceGeoVerifiedNote")}
               </p>
             </div>
           ) : (
@@ -158,7 +160,7 @@ export function PlatformCard({
                 htmlFor={`${platform}-countries`}
                 className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
               >
-                Where your audience is
+                {t("mediaKit.whereAudienceIs")}
               </label>
               <textarea
                 id={`${platform}-countries`}
@@ -171,17 +173,15 @@ export function PlatformCard({
                 className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
               />
               <p className="text-xs text-fg/45">
-                One country per line: two-letter code, then a percentage.
-                This is recorded as self-reported until you connect platform
-                analytics.
+                {t("mediaKit.countriesHint")}
               </p>
             </div>
           )}
 
           {state.error ? <Alert>{state.error}</Alert> : null}
-          {saved ? <Alert tone="info">Saved.</Alert> : null}
+          {saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
-          <SaveButton label={kit ? "Save changes" : "Add platform"} />
+          <SaveButton label={kit ? t("mediaKit.saveChanges") : t("mediaKit.addPlatform")} />
         </form>
       )}
     </GlassPanel>

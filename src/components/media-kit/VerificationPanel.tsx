@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslation } from "@/components/LocaleProvider";
 import {
   connectAnalytics,
   disconnectAnalytics,
@@ -18,13 +19,14 @@ const REAL_OAUTH_PLATFORMS: Platform[] = ["youtube", "instagram"];
 
 function SyncButton() {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <button
       type="submit"
       disabled={pending}
       className="text-xs text-brand-green underline underline-offset-4 transition hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Syncing…" : "Sync now"}
+      {pending ? t("common.syncing") : t("mediaKit.syncNow")}
     </button>
   );
 }
@@ -53,6 +55,7 @@ export function VerificationPanel({
   /** True when this platform's OAuth app is actually registered (client ID/secret present). */
   configured: boolean;
 }) {
+  const { t } = useTranslation();
   const support = VERIFICATION_SUPPORT[platform];
   const availability = verificationAvailability(platform, plan);
   const [syncState, syncAction] = useActionState<SyncVerifiedGeoState, FormData>(
@@ -64,7 +67,7 @@ export function VerificationPanel({
     return (
       <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3.5">
         <p className="text-xs leading-relaxed text-fg/60">
-          Verified audience data is syncing from {support.source}.
+          {t("mediaKit.syncingFromSource", { source: support.source })}
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-4">
@@ -81,7 +84,7 @@ export function VerificationPanel({
               type="submit"
               className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
             >
-              Disconnect
+              {t("common.disconnect")}
             </button>
           </form>
         </div>
@@ -90,12 +93,11 @@ export function VerificationPanel({
           <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">{syncState.error}</p>
         ) : null}
         {syncState.synced ? (
-          <p className="mt-2 text-[11px] text-brand-green">Synced.</p>
+          <p className="mt-2 text-[11px] text-brand-green">{t("common.synced")}</p>
         ) : null}
 
         <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
-          Disconnecting clears your verified audience data immediately and drops
-          the badge.
+          {t("mediaKit.disconnectClearsNote")}
         </p>
       </div>
     );
@@ -113,11 +115,10 @@ export function VerificationPanel({
     return (
       <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
         <p className="text-xs leading-relaxed text-fg/50">
-          Verified audience geography from {support.source} is included on Pro
-          and Elite.
+          {t("mediaKit.includedProElite", { source: support.source })}
         </p>
         <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
-          Upgrades are handled over Discord — there is no billing in the app.
+          {t("mediaKit.upgradesOverDiscordNote")}
         </p>
       </div>
     );
@@ -132,13 +133,12 @@ export function VerificationPanel({
           type="submit"
           className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
         >
-          Connect {support.source.split(" ")[0]} analytics
+          {t("mediaKit.connectAnalytics", { source: support.source.split(" ")[0] })}
         </button>
       </form>
       {!configured ? (
         <p className="mt-2 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
-          Not available yet — this connection is waiting on platform app
-          review.
+          {t("mediaKit.pendingReview")}
         </p>
       ) : null}
     </div>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/components/LocaleProvider";
 import type { AiEvaluation } from "@/lib/types/database";
 
 /**
@@ -14,10 +17,10 @@ const STYLES: Record<AiEvaluation, string> = {
   red: "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200",
 };
 
-const LABELS: Record<AiEvaluation, string> = {
-  green: "Green light",
-  yellow: "Proceed with care",
-  red: "High risk",
+const LABEL_KEYS: Record<AiEvaluation, string> = {
+  green: "badges.greenLight",
+  yellow: "badges.proceedWithCare",
+  red: "badges.highRisk",
 };
 
 export function RiskBadge({
@@ -29,12 +32,14 @@ export function RiskBadge({
   capped?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
+
   if (!risk) {
     return (
       <span
         className={`inline-flex items-center rounded-full border border-fg/10 bg-fg/5 px-2.5 py-0.5 text-xs text-fg/40 ${className}`}
       >
-        Not evaluated
+        {t("badges.notEvaluated")}
       </span>
     );
   }
@@ -42,15 +47,11 @@ export function RiskBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${STYLES[risk]} ${className}`}
-      title={
-        capped
-          ? "Capped at yellow: the audience data behind this rating is self-reported, and the deal is high-value (§7.4)."
-          : undefined
-      }
+      title={capped ? t("badges.cappedTooltip") : undefined}
     >
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
-      {LABELS[risk]}
-      {capped ? <span className="opacity-70">· capped</span> : null}
+      {t(LABEL_KEYS[risk])}
+      {capped ? <span className="opacity-70">· {t("badges.capped")}</span> : null}
     </span>
   );
 }

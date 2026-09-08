@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "@/components/LocaleProvider";
 import type { DealStatus } from "@/lib/types/database";
 
 const STYLES: Record<DealStatus, string> = {
@@ -8,19 +11,20 @@ const STYLES: Record<DealStatus, string> = {
   disputed: "bg-red-500/15 text-red-700 dark:text-red-200",
 };
 
-const LABELS: Record<DealStatus, string> = {
-  new: "New",
-  negotiating: "Negotiating",
-  agreed: "Agreed",
-  paid: "Paid",
-  disputed: "Disputed",
+const LABEL_KEYS: Record<DealStatus, string> = {
+  new: "badges.statusNew",
+  negotiating: "badges.statusNegotiating",
+  agreed: "badges.statusAgreed",
+  paid: "badges.statusPaid",
+  disputed: "badges.statusDisputed",
 };
 
 export function StatusBadge({ status }: { status: DealStatus | null }) {
+  const { t } = useTranslation();
   const s = status ?? "new";
   return (
     <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${STYLES[s]}`}>
-      {LABELS[s]}
+      {t(LABEL_KEYS[s])}
     </span>
   );
 }

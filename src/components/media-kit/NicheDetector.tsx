@@ -3,17 +3,19 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/Alert";
+import { useTranslation } from "@/components/LocaleProvider";
 import { detectNiche, type DetectNicheState } from "@/lib/media-kit/actions";
 
 function DetectButton() {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <button
       type="submit"
       disabled={pending}
       className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Detecting…" : "Detect niche"}
+      {pending ? t("common.detecting") : t("mediaKit.detectNiche")}
     </button>
   );
 }
@@ -32,6 +34,7 @@ export function NicheDetector({
   currentCategory: string | null;
   currentTags: string[] | null;
 }) {
+  const { t } = useTranslation();
   const [state, formAction] = useActionState<DetectNicheState, FormData>(
     detectNiche,
     { error: null, result: null },
@@ -40,7 +43,7 @@ export function NicheDetector({
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
       <p className="text-xs font-medium tracking-wide text-fg/70 uppercase">
-        Niche & tags
+        {t("mediaKit.nicheAndTags")}
       </p>
 
       {currentCategory ? (
@@ -60,7 +63,7 @@ export function NicheDetector({
           ) : null}
         </div>
       ) : (
-        <p className="mt-2 text-xs text-fg/40">Not detected yet.</p>
+        <p className="mt-2 text-xs text-fg/40">{t("mediaKit.notDetectedYet")}</p>
       )}
 
       <form action={formAction} className="mt-3">
@@ -75,13 +78,12 @@ export function NicheDetector({
       ) : null}
       {state.result ? (
         <p className="mt-2.5 text-xs text-brand-green">
-          Detected: {state.result.category}
+          {t("mediaKit.detected", { category: state.result.category })}
         </p>
       ) : null}
 
       <p className="mt-2.5 text-[11px] leading-relaxed text-fg/30">
-        AI-generated from your recent titles/captions — overwrites the
-        category above, and never stores the raw text this reads.
+        {t("mediaKit.nicheFooterNote")}
       </p>
     </div>
   );

@@ -1,7 +1,10 @@
+"use client";
+
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { VerifiedTag } from "@/components/deals/VerifiedTag";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { AnalyzerForm } from "@/app/(app)/analyzer/AnalyzerForm";
+import { useTranslation } from "@/components/LocaleProvider";
 import type { MediaKit } from "@/lib/media-kit/queries";
 
 /** Manual Analyzer (§5.1), presentation only. Shared with /preview. */
@@ -15,13 +18,14 @@ export function AnalyzerView({
   > | null;
   demo?: boolean;
 }) {
+  const { t } = useTranslation();
   const audienceVerified = kit?.audience_verified === true;
 
   return (
     <>
       <SectionHeader
-        title="Manual analyzer"
-        description="Paste an offer you received anywhere and get an instant price recommendation and risk rating. No email connection required."
+        title={t("analyzer.title")}
+        description={t("analyzer.description")}
       />
 
       <div className="grid gap-4 lg:grid-cols-5">
@@ -34,7 +38,7 @@ export function AnalyzerView({
           <GlassPanel className="p-5">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-fg">
-                Pricing basis
+                {t("analyzer.pricingBasis")}
               </h2>
               <VerifiedTag verified={audienceVerified} />
             </div>
@@ -42,39 +46,35 @@ export function AnalyzerView({
             {kit ? (
               <dl className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">Platform</dt>
+                  <dt className="text-xs text-fg/45">{t("analyzer.platform")}</dt>
                   <dd className="text-fg capitalize">{kit.platform}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">Average views</dt>
+                  <dt className="text-xs text-fg/45">{t("analyzer.averageViews")}</dt>
                   <dd className="text-fg tabular-nums">
                     {kit.avg_views?.toLocaleString("en-US") ?? "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">Engagement</dt>
+                  <dt className="text-xs text-fg/45">{t("analyzer.engagement")}</dt>
                   <dd className="text-fg tabular-nums">
                     {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">Category</dt>
+                  <dt className="text-xs text-fg/45">{t("analyzer.category")}</dt>
                   <dd className="text-fg">{kit.content_category ?? "—"}</dd>
                 </div>
               </dl>
             ) : (
               <p className="mt-3 text-xs leading-relaxed text-fg/45">
-                No media kit on file yet, so pricing will fall back to the offer
-                text alone. Add your reach and audience data in Media kit for a
-                usable recommendation.
+                {t("analyzer.noKitNote")}
               </p>
             )}
 
             {!audienceVerified ? (
               <p className="mt-4 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-fg/40">
-                Your audience geography is self-reported, so a high-value deal
-                can&apos;t be rated green on it alone. Connecting YouTube or
-                Instagram analytics lifts that cap.
+                {t("analyzer.unverifiedCapNote")}
               </p>
             ) : null}
           </GlassPanel>

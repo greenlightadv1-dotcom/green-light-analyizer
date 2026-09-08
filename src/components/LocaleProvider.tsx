@@ -92,17 +92,25 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** `t("nav.dashboard")` — dotted-path lookup into the active locale's dictionary. */
+/**
+ * `t("nav.dashboard")` — dotted-path lookup into the active locale's
+ * dictionary. `t("dashboard.welcomeBack", { name: "Amir" })` also
+ * substitutes `{name}`-style placeholders in the looked-up string.
+ */
 export function useTranslation() {
   const ctx = useContext(LocaleContext);
   if (!ctx) throw new Error("useTranslation must be used within LocaleProvider");
 
   const t = useCallback(
-    (path: string): string => {
+    (path: string, params?: Record<string, string | number>): string => {
       const value = path
         .split(".")
         .reduce<unknown>((node, key) => (node as Record<string, unknown> | undefined)?.[key], ctx.dict);
-      return typeof value === "string" ? value : path;
+      const template = typeof value === "string" ? value : path;
+      if (!params) return template;
+      return template.replace(/\{(\w+)\}/g, (match, key: string) =>
+        key in params ? String(params[key]) : match,
+      );
     },
     [ctx.dict],
   );

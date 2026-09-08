@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { RiskBadge } from "@/components/deals/RiskBadge";
+import { useTranslation } from "@/components/LocaleProvider";
 import {
   analyzeOffer,
   createDealFromAnalysis,
@@ -16,21 +17,25 @@ import {
 const selectClass =
   "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 
+/** Dark, readable regardless of theme — native <option> popups ignore the app's light/dark CSS variables in most browsers. */
+const optionClass = "bg-slate-900 text-white dark:bg-slate-900 dark:text-white";
+
 /** §6.2 sponsorship_type, in the order a creator is most likely to need. */
 const TYPES = [
-  { value: "video_dedicated", label: "Dedicated video" },
-  { value: "integration", label: "Integration / segment" },
-  { value: "post", label: "Post" },
-  { value: "story_share", label: "Story share" },
-  { value: "live_mention", label: "Live mention" },
-  { value: "other", label: "Other" },
-];
+  { value: "video_dedicated", labelKey: "analyzer.typeVideoDedicated" },
+  { value: "integration", labelKey: "analyzer.typeIntegration" },
+  { value: "post", labelKey: "analyzer.typePost" },
+  { value: "story_share", labelKey: "analyzer.typeStoryShare" },
+  { value: "live_mention", labelKey: "analyzer.typeLiveMention" },
+  { value: "other", labelKey: "analyzer.typeOther" },
+] as const;
 
 function AnalyzeButton() {
   const { pending } = useFormStatus();
+  const { t } = useTranslation();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Analysing…" : "Analyse this offer"}
+      {pending ? t("analyzer.analysing") : t("analyzer.analyzeButton")}
     </Button>
   );
 }
@@ -81,6 +86,7 @@ function trustScoreClass(score: number): string {
 }
 
 export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
+  const { t } = useTranslation();
   const [state, formAction] = useActionState<AnalyzerState, FormData>(
     analyzeOffer,
     { error: null, result: null },
@@ -108,7 +114,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             id="sender_email"
             name="sender_email"
             type="email"
-            label="Who sent it"
+            label={t("analyzer.whoSentIt")}
             placeholder="brand@company.com"
             required
           />
@@ -118,7 +124,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               htmlFor="message_text"
               className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
             >
-              The offer
+              {t("analyzer.theOffer")}
             </label>
             <textarea
               id="message_text"
@@ -126,7 +132,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               rows={7}
               maxLength={20000}
               required
-              placeholder="Paste the full message you received…"
+              placeholder={t("analyzer.offerPlaceholder")}
               className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
             />
           </div>
@@ -137,7 +143,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 htmlFor="sponsorship_type"
                 className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
               >
-                What they want
+                {t("analyzer.whatTheyWant")}
               </label>
               <select
                 id="sponsorship_type"
@@ -146,9 +152,9 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 required
                 defaultValue="integration"
               >
-                {TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {TYPES.map((type) => (
+                  <option key={type.value} value={type.value} className={optionClass}>
+                    {t(type.labelKey)}
                   </option>
                 ))}
               </select>
@@ -157,9 +163,9 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <Field
               id="target_countries"
               name="target_countries"
-              label="Target countries"
+              label={t("analyzer.targetCountries")}
               placeholder="EG, SA, AE"
-              hint="Optional. Two-letter codes, comma separated."
+              hint={t("analyzer.targetCountriesHint")}
             />
           </div>
 
@@ -172,7 +178,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-fg">Recommendation</h2>
+            <h2 className="text-sm font-semibold text-fg">{t("analyzer.recommendation")}</h2>
             <RiskBadge risk={r.risk} capped={r.risk_capped} />
           </div>
 
@@ -181,8 +187,10 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               ${r.recommended_price_usd.toLocaleString("en-US")}
             </p>
             <p className="text-sm text-fg/45 tabular-nums">
-              fair range ${r.price_range_usd.low.toLocaleString("en-US")}–$
-              {r.price_range_usd.high.toLocaleString("en-US")}
+              {t("analyzer.fairRange", {
+                low: r.price_range_usd.low.toLocaleString("en-US"),
+                high: r.price_range_usd.high.toLocaleString("en-US"),
+              })}
             </p>
           </div>
 
@@ -192,9 +200,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
 
           {r.risk_capped ? (
             <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
-              Held at yellow: this is a high-value deal and the audience
-              geography behind the rating is self-reported. Connect YouTube or
-              Instagram analytics to let a deal like this rate green.
+              {t("analyzer.heldAtYellow")}
             </p>
           ) : null}
 
@@ -206,9 +212,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           */}
           {r.engine === "heuristic" ? (
             <p className="mt-3 text-[11px] leading-relaxed text-fg/35">
-              Rule-based estimate — the AI engine is not configured on this
-              environment, so this is arithmetic on your reach and category, not
-              an AI reading of the offer.
+              {t("analyzer.ruleBasedEstimate")}
             </p>
           ) : null}
 
@@ -239,7 +243,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               variant="ghost"
               fullWidth={false}
             >
-              Open a deal room for this offer
+              {t("analyzer.openDealRoom")}
             </Button>
           </form>
         </GlassPanel>
@@ -249,23 +253,23 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-fg">
-              Domain & security check
+              {t("analyzer.domainSecurityCheck")}
             </h2>
             {r.security.trustScore !== null ? (
               <span
                 className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${trustScoreClass(r.security.trustScore)}`}
               >
-                {r.security.trustScore}% trust
+                {t("analyzer.trustPercent", { score: r.security.trustScore })}
               </span>
             ) : (
               <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg/45">
-                Safety score unavailable
+                {t("analyzer.safetyScoreUnavailable")}
               </span>
             )}
           </div>
 
           <p className="mt-3 text-sm text-fg/60">
-            Domain: <span className="text-fg">{r.security.domain}</span>
+            {t("analyzer.domain")} <span className="text-fg">{r.security.domain}</span>
           </p>
 
           {r.security.reasons.length > 0 ? (
@@ -285,20 +289,20 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
               <div>
                 <dt className="text-xs text-fg/45">
-                  Company / organization
+                  {t("analyzer.companyOrg")}
                 </dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.registrantOrganization ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">Registrant country</dt>
+                <dt className="text-xs text-fg/45">{t("analyzer.registrantCountry")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.registrantCountry ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">Domain created</dt>
+                <dt className="text-xs text-fg/45">{t("analyzer.domainCreated")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.createdAt
                     ? new Date(r.security.whois.createdAt).toLocaleDateString()
@@ -306,7 +310,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">Domain expires</dt>
+                <dt className="text-xs text-fg/45">{t("analyzer.domainExpires")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.expiresAt
                     ? new Date(r.security.whois.expiresAt).toLocaleDateString()
@@ -316,19 +320,19 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             </dl>
           ) : (
             <p className="mt-4 text-xs text-fg/40">
-              WHOIS lookup unavailable — no company/domain profile to show.
+              {t("analyzer.whoisUnavailable")}
             </p>
           )}
 
           <div className="mt-4 space-y-1 border-t border-fg/8 pt-3">
             {r.security.whois?.whoisServer ? (
               <p className="text-[11px] text-fg/30">
-                WHOIS source: {r.security.whois.whoisServer}
+                {t("analyzer.whoisSource", { server: r.security.whois.whoisServer })}
               </p>
             ) : null}
             {!r.security.safeBrowsing ? (
               <p className="text-[11px] text-fg/30">
-                Phishing/malware check unavailable on this environment.
+                {t("analyzer.phishingCheckUnavailable")}
               </p>
             ) : null}
           </div>

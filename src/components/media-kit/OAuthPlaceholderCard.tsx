@@ -1,4 +1,7 @@
+"use client";
+
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { useTranslation } from "@/components/LocaleProvider";
 import {
   OAUTH_PLACEHOLDER_PLATFORMS,
   OAUTH_PLACEHOLDER_LABELS,
@@ -12,6 +15,7 @@ import {
  * so it is genuinely locked rather than styled to look locked.
  */
 export function OAuthPlaceholderCard() {
+  const { t } = useTranslation();
   return (
     <GlassPanel
       as="section"
@@ -19,15 +23,14 @@ export function OAuthPlaceholderCard() {
       className="p-6 opacity-70 select-none"
     >
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-fg">More platforms</h2>
+        <h2 className="text-sm font-semibold text-fg">{t("mediaKit.morePlatforms")}</h2>
         <span className="rounded-full border border-brand-green/30 bg-brand-green/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand-green uppercase">
-          Coming soon
+          {t("common.comingSoon")}
         </span>
       </div>
 
       <p className="mt-2 text-xs leading-relaxed text-fg/40">
-        Connecting these needs a registered app and client credentials for
-        each platform, which don&apos;t exist yet.
+        {t("mediaKit.morePlatformsBody")}
       </p>
 
       <ul className="mt-4 flex flex-wrap gap-2">

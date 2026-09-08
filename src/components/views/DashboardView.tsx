@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ComingSoonCard } from "@/components/dashboard/ComingSoonCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -5,6 +7,7 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { useTranslation } from "@/components/LocaleProvider";
 import { canVerifyAudience } from "@/lib/media-kit/platforms";
 import type { DealChat } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
@@ -26,6 +29,7 @@ export function DashboardView({
   chats: DealChat[];
   kits: MediaKit[];
 }) {
+  const { t } = useTranslation();
   const recent = chats.slice(0, 5);
   const openDeals = chats.filter(
     (c) => c.deal_status !== "paid" && c.deal_status !== "disputed",
@@ -36,43 +40,43 @@ export function DashboardView({
   return (
     <>
       <SectionHeader
-        title={`Welcome back, ${profile.full_name.split(" ")[0]}`}
-        description="Every offer that reaches your inbound alias is priced and risk-rated before you read it."
+        title={t("dashboard.welcomeBack", { name: profile.full_name.split(" ")[0] })}
+        description={t("dashboard.subtitle")}
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">Plan</p>
+          <p className="text-xs tracking-wide text-fg/45 uppercase">{t("dashboard.plan")}</p>
           <p className="mt-1.5 text-lg font-semibold text-fg">
             {profile.subscription_plan ?? "Starter"}
           </p>
           {/* §4.3 — no in-app billing in the MVP; upgrades go through Discord. */}
           <p className="mt-2 text-xs text-fg/40">
-            Upgrades and payments are handled via Discord support tickets.
+            {t("dashboard.planNote")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
-            Open deals
+            {t("dashboard.openDeals")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {openDeals}
           </p>
           <p className="mt-2 text-xs text-fg/40">
-            {profile.region ?? "MENA"} pricing · {plan} plan
+            {t("dashboard.pricingNote", { region: profile.region ?? "MENA", plan })}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
-            Inbound alias
+            {t("dashboard.inboundAlias")}
           </p>
           <p className="mt-1.5 font-mono text-sm break-all text-brand-green">
-            {profile.inbound_alias ?? "Not issued yet"}
+            {profile.inbound_alias ?? t("dashboard.notIssuedYet")}
           </p>
           <p className="mt-2 text-xs text-fg/40">
-            Forward your public business email here.
+            {t("dashboard.forwardEmailNote")}
           </p>
         </GlassPanel>
       </div>
@@ -81,21 +85,21 @@ export function DashboardView({
         <div className="space-y-4 lg:col-span-2">
           {recent.length === 0 ? (
             <EmptyState
-              title="No deals yet"
+              title={t("dashboard.noDealsYetTitle")}
               spec="§5, §6.2"
-              body="Offers forwarded to your inbound alias turn into deal rooms here, already priced and risk-rated. Set up forwarding in Settings to start receiving them."
+              body={t("dashboard.noDealsYetBody")}
             />
           ) : (
             <GlassPanel className="overflow-hidden">
               <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-fg">
-                  Recent deals
+                  {t("dashboard.recentDeals")}
                 </h2>
                 <Link
                   href="/inbox"
                   className="text-xs text-fg/45 transition hover:text-fg/80"
                 >
-                  View all ({chats.length})
+                  {t("dashboard.viewAll", { count: chats.length })}
                 </Link>
               </div>
 
@@ -130,29 +134,31 @@ export function DashboardView({
           */}
           <GlassPanel className="p-5">
             <h2 className="text-sm font-semibold text-fg">
-              Audience verification
+              {t("dashboard.audienceVerification")}
             </h2>
             {verifiedKits > 0 ? (
               <p className="mt-2 text-sm leading-relaxed text-fg/55">
-                {verifiedKits} of your {kits.length} connected{" "}
-                {kits.length === 1 ? "platform" : "platforms"} has verified
-                audience data. Offers against it are priced with full
-                confidence.
+                {t("dashboard.audienceVerifiedNote", {
+                  count: verifiedKits,
+                  total: kits.length,
+                  platformWord: t(
+                    kits.length === 1 ? "dashboard.platformSingular" : "dashboard.platformPlural",
+                  ),
+                })}
               </p>
             ) : (
               <p className="mt-2 text-sm leading-relaxed text-fg/55">
-                Your audience data is self-reported, so a high-value offer
-                can&apos;t be rated green on it alone.{" "}
+                {t("dashboard.audienceUnverifiedNote")}{" "}
                 {canVerifyAudience(plan)
-                  ? "Connecting YouTube or Instagram analytics lifts that cap."
-                  : "Verified audience data is included on Pro and Elite."}
+                  ? t("dashboard.audienceUnverifiedCanUpgrade")
+                  : t("dashboard.audienceUnverifiedIncluded")}
               </p>
             )}
             <Link
               href="/media-kit"
               className="mt-3 inline-block text-xs text-brand-green transition hover:brightness-125"
             >
-              Open media kit →
+              {t("dashboard.openMediaKit")}
             </Link>
           </GlassPanel>
         </div>

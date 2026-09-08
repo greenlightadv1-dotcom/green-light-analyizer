@@ -1,13 +1,16 @@
 /**
  * English is the structural source of truth: every other dictionary must
- * carry exactly these keys (checked by dictionaries/index.ts in dev).
+ * carry exactly these keys (enforced by TypeScript — dictionaries/{ar,fr,es,de}.ts
+ * are typed against `Dictionary`, so a missing/extra key is a compile error).
  *
- * Scope, deliberately: shared chrome (Sidebar/TopBar) and the public landing
- * page — the two surfaces that reach literally every screen or every
- * visitor, same reasoning as the theming rollout. Page-level content
- * (dashboard cards, deal data, admin tables, form copy) stays English for
- * this pass; translating that is a much larger follow-up, not attempted
- * here.
+ * Scope: the shared chrome, the public landing page, and — as of this
+ * round — the inner content of Dashboard, Manual Analyzer, Deal Inbox,
+ * Media Kit and Settings (nav labels, form fields, card titles, table
+ * headings, badges, empty/error states). Still English: Admin pages, and a
+ * few data-driven strings that live in lib/ files rather than JSX (platform
+ * support notes in lib/media-kit/platforms.ts, sponsorship-type values
+ * stored in the DB) — translating those means making a data module
+ * locale-aware, a larger follow-up this file doesn't claim is done.
  */
 const en = {
   nav: {
@@ -54,6 +57,249 @@ const en = {
       "Every inbound offer gets an instant price recommendation and a green / yellow / red risk rating, weighted by how much of the audience data behind it is actually verified.",
     footerRights: "All rights reserved.",
     joinDiscord: "Join our Discord",
+  },
+  common: {
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved.",
+    edit: "Edit",
+    add: "Add",
+    close: "Close",
+    copy: "Copy",
+    copied: "Copied",
+    send: "Send",
+    sending: "Sending…",
+    synced: "Synced.",
+    syncing: "Syncing…",
+    disconnect: "Disconnect",
+    redeem: "Redeem",
+    redeeming: "Redeeming…",
+    detecting: "Detecting…",
+    comingSoon: "Coming soon",
+    and: "and",
+  },
+  badges: {
+    greenLight: "Green light",
+    proceedWithCare: "Proceed with care",
+    highRisk: "High risk",
+    notEvaluated: "Not evaluated",
+    capped: "capped",
+    cappedTooltip:
+      "Capped at yellow: the audience data behind this rating is self-reported, and the deal is high-value (§7.4).",
+    statusNew: "New",
+    statusNegotiating: "Negotiating",
+    statusAgreed: "Agreed",
+    statusPaid: "Paid",
+    statusDisputed: "Disputed",
+    verified: "Verified",
+    selfReported: "Self-reported",
+  },
+  dashboard: {
+    welcomeBack: "Welcome back, {name}",
+    subtitle: "Every offer that reaches your inbound alias is priced and risk-rated before you read it.",
+    plan: "Plan",
+    planNote: "Upgrades and payments are handled via Discord support tickets.",
+    openDeals: "Open deals",
+    pricingNote: "{region} pricing · {plan} plan",
+    inboundAlias: "Inbound alias",
+    notIssuedYet: "Not issued yet",
+    forwardEmailNote: "Forward your public business email here.",
+    recentDeals: "Recent deals",
+    viewAll: "View all ({count})",
+    noDealsYetTitle: "No deals yet",
+    noDealsYetBody:
+      "Offers forwarded to your inbound alias turn into deal rooms here, already priced and risk-rated. Set up forwarding in Settings to start receiving them.",
+    audienceVerification: "Audience verification",
+    audienceVerifiedNote:
+      "{count} of your {total} connected {platformWord} has verified audience data. Offers against it are priced with full confidence.",
+    audienceUnverifiedNote:
+      "Your audience data is self-reported, so a high-value offer can't be rated green on it alone.",
+    audienceUnverifiedCanUpgrade: "Connecting YouTube or Instagram analytics lifts that cap.",
+    audienceUnverifiedIncluded: "Verified audience data is included on Pro and Elite.",
+    openMediaKit: "Open media kit →",
+    platformSingular: "platform",
+    platformPlural: "platforms",
+    aiAssistant: "AI Assistant",
+    aiFeature1: "Video & script idea generation",
+    aiFeature2: "Copyright check",
+    aiFeature3: "Thumbnail idea generation",
+    aiFeature4: "Best posting time recommendations",
+    aiFeature5: "Verified audience geo for TikTok / Twitch, if those APIs open up",
+  },
+  analyzer: {
+    title: "Manual analyzer",
+    description:
+      "Paste an offer you received anywhere and get an instant price recommendation and risk rating. No email connection required.",
+    pricingBasis: "Pricing basis",
+    platform: "Platform",
+    averageViews: "Average views",
+    engagement: "Engagement",
+    category: "Category",
+    noKitNote:
+      "No media kit on file yet, so pricing will fall back to the offer text alone. Add your reach and audience data in Media kit for a usable recommendation.",
+    unverifiedCapNote:
+      "Your audience geography is self-reported, so a high-value deal can't be rated green on it alone. Connecting YouTube or Instagram analytics lifts that cap.",
+    whoSentIt: "Who sent it",
+    theOffer: "The offer",
+    offerPlaceholder: "Paste the full message you received…",
+    whatTheyWant: "What they want",
+    typeVideoDedicated: "Dedicated video",
+    typeIntegration: "Integration / segment",
+    typePost: "Post",
+    typeStoryShare: "Story share",
+    typeLiveMention: "Live mention",
+    typeOther: "Other",
+    targetCountries: "Target countries",
+    targetCountriesHint: "Optional. Two-letter codes, comma separated.",
+    analysing: "Analysing…",
+    analyzeButton: "Analyse this offer",
+    recommendation: "Recommendation",
+    fairRange: "fair range ${low}–${high}",
+    heldAtYellow:
+      "Held at yellow: this is a high-value deal and the audience geography behind the rating is self-reported. Connect YouTube or Instagram analytics to let a deal like this rate green.",
+    ruleBasedEstimate:
+      "Rule-based estimate — the AI engine is not configured on this environment, so this is arithmetic on your reach and category, not an AI reading of the offer.",
+    openDealRoom: "Open a deal room for this offer",
+    domainSecurityCheck: "Domain & security check",
+    trustPercent: "{score}% trust",
+    safetyScoreUnavailable: "Safety score unavailable",
+    domain: "Domain:",
+    companyOrg: "Company / organization",
+    registrantCountry: "Registrant country",
+    domainCreated: "Domain created",
+    domainExpires: "Domain expires",
+    whoisUnavailable: "WHOIS lookup unavailable — no company/domain profile to show.",
+    whoisSource: "WHOIS source: {server}",
+    phishingCheckUnavailable: "Phishing/malware check unavailable on this environment.",
+  },
+  inbox: {
+    title: "Deal inbox",
+    description: "Every sponsorship offer becomes a chat room here — masked, priced and risk-rated.",
+    noRoomsTitle: "No deal rooms yet",
+    noRoomsBody:
+      "Rooms appear automatically when an offer arrives at your inbound alias, or when you open one from the Manual Analyzer.",
+    unspecifiedDeliverable: "unspecified deliverable",
+    targeting: "targeting {countries}",
+    backToInbox: "← Deal inbox",
+    contactStrippedNote: "Contact details are stripped before a message is stored. Everything stays on-platform.",
+    deal: "Deal",
+    offer: "Offer",
+    deliverable: "Deliverable",
+    targetingLabel: "Targeting",
+    coPilot: "Co-Pilot",
+    status: "Status",
+    whyCantShare: "Why you can't share contacts",
+    whyCantShareBody:
+      "Emails, phone numbers and links to WhatsApp, Telegram or Discord are removed automatically before a message is saved. Taking a deal off-platform is grounds for permanent removal — and the platform can only protect your payment while the deal stays here.",
+    noMessagesYet: "No messages yet. Open the conversation below.",
+    viaGreenLight: "via Green Light",
+    filtered: "filtered",
+    filteredTitle: "Contact details were removed from this message by platform policy.",
+    writeReply: "Write a reply…",
+    message: "Message",
+    relayFailed:
+      "Saved to the conversation, but we could not email it to the company just yet. Our team has been alerted — you do not need to resend.",
+    contactRemovedDemo:
+      "Contact details were removed: {rules}. In the live product this is also logged for admin review and can permanently close the account.",
+    contactRemovedLive:
+      "Your message was sent, but {rules} was removed. Sharing direct contact details or moving a deal off-platform breaches the terms and can permanently close your account — this attempt has been logged for review.",
+    maskingFooterNote:
+      "Emails, phone numbers and WhatsApp / Telegram / Discord links are removed automatically before your message is saved.",
+    ruleEmail: "an email address",
+    rulePhone: "a phone number",
+    ruleSocial: "an external messaging link",
+    updateStatus: "Update status",
+    markPaidNote: "Marking a deal paid is done by Green Light once escrow clears, not from here.",
+  },
+  mediaKit: {
+    title: "Media kit",
+    description:
+      "What sponsors see about your reach. Stats come from platform APIs or carry a self-reported tag — never a screenshot.",
+    connectedNote: "{platform} connected — verified audience geography will sync below.",
+    connectFailedNote: "Couldn't connect {platform}. Try again, or check that the connection hasn't already expired.",
+    platforms: "Platforms",
+    planLabel: "{plan} plan.",
+    canConnectMore: "You can connect more.",
+    upgradeForMore: "Upgrade over Discord for more.",
+    verifiedAudiences: "Verified audiences",
+    verifiedIncluded: "Verified geography is included on your plan.",
+    verifiedProFeature: "Verified geography is a Pro and Elite feature.",
+    pricingImpact: "Pricing impact",
+    pricingImpactVerified: "Verified data is priced with full confidence.",
+    pricingImpactUnverified: "Without verified geography, a high-value deal can't be rated green.",
+    lockReason:
+      "Your {plan} plan covers {limit} platform connections and you have used them all. Upgrade over Discord to add {platform}.",
+    audienceGeoVerifiedNote:
+      "Audience geography is verified via your connected account — see below. Disconnect above to enter it manually again.",
+    whereAudienceIs: "Where your audience is",
+    countriesHint:
+      "One country per line: two-letter code, then a percentage. This is recorded as self-reported until you connect platform analytics.",
+    handle: "Handle",
+    avgViews: "Average views",
+    avgCcv: "Average CCV",
+    avgCcvHint: "Live concurrent viewers, if you stream.",
+    engagementPct: "Engagement %",
+    engagementHint: "Likes + comments ÷ views.",
+    category: "Category",
+    language: "Language",
+    saveChanges: "Save changes",
+    addPlatform: "Add platform",
+    tiktokNote: "TikTok is not listed here: the schema's platform set covers YouTube, Twitch, Kick and Instagram only.",
+    morePlatforms: "More platforms",
+    morePlatformsBody: "Connecting these needs a registered app and client credentials for each platform, which don't exist yet.",
+    audienceGeography: "Audience geography",
+    noAudienceGeoYet: "No audience geography yet. Add it above so offers can be priced against what a sponsor is targeting.",
+    syncingFromSource: "Verified audience data is syncing from {source}.",
+    syncNow: "Sync now",
+    disconnectClearsNote: "Disconnecting clears your verified audience data immediately and drops the badge.",
+    includedProElite: "Verified audience geography from {source} is included on Pro and Elite.",
+    upgradesOverDiscordNote: "Upgrades are handled over Discord — there is no billing in the app.",
+    connectAnalytics: "Connect {source} analytics",
+    pendingReview: "Not available yet — this connection is waiting on platform app review.",
+    channelStats: "Channel stats",
+    accountStats: "Account stats",
+    subscribers: "Subscribers",
+    lifetimeViews: "Lifetime views",
+    videos: "Videos",
+    engagementLast10: "Engagement (last 10)",
+    notSyncedRequiresHandle: "Not synced yet. Requires a channel handle above.",
+    notSyncedYet: "Not synced yet.",
+    syncFromYoutube: "Sync from YouTube",
+    syncFromInstagram: "Sync from Instagram",
+    followers: "Followers",
+    posts: "Posts",
+    nicheAndTags: "Niche & tags",
+    notDetectedYet: "Not detected yet.",
+    detectNiche: "Detect niche",
+    detected: "Detected: {category}",
+    nicheFooterNote:
+      "AI-generated from your recent titles/captions — overwrites the category above, and never stores the raw text this reads.",
+  },
+  settings: {
+    title: "Settings",
+    description: "Account, email intake and billing.",
+    account: "Account",
+    name: "Name",
+    email: "Email",
+    role: "Role",
+    planBilling: "Plan & billing",
+    onPlan: "You are on the {plan} plan.",
+    endsOn: "It ends {date}.",
+    billingNote:
+      "Upgrades, downgrades and payment confirmation are handled by our team over Discord — Vodafone Cash, InstaPay and Meeza for MENA, PayPal or crypto internationally.",
+    promoCodeLabel: "Have a promo code?",
+    redeemed: "Code redeemed — your plan has been updated.",
+    openTicket: "Open a ticket in our Discord",
+    emailIntake: "Email intake",
+    emailIntakeNote: "Forward your business email here and every offer arrives already priced and risk-rated.",
+    noAliasNote: "No inbound alias has been issued for this account yet. Ask an administrator to add one — offers cannot be received without it.",
+    step1: "Open Gmail on a computer and go to Settings → See all settings → Forwarding and POP/IMAP.",
+    step2: "Click “Add a forwarding address”, paste the address above, and confirm.",
+    step3: "Gmail sends a confirmation code to Green Light. We accept it automatically — no action needed from you.",
+    step4: "Back in Gmail, choose “Forward a copy of incoming mail to” and pick that address.",
+    step5: "Optional but recommended: use Filters instead, so only business enquiries are forwarded rather than your whole inbox.",
+    privacyFooter:
+      "Your real email address never changes and never reaches a sponsor. Green Light does not connect to your Gmail account, does not ask for Google sign-in, and cannot read anything you have not forwarded.",
   },
 };
 
