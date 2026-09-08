@@ -6,8 +6,8 @@ import { Alert } from "@/components/ui/Alert";
 import { VerifiedTag } from "@/components/deals/VerifiedTag";
 import { NicheDetector } from "@/components/media-kit/NicheDetector";
 import {
-  syncYoutubeStats,
-  type SyncYoutubeState,
+  syncInstagramStats,
+  type SyncInstagramState,
 } from "@/lib/media-kit/actions";
 import type { MediaKit } from "@/lib/media-kit/queries";
 
@@ -19,38 +19,31 @@ function SyncButton() {
       disabled={pending}
       className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {pending ? "Syncing…" : "Sync from YouTube"}
+      {pending ? "Syncing…" : "Sync from Instagram"}
     </button>
   );
 }
 
 /**
- * Channel-level stats via the YouTube Data API v3 (§9) — separate from
- * avg_views/avg_ccv, which stay the creator's own self-reported per-video
- * figures. subscriber_count/channel_view_count/media_count are non-NULL
- * only once this has run at least once, the same verified-by-non-NULL
- * convention as verified_top_countries (§7.2). engagement_rate IS the same
- * field the creator can set manually above — a sync overwrites it rather
- * than duplicating it, since it's the same measured quantity either way
- * (see media-kit/actions.ts's syncYoutubeStats doc comment).
+ * Follower/media counts via the Instagram Graph API — needs the same §7.3
+ * OAuth connection as verified audience geography (unlike YouTube, there is
+ * no API-key-only public path for this), so only ever rendered once
+ * analytics_oauth_connected is true — see MediaKitView.
  */
-export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
-  const [state, formAction] = useActionState<SyncYoutubeState, FormData>(
-    syncYoutubeStats,
+export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
+  const [state, formAction] = useActionState<SyncInstagramState, FormData>(
+    syncInstagramStats,
     { error: null, synced: false },
   );
 
-  const hasStats =
-    kit.subscriber_count !== null ||
-    kit.channel_view_count !== null ||
-    kit.media_count !== null;
+  const hasStats = kit.subscriber_count !== null || kit.media_count !== null;
 
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-white/8 bg-navy-dark/40 p-3.5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
-            Channel stats
+            Account stats
           </p>
           {hasStats ? <VerifiedTag verified /> : null}
         </div>
@@ -58,38 +51,25 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
         {hasStats ? (
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <dt className="text-xs text-white/45">Subscribers</dt>
+              <dt className="text-xs text-white/45">Followers</dt>
               <dd className="text-sm text-white tabular-nums">
                 {kit.subscriber_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-white/45">Lifetime views</dt>
-              <dd className="text-sm text-white tabular-nums">
-                {kit.channel_view_count?.toLocaleString("en-US") ?? "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-white/45">Videos</dt>
+              <dt className="text-xs text-white/45">Posts</dt>
               <dd className="text-sm text-white tabular-nums">
                 {kit.media_count?.toLocaleString("en-US") ?? "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-white/45">Engagement (last 10)</dt>
-              <dd className="text-sm text-white tabular-nums">
-                {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
               </dd>
             </div>
           </dl>
         ) : (
           <p className="mt-2 text-xs leading-relaxed text-white/40">
-            Not synced yet. Requires a channel handle above.
+            Not synced yet.
           </p>
         )}
 
         <form action={formAction} className="mt-3">
-          <input type="hidden" name="media_kit_id" value={kit.id} />
           <SyncButton />
         </form>
 

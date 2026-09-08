@@ -195,6 +195,8 @@ export const mockKits: MediaKit[] = [
     last_synced_at: ago(180),
     subscriber_count: 212_000,
     channel_view_count: 18_400_000,
+    media_count: 340,
+    content_tags: ["tech", "reviews", "unboxing"],
   },
   {
     id: "00000000-0000-4000-8000-00000000cc02",
@@ -217,5 +219,7 @@ export const mockKits: MediaKit[] = [
     last_synced_at: ago(60 * 24 * 3),
     subscriber_count: null,
     channel_view_count: null,
+    media_count: null,
+    content_tags: null,
   },
 ];

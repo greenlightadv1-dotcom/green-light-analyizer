@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/ai/*.test.ts src/lib/media-kit/*.test.ts src/lib/email/*.test.ts src/lib/security/*.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/ai/*.test.ts src/lib/media-kit/*.test.ts src/lib/email/*.test.ts src/lib/security/*.test.ts src/lib/youtube/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",

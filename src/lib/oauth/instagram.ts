@@ -110,6 +110,66 @@ export async function getValidAccessToken(creatorId: string): Promise<string | n
   return null;
 }
 
+export type InstagramBasicMetrics = {
+  followersCount: number | null;
+  mediaCount: number | null;
+};
+
+/** Follower/media counts via the Instagram Business Account's own fields. */
+export async function fetchBasicMetrics(
+  accessToken: string,
+  igUserId: string,
+): Promise<InstagramBasicMetrics | null> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v19.0/${igUserId}?fields=followers_count,media_count&access_token=${encodeURIComponent(accessToken)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!response.ok) return null;
+
+    const body: { followers_count?: number; media_count?: number } =
+      await response.json();
+
+    return {
+      followersCount: body.followers_count ?? null,
+      mediaCount: body.media_count ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type InstagramRecentPost = {
+  caption: string;
+};
+
+/**
+ * Captions of the most recent posts, for AI niche detection
+ * (src/lib/ai/niche.ts). Instagram has no separate "title" field the way a
+ * YouTube video does — the caption is the only text a post carries.
+ */
+export async function fetchRecentCaptions(
+  accessToken: string,
+  igUserId: string,
+): Promise<InstagramRecentPost[] | null> {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v19.0/${igUserId}/media?fields=caption&limit=10&access_token=${encodeURIComponent(accessToken)}`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    if (!response.ok) return null;
+
+    const body: { data?: { caption?: string }[] } = await response.json();
+    const captions = (body.data ?? [])
+      .map((post) => post.caption)
+      .filter((caption): caption is string => Boolean(caption?.trim()));
+
+    return captions.length > 0 ? captions.map((caption) => ({ caption })) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Audience country breakdown via Instagram Graph API insights. */
 export async function fetchAudienceCountries(
   accessToken: string,

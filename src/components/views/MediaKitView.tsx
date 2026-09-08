@@ -3,6 +3,7 @@ import { CountryShareList } from "@/components/media-kit/CountryShareList";
 import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
+import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -152,6 +153,11 @@ export function MediaKitView({
 
                   {platform === "youtube" ? (
                     <YoutubeSyncPanel kit={kit} />
+                  ) : null}
+
+                  {platform === "instagram" &&
+                  kit.analytics_oauth_connected === true ? (
+                    <InstagramSyncPanel kit={kit} />
                   ) : null}
                 </GlassPanel>
               ) : null}

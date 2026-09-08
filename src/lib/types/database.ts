@@ -115,10 +115,14 @@ type MediaKit = {
   audience_verified: boolean | null;
   analytics_oauth_connected: boolean | null;
   last_synced_at: string | null;
-  /** YouTube only. Non-NULL = populated by "Sync from YouTube" (migration 0014). */
+  /** Subscribers (YouTube) or followers (Instagram). Non-NULL = synced (migration 0014). */
   subscriber_count: number | null;
   /** BIGINT column — a large channel's lifetime total can exceed INTEGER range. */
   channel_view_count: number | null;
+  /** Video count (YouTube) or post count (Instagram) (migration 0016). */
+  media_count: number | null;
+  /** AI-generated, supplementary to content_category (migration 0016). */
+  content_tags: string[] | null;
 };
 
 type DealChat = {

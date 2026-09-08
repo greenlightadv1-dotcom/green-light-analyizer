@@ -83,7 +83,7 @@ type NvidiaPayload = {
  * parse, rather than silently falling back to the heuristic engine on every
  * single call because of a formatting quirk.
  */
-function extractJsonObject(text: string): unknown {
+export function extractJsonObject(text: string): unknown {
   try {
     return JSON.parse(text);
   } catch {
