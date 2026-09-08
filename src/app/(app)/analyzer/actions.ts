@@ -7,6 +7,8 @@ import type { EvaluationResult } from "@/lib/ai/types";
 import { requireProfile } from "@/lib/auth";
 import { buildEvaluationInput } from "@/lib/deals/queries";
 import { maskSensitiveData } from "@/lib/mask";
+import { runSecurityCheck } from "@/lib/security/check";
+import type { SecurityCheckResult } from "@/lib/security/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SponsorshipType } from "@/lib/types/database";
 
@@ -27,6 +29,8 @@ export type AnalyzerState = {
         sponsorship_type: SponsorshipType;
         target_countries: string[];
         offer_text: string;
+        /** Independent of price/risk — see runSecurityCheck(). */
+        security: SecurityCheckResult | null;
       })
     | null;
 };
@@ -83,7 +87,16 @@ export async function analyzeOffer(
     offer_text: offerText,
   });
 
-  const result = await evaluateOffer(input);
+  // Priced independently of the security/domain check below — Promise.all,
+  // not sequential awaits, so a slow Safe Browsing or WHOIS call never delays
+  // the price/risk recommendation. Both sides already catch their own
+  // network/config failures internally and resolve rather than reject; the
+  // .catch(() => null) here is one more layer so even an unexpected bug in
+  // the security path can never take the price/risk result down with it.
+  const [result, security] = await Promise.all([
+    evaluateOffer(input),
+    runSecurityCheck(senderEmail, offerText).catch(() => null),
+  ]);
 
   return {
     error: null,
@@ -93,6 +106,7 @@ export async function analyzeOffer(
       sponsorship_type: sponsorshipType,
       target_countries: targetCountries,
       offer_text: offerText,
+      security,
     },
   };
 }

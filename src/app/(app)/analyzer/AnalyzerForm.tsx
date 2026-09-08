@@ -53,7 +53,32 @@ const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
   sponsorship_type: "integration",
   target_countries: ["SA"],
   offer_text: "",
+  security: {
+    domain: "lumenapp.example",
+    safeBrowsing: { flagged: false, threatTypes: [] },
+    whois: {
+      domain: "lumenapp.example",
+      createdAt: "2019-03-11T00:00:00.000Z",
+      expiresAt: "2027-03-11T00:00:00.000Z",
+      registrantOrganization: "Lumen App Inc.",
+      registrantName: "REDACTED FOR PRIVACY",
+      registrantCountry: "US",
+      whoisServer: "whois.example-registrar.com",
+    },
+    trustScore: 100,
+    reasons: [],
+  },
 };
+
+function trustScoreClass(score: number): string {
+  if (score >= 80) {
+    return "border-brand-green/30 bg-brand-green/10 text-brand-green";
+  }
+  if (score >= 50) {
+    return "border-amber-300/30 bg-amber-300/10 text-amber-200";
+  }
+  return "border-red-400/30 bg-red-500/10 text-red-200";
+}
 
 export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
   const [state, formAction] = useActionState<AnalyzerState, FormData>(
@@ -217,6 +242,96 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               Open a deal room for this offer
             </Button>
           </form>
+        </GlassPanel>
+      ) : null}
+
+      {r?.security ? (
+        <GlassPanel className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-white">
+              Domain & security check
+            </h2>
+            {r.security.trustScore !== null ? (
+              <span
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${trustScoreClass(r.security.trustScore)}`}
+              >
+                {r.security.trustScore}% trust
+              </span>
+            ) : (
+              <span className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/45">
+                Safety score unavailable
+              </span>
+            )}
+          </div>
+
+          <p className="mt-3 text-sm text-white/60">
+            Domain: <span className="text-white">{r.security.domain}</span>
+          </p>
+
+          {r.security.reasons.length > 0 ? (
+            <ul className="mt-3 space-y-1.5">
+              {r.security.reasons.map((reason) => (
+                <li
+                  key={reason}
+                  className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-100"
+                >
+                  {reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {r.security.whois ? (
+            <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-white/45">
+                  Company / organization
+                </dt>
+                <dd className="text-sm text-white">
+                  {r.security.whois.registrantOrganization ?? "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-white/45">Registrant country</dt>
+                <dd className="text-sm text-white">
+                  {r.security.whois.registrantCountry ?? "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-white/45">Domain created</dt>
+                <dd className="text-sm text-white">
+                  {r.security.whois.createdAt
+                    ? new Date(r.security.whois.createdAt).toLocaleDateString()
+                    : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-white/45">Domain expires</dt>
+                <dd className="text-sm text-white">
+                  {r.security.whois.expiresAt
+                    ? new Date(r.security.whois.expiresAt).toLocaleDateString()
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="mt-4 text-xs text-white/40">
+              WHOIS lookup unavailable — no company/domain profile to show.
+            </p>
+          )}
+
+          <div className="mt-4 space-y-1 border-t border-white/8 pt-3">
+            {r.security.whois?.whoisServer ? (
+              <p className="text-[11px] text-white/30">
+                WHOIS source: {r.security.whois.whoisServer}
+              </p>
+            ) : null}
+            {!r.security.safeBrowsing ? (
+              <p className="text-[11px] text-white/30">
+                Phishing/malware check unavailable on this environment.
+              </p>
+            ) : null}
+          </div>
         </GlassPanel>
       ) : null}
     </div>
