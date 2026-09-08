@@ -35,7 +35,7 @@ export default async function AdminUsersPage() {
   const { data: profiles } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, primary_email, role, region, subscription_plan, must_change_password, banned_at, banned_reason",
+      "id, full_name, primary_email, role, region, subscription_plan, subscription_expires_at, must_change_password, banned_at, banned_reason",
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -70,6 +70,13 @@ export default async function AdminUsersPage() {
                   </span>
                   <span className="text-xs text-white/60">
                     {p.subscription_plan}
+                    {p.subscription_expires_at ? (
+                      <>
+                        {" "}
+                        · ends{" "}
+                        {new Date(p.subscription_expires_at).toLocaleDateString()}
+                      </>
+                    ) : null}
                   </span>
                   {p.banned_at ? (
                     <span className="text-red-300">Banned</span>
@@ -143,6 +150,36 @@ export default async function AdminUsersPage() {
                           </select>
                         </div>
 
+                        <div className="space-y-1">
+                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                            Renew / extend
+                          </label>
+                          <select
+                            name="duration_preset"
+                            defaultValue="none"
+                            className={selectClass}
+                          >
+                            <option value="none">No change to expiry</option>
+                            <option value="30">Monthly — 30 days</option>
+                            <option value="90">Quarterly — 90 days</option>
+                            <option value="365">Yearly — 365 days</option>
+                            <option value="custom">Custom…</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                            Custom days
+                          </label>
+                          <input
+                            type="number"
+                            name="custom_days"
+                            min={1}
+                            placeholder="e.g. 45"
+                            className={`${inputClass} h-9 w-24`}
+                          />
+                        </div>
+
                         <button type="submit" className={saveButtonClass}>
                           Save changes
                         </button>
@@ -152,6 +189,10 @@ export default async function AdminUsersPage() {
                         Changing role does not move this account&apos;s
                         existing deals or media kits — use this to correct a
                         miscreated account, not to reassign an active one.
+                        Renewing adds to any time already remaining rather
+                        than resetting it, and only applies when a duration
+                        other than &ldquo;No change&rdquo; is picked — editing
+                        plan/region/role alone never touches the expiry date.
                       </p>
 
                       <div className="border-t border-white/8 pt-3.5">

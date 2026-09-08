@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateInboundAlias } from "@/lib/alias";
-import { daysFromNow } from "@/lib/subscription";
+import { extendExpiry } from "@/lib/subscription";
 import { requireRole } from "@/lib/auth";
 import type {
   AdminActionType,
@@ -22,6 +22,8 @@ export type CreateUserState = {
 const ROLES: Role[] = ["creator", "company", "admin"];
 const REGIONS: Region[] = ["MENA", "International"];
 const PLANS: SubscriptionPlan[] = ["Starter", "Pro", "Elite"];
+/** Monthly / Quarterly / Yearly, per the admin renewal UI. "custom"/"none" are handled separately. */
+const DURATION_PRESETS = [30, 90, 365];
 
 function temporaryPassword() {
   const bytes = new Uint8Array(18);
@@ -110,7 +112,8 @@ export async function createUser(
 }
 
 /**
- * Edit an existing account's plan, region or role.
+ * Edit an existing account's plan, region or role, and/or renew its
+ * subscription for a chosen duration.
  *
  * Reads the current row first so admin_actions gets an exact old -> new diff
  * and so a role change can tell whether it's actually moving into or out of
@@ -137,11 +140,26 @@ export async function updateProfile(formData: FormData): Promise<void> {
     return;
   }
 
+  // Duration is opt-in: "none" (the form's default) means don't touch
+  // subscription_expires_at at all, so saving an unrelated region/role edit
+  // can never accidentally renew someone's subscription as a side effect.
+  const durationPreset = String(formData.get("duration_preset") ?? "none");
+  let explicitDurationDays: number | null = null;
+  if (durationPreset === "custom") {
+    const customDays = Number(formData.get("custom_days"));
+    if (Number.isFinite(customDays) && customDays > 0) {
+      explicitDurationDays = Math.floor(customDays);
+    }
+  } else {
+    const preset = Number(durationPreset);
+    if (DURATION_PRESETS.includes(preset)) explicitDurationDays = preset;
+  }
+
   const service = createAdminClient();
 
   const { data: current } = await service
     .from("profiles")
-    .select("subscription_plan, region, role, inbound_alias, full_name")
+    .select("subscription_plan, subscription_expires_at, region, role, inbound_alias, full_name")
     .eq("id", targetId)
     .single();
   if (!current) return;
@@ -153,18 +171,38 @@ export async function updateProfile(formData: FormData): Promise<void> {
     new_value: string;
   }[] = [];
 
-  if (current.subscription_plan !== plan) {
+  const planChanged = current.subscription_plan !== plan;
+  if (planChanged) {
     updates.subscription_plan = plan;
-    // A paid plan set here always carries a fresh 30-day expiry (checked and
-    // enforced in requireProfile()); moving back to Starter clears it, since
-    // Starter never expires.
-    updates.subscription_expires_at = plan === "Starter" ? null : daysFromNow(30);
     auditRows.push({
       action: "plan_change",
       old_value: current.subscription_plan,
       new_value: plan,
     });
   }
+
+  if (plan === "Starter") {
+    // Starter never expires. Clearing this only matters when the plan is
+    // actually changing away from a paid one -- an unrelated edit while
+    // already on Starter has nothing to clear.
+    if (planChanged) updates.subscription_expires_at = null;
+  } else {
+    // A duration applies whenever the admin explicitly picked one. Moving
+    // INTO a paid plan with no duration chosen falls back to a 30-day grant
+    // -- a paid plan can never end up with no expiry by accident -- but
+    // leaving the plan unchanged with no duration chosen touches nothing.
+    const durationDays = explicitDurationDays ?? (planChanged ? 30 : null);
+    if (durationDays !== null) {
+      const newExpiry = extendExpiry(current.subscription_expires_at, durationDays);
+      updates.subscription_expires_at = newExpiry;
+      auditRows.push({
+        action: "renewal",
+        old_value: current.subscription_expires_at,
+        new_value: newExpiry,
+      });
+    }
+  }
+
   if (current.region !== region) {
     updates.region = region;
     auditRows.push({

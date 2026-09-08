@@ -115,6 +115,10 @@ type MediaKit = {
   audience_verified: boolean | null;
   analytics_oauth_connected: boolean | null;
   last_synced_at: string | null;
+  /** YouTube only. Non-NULL = populated by "Sync from YouTube" (migration 0014). */
+  subscriber_count: number | null;
+  /** BIGINT column — a large channel's lifetime total can exceed INTEGER range. */
+  channel_view_count: number | null;
 };
 
 type DealChat = {
@@ -147,7 +151,8 @@ export type AdminActionType =
   | "region_change"
   | "role_change"
   | "ban"
-  | "unban";
+  | "unban"
+  | "renewal";
 
 /** Audit trail for admin edits to an existing account (migration 0012). */
 type AdminAction = {
