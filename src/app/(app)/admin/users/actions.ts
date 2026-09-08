@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateInboundAlias } from "@/lib/alias";
 import { requireRole } from "@/lib/auth";
-import type { Region, Role } from "@/lib/types/database";
+import type {
+  AdminActionType,
+  Database,
+  Region,
+  Role,
+  SubscriptionPlan,
+} from "@/lib/types/database";
 
 export type CreateUserState = {
   error: string | null;
@@ -14,6 +20,7 @@ export type CreateUserState = {
 
 const ROLES: Role[] = ["creator", "company", "admin"];
 const REGIONS: Region[] = ["MENA", "International"];
+const PLANS: SubscriptionPlan[] = ["Starter", "Pro", "Elite"];
 
 function temporaryPassword() {
   const bytes = new Uint8Array(18);
@@ -99,4 +106,156 @@ export async function createUser(
 
   revalidatePath("/admin/users");
   return { error: null, created: { email, tempPassword } };
+}
+
+/**
+ * Edit an existing account's plan, region or role.
+ *
+ * Reads the current row first so admin_actions gets an exact old -> new diff
+ * and so a role change can tell whether it's actually moving into or out of
+ * 'creator' -- inbound_alias generation depends on that, not just the new
+ * value in isolation.
+ *
+ * Void return, same as the violation-queue actions below: this is a plain
+ * <select> form with no free text, so there is nothing a user could submit
+ * that the browser's own required/option constraints don't already rule out.
+ */
+export async function updateProfile(formData: FormData): Promise<void> {
+  const admin = await requireRole("admin");
+
+  const targetId = String(formData.get("profile_id") ?? "");
+  // Own row never renders a Manage control, so reaching this is only possible
+  // via a hand-crafted request -- silently refuse rather than let an admin
+  // lock themselves out of their own account.
+  if (!targetId || targetId === admin.id) return;
+
+  const plan = String(formData.get("subscription_plan") ?? "") as SubscriptionPlan;
+  const region = String(formData.get("region") ?? "") as Region;
+  const role = String(formData.get("role") ?? "") as Role;
+  if (!PLANS.includes(plan) || !REGIONS.includes(region) || !ROLES.includes(role)) {
+    return;
+  }
+
+  const service = createAdminClient();
+
+  const { data: current } = await service
+    .from("profiles")
+    .select("subscription_plan, region, role, inbound_alias, full_name")
+    .eq("id", targetId)
+    .single();
+  if (!current) return;
+
+  const updates: Database["public"]["Tables"]["profiles"]["Update"] = {};
+  const auditRows: {
+    action: AdminActionType;
+    old_value: string | null;
+    new_value: string;
+  }[] = [];
+
+  if (current.subscription_plan !== plan) {
+    updates.subscription_plan = plan;
+    auditRows.push({
+      action: "plan_change",
+      old_value: current.subscription_plan,
+      new_value: plan,
+    });
+  }
+  if (current.region !== region) {
+    updates.region = region;
+    auditRows.push({
+      action: "region_change",
+      old_value: current.region,
+      new_value: region,
+    });
+  }
+  if (current.role !== role) {
+    updates.role = role;
+    auditRows.push({
+      action: "role_change",
+      old_value: current.role,
+      new_value: role,
+    });
+    // Only creators get an inbound alias (§5.1). Moving into 'creator'
+    // without one yet generates one; moving away leaves an existing alias in
+    // place rather than deleting it -- nothing else depends on this deleting
+    // cleanly, and a stale unused alias is harmless.
+    if (role === "creator" && !current.inbound_alias) {
+      updates.inbound_alias = generateInboundAlias(current.full_name);
+    }
+  }
+
+  if (Object.keys(updates).length === 0) return;
+
+  const { error } = await service
+    .from("profiles")
+    .update(updates)
+    .eq("id", targetId);
+  if (error) return;
+
+  await service.from("admin_actions").insert(
+    auditRows.map((row) => ({
+      ...row,
+      admin_id: admin.id,
+      target_profile_id: targetId,
+    })),
+  );
+
+  revalidatePath("/admin/users");
+}
+
+/**
+ * Ban or unban an account directly from the Accounts page.
+ *
+ * Distinct from banProfile() in admin/violations/actions.ts, which applies
+ * the automatic §6/§12 permanent ban tied to a logged violation and always
+ * uses the same fixed reason. This is for admin discretion with no violation
+ * on file -- a Discord report, a chargeback, a suspected fraud pattern -- so
+ * the reason is admin-entered rather than fixed, and unlike that flow, it can
+ * be reversed: an admin's own mistaken ban should not require a database
+ * edit to undo.
+ */
+export async function setBan(formData: FormData): Promise<void> {
+  const admin = await requireRole("admin");
+
+  const targetId = String(formData.get("profile_id") ?? "");
+  const action = String(formData.get("action") ?? "");
+  if (!targetId || targetId === admin.id) return;
+  if (action !== "ban" && action !== "unban") return;
+
+  const service = createAdminClient();
+
+  if (action === "ban") {
+    const reason = String(formData.get("reason") ?? "").trim();
+    if (!reason) return;
+
+    const { error } = await service
+      .from("profiles")
+      .update({ banned_at: new Date().toISOString(), banned_reason: reason })
+      .eq("id", targetId);
+    if (error) return;
+
+    await service.from("admin_actions").insert({
+      admin_id: admin.id,
+      target_profile_id: targetId,
+      action: "ban",
+      old_value: null,
+      new_value: reason,
+    });
+  } else {
+    const { error } = await service
+      .from("profiles")
+      .update({ banned_at: null, banned_reason: null })
+      .eq("id", targetId);
+    if (error) return;
+
+    await service.from("admin_actions").insert({
+      admin_id: admin.id,
+      target_profile_id: targetId,
+      action: "unban",
+      old_value: null,
+      new_value: null,
+    });
+  }
+
+  revalidatePath("/admin/users");
 }

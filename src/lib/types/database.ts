@@ -140,6 +140,24 @@ type Message = {
   created_at: string | null;
 };
 
+export type AdminActionType =
+  | "plan_change"
+  | "region_change"
+  | "role_change"
+  | "ban"
+  | "unban";
+
+/** Audit trail for admin edits to an existing account (migration 0012). */
+type AdminAction = {
+  id: string;
+  admin_id: string | null;
+  target_profile_id: string | null;
+  action: AdminActionType;
+  old_value: string | null;
+  new_value: string | null;
+  created_at: string | null;
+};
+
 /** Columns with a database default (or that are nullable) are optional on insert. */
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -194,6 +212,10 @@ export type Database = {
             "profile_id" | "matched_rules" | "redacted_excerpt"
           >
         >
+      >;
+      admin_actions: Table<
+        AdminAction,
+        Optional<AdminAction, Exclude<keyof AdminAction, "action">>
       >;
     };
     Views: Record<never, never>;
