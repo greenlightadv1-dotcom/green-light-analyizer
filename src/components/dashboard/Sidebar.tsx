@@ -37,7 +37,7 @@ export function Sidebar({
 
   return (
     <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col p-4 lg:flex">
-      <Link href={`${basePath}/dashboard`} className="mb-8 block px-2 pt-2">
+      <Link href={`${basePath}/dashboard`} className="mb-6 block px-2 pt-2">
         {/* Dark surface -> dark lockup (§2.3). */}
         <Logo variant="dark" height={30} />
       </Link>
@@ -51,10 +51,10 @@ export function Sidebar({
               key={item.href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`rounded-xl px-3 py-2.5 text-sm transition ${
+              className={`rounded-xl border-l-2 py-2.5 pr-3 pl-2.5 text-sm transition ${
                 active
-                  ? "bg-brand-green/12 font-medium text-brand-green"
-                  : "text-white/60 hover:bg-white/5 hover:text-white"
+                  ? "border-brand-green bg-brand-green/12 font-medium text-brand-green"
+                  : "border-transparent text-white/60 hover:translate-x-0.5 hover:bg-white/5 hover:text-white"
               }`}
             >
               {item.label}
@@ -63,7 +63,7 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto px-2 pt-6">
+      <div className="mt-auto px-2 pt-5">
         <LogoMark size={20} className="opacity-40" />
       </div>
     </aside>

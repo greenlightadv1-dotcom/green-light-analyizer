@@ -67,7 +67,13 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   "Liquid Glass" — §2.2. The recipe below is the spec's, verbatim.
+   "Liquid Glass" — §2.2. Background/blur/border are the spec's recipe,
+   verbatim. The two shadows are the one addition on top of it: a soft outer
+   drop shadow so panels read as floating above the obsidian shell rather
+   than flush with it, and a hairline inset highlight along the top edge —
+   the standard glassmorphism cue for a lit edge catching the ambient glow.
+   Both are shared by every card/nav-rail in the product, so they apply
+   everywhere at once rather than needing a per-view touch-up.
 --------------------------------------------------------------------------- */
 @utility glass-panel {
   background: rgba(41, 62, 97, 0.35); /* navy tint */
@@ -75,6 +81,9 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
+  box-shadow:
+    0 24px 48px -28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Slightly denser variant for nav rails and sticky headers. */
@@ -84,6 +93,9 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
+  box-shadow:
+    0 24px 48px -28px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
 }
 
 /* Green focus ring used across inputs and interactive glass surfaces. */

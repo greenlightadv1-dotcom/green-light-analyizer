@@ -39,7 +39,7 @@ export default function PreviewLayout({
   if (!previewEnabled()) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl gap-6 p-4">
+    <div className="mx-auto flex w-full max-w-7xl gap-5 p-4">
       <Sidebar role={mockProfile.role} basePath="/preview" />
       <div className="min-w-0 flex-1">
         <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-2.5 text-xs leading-relaxed text-amber-100">

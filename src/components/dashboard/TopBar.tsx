@@ -10,7 +10,7 @@ export function TopBar({
   demo?: boolean;
 }) {
   return (
-    <header className="glass-panel-solid mb-6 flex items-center justify-between gap-4 px-4 py-3">
+    <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
       <div className="lg:hidden">
         <Logo variant="dark" height={26} />
       </div>

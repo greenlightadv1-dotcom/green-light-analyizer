@@ -35,6 +35,15 @@ const ORBS: Orb[] = [
     drift: { x: [0, 40, -50, 0], y: [0, -30, 20, 0] },
     duration: 38,
   },
+  // Sits behind the main content column (not just the corners), so the glow
+  // mesh reads through the glass cards a reader is actually looking at,
+  // rather than only being visible in the margins.
+  {
+    className: "h-[560px] w-[560px] top-1/4 left-[38%]",
+    color: "rgba(98, 232, 35, 0.08)",
+    drift: { x: [0, -30, 30, 0], y: [0, 25, -25, 0] },
+    duration: 44,
+  },
 ];
 
 export function GlowOrbs() {
