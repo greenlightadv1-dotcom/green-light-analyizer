@@ -193,6 +193,8 @@ export const mockKits: MediaKit[] = [
     audience_verified: true,
     analytics_oauth_connected: true,
     last_synced_at: ago(180),
+    subscriber_count: 212_000,
+    channel_view_count: 18_400_000,
   },
   {
     id: "00000000-0000-4000-8000-00000000cc02",
@@ -213,5 +215,7 @@ export const mockKits: MediaKit[] = [
     audience_verified: false,
     analytics_oauth_connected: false,
     last_synced_at: ago(60 * 24 * 3),
+    subscriber_count: null,
+    channel_view_count: null,
   },
 ];

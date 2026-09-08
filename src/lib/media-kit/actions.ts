@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchYoutubeChannelStats } from "@/lib/youtube/client";
 import type { Platform } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
 import {
@@ -172,4 +173,76 @@ export async function connectAnalytics(formData: FormData): Promise<void> {
   throw new Error(
     `Analytics OAuth for ${platform} is not configured on this environment yet.`,
   );
+}
+
+export type SyncYoutubeState = {
+  error: string | null;
+  synced: boolean;
+};
+
+/**
+ * "Sync from YouTube" — channel-level stats via the YouTube Data API v3
+ * (§9), distinct from the §7.3 Analytics OAuth flow above: this is a public,
+ * API-key-only lookup (no consent screen, no token storage), so it's viable
+ * today rather than blocked on OAuth review.
+ *
+ * subscriber_count/channel_view_count are withheld from `authenticated`'s
+ * column grant (same as verified_top_countries), so this always writes
+ * through the service-role client — never through the caller's own,
+ * regardless of who is calling.
+ */
+export async function syncYoutubeStats(
+  _prev: SyncYoutubeState,
+  formData: FormData,
+): Promise<SyncYoutubeState> {
+  const profile = await requireProfile();
+
+  const mediaKitId = String(formData.get("media_kit_id") ?? "");
+  if (!mediaKitId) return { error: "Missing media kit.", synced: false };
+
+  // Caller's own client: RLS already scopes this to a kit the caller may
+  // read, and the ownership + platform check below is the real gate before
+  // any API call or write happens.
+  const supabase = await createClient();
+  const { data: kit } = await supabase
+    .from("media_kits")
+    .select("id, creator_id, platform, platform_handle")
+    .eq("id", mediaKitId)
+    .single();
+
+  if (!kit || kit.creator_id !== profile.id || kit.platform !== "youtube") {
+    return { error: "That media kit could not be found.", synced: false };
+  }
+  if (!kit.platform_handle) {
+    return {
+      error: "Add your channel handle above before syncing.",
+      synced: false,
+    };
+  }
+
+  const stats = await fetchYoutubeChannelStats(kit.platform_handle);
+  if (!stats) {
+    return {
+      error:
+        "Could not reach YouTube — check the handle, and that YOUTUBE_API_KEY is configured.",
+      synced: false,
+    };
+  }
+
+  const service = createAdminClient();
+  const { error } = await service
+    .from("media_kits")
+    .update({
+      subscriber_count: stats.subscriberCount,
+      channel_view_count: stats.viewCount,
+      last_synced_at: new Date().toISOString(),
+    })
+    .eq("id", mediaKitId);
+
+  if (error) {
+    return { error: "Fetched from YouTube but could not save.", synced: false };
+  }
+
+  revalidatePath("/media-kit");
+  return { error: null, synced: true };
 }

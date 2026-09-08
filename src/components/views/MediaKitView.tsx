@@ -2,6 +2,8 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CountryShareList } from "@/components/media-kit/CountryShareList";
 import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
+import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
+import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { kitByPlatform, type MediaKit } from "@/lib/media-kit/queries";
 import {
@@ -107,6 +109,10 @@ export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: Subscript
                     plan={plan}
                     connected={kit.analytics_oauth_connected === true}
                   />
+
+                  {platform === "youtube" ? (
+                    <YoutubeSyncPanel kit={kit} />
+                  ) : null}
                 </GlassPanel>
               ) : null}
             </div>
@@ -124,6 +130,10 @@ export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: Subscript
         TikTok is not listed here: the schema&apos;s platform set covers YouTube,
         Twitch, Kick and Instagram only.
       </p>
+
+      <div className="mt-4">
+        <OAuthPlaceholderCard />
+      </div>
     </>
   );
 }
