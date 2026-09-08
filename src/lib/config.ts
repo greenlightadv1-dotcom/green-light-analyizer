@@ -139,6 +139,34 @@ export function readConfigReport(): ConfigReport {
       required: false,
       impact: "Same as META_APP_ID — both are needed together.",
     },
+    {
+      name: "SUPABASE_WEBHOOK_SECRET",
+      set: Boolean(process.env.SUPABASE_WEBHOOK_SECRET),
+      required: false,
+      impact:
+        "POST /api/webhooks/supabase returns 503 and refuses every delivery — no database-change notification ever reaches Discord.",
+    },
+    {
+      name: "DISCORD_SUPABASE_WEBHOOK_URL",
+      set: Boolean(process.env.DISCORD_SUPABASE_WEBHOOK_URL),
+      required: false,
+      impact:
+        "Database-change deliveries to /api/webhooks/supabase are accepted but never posted — the Discord channel stays silent.",
+    },
+    {
+      name: "DISCORD_GITHUB_WEBHOOK_URL",
+      set: Boolean(process.env.DISCORD_GITHUB_WEBHOOK_URL),
+      required: false,
+      impact:
+        "GitHub activity has nowhere to post yet — point a GitHub webhook or CI step at a route that calls sendDiscordLog(\"github\", …) once one exists.",
+    },
+    {
+      name: "DISCORD_DEPLOYS_WEBHOOK_URL",
+      set: Boolean(process.env.DISCORD_DEPLOYS_WEBHOOK_URL),
+      required: false,
+      impact:
+        "Deploy notifications have nowhere to post yet — point a Vercel deploy hook or CI step at a route that calls sendDiscordLog(\"deploys\", …) once one exists.",
+    },
   ];
 
   const missingRequired = items
