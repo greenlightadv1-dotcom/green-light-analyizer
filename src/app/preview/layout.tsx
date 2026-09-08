@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { mockProfile } from "@/lib/preview/mock";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 /**
  * UI preview shell — CLAUDE.md has no section for this; it exists so the
@@ -17,14 +18,18 @@ import { mockProfile } from "@/lib/preview/mock";
  * lets it deploy with no configuration at all.
  *
  * Availability is self-limiting: these routes exist only while the app has no
- * Supabase configuration — that is, only while the real product cannot run
- * anyway. The moment NEXT_PUBLIC_SUPABASE_URL is set, every route here starts
- * returning 404 with nothing to remember to delete. NEXT_PUBLIC_ENABLE_UI_PREVIEW=1
- * forces them on alongside a configured app, for reviewing the UI on staging.
+ * usable Supabase configuration — that is, only while the real product cannot
+ * run anyway. The moment both NEXT_PUBLIC_SUPABASE_URL and
+ * NEXT_PUBLIC_SUPABASE_ANON_KEY are set to something usable, every route here
+ * starts returning 404 with nothing to remember to delete. A partial or
+ * malformed config (one var set, the other missing or blank) counts as "not
+ * configured" here too, so this stays the fallback rather than a 404 stacked
+ * on top of the real app's own 500. NEXT_PUBLIC_ENABLE_UI_PREVIEW=1 forces
+ * these routes on alongside a configured app, for reviewing the UI on staging.
  */
 function previewEnabled() {
   if (process.env.NEXT_PUBLIC_ENABLE_UI_PREVIEW === "1") return true;
-  return !process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return !isSupabaseConfigured();
 }
 export default function PreviewLayout({
   children,

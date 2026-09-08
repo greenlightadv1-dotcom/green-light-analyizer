@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 /** Routes reachable without a session. There is no signup route — by design (§4). */
 const PUBLIC_PATHS = ["/login", "/auth"];
@@ -26,44 +28,52 @@ function isPublic(pathname: string) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  // With no Supabase configuration there is no session to refresh and no data
-  // to protect — the pages themselves fail on their own database calls. Passing
-  // through beats throwing on every request, which would turn a missing
-  // environment variable into an unreadable wall of 500s. /admin/system exists
-  // to name exactly which variable is absent.
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
+  // With no usable Supabase configuration there is no session to refresh and
+  // no data to protect — the pages themselves fail on their own database
+  // calls. Passing through beats throwing on every request, which would turn
+  // a missing or malformed environment variable into an unreadable wall of
+  // 500s. /admin/system exists to name exactly which variable is absent (once
+  // it's reachable — see the same check in requireProfile()).
+  if (!isSupabaseConfigured()) {
     return response;
   }
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+  let user: User | null;
+  try {
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value),
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options),
+            );
+          },
         },
       },
-    },
-  );
+    );
 
-  // getUser() revalidates the token with Supabase Auth. Do not swap this for
-  // getSession(), which trusts whatever is in the cookie.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // getUser() revalidates the token with Supabase Auth. Do not swap this for
+    // getSession(), which trusts whatever is in the cookie.
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+  } catch (error) {
+    // A reachability problem (project paused, DNS, TLS, transient outage) is
+    // not this request's fault to fail on. Let it through unauthenticated —
+    // the page's own requireProfile() call hits the same failure and decides
+    // what to show, rather than every route in the product going dark because
+    // Supabase had one bad moment.
+    console.error("proxy: Supabase session check failed", error);
+    return response;
+  }
 
   const { pathname } = request.nextUrl;
 
