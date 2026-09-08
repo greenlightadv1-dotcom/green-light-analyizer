@@ -5,5 +5,5 @@ import { mockProfile } from "@/lib/preview/mock";
 export const metadata: Metadata = { title: "Settings · Preview" };
 
 export default function PreviewSettings() {
-  return <SettingsView profile={mockProfile} />;
+  return <SettingsView profile={mockProfile} demo />;
 }

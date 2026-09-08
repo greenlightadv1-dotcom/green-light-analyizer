@@ -1,10 +1,17 @@
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { InboundAliasCard } from "@/components/settings/InboundAliasCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { RedeemCodeForm } from "@/app/(app)/settings/RedeemCodeForm";
 import type { Profile } from "@/lib/auth";
 
 /** Settings, presentation only. Shared with /preview. */
-export function SettingsView({ profile }: { profile: Profile }) {
+export function SettingsView({
+  profile,
+  demo = false,
+}: {
+  profile: Profile;
+  demo?: boolean;
+}) {
 
   return (
     <>
@@ -46,13 +53,24 @@ export function SettingsView({ profile }: { profile: Profile }) {
               {profile.subscription_plan ?? "Starter"}
             </span>{" "}
             plan.
+            {profile.subscription_expires_at ? (
+              <>
+                {" "}
+                It ends{" "}
+                {new Date(profile.subscription_expires_at).toLocaleDateString()}
+                .
+              </>
+            ) : null}
           </p>
           <p className="mt-3 text-sm leading-relaxed text-white/45">
             Upgrades, downgrades and payment confirmation are handled by our
             team over Discord — Vodafone Cash, InstaPay and Meeza for MENA,
             PayPal or crypto internationally.
           </p>
-          <p className="mt-auto pt-5 text-xs text-white/35">
+
+          <RedeemCodeForm demo={demo} />
+
+          <p className="mt-5 text-xs text-white/35">
             Discord invite link to be supplied by the client.
           </p>
         </GlassPanel>

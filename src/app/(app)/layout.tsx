@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
+import { ExpiryWarningBanner } from "@/components/dashboard/ExpiryWarningBanner";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { requireProfile } from "@/lib/auth";
 
@@ -19,6 +20,7 @@ export default async function AppLayout({
       <Sidebar role={profile.role} />
       <div className="min-w-0 flex-1">
         <TopBar profile={profile} />
+        <ExpiryWarningBanner profile={profile} />
         <PageTransition>{children}</PageTransition>
       </div>
     </div>

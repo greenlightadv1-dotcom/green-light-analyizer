@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateInboundAlias } from "@/lib/alias";
+import { daysFromNow } from "@/lib/subscription";
 import { requireRole } from "@/lib/auth";
 import type {
   AdminActionType,
@@ -154,6 +155,10 @@ export async function updateProfile(formData: FormData): Promise<void> {
 
   if (current.subscription_plan !== plan) {
     updates.subscription_plan = plan;
+    // A paid plan set here always carries a fresh 30-day expiry (checked and
+    // enforced in requireProfile()); moving back to Starter clears it, since
+    // Starter never expires.
+    updates.subscription_expires_at = plan === "Starter" ? null : daysFromNow(30);
     auditRows.push({
       action: "plan_change",
       old_value: current.subscription_plan,

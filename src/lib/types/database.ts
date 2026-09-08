@@ -56,6 +56,8 @@ type Profile = {
   role: Role;
   region: Region | null;
   subscription_plan: SubscriptionPlan | null;
+  /** NULL = no expiry. Only the service-role client ever writes it. */
+  subscription_expires_at: string | null;
   inbound_alias: string | null;
   /** Creator PII — must never reach a company's client (§6, §12). */
   primary_email: string;
@@ -158,6 +160,23 @@ type AdminAction = {
   created_at: string | null;
 };
 
+/**
+ * Single-use trial/promo code (migration 0013). No RLS policy for
+ * `authenticated` at all -- every read and write goes through
+ * createAdminClient(), so this type is only ever used server-side.
+ */
+type PromoCode = {
+  code: string;
+  duration_days: number;
+  target_plan: Extract<SubscriptionPlan, "Pro" | "Elite">;
+  is_used: boolean;
+  used_by: string | null;
+  used_at: string | null;
+  expires_at: string;
+  created_by: string | null;
+  created_at: string | null;
+};
+
 /** Columns with a database default (or that are nullable) are optional on insert. */
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -177,6 +196,7 @@ export type Database = {
           Profile,
           | "region"
           | "subscription_plan"
+          | "subscription_expires_at"
           | "inbound_alias"
           | "must_change_password"
           | "banned_at"
@@ -216,6 +236,13 @@ export type Database = {
       admin_actions: Table<
         AdminAction,
         Optional<AdminAction, Exclude<keyof AdminAction, "action">>
+      >;
+      promo_codes: Table<
+        PromoCode,
+        Optional<
+          PromoCode,
+          Exclude<keyof PromoCode, "code" | "duration_days" | "target_plan" | "expires_at">
+        >
       >;
     };
     Views: Record<never, never>;

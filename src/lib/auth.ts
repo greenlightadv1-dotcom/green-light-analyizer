@@ -3,6 +3,7 @@ import "server-only";
 import { redirect, unstable_rethrow } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { Database, Role } from "@/lib/types/database";
 
@@ -70,6 +71,38 @@ export async function requireProfile(): Promise<Profile> {
   // rather than in the proxy so it costs nothing extra — the profile row is
   // already being read — and so it holds on every authenticated render.
   if (profile.banned_at) redirect("/suspended");
+
+  // A paid plan (set by admin, or by redeeming a promo code) carries an end
+  // date. Checked here rather than a cron job: this already runs on every
+  // authenticated request, so there is never more than one request's worth of
+  // gap between "expired" and "enforced".
+  if (
+    profile.subscription_plan !== "Starter" &&
+    profile.subscription_expires_at &&
+    new Date(profile.subscription_expires_at) < new Date()
+  ) {
+    profile = {
+      ...profile,
+      subscription_plan: "Starter",
+      subscription_expires_at: null,
+    };
+    try {
+      // subscription_plan/subscription_expires_at are not writable through
+      // the caller's own client (column privileges) — this correction, like
+      // every other write to those columns, has to go through the
+      // service-role client.
+      await createAdminClient()
+        .from("profiles")
+        .update({ subscription_plan: "Starter", subscription_expires_at: null })
+        .eq("id", profile.id);
+    } catch (error) {
+      // Opportunistic: the in-memory value above is already correct for this
+      // request regardless of whether the write lands, so a failure here
+      // (including a missing SUPABASE_SERVICE_ROLE_KEY) just means the next
+      // request tries the write again rather than breaking this one.
+      console.error("requireProfile: expiry downgrade failed to persist", error);
+    }
+  }
 
   return profile;
 }
