@@ -10,8 +10,8 @@ import type { AiEvaluation } from "@/lib/types/database";
  */
 const STYLES: Record<AiEvaluation, string> = {
   green: "border-brand-green/30 bg-brand-green/10 text-brand-green",
-  yellow: "border-amber-300/30 bg-amber-300/10 text-amber-200",
-  red: "border-red-400/30 bg-red-500/10 text-red-200",
+  yellow: "border-amber-300/30 bg-amber-300/10 text-amber-700 dark:text-amber-200",
+  red: "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200",
 };
 
 const LABELS: Record<AiEvaluation, string> = {
@@ -32,7 +32,7 @@ export function RiskBadge({
   if (!risk) {
     return (
       <span
-        className={`inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-white/40 ${className}`}
+        className={`inline-flex items-center rounded-full border border-fg/10 bg-fg/5 px-2.5 py-0.5 text-xs text-fg/40 ${className}`}
       >
         Not evaluated
       </span>

@@ -465,14 +465,41 @@ admin-gated model, which is unchanged.
 - **Palette** — still exactly §2.1's hexes (`#293E61` / `#1F2E47` / `#62E823`).
   A later design pass proposed a different navy/green pair; it was rejected in
   favor of the confirmed brand colors already implemented everywhere else.
-- **Light/dark mode is landing-page-only.** `ThemeProvider`
+- **Light/dark mode is app-wide.** `ThemeProvider`
   (`src/components/ThemeProvider.tsx`, wrapping `next-themes`) is mounted at
-  the root and defaults to system preference with a manual toggle, but the
-  authenticated app shell (Sidebar, TopBar, GlassPanel, every dashboard view)
-  is intentionally still hardcoded to the dark palette and does not read the
-  theme class at all — matching §2.2's "dark theme shell" framing for the
-  product itself. Only `src/components/landing/*` uses Tailwind `dark:`
-  utilities, enabled via the `@custom-variant dark` in `globals.css`.
+  the root, defaults to system preference, and is switchable via `ThemeMenu`
+  (`src/components/ui/ThemeMenu.tsx` — Light/Dark/System, in the dashboard
+  `TopBar` and the landing nav). This reverses this section's original
+  "landing-page-only" scoping decision, made before the client asked for a
+  fully themeable dashboard.
+  - Almost every `text-white`/`border-white`/`bg-white`/`divide-white`
+    utility across the app (Sidebar, TopBar, every dashboard/admin view) was
+    a foreground tint, not literal brand white, so those were converted to
+    the theme-reactive `--color-fg` token (§2.1's `@theme` block) rather
+    than adding a `dark:` pair to every one — flip that one CSS variable
+    under `:root.dark` and the whole app re-themes. `glass-panel` /
+    `glass-panel-solid` and the body mesh gradient (§2.2) each carry their
+    own light/dark recipe the same way.
+  - The exception: a few surfaces are deliberately a fixed dark "code
+    block" regardless of theme (§2.1's navy-dark usage) — generated
+    codes/passwords, the violation log excerpt, and the deal room's
+    "via Green Light" system bubble. Those keep literal `text-white`, since
+    ink-on-navy in light mode would be close to unreadable.
+  - Literal, always-white surfaces (the Logo's own asset, landing's white
+    cards) still use the real `white` token and are untouched by this.
+- **Desktop layout** — the authenticated app shell's outer container
+  (`(app)/layout.tsx`, mirrored in `preview/layout.tsx`) is `max-w-[1680px]`
+  with responsive gap/padding (`lg:`/`2xl:` steps), not the earlier
+  `max-w-7xl` (1280px) — that read as a narrow centered column on large
+  desktop monitors.
+- **Logo** (`src/components/brand/Logo.tsx`) no longer wraps the wordmark in
+  an opaque navy/white plate `<span>` — it renders the PNG directly, on the
+  assumption the asset is transparent. It currently is **not**: all three
+  files in `/public/branding/` are baked-opaque RGB PNGs with no alpha
+  channel (confirmed from their PNG header, colorType 2), so each mark shows
+  its own opaque background as a visible rectangle until real transparent —
+  or SVG — artwork replaces those files. That's expected, not a bug in the
+  component.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

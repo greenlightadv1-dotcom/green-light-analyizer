@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Logo } from "@/components/brand/Logo";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
@@ -18,19 +18,19 @@ export default function SuspendedPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <Logo variant="dark" height={44} />
+          <ThemedLogo height={44} />
         </div>
 
         <GlassPanel className="p-7 sm:p-8">
-          <h1 className="text-xl font-semibold text-white">
+          <h1 className="text-xl font-semibold text-fg">
             This account is suspended
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-white/55">
+          <p className="mt-3 text-sm leading-relaxed text-fg/55">
             Green Light closed this account for attempting to move a deal off
             the platform or exchange direct contact details, which the terms
             treat as a permanent breach.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-white/45">
+          <p className="mt-3 text-sm leading-relaxed text-fg/45">
             If you believe this is a mistake, open a ticket in our{" "}
             <a
               href={DISCORD_INVITE_URL}
@@ -46,7 +46,7 @@ export default function SuspendedPage() {
           <form action="/auth/signout" method="post" className="mt-6">
             <button
               type="submit"
-              className="text-xs text-white/40 underline underline-offset-4 transition hover:text-white/70"
+              className="text-xs text-fg/40 underline underline-offset-4 transition hover:text-fg/70"
             >
               Sign out
             </button>

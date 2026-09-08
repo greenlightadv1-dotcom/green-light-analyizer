@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ThemedLogo } from "@/components/landing/ThemedLogo";
-import { ThemeToggle } from "@/components/landing/ThemeToggle";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
+import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { CtaLink } from "@/components/landing/CtaLink";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
@@ -18,7 +18,7 @@ export function LandingNav() {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <ThemeToggle />
+          <ThemeMenu />
           <CtaLink href="/login" variant="ghost" className="hidden sm:inline-flex">
             Sign in
           </CtaLink>

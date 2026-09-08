@@ -39,10 +39,10 @@ export default function PreviewLayout({
   if (!previewEnabled()) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl gap-5 p-4">
+    <div className="mx-auto flex w-full max-w-[1680px] gap-5 p-4 lg:gap-6 lg:p-6 2xl:p-8">
       <Sidebar role={mockProfile.role} basePath="/preview" />
       <div className="min-w-0 flex-1">
-        <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-2.5 text-xs leading-relaxed text-amber-100">
+        <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
           <strong className="font-semibold">Interface preview.</strong> Every
           name, figure and message on these screens is invented, and nothing is
           saved. The real product is admin-gated and holds no data yet.

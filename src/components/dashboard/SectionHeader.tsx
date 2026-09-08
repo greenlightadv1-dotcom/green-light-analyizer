@@ -10,11 +10,11 @@ export function SectionHeader({
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-white">
+        <h1 className="text-2xl font-semibold tracking-tight text-fg">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-fg/50">
             {description}
           </p>
         ) : null}

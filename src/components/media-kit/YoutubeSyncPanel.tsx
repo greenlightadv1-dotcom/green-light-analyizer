@@ -17,7 +17,7 @@ function SyncButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? "Syncing…" : "Sync from YouTube"}
     </button>
@@ -47,9 +47,9 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-white/8 bg-navy-dark/40 p-3.5">
+      <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
+          <p className="text-xs font-medium tracking-wide text-fg/70 uppercase">
             Channel stats
           </p>
           {hasStats ? <VerifiedTag verified /> : null}
@@ -58,32 +58,32 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
         {hasStats ? (
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <dt className="text-xs text-white/45">Subscribers</dt>
-              <dd className="text-sm text-white tabular-nums">
+              <dt className="text-xs text-fg/45">Subscribers</dt>
+              <dd className="text-sm text-fg tabular-nums">
                 {kit.subscriber_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-white/45">Lifetime views</dt>
-              <dd className="text-sm text-white tabular-nums">
+              <dt className="text-xs text-fg/45">Lifetime views</dt>
+              <dd className="text-sm text-fg tabular-nums">
                 {kit.channel_view_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-white/45">Videos</dt>
-              <dd className="text-sm text-white tabular-nums">
+              <dt className="text-xs text-fg/45">Videos</dt>
+              <dd className="text-sm text-fg tabular-nums">
                 {kit.media_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-white/45">Engagement (last 10)</dt>
-              <dd className="text-sm text-white tabular-nums">
+              <dt className="text-xs text-fg/45">Engagement (last 10)</dt>
+              <dd className="text-sm text-fg tabular-nums">
                 {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
               </dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-2 text-xs leading-relaxed text-white/40">
+          <p className="mt-2 text-xs leading-relaxed text-fg/40">
             Not synced yet. Requires a channel handle above.
           </p>
         )}

@@ -2,15 +2,14 @@
 
 /*
  * Class-based dark mode (next-themes sets class="dark"/"light" on <html>,
- * defaulting to the visitor's system preference — see ThemeProvider). Without
- * this, Tailwind v4's `dark:` variant falls back to a plain
+ * defaulting to the visitor's system preference — see ThemeProvider).
+ * Without this, Tailwind v4's `dark:` variant falls back to a plain
  * `prefers-color-scheme` media query, which can't be overridden by the
  * in-app toggle.
  *
- * Only the public landing page actually uses `dark:` utilities today — the
- * authenticated app shell (Sidebar/TopBar/GlassPanel/etc.) is intentionally
- * still hardcoded to the dark palette below, regardless of <html>'s class,
- * matching CLAUDE.md §2.2's "dark theme shell" framing for the product itself.
+ * The authenticated app shell (Sidebar/TopBar/every dashboard view) now
+ * themes too, via the --color-fg token below rather than per-utility `dark:`
+ * pairs sprinkled through 30+ files — see that token's own comment.
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -29,10 +28,26 @@
   --color-navy: #293e61;
   --color-navy-dark: #1f2e47;
   --color-brand-green: #62e823;
+  /* Always ink regardless of theme — e.g. text on the neon-green CTA fill,
+     which needs the same dark text in light or dark mode. Not the same
+     token as --color-fg below, which is the one that actually flips. */
   --color-ink: #231f20;
 
   /* Base app background — deep obsidian shell the glass panels float on (§2.2) */
   --color-obsidian: #0a0d14;
+
+  /*
+   * Theme-reactive foreground token. Every "text-white/NN",
+   * "border-white/NN" and "bg-white/NN" utility across the dashboard (nearly
+   * all of them tints/opacity of a single foreground color, not literal
+   * brand white) uses --color-fg instead, so flipping this one variable
+   * under .dark re-themes the whole app — Tailwind still generates the
+   * full text-fg/border-fg/bg-fg/NN opacity-modifier utility set for any
+   * color registered here, same as it does for navy/brand-green/ink above.
+   * Literal, always-white surfaces (Logo's plate, landing page's white
+   * cards) keep using the real `white` token and are unaffected.
+   */
+  --color-fg: #231f20;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -40,17 +55,16 @@
   --radius-glass: 20px;
 }
 
-/*
- * The authenticated app is always dark (color-scheme: dark, unconditional).
- * The landing page is the one surface that switches with the theme class, so
- * native form controls / scrollbars there follow it too.
- */
-:root {
-  color-scheme: dark;
+:root.dark {
+  --color-fg: #ffffff;
 }
 
-:root:not(.dark) {
+:root {
   color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
 }
 
 html,
@@ -61,40 +75,56 @@ body {
 /*
  * Base app-shell background — a static mesh gradient in the exact §2.1
  * hexes, sitting under GlowOrbs' animated blobs and every glass panel.
- * Previously a flat --color-obsidian fill; this adds depth without moving
- * off-brand. Fixed to the viewport (not the page) so it reads as one ambient
- * backdrop rather than tiling as content scrolls taller than one screen.
+ * Fixed to the viewport (not the page) so it reads as one ambient backdrop
+ * rather than tiling as content scrolls taller than one screen. Light and
+ * dark each get their own mesh — same brand hues, different base.
  */
 body {
+  background-color: #f6f7fb;
+  background-image:
+    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.14), transparent 60%),
+    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.12), transparent 55%),
+    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.08), transparent 60%),
+    linear-gradient(165deg, #eef1f7 0%, #f6f7fb 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:root.dark body {
   background-color: var(--color-obsidian);
   background-image:
     radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.12), transparent 60%),
     radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.65), transparent 55%),
     radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.07), transparent 60%),
     linear-gradient(165deg, #1f2e47 0%, #0a0d14 55%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  color: #ffffff;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 /* ---------------------------------------------------------------------------
-   "Liquid Glass" — §2.2. Background/blur/border are the spec's recipe,
-   verbatim. The two shadows are the one addition on top of it: a soft outer
-   drop shadow so panels read as floating above the obsidian shell rather
-   than flush with it, and a hairline inset highlight along the top edge —
-   the standard glassmorphism cue for a lit edge catching the ambient glow.
-   Both are shared by every card/nav-rail in the product, so they apply
-   everywhere at once rather than needing a per-view touch-up.
+   "Liquid Glass" — §2.2. The dark recipe (:root.dark overrides below) is the
+   spec's, verbatim, plus a soft outer drop shadow (panels float above the
+   shell rather than sitting flush with it) and a hairline inset top
+   highlight (the standard glassmorphism "lit edge" cue). The light recipe
+   is the same idea in the light palette: navy-tinted glass over the app's
+   off-white mesh instead of white-tinted glass over obsidian.
 --------------------------------------------------------------------------- */
 @utility glass-panel {
-  background: rgba(41, 62, 97, 0.35); /* navy tint */
+  background: rgba(255, 255, 255, 0.68);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(41, 62, 97, 0.12);
   border-radius: 20px;
+  box-shadow:
+    0 20px 40px -26px rgba(41, 62, 97, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+:root.dark .glass-panel {
+  background: rgba(41, 62, 97, 0.35); /* navy tint */
+  border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 24px 48px -28px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
@@ -102,11 +132,19 @@ body {
 
 /* Slightly denser variant for nav rails and sticky headers. */
 @utility glass-panel-solid {
-  background: rgba(31, 46, 71, 0.72);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(41, 62, 97, 0.14);
   border-radius: 20px;
+  box-shadow:
+    0 20px 40px -26px rgba(41, 62, 97, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+}
+
+:root.dark .glass-panel-solid {
+  background: rgba(31, 46, 71, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
   box-shadow:
     0 24px 48px -28px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.07);

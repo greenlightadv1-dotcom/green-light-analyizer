@@ -8,7 +8,7 @@ const VARIANTS: Record<Variant, string> = {
   primary:
     "bg-brand-green text-ink hover:brightness-110 active:brightness-95 shadow-[0_8px_30px_-12px_rgba(98,232,35,0.7)]",
   ghost:
-    "bg-white/5 text-white hover:bg-white/10 border border-white/10 backdrop-blur",
+    "bg-fg/5 text-fg hover:bg-fg/10 border border-fg/10 backdrop-blur",
 };
 
 export function Button({

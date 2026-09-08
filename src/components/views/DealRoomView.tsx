@@ -31,7 +31,7 @@ export function DealRoomView({
       <div className="mb-1">
         <Link
           href={`${basePath}/inbox`}
-          className="text-xs text-white/40 transition hover:text-white/70"
+          className="text-xs text-fg/40 transition hover:text-fg/70"
         >
           ← Deal inbox
         </Link>
@@ -54,36 +54,36 @@ export function DealRoomView({
 
         <div className="space-y-4">
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">Deal</h2>
+            <h2 className="text-sm font-semibold text-fg">Deal</h2>
             <dl className="mt-4 space-y-3.5 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-xs text-white/45">Offer</dt>
-                <dd className="font-semibold text-white tabular-nums">
+                <dt className="text-xs text-fg/45">Offer</dt>
+                <dd className="font-semibold text-fg tabular-nums">
                   {chat.offered_amount === null
                     ? "—"
                     : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-xs text-white/45">Deliverable</dt>
-                <dd className="text-white capitalize">
+                <dt className="text-xs text-fg/45">Deliverable</dt>
+                <dd className="text-fg capitalize">
                   {chat.sponsorship_type?.replace(/_/g, " ") ?? "—"}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-xs text-white/45">Targeting</dt>
-                <dd className="text-white">
+                <dt className="text-xs text-fg/45">Targeting</dt>
+                <dd className="text-fg">
                   {chat.target_countries?.join(", ") || "—"}
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-xs text-white/45">Co-Pilot</dt>
+                <dt className="text-xs text-fg/45">Co-Pilot</dt>
                 <dd>
                   <RiskBadge risk={chat.ai_evaluation} />
                 </dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-xs text-white/45">Status</dt>
+                <dt className="text-xs text-fg/45">Status</dt>
                 <dd>
                   <StatusBadge status={chat.deal_status} />
                 </dd>
@@ -98,10 +98,10 @@ export function DealRoomView({
           />
 
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-fg">
               Why you can&apos;t share contacts
             </h2>
-            <p className="mt-2 text-xs leading-relaxed text-white/45">
+            <p className="mt-2 text-xs leading-relaxed text-fg/45">
               Emails, phone numbers and links to WhatsApp, Telegram or Discord
               are removed automatically before a message is saved. Taking a deal
               off-platform is grounds for permanent removal — and the platform

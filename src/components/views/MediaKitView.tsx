@@ -66,13 +66,13 @@ export function MediaKitView({
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Platforms
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white tabular-nums">
-            {kits.length} <span className="text-sm text-white/35">/ {limit}</span>
+          <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
+            {kits.length} <span className="text-sm text-fg/35">/ {limit}</span>
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             {plan} plan.{" "}
             {canAddConnection(plan, kits.length)
               ? "You can connect more."
@@ -81,13 +81,13 @@ export function MediaKitView({
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Verified audiences
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white tabular-nums">
+          <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {verifiedCount}
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             {canVerifyAudience(plan)
               ? "Verified geography is included on your plan."
               : "Verified geography is a Pro and Elite feature."}
@@ -95,10 +95,10 @@ export function MediaKitView({
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Pricing impact
           </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/60">
+          <p className="mt-1.5 text-sm leading-relaxed text-fg/60">
             {verifiedCount > 0
               ? "Verified data is priced with full confidence."
               : "Without verified geography, a high-value deal can't be rated green."}
@@ -172,7 +172,7 @@ export function MediaKitView({
         stored. Flagged rather than silently widened — adding a platform is a
         product decision.
       */}
-      <p className="mt-6 text-xs leading-relaxed text-white/30">
+      <p className="mt-6 text-xs leading-relaxed text-fg/30">
         TikTok is not listed here: the schema&apos;s platform set covers YouTube,
         Twitch, Kick and Instagram only.
       </p>

@@ -10,7 +10,7 @@ export function VerifiedTag({ verified }: { verified: boolean }) {
       Verified
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/25 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-200 uppercase">
+    <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/25 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 dark:text-amber-200 uppercase">
       Self-reported
     </span>
   );

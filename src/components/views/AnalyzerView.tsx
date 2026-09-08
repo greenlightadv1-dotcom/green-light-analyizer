@@ -33,7 +33,7 @@ export function AnalyzerView({
           {/* §7.2: never show audience data without saying which kind it is. */}
           <GlassPanel className="p-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-white">
+              <h2 className="text-sm font-semibold text-fg">
                 Pricing basis
               </h2>
               <VerifiedTag verified={audienceVerified} />
@@ -42,28 +42,28 @@ export function AnalyzerView({
             {kit ? (
               <dl className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-white/45">Platform</dt>
-                  <dd className="text-white capitalize">{kit.platform}</dd>
+                  <dt className="text-xs text-fg/45">Platform</dt>
+                  <dd className="text-fg capitalize">{kit.platform}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-white/45">Average views</dt>
-                  <dd className="text-white tabular-nums">
+                  <dt className="text-xs text-fg/45">Average views</dt>
+                  <dd className="text-fg tabular-nums">
                     {kit.avg_views?.toLocaleString("en-US") ?? "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-white/45">Engagement</dt>
-                  <dd className="text-white tabular-nums">
+                  <dt className="text-xs text-fg/45">Engagement</dt>
+                  <dd className="text-fg tabular-nums">
                     {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-white/45">Category</dt>
-                  <dd className="text-white">{kit.content_category ?? "—"}</dd>
+                  <dt className="text-xs text-fg/45">Category</dt>
+                  <dd className="text-fg">{kit.content_category ?? "—"}</dd>
                 </div>
               </dl>
             ) : (
-              <p className="mt-3 text-xs leading-relaxed text-white/45">
+              <p className="mt-3 text-xs leading-relaxed text-fg/45">
                 No media kit on file yet, so pricing will fall back to the offer
                 text alone. Add your reach and audience data in Media kit for a
                 usable recommendation.
@@ -71,7 +71,7 @@ export function AnalyzerView({
             )}
 
             {!audienceVerified ? (
-              <p className="mt-4 border-t border-white/8 pt-3 text-[11px] leading-relaxed text-white/40">
+              <p className="mt-4 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-fg/40">
                 Your audience geography is self-reported, so a high-value deal
                 can&apos;t be rated green on it alone. Connecting YouTube or
                 Instagram analytics lifts that cap.

@@ -22,7 +22,7 @@ function SyncButton() {
     <button
       type="submit"
       disabled={pending}
-      className="text-xs text-brand-green underline underline-offset-4 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+      className="text-xs text-brand-green underline underline-offset-4 transition hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? "Syncing…" : "Sync now"}
     </button>
@@ -63,7 +63,7 @@ export function VerificationPanel({
   if (connected) {
     return (
       <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3.5">
-        <p className="text-xs leading-relaxed text-white/60">
+        <p className="text-xs leading-relaxed text-fg/60">
           Verified audience data is syncing from {support.source}.
         </p>
 
@@ -79,7 +79,7 @@ export function VerificationPanel({
             <input type="hidden" name="platform" value={platform} />
             <button
               type="submit"
-              className="text-xs text-white/45 underline underline-offset-4 transition hover:text-white/80"
+              className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
             >
               Disconnect
             </button>
@@ -87,13 +87,13 @@ export function VerificationPanel({
         </div>
 
         {syncState.error ? (
-          <p className="mt-2 text-[11px] text-red-300">{syncState.error}</p>
+          <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">{syncState.error}</p>
         ) : null}
         {syncState.synced ? (
           <p className="mt-2 text-[11px] text-brand-green">Synced.</p>
         ) : null}
 
-        <p className="mt-2 text-[11px] leading-relaxed text-white/30">
+        <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
           Disconnecting clears your verified audience data immediately and drops
           the badge.
         </p>
@@ -103,20 +103,20 @@ export function VerificationPanel({
 
   if (availability === "unsupported") {
     return (
-      <div className="rounded-xl border border-white/8 bg-white/3 p-3.5">
-        <p className="text-xs leading-relaxed text-white/40">{support.note}</p>
+      <div className="rounded-xl border border-fg/8 bg-fg/3 p-3.5">
+        <p className="text-xs leading-relaxed text-fg/40">{support.note}</p>
       </div>
     );
   }
 
   if (availability === "needs-upgrade") {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-3.5">
-        <p className="text-xs leading-relaxed text-white/50">
+      <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
+        <p className="text-xs leading-relaxed text-fg/50">
           Verified audience geography from {support.source} is included on Pro
           and Elite.
         </p>
-        <p className="mt-2 text-[11px] leading-relaxed text-white/30">
+        <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
           Upgrades are handled over Discord — there is no billing in the app.
         </p>
       </div>
@@ -124,8 +124,8 @@ export function VerificationPanel({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-3.5">
-      <p className="text-xs leading-relaxed text-white/55">{support.note}</p>
+    <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
+      <p className="text-xs leading-relaxed text-fg/55">{support.note}</p>
       <form action={connectAnalytics} className="mt-2.5">
         <input type="hidden" name="platform" value={platform} />
         <button
@@ -136,7 +136,7 @@ export function VerificationPanel({
         </button>
       </form>
       {!configured ? (
-        <p className="mt-2 text-[11px] leading-relaxed text-amber-200/60">
+        <p className="mt-2 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
           Not available yet — this connection is waiting on platform app
           review.
         </p>

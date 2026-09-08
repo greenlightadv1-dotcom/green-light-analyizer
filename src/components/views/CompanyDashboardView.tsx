@@ -40,25 +40,25 @@ export function CompanyDashboardView({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Open deals
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white tabular-nums">
+          <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {openDeals}
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             {chats.length} total, across every creator you&apos;ve offered
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Commission
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white">
+          <p className="mt-1.5 text-lg font-semibold text-fg">
             Charged on the deal, not on your seat
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             Browsing and messaging creators is free (§8).
           </p>
         </GlassPanel>
@@ -73,30 +73,30 @@ export function CompanyDashboardView({
           />
         ) : (
           <GlassPanel className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-white">
+            <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
+              <h2 className="text-sm font-semibold text-fg">
                 Recent deals
               </h2>
               <Link
                 href="/inbox"
-                className="text-xs text-white/45 transition hover:text-white/80"
+                className="text-xs text-fg/45 transition hover:text-fg/80"
               >
                 View all ({chats.length})
               </Link>
             </div>
 
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-fg/5">
               {recent.map((chat) => (
                 <li key={chat.id}>
                   <Link
                     href={`/inbox/${chat.id}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-white/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-fg/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
                   >
-                    <span className="min-w-0 flex-1 truncate text-sm text-white">
+                    <span className="min-w-0 flex-1 truncate text-sm text-fg">
                       {chat.sponsorship_type?.replace(/_/g, " ") ??
                         "unspecified deliverable"}
                     </span>
-                    <span className="text-sm text-white/70 tabular-nums">
+                    <span className="text-sm text-fg/70 tabular-nums">
                       {chat.offered_amount === null
                         ? "—"
                         : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}

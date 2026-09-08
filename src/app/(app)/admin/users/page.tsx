@@ -9,15 +9,15 @@ import { setBan, updateProfile } from "./actions";
 export const metadata: Metadata = { title: "Accounts" };
 
 const selectClass =
-  "h-9 rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs text-white transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 const inputClass =
-  "h-9 w-full rounded-lg border border-white/10 bg-white/5 px-2.5 text-xs text-white placeholder:text-white/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-9 w-full rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 const saveButtonClass =
   "h-9 shrink-0 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs font-medium text-brand-green transition hover:bg-brand-green/20";
 const banButtonClass =
-  "h-9 shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-3 text-xs font-medium text-red-200 transition hover:bg-red-500/20";
+  "h-9 shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-3 text-xs font-medium text-red-700 dark:text-red-200 transition hover:bg-red-500/20";
 const unbanButtonClass =
-  "h-9 shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 text-xs text-white/60 transition hover:bg-white/10 hover:text-white";
+  "h-9 shrink-0 rounded-lg border border-fg/10 bg-fg/5 px-3 text-xs text-fg/60 transition hover:bg-fg/10 hover:text-fg";
 
 /**
  * Admin account management — §4.1. Admins are the only ones who can bring an
@@ -53,22 +53,22 @@ export default async function AdminUsersPage() {
         </div>
 
         <GlassPanel className="overflow-hidden lg:col-span-3">
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-fg/5">
             {(profiles ?? []).map((p) => (
               <li key={p.id} className="px-5 py-3.5">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                   <div className="min-w-0 flex-1">
-                    <span className="block truncate text-sm text-white">
+                    <span className="block truncate text-sm text-fg">
                       {p.full_name}
                     </span>
-                    <span className="block truncate text-xs text-white/40">
+                    <span className="block truncate text-xs text-fg/40">
                       {p.primary_email}
                     </span>
                   </div>
-                  <span className="text-xs text-white/60 capitalize">
+                  <span className="text-xs text-fg/60 capitalize">
                     {p.role}
                   </span>
-                  <span className="text-xs text-white/60">
+                  <span className="text-xs text-fg/60">
                     {p.subscription_plan}
                     {p.subscription_expires_at ? (
                       <>
@@ -79,9 +79,9 @@ export default async function AdminUsersPage() {
                     ) : null}
                   </span>
                   {p.banned_at ? (
-                    <span className="text-red-300">Banned</span>
+                    <span className="text-red-700 dark:text-red-300">Banned</span>
                   ) : p.must_change_password ? (
-                    <span className="text-xs text-amber-300/80">
+                    <span className="text-xs text-amber-700/80 dark:text-amber-300/80">
                       Password reset pending
                     </span>
                   ) : (
@@ -90,14 +90,14 @@ export default async function AdminUsersPage() {
                 </div>
 
                 {p.id === admin.id ? (
-                  <p className="mt-2 text-xs text-white/30">This is you.</p>
+                  <p className="mt-2 text-xs text-fg/30">This is you.</p>
                 ) : (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-white/45 transition select-none hover:text-white/80">
+                    <summary className="cursor-pointer text-xs text-fg/45 transition select-none hover:text-fg/80">
                       Manage
                     </summary>
 
-                    <div className="mt-3 space-y-4 rounded-xl border border-white/8 bg-navy-dark/40 p-4">
+                    <div className="mt-3 space-y-4 rounded-xl border border-fg/10 bg-fg/5 p-4">
                       <form
                         action={updateProfile}
                         className="flex flex-wrap items-end gap-3"
@@ -105,7 +105,7 @@ export default async function AdminUsersPage() {
                         <input type="hidden" name="profile_id" value={p.id} />
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                             Plan
                           </label>
                           <select
@@ -120,7 +120,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                             Region
                           </label>
                           <select
@@ -136,7 +136,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                             Role
                           </label>
                           <select
@@ -151,7 +151,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                             Renew / extend
                           </label>
                           <select
@@ -168,7 +168,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                             Custom days
                           </label>
                           <input
@@ -185,7 +185,7 @@ export default async function AdminUsersPage() {
                         </button>
                       </form>
 
-                      <p className="text-[11px] leading-relaxed text-white/35">
+                      <p className="text-[11px] leading-relaxed text-fg/35">
                         Changing role does not move this account&apos;s
                         existing deals or media kits — use this to correct a
                         miscreated account, not to reassign an active one.
@@ -195,7 +195,7 @@ export default async function AdminUsersPage() {
                         plan/region/role alone never touches the expiry date.
                       </p>
 
-                      <div className="border-t border-white/8 pt-3.5">
+                      <div className="border-t border-fg/8 pt-3.5">
                         {p.banned_at ? (
                           <form
                             action={setBan}
@@ -207,7 +207,7 @@ export default async function AdminUsersPage() {
                               value={p.id}
                             />
                             <input type="hidden" name="action" value="unban" />
-                            <p className="min-w-0 flex-1 text-xs text-white/50">
+                            <p className="min-w-0 flex-1 text-xs text-fg/50">
                               Banned{" "}
                               {new Date(p.banned_at).toLocaleDateString()} —{" "}
                               {p.banned_reason}
@@ -228,7 +228,7 @@ export default async function AdminUsersPage() {
                             />
                             <input type="hidden" name="action" value="ban" />
                             <div className="min-w-[220px] flex-1 space-y-1">
-                              <label className="block text-[10px] tracking-wide text-white/40 uppercase">
+                              <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
                                 Ban reason
                               </label>
                               <input
@@ -250,7 +250,7 @@ export default async function AdminUsersPage() {
               </li>
             ))}
             {!profiles?.length ? (
-              <li className="px-5 py-8 text-sm text-white/40">
+              <li className="px-5 py-8 text-sm text-fg/40">
                 No accounts yet.
               </li>
             ) : null}

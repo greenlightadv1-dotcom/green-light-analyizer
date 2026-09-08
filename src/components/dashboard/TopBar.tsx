@@ -1,4 +1,5 @@
-import { Logo } from "@/components/brand/Logo";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
+import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import type { Profile } from "@/lib/auth";
 
 export function TopBar({
@@ -12,26 +13,30 @@ export function TopBar({
   return (
     <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
       <div className="lg:hidden">
-        <Logo variant="dark" height={26} />
+        <ThemedLogo height={26} />
       </div>
 
       <div className="hidden min-w-0 lg:block">
-        <p className="truncate text-sm font-medium text-white">
+        <p className="truncate text-sm font-medium text-fg">
           {profile.full_name}
         </p>
-        <p className="text-xs text-white/45 capitalize">
+        <p className="text-xs text-fg/45 capitalize">
           {profile.role} · {profile.subscription_plan ?? "Starter"}
         </p>
       </div>
 
-      <form action={demo ? undefined : "/auth/signout"} method="post">
-        <button
-          type={demo ? "button" : "submit"}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
-        >
-          Sign out
-        </button>
-      </form>
+      <div className="flex items-center gap-2">
+        <ThemeMenu />
+
+        <form action={demo ? undefined : "/auth/signout"} method="post">
+          <button
+            type={demo ? "button" : "submit"}
+            className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
     </header>
   );
 }

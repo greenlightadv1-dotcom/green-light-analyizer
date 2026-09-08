@@ -58,10 +58,10 @@ export function PlatformCard({
   if (locked) {
     return (
       <GlassPanel className="p-5 opacity-60">
-        <h2 className="text-sm font-semibold text-white">
+        <h2 className="text-sm font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-white/40">
+        <p className="mt-2 text-xs leading-relaxed text-fg/40">
           {lockReason}
         </p>
       </GlassPanel>
@@ -71,14 +71,14 @@ export function PlatformCard({
   return (
     <GlassPanel className="p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-white">
+        <h2 className="text-sm font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="text-xs text-white/45 transition hover:text-white/80"
+          className="text-xs text-fg/45 transition hover:text-fg/80"
         >
           {open ? "Close" : kit ? "Edit" : "Add"}
         </button>
@@ -156,7 +156,7 @@ export function PlatformCard({
             <div className="space-y-1.5">
               <label
                 htmlFor={`${platform}-countries`}
-                className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
               >
                 Where your audience is
               </label>
@@ -168,9 +168,9 @@ export function PlatformCard({
                   kit?.declared_top_countries as CountryShare[] | null,
                 )}
                 placeholder={"EG 40\nSA 25\nAE 15"}
-                className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 font-mono text-sm text-white placeholder:text-white/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+                className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
               />
-              <p className="text-xs text-white/45">
+              <p className="text-xs text-fg/45">
                 One country per line: two-letter code, then a percentage.
                 This is recorded as self-reported until you connect platform
                 analytics.

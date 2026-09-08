@@ -39,27 +39,27 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-white">Email intake</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-white/50">
+      <h2 className="text-sm font-semibold text-fg">Email intake</h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-fg/50">
         Forward your business email here and every offer arrives already priced
         and risk-rated.
       </p>
 
       {alias ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 rounded-xl border border-white/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+          <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {alias}
           </code>
           <button
             type="button"
             onClick={copy}
-            className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+            className="rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-100">
+        <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
           No inbound alias has been issued for this account yet. Ask an
           administrator to add one — offers cannot be received without it.
         </p>
@@ -67,8 +67,8 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
 
       <ol className="mt-5 space-y-2.5">
         {STEPS.map((step, i) => (
-          <li key={i} className="flex gap-3 text-xs leading-relaxed text-white/55">
-            <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/8 text-[10px] font-medium text-white/60">
+          <li key={i} className="flex gap-3 text-xs leading-relaxed text-fg/55">
+            <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-fg/8 text-[10px] font-medium text-fg/60">
               {i + 1}
             </span>
             {step}
@@ -76,7 +76,7 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
         ))}
       </ol>
 
-      <p className="mt-5 border-t border-white/8 pt-4 text-[11px] leading-relaxed text-white/35">
+      <p className="mt-5 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg/35">
         Your real email address never changes and never reaches a sponsor.
         Green Light does not connect to your Gmail account, does not ask for
         Google sign-in, and cannot read anything you have not forwarded.

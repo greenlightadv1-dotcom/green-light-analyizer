@@ -88,13 +88,13 @@ export function Composer({
           maxLength={4000}
           required
           placeholder="Write a reply…"
-          className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+          className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
         />
         <SendButton />
       </div>
 
       {state.error ? (
-        <p role="alert" className="text-xs text-red-300">
+        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
           {state.error}
         </p>
       ) : null}
@@ -102,7 +102,7 @@ export function Composer({
       {state.relayFailed ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100"
+          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
           Saved to the conversation, but we could not email it to the company
           just yet. Our team has been alerted — you do not need to resend.
@@ -112,7 +112,7 @@ export function Composer({
       {demoViolation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100"
+          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
           Contact details were removed:{" "}
           {demoViolation.map((r) => RULE_LABELS[r] ?? r).join(" and ")}. In the
@@ -124,7 +124,7 @@ export function Composer({
       {state.violation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100"
+          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
         >
           Your message was sent, but{" "}
           {state.violation.rules
@@ -136,7 +136,7 @@ export function Composer({
         </p>
       ) : null}
 
-      <p className="text-[11px] text-white/30">
+      <p className="text-[11px] text-fg/30">
         Emails, phone numbers and WhatsApp / Telegram / Discord links are removed
         automatically before your message is saved.
       </p>

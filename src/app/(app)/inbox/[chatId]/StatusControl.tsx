@@ -28,7 +28,7 @@ export function StatusControl({
 }) {
   return (
     <GlassPanel className="p-5">
-      <h2 className="text-sm font-semibold text-white">Update status</h2>
+      <h2 className="text-sm font-semibold text-fg">Update status</h2>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {OPTIONS.map((option) => (
@@ -44,7 +44,7 @@ export function StatusControl({
               className={`rounded-lg border px-2.5 py-1.5 text-xs transition ${
                 current === option.value
                   ? "cursor-default border-brand-green/30 bg-brand-green/10 text-brand-green"
-                  : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
+                  : "border-fg/10 bg-fg/5 text-fg/60 hover:bg-fg/10 hover:text-fg"
               }`}
             >
               {option.label}
@@ -53,7 +53,7 @@ export function StatusControl({
         ))}
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-white/30">
+      <p className="mt-3 text-[11px] leading-relaxed text-fg/30">
         Marking a deal paid is done by Green Light once escrow clears, not from
         here.
       </p>

@@ -19,14 +19,14 @@ export function EmptyState({
     <GlassPanel className="flex flex-col items-start gap-2 p-8">
       <div className="flex items-center gap-2">
         <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
-        <h2 className="text-sm font-semibold text-white">{title}</h2>
+        <h2 className="text-sm font-semibold text-fg">{title}</h2>
         {spec ? (
-          <span className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+          <span className="rounded-md border border-fg/10 bg-fg/5 px-1.5 py-0.5 font-mono text-[10px] text-fg/40">
             {spec}
           </span>
         ) : null}
       </div>
-      <p className="max-w-xl text-sm leading-relaxed text-white/45">{body}</p>
+      <p className="max-w-xl text-sm leading-relaxed text-fg/45">{body}</p>
     </GlassPanel>
   );
 }

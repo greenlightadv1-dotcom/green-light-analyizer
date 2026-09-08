@@ -7,7 +7,7 @@ export function Alert({
 }) {
   const styles =
     tone === "error"
-      ? "border-red-400/30 bg-red-500/10 text-red-200"
+      ? "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200"
       : "border-brand-green/25 bg-brand-green/10 text-brand-green";
 
   return (

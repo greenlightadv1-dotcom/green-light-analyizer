@@ -28,11 +28,11 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
   return (
     <form
       action={demo ? undefined : formAction}
-      className="mt-4 border-t border-white/8 pt-4"
+      className="mt-4 border-t border-fg/8 pt-4"
     >
       <label
         htmlFor="code"
-        className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+        className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
       >
         Have a promo code?
       </label>
@@ -42,7 +42,7 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
           name="code"
           placeholder="XXXX-XXXX"
           autoComplete="off"
-          className="h-11 min-w-[160px] flex-1 rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-white uppercase transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+          className="h-11 min-w-[160px] flex-1 rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg uppercase transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
         />
         <SubmitButton demo={demo} />
       </div>

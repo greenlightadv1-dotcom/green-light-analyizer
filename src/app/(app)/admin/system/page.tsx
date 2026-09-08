@@ -35,13 +35,13 @@ export default async function SystemPage() {
             : "border-amber-300/25 bg-amber-300/5"
         }`}
       >
-        <p className="text-sm font-medium text-white">
+        <p className="text-sm font-medium text-fg">
           {report.ready
             ? "All required configuration is present."
             : `${report.missingRequired.length} required ${report.missingRequired.length === 1 ? "variable is" : "variables are"} missing.`}
         </p>
         {!report.ready ? (
-          <p className="mt-1.5 font-mono text-xs text-amber-200">
+          <p className="mt-1.5 font-mono text-xs text-amber-700 dark:text-amber-200">
             {report.missingRequired.join(", ")}
           </p>
         ) : null}
@@ -50,22 +50,22 @@ export default async function SystemPage() {
       <GlassPanel className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-white/8 text-xs tracking-wide text-white/40 uppercase">
+            <thead className="border-b border-fg/8 text-xs tracking-wide text-fg/40 uppercase">
               <tr>
                 <th className="px-5 py-3 font-medium">Variable</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">If missing</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-fg/5">
               {report.items.map((item) => (
                 <tr key={item.name}>
                   <td className="px-5 py-3 align-top">
-                    <span className="font-mono text-xs text-white">
+                    <span className="font-mono text-xs text-fg">
                       {item.name}
                     </span>
                     {item.required ? (
-                      <span className="ml-2 text-[10px] tracking-wide text-white/35 uppercase">
+                      <span className="ml-2 text-[10px] tracking-wide text-fg/35 uppercase">
                         required
                       </span>
                     ) : null}
@@ -76,14 +76,14 @@ export default async function SystemPage() {
                     ) : (
                       <span
                         className={
-                          item.required ? "text-red-300" : "text-amber-300/80"
+                          item.required ? "text-red-700 dark:text-red-300" : "text-amber-700/80 dark:text-amber-300/80"
                         }
                       >
                         Not set
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-3 align-top text-xs leading-relaxed text-white/45">
+                  <td className="px-5 py-3 align-top text-xs leading-relaxed text-fg/45">
                     {item.set ? "—" : item.impact}
                   </td>
                 </tr>
@@ -93,7 +93,7 @@ export default async function SystemPage() {
         </div>
       </GlassPanel>
 
-      <p className="mt-4 text-xs leading-relaxed text-white/30">
+      <p className="mt-4 text-xs leading-relaxed text-fg/30">
         Values are never displayed here, only whether something is present. Set
         them in Vercel under Project Settings → Environment Variables, then
         redeploy — Next.js reads server environment variables at build and

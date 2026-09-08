@@ -39,7 +39,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-obsidian text-white antialiased">
+      {/* No bg-/text- utility classes here on purpose: globals.css's `body`
+          selector owns background + color now (theme-reactive), and a
+          class utility here would out-specificity it in light mode. */}
+      <body className="min-h-screen antialiased">
         <ThemeProvider>
           <GlowOrbs />
           {children}

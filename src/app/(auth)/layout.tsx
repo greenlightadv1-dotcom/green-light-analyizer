@@ -1,4 +1,4 @@
-import { Logo } from "@/components/brand/Logo";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { PageTransition } from "@/components/ui/PageTransition";
 
 /** Shared shell for the unauthenticated surfaces: login and forced reset. */
@@ -12,8 +12,7 @@ export default function AuthLayout({
       <PageTransition>
         <div className="w-full max-w-md">
           <div className="mb-8 flex justify-center">
-            {/* Dark theme is the app default -> dark lockup (§2.3). */}
-            <Logo variant="dark" height={44} priority />
+            <ThemedLogo height={44} />
           </div>
           {children}
         </div>

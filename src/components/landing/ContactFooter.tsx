@@ -1,4 +1,4 @@
-import { ThemedLogo } from "@/components/landing/ThemedLogo";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import {
   DISCORD_INVITE_URL,
   WHATSAPP_PHONE,

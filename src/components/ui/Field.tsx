@@ -16,20 +16,20 @@ export function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={id}
-        className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+        className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
       >
         {label}
       </label>
       <input
         id={id}
         aria-describedby={hintId}
-        className={`h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-white
-          placeholder:text-white/30 transition
+        className={`h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg
+          placeholder:text-fg/30 transition
           focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none ${className}`}
         {...rest}
       />
       {hint ? (
-        <p id={hintId} className="text-xs text-white/45">
+        <p id={hintId} className="text-xs text-fg/45">
           {hint}
         </p>
       ) : null}

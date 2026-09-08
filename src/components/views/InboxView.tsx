@@ -43,10 +43,10 @@ export function InboxView({
                 className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-white">
+                  <p className="truncate text-sm font-medium text-fg">
                     {chat.sender_email}
                   </p>
-                  <p className="mt-0.5 text-xs text-white/40">
+                  <p className="mt-0.5 text-xs text-fg/40">
                     {chat.sponsorship_type?.replace(/_/g, " ") ?? "unspecified deliverable"}
                     {chat.target_countries?.length
                       ? ` · targeting ${chat.target_countries.join(", ")}`
@@ -54,7 +54,7 @@ export function InboxView({
                   </p>
                 </div>
 
-                <p className="text-sm font-semibold text-white tabular-nums">
+                <p className="text-sm font-semibold text-fg tabular-nums">
                   {formatMoney(chat.offered_amount)}
                 </p>
                 <StatusBadge status={chat.deal_status} />

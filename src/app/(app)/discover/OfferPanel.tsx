@@ -13,7 +13,7 @@ import {
 } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-white transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 
 const TYPES = [
   { value: "video_dedicated", label: "Dedicated video" },
@@ -75,15 +75,15 @@ export function OfferPanel({
   const r = state.result;
 
   return (
-    <div className="w-full max-w-md space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="w-full max-w-md space-y-3 rounded-2xl border border-fg/10 bg-fg/5 p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-white/60 uppercase">
+        <p className="text-xs font-medium tracking-wide text-fg/60 uppercase">
           Offer to {creatorName}
         </p>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-xs text-white/40 hover:text-white/70"
+          className="text-xs text-fg/40 hover:text-fg/70"
         >
           Cancel
         </button>
@@ -97,7 +97,7 @@ export function OfferPanel({
           <div className="space-y-1.5">
             <label
               htmlFor={`sponsorship_type-${creatorId}`}
-              className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
             >
               What you want
             </label>
@@ -138,7 +138,7 @@ export function OfferPanel({
         <div className="space-y-1.5">
           <label
             htmlFor={`message_text-${creatorId}`}
-            className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
           >
             Your message
           </label>
@@ -149,7 +149,7 @@ export function OfferPanel({
             maxLength={20000}
             required
             placeholder="Describe the deliverable, timeline and anything else the creator needs…"
-            className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+            className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
           />
         </div>
 
@@ -159,28 +159,28 @@ export function OfferPanel({
       </form>
 
       {r ? (
-        <div className="space-y-3 border-t border-white/8 pt-3">
+        <div className="space-y-3 border-t border-fg/8 pt-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-fg">
               Co-Pilot recommendation
             </p>
             <RiskBadge risk={r.risk} capped={r.risk_capped} />
           </div>
 
-          <p className="text-lg font-semibold text-white tabular-nums">
+          <p className="text-lg font-semibold text-fg tabular-nums">
             ${r.recommended_price_usd.toLocaleString("en-US")}{" "}
-            <span className="text-xs font-normal text-white/45">
+            <span className="text-xs font-normal text-fg/45">
               fair range ${r.price_range_usd.low.toLocaleString("en-US")}–$
               {r.price_range_usd.high.toLocaleString("en-US")}
             </span>
           </p>
 
-          <p className="text-xs leading-relaxed text-white/55">
+          <p className="text-xs leading-relaxed text-fg/55">
             {r.reasoning}
           </p>
 
           {r.engine === "heuristic" ? (
-            <p className="text-[11px] leading-relaxed text-white/35">
+            <p className="text-[11px] leading-relaxed text-fg/35">
               Rule-based estimate — the AI engine is not configured on this
               environment.
             </p>

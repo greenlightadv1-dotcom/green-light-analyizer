@@ -50,10 +50,10 @@ export function DiscoverView({
             <GlassPanel key={creator.creator_id} className="p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-fg">
                     {creator.full_name}
                   </p>
-                  <p className="mt-0.5 text-xs text-white/45">
+                  <p className="mt-0.5 text-xs text-fg/45">
                     {creator.content_category ?? "Category not set"}
                     {creator.content_language
                       ? ` · ${creator.content_language}`
@@ -61,7 +61,7 @@ export function DiscoverView({
                     {" · "}
                     {formatViews(creator.avg_views)}
                   </p>
-                  <p className="mt-1 text-xs text-white/35">
+                  <p className="mt-1 text-xs text-fg/35">
                     {creator.platforms?.length
                       ? creator.platforms
                           .map((p) => PLATFORM_LABELS[p] ?? p)
@@ -76,7 +76,7 @@ export function DiscoverView({
                 />
               </div>
 
-              <div className="mt-4 border-t border-white/8 pt-4">
+              <div className="mt-4 border-t border-fg/8 pt-4">
                 <CountryShareList
                   shares={
                     creator.audience_verified

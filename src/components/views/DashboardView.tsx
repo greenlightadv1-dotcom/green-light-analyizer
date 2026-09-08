@@ -42,36 +42,36 @@ export function DashboardView({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">Plan</p>
-          <p className="mt-1.5 text-lg font-semibold text-white">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">Plan</p>
+          <p className="mt-1.5 text-lg font-semibold text-fg">
             {profile.subscription_plan ?? "Starter"}
           </p>
           {/* §4.3 — no in-app billing in the MVP; upgrades go through Discord. */}
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             Upgrades and payments are handled via Discord support tickets.
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Open deals
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-white tabular-nums">
+          <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {openDeals}
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             {profile.region ?? "MENA"} pricing · {plan} plan
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-white/45 uppercase">
+          <p className="text-xs tracking-wide text-fg/45 uppercase">
             Inbound alias
           </p>
           <p className="mt-1.5 font-mono text-sm break-all text-brand-green">
             {profile.inbound_alias ?? "Not issued yet"}
           </p>
-          <p className="mt-2 text-xs text-white/40">
+          <p className="mt-2 text-xs text-fg/40">
             Forward your public business email here.
           </p>
         </GlassPanel>
@@ -87,29 +87,29 @@ export function DashboardView({
             />
           ) : (
             <GlassPanel className="overflow-hidden">
-              <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3.5">
-                <h2 className="text-sm font-semibold text-white">
+              <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
+                <h2 className="text-sm font-semibold text-fg">
                   Recent deals
                 </h2>
                 <Link
                   href="/inbox"
-                  className="text-xs text-white/45 transition hover:text-white/80"
+                  className="text-xs text-fg/45 transition hover:text-fg/80"
                 >
                   View all ({chats.length})
                 </Link>
               </div>
 
-              <ul className="divide-y divide-white/5">
+              <ul className="divide-y divide-fg/5">
                 {recent.map((chat) => (
                   <li key={chat.id}>
                     <Link
                       href={`/inbox/${chat.id}`}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-white/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-fg/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
                     >
-                      <span className="min-w-0 flex-1 truncate text-sm text-white">
+                      <span className="min-w-0 flex-1 truncate text-sm text-fg">
                         {chat.sender_email}
                       </span>
-                      <span className="text-sm text-white/70 tabular-nums">
+                      <span className="text-sm text-fg/70 tabular-nums">
                         {chat.offered_amount === null
                           ? "—"
                           : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}
@@ -129,18 +129,18 @@ export function DashboardView({
             beats a generic "connect your accounts" prompt.
           */}
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-fg">
               Audience verification
             </h2>
             {verifiedKits > 0 ? (
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
+              <p className="mt-2 text-sm leading-relaxed text-fg/55">
                 {verifiedKits} of your {kits.length} connected{" "}
                 {kits.length === 1 ? "platform" : "platforms"} has verified
                 audience data. Offers against it are priced with full
                 confidence.
               </p>
             ) : (
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
+              <p className="mt-2 text-sm leading-relaxed text-fg/55">
                 Your audience data is self-reported, so a high-value offer
                 can&apos;t be rated green on it alone.{" "}
                 {canVerifyAudience(plan)

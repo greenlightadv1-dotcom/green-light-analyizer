@@ -78,7 +78,7 @@ export function DealRoom({
     <GlassPanel className="flex h-[calc(100vh-16rem)] min-h-96 flex-col overflow-hidden">
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-white/35">
+          <p className="py-10 text-center text-sm text-fg/35">
             No messages yet. Open the conversation below.
           </p>
         ) : (
@@ -99,17 +99,24 @@ export function DealRoom({
                 <div
                   className={`max-w-[78%] rounded-2xl px-3.5 py-2.5 ${
                     system
-                      ? "w-full max-w-full border border-white/8 bg-navy-dark/50 text-white/80"
+                      ? // Always a navy chip regardless of theme (the AI
+                        // Co-Pilot's own accent surface, not app chrome), so
+                        // its text stays literal white rather than the
+                        // theme-reactive fg token — ink-on-navy in light
+                        // mode would be close to unreadable.
+                        "w-full max-w-full border border-white/8 bg-navy-dark/50 text-white/80"
                       : mine
-                        ? "bg-brand-green/15 text-white"
-                        : "bg-white/6 text-white/90"
+                        ? "bg-brand-green/15 text-fg"
+                        : "bg-fg/6 text-fg/90"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">
                     {message.message_text}
                   </p>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="text-[10px] text-white/35">
+                    <span
+                      className={`text-[10px] ${system ? "text-white/35" : "text-fg/35"}`}
+                    >
                       {formatTime(message.created_at)}
                     </span>
                     {system ? (
@@ -119,7 +126,7 @@ export function DealRoom({
                     ) : null}
                     {message.is_masked ? (
                       <span
-                        className="text-[10px] text-amber-200/70"
+                        className="text-[10px] text-amber-700/70 dark:text-amber-200/70"
                         title="Contact details were removed from this message by platform policy."
                       >
                         filtered
@@ -134,7 +141,7 @@ export function DealRoom({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-white/8 p-4">
+      <div className="border-t border-fg/8 p-4">
         <Composer
           chatId={chatId}
           demo={demo}

@@ -14,7 +14,7 @@ import {
 } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-white transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 
 /** §6.2 sponsorship_type, in the order a creator is most likely to need. */
 const TYPES = [
@@ -75,9 +75,9 @@ function trustScoreClass(score: number): string {
     return "border-brand-green/30 bg-brand-green/10 text-brand-green";
   }
   if (score >= 50) {
-    return "border-amber-300/30 bg-amber-300/10 text-amber-200";
+    return "border-amber-300/30 bg-amber-300/10 text-amber-700 dark:text-amber-200";
   }
-  return "border-red-400/30 bg-red-500/10 text-red-200";
+  return "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200";
 }
 
 export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
@@ -116,7 +116,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           <div className="space-y-1.5">
             <label
               htmlFor="message_text"
-              className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
             >
               The offer
             </label>
@@ -127,7 +127,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               maxLength={20000}
               required
               placeholder="Paste the full message you received…"
-              className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+              className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
             />
           </div>
 
@@ -135,7 +135,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <div className="space-y-1.5">
               <label
                 htmlFor="sponsorship_type"
-                className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
               >
                 What they want
               </label>
@@ -172,26 +172,26 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-white">Recommendation</h2>
+            <h2 className="text-sm font-semibold text-fg">Recommendation</h2>
             <RiskBadge risk={r.risk} capped={r.risk_capped} />
           </div>
 
           <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className="text-3xl font-semibold text-white tabular-nums">
+            <p className="text-3xl font-semibold text-fg tabular-nums">
               ${r.recommended_price_usd.toLocaleString("en-US")}
             </p>
-            <p className="text-sm text-white/45 tabular-nums">
+            <p className="text-sm text-fg/45 tabular-nums">
               fair range ${r.price_range_usd.low.toLocaleString("en-US")}–$
               {r.price_range_usd.high.toLocaleString("en-US")}
             </p>
           </div>
 
-          <p className="mt-3 text-sm leading-relaxed text-white/60">
+          <p className="mt-3 text-sm leading-relaxed text-fg/60">
             {r.reasoning}
           </p>
 
           {r.risk_capped ? (
-            <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+            <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
               Held at yellow: this is a high-value deal and the audience
               geography behind the rating is self-reported. Connect YouTube or
               Instagram analytics to let a deal like this rate green.
@@ -205,7 +205,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             about the one feature the product is sold on.
           */}
           {r.engine === "heuristic" ? (
-            <p className="mt-3 text-[11px] leading-relaxed text-white/35">
+            <p className="mt-3 text-[11px] leading-relaxed text-fg/35">
               Rule-based estimate — the AI engine is not configured on this
               environment, so this is arithmetic on your reach and category, not
               an AI reading of the offer.
@@ -248,7 +248,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r?.security ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-fg">
               Domain & security check
             </h2>
             {r.security.trustScore !== null ? (
@@ -258,14 +258,14 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 {r.security.trustScore}% trust
               </span>
             ) : (
-              <span className="rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/45">
+              <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg/45">
                 Safety score unavailable
               </span>
             )}
           </div>
 
-          <p className="mt-3 text-sm text-white/60">
-            Domain: <span className="text-white">{r.security.domain}</span>
+          <p className="mt-3 text-sm text-fg/60">
+            Domain: <span className="text-fg">{r.security.domain}</span>
           </p>
 
           {r.security.reasons.length > 0 ? (
@@ -273,7 +273,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               {r.security.reasons.map((reason) => (
                 <li
                   key={reason}
-                  className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-100"
+                  className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-100"
                 >
                   {reason}
                 </li>
@@ -284,30 +284,30 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           {r.security.whois ? (
             <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-white/45">
+                <dt className="text-xs text-fg/45">
                   Company / organization
                 </dt>
-                <dd className="text-sm text-white">
+                <dd className="text-sm text-fg">
                   {r.security.whois.registrantOrganization ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-white/45">Registrant country</dt>
-                <dd className="text-sm text-white">
+                <dt className="text-xs text-fg/45">Registrant country</dt>
+                <dd className="text-sm text-fg">
                   {r.security.whois.registrantCountry ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-white/45">Domain created</dt>
-                <dd className="text-sm text-white">
+                <dt className="text-xs text-fg/45">Domain created</dt>
+                <dd className="text-sm text-fg">
                   {r.security.whois.createdAt
                     ? new Date(r.security.whois.createdAt).toLocaleDateString()
                     : "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-white/45">Domain expires</dt>
-                <dd className="text-sm text-white">
+                <dt className="text-xs text-fg/45">Domain expires</dt>
+                <dd className="text-sm text-fg">
                   {r.security.whois.expiresAt
                     ? new Date(r.security.whois.expiresAt).toLocaleDateString()
                     : "—"}
@@ -315,19 +315,19 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               </div>
             </dl>
           ) : (
-            <p className="mt-4 text-xs text-white/40">
+            <p className="mt-4 text-xs text-fg/40">
               WHOIS lookup unavailable — no company/domain profile to show.
             </p>
           )}
 
-          <div className="mt-4 space-y-1 border-t border-white/8 pt-3">
+          <div className="mt-4 space-y-1 border-t border-fg/8 pt-3">
             {r.security.whois?.whoisServer ? (
-              <p className="text-[11px] text-white/30">
+              <p className="text-[11px] text-fg/30">
                 WHOIS source: {r.security.whois.whoisServer}
               </p>
             ) : null}
             {!r.security.safeBrowsing ? (
-              <p className="text-[11px] text-white/30">
+              <p className="text-[11px] text-fg/30">
                 Phishing/malware check unavailable on this environment.
               </p>
             ) : null}

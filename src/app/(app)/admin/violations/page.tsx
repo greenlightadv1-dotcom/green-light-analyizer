@@ -63,15 +63,15 @@ export default async function ViolationsPage() {
               <GlassPanel key={log.id} className="p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-fg">
                       {who?.full_name ?? "Unknown account"}
                       {who?.banned_at ? (
-                        <span className="ml-2 text-xs text-red-300">
+                        <span className="ml-2 text-xs text-red-700 dark:text-red-300">
                           already banned
                         </span>
                       ) : null}
                     </p>
-                    <p className="mt-0.5 text-xs text-white/40">
+                    <p className="mt-0.5 text-xs text-fg/40">
                       {log.created_at
                         ? new Date(log.created_at).toLocaleString()
                         : ""}
@@ -82,7 +82,7 @@ export default async function ViolationsPage() {
                     {log.matched_rules.map((rule) => (
                       <span
                         key={rule}
-                        className="rounded-md border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-200 uppercase"
+                        className="rounded-md border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 dark:text-amber-200 uppercase"
                       >
                         {RULE_LABELS[rule] ?? rule}
                       </span>
@@ -90,6 +90,8 @@ export default async function ViolationsPage() {
                   </div>
                 </div>
 
+                {/* navy-dark is a fixed dark "code block" surface (§2.1)
+                    regardless of theme, so its text stays literal white. */}
                 <p className="mt-3 rounded-xl border border-white/8 bg-navy-dark/60 px-3.5 py-2.5 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/70">
                   {log.redacted_excerpt}
                 </p>
@@ -105,7 +107,7 @@ export default async function ViolationsPage() {
                       <input type="hidden" name="log_id" value={log.id} />
                       <button
                         type="submit"
-                        className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-200 transition hover:bg-red-500/20"
+                        className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-200 transition hover:bg-red-500/20"
                       >
                         Ban permanently
                       </button>
@@ -116,7 +118,7 @@ export default async function ViolationsPage() {
                     <input type="hidden" name="log_id" value={log.id} />
                     <button
                       type="submit"
-                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/10 hover:text-white"
+                      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/60 transition hover:bg-fg/10 hover:text-fg"
                     >
                       Dismiss — false positive
                     </button>

@@ -5,14 +5,13 @@ import { ValueProps } from "@/components/landing/ValueProps";
 import { ContactFooter } from "@/components/landing/ContactFooter";
 
 /**
- * Public marketing landing page (src/app/page.tsx). Opaque bg-white/dark:bg-obsidian
- * at the top level so it fully overrides the app shell's hardcoded dark
- * `body` background regardless of theme — see globals.css's comment on
- * @custom-variant dark for why only this page uses `dark:` utilities at all.
+ * Public marketing landing page (src/app/page.tsx). No bg/text classes of
+ * its own — `body` in globals.css is theme-aware now (mesh gradient +
+ * --color-fg), same as the rest of the app, so this just needs the layout.
  */
 export function LandingView() {
   return (
-    <div className="min-h-screen bg-white text-ink dark:bg-obsidian dark:text-white">
+    <div className="min-h-screen">
       <PageTransition>
         <LandingNav />
         <main>

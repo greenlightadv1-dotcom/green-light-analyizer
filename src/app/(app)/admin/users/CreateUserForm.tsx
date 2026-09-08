@@ -9,7 +9,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { createUser, type CreateUserState } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-white transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -28,8 +28,8 @@ export function CreateUserForm() {
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-white">New account</h2>
-      <p className="mt-1 text-xs leading-relaxed text-white/45">
+      <h2 className="text-sm font-semibold text-fg">New account</h2>
+      <p className="mt-1 text-xs leading-relaxed text-fg/45">
         A temporary password is generated and shown once. The account holder is
         forced to replace it on first login.
       </p>
@@ -54,7 +54,7 @@ export function CreateUserForm() {
         <div className="space-y-1.5">
           <label
             htmlFor="role"
-            className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
           >
             Role
           </label>
@@ -68,7 +68,7 @@ export function CreateUserForm() {
         <div className="space-y-1.5">
           <label
             htmlFor="region"
-            className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
           >
             Region
           </label>
@@ -89,9 +89,11 @@ export function CreateUserForm() {
             <p className="text-sm text-brand-green">
               Account created for {state.created.email}
             </p>
-            <p className="mt-2 text-xs text-white/60">
+            <p className="mt-2 text-xs text-fg/60">
               Temporary password — copy it now, it is not shown again:
             </p>
+            {/* navy-dark is a fixed dark "code block" surface (§2.1) regardless
+                of theme, so its text stays literal white, not the fg token. */}
             <code className="mt-1.5 block rounded-lg bg-navy-dark/80 px-3 py-2 font-mono text-sm break-all text-white">
               {state.created.tempPassword}
             </code>

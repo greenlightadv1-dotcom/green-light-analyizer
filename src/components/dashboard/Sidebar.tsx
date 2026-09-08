@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Logo, LogoMark } from "@/components/brand/Logo";
+import { LogoMark } from "@/components/brand/Logo";
+import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import type { Role } from "@/lib/types/database";
 
 type NavItem = {
@@ -38,8 +39,7 @@ export function Sidebar({
   return (
     <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col p-4 lg:flex">
       <Link href={`${basePath}/dashboard`} className="mb-6 block px-2 pt-2">
-        {/* Dark surface -> dark lockup (§2.3). */}
-        <Logo variant="dark" height={30} />
+        <ThemedLogo height={30} />
       </Link>
 
       <nav className="flex flex-col gap-1">
@@ -54,7 +54,7 @@ export function Sidebar({
               className={`rounded-xl border-l-2 py-2.5 pr-3 pl-2.5 text-sm transition ${
                 active
                   ? "border-brand-green bg-brand-green/12 font-medium text-brand-green"
-                  : "border-transparent text-white/60 hover:translate-x-0.5 hover:bg-white/5 hover:text-white"
+                  : "border-transparent text-fg/60 hover:translate-x-0.5 hover:bg-fg/5 hover:text-fg"
               }`}
             >
               {item.label}

@@ -13,8 +13,8 @@ export default async function LoginPage({
 
   return (
     <GlassPanel className="p-7 sm:p-8">
-      <h1 className="text-xl font-semibold text-white">Sign in</h1>
-      <p className="mt-1.5 text-sm text-white/55">
+      <h1 className="text-xl font-semibold text-fg">Sign in</h1>
+      <p className="mt-1.5 text-sm text-fg/55">
         Your Personal Business Manager.
       </p>
 
@@ -26,7 +26,7 @@ export default async function LoginPage({
         link. Plans and payments are handled via Discord tickets (§4.3), not
         in-app billing.
       */}
-      <p className="mt-7 border-t border-white/8 pt-5 text-xs leading-relaxed text-white/45">
+      <p className="mt-7 border-t border-fg/8 pt-5 text-xs leading-relaxed text-fg/45">
         Green Light accounts are created by an administrator — there is no
         public sign-up. Need access, or a plan change? Open a ticket in our
         Discord support server.

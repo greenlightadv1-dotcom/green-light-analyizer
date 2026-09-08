@@ -1,11 +1,11 @@
 import type { DealStatus } from "@/lib/types/database";
 
 const STYLES: Record<DealStatus, string> = {
-  new: "bg-white/10 text-white/70",
-  negotiating: "bg-sky-400/15 text-sky-200",
+  new: "bg-fg/10 text-fg/70",
+  negotiating: "bg-sky-400/15 text-sky-700 dark:text-sky-200",
   agreed: "bg-brand-green/15 text-brand-green",
   paid: "bg-brand-green/25 text-brand-green",
-  disputed: "bg-red-500/15 text-red-200",
+  disputed: "bg-red-500/15 text-red-700 dark:text-red-200",
 };
 
 const LABELS: Record<DealStatus, string> = {

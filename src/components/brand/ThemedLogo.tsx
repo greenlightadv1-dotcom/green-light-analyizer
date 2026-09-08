@@ -4,7 +4,8 @@ import { Logo } from "@/components/brand/Logo";
  * Swaps the light/dark lockup (CLAUDE.md §2.3) with the `dark:` CSS variant
  * rather than reading the resolved theme in JS — it's pure CSS, so it never
  * flashes the wrong logo while next-themes is still figuring out the theme
- * client-side.
+ * client-side. Used anywhere the surface itself now themes: the landing
+ * page nav/footer, and the dashboard Sidebar/TopBar.
  */
 export function ThemedLogo({ height = 30 }: { height?: number }) {
   return (
