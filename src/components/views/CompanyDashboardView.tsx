@@ -47,7 +47,7 @@ export function CompanyDashboardView({
             {openDeals}
           </p>
           <p className="mt-2 text-xs text-white/40">
-            {chats.length} total, across every creator you've offered
+            {chats.length} total, across every creator you&apos;ve offered
           </p>
         </GlassPanel>
 
