@@ -12,11 +12,33 @@ export const metadata: Metadata = { title: "Media kit" };
  * unreachable from the browser's identity by RLS, not by this page choosing
  * not to write it.
  */
-export default async function MediaKitPage() {
+export default async function MediaKitPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ oauth_connected?: string; oauth_error?: string }>;
+}) {
   const profile = await requireProfile();
   const kits = await listMediaKits(profile.id);
+  const { oauth_connected, oauth_error } = await searchParams;
 
   return (
-    <MediaKitView kits={kits} plan={profile.subscription_plan ?? "Starter"} />
+    <MediaKitView
+      kits={kits}
+      plan={profile.subscription_plan ?? "Starter"}
+      oauthConnected={oauth_connected ?? null}
+      oauthError={oauth_error ?? null}
+      oauthConfigured={{
+        youtube: Boolean(
+          process.env.GOOGLE_OAUTH_CLIENT_ID &&
+            process.env.GOOGLE_OAUTH_CLIENT_SECRET &&
+            process.env.NEXT_PUBLIC_APP_URL,
+        ),
+        instagram: Boolean(
+          process.env.META_APP_ID &&
+            process.env.META_APP_SECRET &&
+            process.env.NEXT_PUBLIC_APP_URL,
+        ),
+      }}
+    />
   );
 }

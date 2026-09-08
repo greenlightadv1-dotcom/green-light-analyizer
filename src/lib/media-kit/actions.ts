@@ -1,17 +1,26 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchYoutubeChannelStats } from "@/lib/youtube/client";
-import type { Platform } from "@/lib/types/database";
+import { deleteOAuthConnection } from "@/lib/oauth/tokens";
+import * as youtubeOAuth from "@/lib/oauth/youtube";
+import * as instagramOAuth from "@/lib/oauth/instagram";
+import type { OAuthPlatform, Platform } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
 import {
   PLATFORMS,
   canAddConnection,
   verificationAvailability,
 } from "./platforms";
+
+const REAL_OAUTH_PLATFORMS = ["youtube", "instagram"] as const;
+function isRealOAuthPlatform(value: string): value is OAuthPlatform {
+  return (REAL_OAUTH_PLATFORMS as readonly string[]).includes(value);
+}
 
 export type MediaKitState = {
   error: string | null;
@@ -117,6 +126,11 @@ export async function saveMediaKit(
  * Runs as service_role because those three columns are withheld from
  * `authenticated` by design — the same grant that stops a creator *setting*
  * the badge also stops them clearing it, so the server does both.
+ *
+ * Also deletes the stored OAuth tokens (oauth_connections) for youtube/
+ * instagram, if any — the point of disconnecting is that the platform no
+ * longer has standing access, so the credential that would grant it again on
+ * the next sync has to go too, not just the badge on this record.
  */
 export async function disconnectAnalytics(formData: FormData): Promise<void> {
   const profile = await requireProfile();
@@ -136,25 +150,24 @@ export async function disconnectAnalytics(formData: FormData): Promise<void> {
     .eq("creator_id", profile.id)
     .eq("platform", platform);
 
+  if (isRealOAuthPlatform(platform)) {
+    await deleteOAuthConnection(profile.id, platform);
+  }
+
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
 }
 
 /**
- * Begin the §7.3 OAuth handshake.
+ * Begin the §7.3 OAuth handshake for youtube/instagram — everything else
+ * still fails loudly rather than pretending, since no credentials exist for
+ * those platforms yet (see src/lib/oauth/platforms.ts).
  *
- * NOT IMPLEMENTED, and deliberately fails loudly rather than pretending.
- * Completing this needs credentials that do not exist yet:
- *
- *   YouTube   — a Google Cloud project, the yt-analytics.readonly scope, and a
- *               verified OAuth consent screen. Sensitive scope: review takes
- *               days-to-weeks, but NOT a CASA audit (§7.3).
- *   Instagram — a Meta app through App Review for instagram_manage_insights,
- *               plus a Business/Creator account linked to a Facebook Page.
- *
- * Both also need token storage and refresh handling. Until then the page shows
- * the connection as unavailable and says why, rather than offering a button
- * that dead-ends.
+ * The actual redirect-to-provider logic lives in
+ * /api/oauth/[platform]/start, not here: a Server Action can redirect, but
+ * the OAuth flow is naturally a GET-navigable URL (the provider redirects
+ * back to a GET callback), so the route handler is the more direct fit and
+ * this action's whole job is just sending the browser there.
  */
 export async function connectAnalytics(formData: FormData): Promise<void> {
   const profile = await requireProfile();
@@ -168,11 +181,101 @@ export async function connectAnalytics(formData: FormData): Promise<void> {
   );
   if (availability !== "available") return;
 
-  // No provider credentials are configured, so there is nothing to redirect to.
-  // Returning silently would look like a broken button; this is a real state.
+  if (isRealOAuthPlatform(platform)) {
+    redirect(`/api/oauth/${platform}/start`);
+  }
+
+  // No provider credentials are configured for this platform, and no start
+  // route exists for it that could redirect anywhere real. Returning
+  // silently would look like a broken button; this is a real state.
   throw new Error(
     `Analytics OAuth for ${platform} is not configured on this environment yet.`,
   );
+}
+
+export type SyncVerifiedGeoState = {
+  error: string | null;
+  synced: boolean;
+};
+
+/**
+ * "Sync verified geography" — pulls audience-country data through an
+ * already-established youtube/instagram OAuth connection and writes it into
+ * verified_top_countries + audience_verified (§7.2). Distinct from
+ * syncYoutubeStats below: that one is public channel-level stats via an API
+ * key, this one is per-viewer audience geography that only exists behind
+ * OAuth consent.
+ */
+export async function syncVerifiedGeo(
+  _prev: SyncVerifiedGeoState,
+  formData: FormData,
+): Promise<SyncVerifiedGeoState> {
+  const profile = await requireProfile();
+
+  const platform = String(formData.get("platform") ?? "");
+  if (!isRealOAuthPlatform(platform)) {
+    return { error: "Unsupported platform.", synced: false };
+  }
+
+  const accessToken =
+    platform === "youtube"
+      ? await youtubeOAuth.getValidAccessToken(profile.id)
+      : await instagramOAuth.getValidAccessToken(profile.id);
+
+  if (!accessToken) {
+    return {
+      error: "Your connection has expired or is missing — reconnect above.",
+      synced: false,
+    };
+  }
+
+  const service = createAdminClient();
+  const { data: connection } = await service
+    .from("oauth_connections")
+    .select("external_account_id")
+    .eq("creator_id", profile.id)
+    .eq("platform", platform)
+    .maybeSingle();
+
+  if (!connection?.external_account_id) {
+    return { error: "Reconnect above to sync.", synced: false };
+  }
+
+  const countries =
+    platform === "youtube"
+      ? await youtubeOAuth.fetchAudienceCountries(
+          accessToken,
+          connection.external_account_id,
+        )
+      : await instagramOAuth.fetchAudienceCountries(
+          accessToken,
+          connection.external_account_id,
+        );
+
+  if (!countries) {
+    return {
+      error: `Could not reach ${platform === "youtube" ? "YouTube Analytics" : "Instagram"} — try again shortly.`,
+      synced: false,
+    };
+  }
+
+  const { error } = await service
+    .from("media_kits")
+    .update({
+      verified_top_countries: countries,
+      audience_verified: true,
+      last_synced_at: new Date().toISOString(),
+    })
+    .eq("creator_id", profile.id)
+    .eq("platform", platform);
+
+  if (error) {
+    return { error: "Fetched but could not save.", synced: false };
+  }
+
+  revalidatePath("/media-kit");
+  revalidatePath("/analyzer");
+  return { error: null, synced: true };
 }
 
 export type SyncYoutubeState = {

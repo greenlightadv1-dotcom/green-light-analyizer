@@ -4,6 +4,7 @@ import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
+import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { kitByPlatform, type MediaKit } from "@/lib/media-kit/queries";
 import {
@@ -13,10 +14,26 @@ import {
   canAddConnection,
   maxConnections,
 } from "@/lib/media-kit/platforms";
-import type { CountryShare, SubscriptionPlan } from "@/lib/types/database";
+import type { CountryShare, Platform, SubscriptionPlan } from "@/lib/types/database";
+
+const REAL_OAUTH_PLATFORMS: Platform[] = ["youtube", "instagram"];
 
 /** Media kit (§7), presentation only. Shared with /preview. */
-export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: SubscriptionPlan }) {
+export function MediaKitView({
+  kits,
+  plan,
+  oauthConfigured = {},
+  oauthConnected = null,
+  oauthError = null,
+}: {
+  kits: MediaKit[];
+  plan: SubscriptionPlan;
+  /** Whether each real-OAuth platform's app is actually registered. */
+  oauthConfigured?: Partial<Record<Platform, boolean>>;
+  /** Set right after a successful /api/oauth/[platform]/callback redirect. */
+  oauthConnected?: string | null;
+  oauthError?: string | null;
+}) {
   const byPlatform = kitByPlatform(kits);
   const limit = maxConnections(plan);
   const verifiedCount = kits.filter((k) => k.audience_verified).length;
@@ -27,6 +44,24 @@ export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: Subscript
         title="Media kit"
         description="What sponsors see about your reach. Stats come from platform APIs or carry a self-reported tag — never a screenshot."
       />
+
+      {oauthConnected ? (
+        <div className="mb-4">
+          <Alert tone="info">
+            {PLATFORM_LABELS[oauthConnected as Platform] ?? oauthConnected}{" "}
+            connected — verified audience geography will sync below.
+          </Alert>
+        </div>
+      ) : null}
+      {oauthError ? (
+        <div className="mb-4">
+          <Alert>
+            Couldn&apos;t connect{" "}
+            {PLATFORM_LABELS[oauthError as Platform] ?? oauthError}. Try
+            again, or check that the connection hasn&apos;t already expired.
+          </Alert>
+        </div>
+      ) : null}
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
@@ -83,6 +118,10 @@ export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: Subscript
                 kit={kit}
                 locked={blocked}
                 lockReason={`Your ${plan} plan covers ${limit} platform connections and you have used them all. Upgrade over Discord to add ${PLATFORM_LABELS[platform]}.`}
+                verifiedGeoConnected={
+                  REAL_OAUTH_PLATFORMS.includes(platform) &&
+                  kit?.audience_verified === true
+                }
               />
 
               {kit ? (
@@ -108,6 +147,7 @@ export function MediaKitView({ kits, plan }: { kits: MediaKit[]; plan: Subscript
                     platform={platform}
                     plan={plan}
                     connected={kit.analytics_oauth_connected === true}
+                    configured={oauthConfigured[platform] === true}
                   />
 
                   {platform === "youtube" ? (

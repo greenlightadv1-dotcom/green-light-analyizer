@@ -31,12 +31,21 @@ export function PlatformCard({
   kit,
   locked,
   lockReason,
+  verifiedGeoConnected = false,
 }: {
   platform: Platform;
   kit: MediaKit | null;
   /** True when the §8 connection limit blocks adding this new platform. */
   locked: boolean;
   lockReason?: string;
+  /**
+   * True once a real OAuth connection (youtube/instagram) supplies
+   * verified_top_countries for this kit. Replaces the manual "Where your
+   * audience is" field with a note pointing at the verified data shown
+   * below — everything else here (reach, category, language) stays
+   * editable, since no OAuth connection provides any of that.
+   */
+  verifiedGeoConnected?: boolean;
 }) {
   const [state, formAction] = useActionState<MediaKitState, FormData>(
     saveMediaKit,
@@ -136,28 +145,38 @@ export function PlatformCard({
             defaultValue={kit?.content_language ?? ""}
           />
 
-          <div className="space-y-1.5">
-            <label
-              htmlFor={`${platform}-countries`}
-              className="block text-xs font-medium tracking-wide text-white/70 uppercase"
-            >
-              Where your audience is
-            </label>
-            <textarea
-              id={`${platform}-countries`}
-              name="declared_top_countries"
-              rows={4}
-              defaultValue={formatCountryShares(
-                kit?.declared_top_countries as CountryShare[] | null,
-              )}
-              placeholder={"EG 40\nSA 25\nAE 15"}
-              className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 font-mono text-sm text-white placeholder:text-white/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
-            />
-            <p className="text-xs text-white/45">
-              One country per line: two-letter code, then a percentage. This is
-              recorded as self-reported until you connect platform analytics.
-            </p>
-          </div>
+          {verifiedGeoConnected ? (
+            <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3">
+              <p className="text-xs leading-relaxed text-brand-green">
+                Audience geography is verified via your connected account —
+                see below. Disconnect above to enter it manually again.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <label
+                htmlFor={`${platform}-countries`}
+                className="block text-xs font-medium tracking-wide text-white/70 uppercase"
+              >
+                Where your audience is
+              </label>
+              <textarea
+                id={`${platform}-countries`}
+                name="declared_top_countries"
+                rows={4}
+                defaultValue={formatCountryShares(
+                  kit?.declared_top_countries as CountryShare[] | null,
+                )}
+                placeholder={"EG 40\nSA 25\nAE 15"}
+                className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 font-mono text-sm text-white placeholder:text-white/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+              />
+              <p className="text-xs text-white/45">
+                One country per line: two-letter code, then a percentage.
+                This is recorded as self-reported until you connect platform
+                analytics.
+              </p>
+            </div>
+          )}
 
           {state.error ? <Alert>{state.error}</Alert> : null}
           {saved ? <Alert tone="info">Saved.</Alert> : null}

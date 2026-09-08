@@ -85,6 +85,60 @@ export function readConfigReport(): ConfigReport {
       impact:
         "Relayed email is sent from deals@<inbound domain>. That address must be a verified sender in Resend.",
     },
+    {
+      name: "GOOGLE_SAFE_BROWSING_API_KEY",
+      set: Boolean(process.env.GOOGLE_SAFE_BROWSING_API_KEY),
+      required: false,
+      impact:
+        "The Manual Analyzer's domain/security check shows 'unavailable' for the phishing/malware signal instead of a real result.",
+    },
+    {
+      name: "IP2WHOIS_API_KEY",
+      set: Boolean(process.env.IP2WHOIS_API_KEY),
+      required: false,
+      impact:
+        "The Manual Analyzer's domain/security check shows 'unavailable' for the WHOIS/company-profile signal instead of a real result.",
+    },
+    {
+      name: "YOUTUBE_API_KEY",
+      set: Boolean(process.env.YOUTUBE_API_KEY),
+      required: false,
+      impact:
+        "\"Sync from YouTube\" on Media Kit (subscriber/lifetime-view counts) fails with a clear error instead of syncing.",
+    },
+    {
+      name: "NEXT_PUBLIC_APP_URL",
+      set: Boolean(process.env.NEXT_PUBLIC_APP_URL),
+      required: false,
+      impact:
+        "YouTube/Instagram OAuth connect buttons show 'not configured' — the redirect_uri can't be built without a known base URL.",
+    },
+    {
+      name: "GOOGLE_OAUTH_CLIENT_ID",
+      set: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
+      required: false,
+      impact:
+        "YouTube verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+    },
+    {
+      name: "GOOGLE_OAUTH_CLIENT_SECRET",
+      set: Boolean(process.env.GOOGLE_OAUTH_CLIENT_SECRET),
+      required: false,
+      impact: "Same as GOOGLE_OAUTH_CLIENT_ID — both are needed together.",
+    },
+    {
+      name: "META_APP_ID",
+      set: Boolean(process.env.META_APP_ID),
+      required: false,
+      impact:
+        "Instagram verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+    },
+    {
+      name: "META_APP_SECRET",
+      set: Boolean(process.env.META_APP_SECRET),
+      required: false,
+      impact: "Same as META_APP_ID — both are needed together.",
+    },
   ];
 
   const missingRequired = items

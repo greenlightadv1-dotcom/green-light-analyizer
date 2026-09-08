@@ -182,6 +182,25 @@ type PromoCode = {
   created_at: string | null;
 };
 
+export type OAuthPlatform = "youtube" | "instagram";
+
+/**
+ * YouTube Analytics / Instagram Graph API OAuth tokens (migration 0015). No
+ * RLS policy for `authenticated` at all -- server-only, like PromoCode.
+ */
+type OAuthConnection = {
+  id: string;
+  creator_id: string;
+  platform: OAuthPlatform;
+  access_token: string;
+  refresh_token: string | null;
+  expires_at: string;
+  external_account_id: string | null;
+  scope: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 /** Columns with a database default (or that are nullable) are optional on insert. */
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
@@ -247,6 +266,13 @@ export type Database = {
         Optional<
           PromoCode,
           Exclude<keyof PromoCode, "code" | "duration_days" | "target_plan" | "expires_at">
+        >
+      >;
+      oauth_connections: Table<
+        OAuthConnection,
+        Optional<
+          OAuthConnection,
+          Exclude<keyof OAuthConnection, "creator_id" | "platform" | "access_token" | "expires_at">
         >
       >;
     };
