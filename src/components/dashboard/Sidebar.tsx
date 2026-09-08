@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogoMark } from "@/components/brand/Logo";
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import type { Role } from "@/lib/types/database";
 
@@ -39,7 +38,7 @@ export function Sidebar({
   return (
     <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col p-4 lg:flex">
       <Link href={`${basePath}/dashboard`} className="mb-6 block px-2 pt-2">
-        <ThemedLogo height={30} />
+        <ThemedLogo size={34} />
       </Link>
 
       <nav className="flex flex-col gap-1">
@@ -64,7 +63,7 @@ export function Sidebar({
       </nav>
 
       <div className="mt-auto px-2 pt-5">
-        <LogoMark size={20} className="opacity-40" />
+        <ThemedLogo size={20} className="opacity-40" />
       </div>
     </aside>
   );

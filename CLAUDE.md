@@ -96,6 +96,20 @@ Rules:
 - On the dark theme (the app's default), prefer `logo_dark_full.png` in the
   nav/header and `icon_color.png` as the favicon / collapsed sidebar mark.
 
+> **Update — icon-only, real transparency.** The client later supplied two
+> genuinely transparent icon files (confirmed via each WebP's VP8X alpha
+> flag, not just visual inspection) and asked that the wordmark be dropped
+> everywhere in favor of the icon alone, switching with the active theme:
+> `public/branding/icon_dark.webp` (white mark, for dark surfaces) and
+> `icon_light.webp` (navy mark, for light surfaces) — same "suffix names the
+> surface, not the mark's own color" convention as the two `_full.png`
+> files above. `src/components/brand/Logo.tsx` and `ThemedLogo.tsx` render
+> these directly with no plate wrapper, since — unlike the three files
+> above, which are still baked-opaque — these two actually have alpha. The
+> `_full.png` lockups and `icon_color.png` are unused in the app now but
+> left on disk; the favicon (`app/layout.tsx` metadata) still points at
+> `icon_color.png`, not touched by this change.
+
 ### 2.4 Typography
 - No custom typeface was supplied — use a clean geometric/grotesk sans
   (e.g. `Inter` or `Manrope`) for UI text.

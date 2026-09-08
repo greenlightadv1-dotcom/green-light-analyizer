@@ -12,7 +12,7 @@ export default function AuthLayout({
       <PageTransition>
         <div className="w-full max-w-md">
           <div className="mb-8 flex justify-center">
-            <ThemedLogo height={44} />
+            <ThemedLogo size={48} />
           </div>
           {children}
         </div>

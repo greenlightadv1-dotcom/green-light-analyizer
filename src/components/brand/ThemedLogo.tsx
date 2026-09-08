@@ -1,20 +1,26 @@
 import { Logo } from "@/components/brand/Logo";
 
 /**
- * Swaps the light/dark lockup (CLAUDE.md §2.3) with the `dark:` CSS variant
- * rather than reading the resolved theme in JS — it's pure CSS, so it never
- * flashes the wrong logo while next-themes is still figuring out the theme
- * client-side. Used anywhere the surface itself now themes: the landing
- * page nav/footer, and the dashboard Sidebar/TopBar.
+ * Swaps the dark/light icon with the `dark:` CSS variant rather than reading
+ * the resolved theme in JS — it's pure CSS, so it never flashes the wrong
+ * mark while next-themes is still figuring out the theme client-side. Used
+ * everywhere the brand mark appears: landing nav/footer, dashboard
+ * Sidebar/TopBar, the auth shell, and the suspended page.
  */
-export function ThemedLogo({ height = 30 }: { height?: number }) {
+export function ThemedLogo({
+  size = 32,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex">
-      <span className="dark:hidden">
-        <Logo variant="light" height={height} priority />
+    <span className={`relative inline-block ${className}`} style={{ width: size, height: size }}>
+      <span className="absolute inset-0 dark:hidden">
+        <Logo variant="light" size={size} priority />
       </span>
-      <span className="hidden dark:inline-flex">
-        <Logo variant="dark" height={height} priority />
+      <span className="absolute inset-0 hidden dark:block">
+        <Logo variant="dark" size={size} priority />
       </span>
     </span>
   );

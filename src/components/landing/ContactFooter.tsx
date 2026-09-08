@@ -27,7 +27,7 @@ export function ContactFooter() {
     <footer className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
       <div className="flex flex-col items-center gap-6 rounded-2xl border border-navy/10 bg-white/70 px-6 py-8 text-center backdrop-blur-xl sm:flex-row sm:justify-between sm:text-left dark:border-white/10 dark:bg-navy-dark/50">
         <div className="flex items-center gap-3">
-          <ThemedLogo height={24} />
+          <ThemedLogo size={28} />
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">

@@ -18,7 +18,7 @@ export default function SuspendedPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <ThemedLogo height={44} />
+          <ThemedLogo size={48} />
         </div>
 
         <GlassPanel className="p-7 sm:p-8">

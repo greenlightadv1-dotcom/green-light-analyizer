@@ -13,7 +13,7 @@ export function TopBar({
   return (
     <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
       <div className="lg:hidden">
-        <ThemedLogo height={26} />
+        <ThemedLogo size={30} />
       </div>
 
       <div className="hidden min-w-0 lg:block">
