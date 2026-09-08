@@ -2,6 +2,7 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { InboundAliasCard } from "@/components/settings/InboundAliasCard";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { RedeemCodeForm } from "@/app/(app)/settings/RedeemCodeForm";
+import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 import type { Profile } from "@/lib/auth";
 
 /** Settings, presentation only. Shared with /preview. */
@@ -70,9 +71,14 @@ export function SettingsView({
 
           <RedeemCodeForm demo={demo} />
 
-          <p className="mt-5 text-xs text-white/35">
-            Discord invite link to be supplied by the client.
-          </p>
+          <a
+            href={DISCORD_INVITE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center text-xs text-brand-green underline underline-offset-2 hover:brightness-110"
+          >
+            Open a ticket in our Discord
+          </a>
         </GlassPanel>
 
         <div className="lg:col-span-2">

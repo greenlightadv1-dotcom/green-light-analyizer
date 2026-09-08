@@ -449,6 +449,31 @@ state** (visible but not clickable) to tease upcoming features:
   or is fast-followed shortly after MVP launch, given the extra OAuth
   review lead time.
 
+---
+
+## 14. Public landing page & theming
+
+`/` is now a real public marketing page (`src/components/landing/`), reachable
+without a session — previously the root just redirected straight to
+`/dashboard` or `/login`. This does **not** add self-signup: the "Request
+access" CTA and every other contact point route to Discord/WhatsApp, per §4's
+admin-gated model, which is unchanged.
+
+- **Contact channels** — `src/lib/constants/contact.ts` is the one place
+  Discord/WhatsApp URLs are defined. Reused by the landing page, `/settings`'
+  Plan & billing card, and `/suspended`.
+- **Palette** — still exactly §2.1's hexes (`#293E61` / `#1F2E47` / `#62E823`).
+  A later design pass proposed a different navy/green pair; it was rejected in
+  favor of the confirmed brand colors already implemented everywhere else.
+- **Light/dark mode is landing-page-only.** `ThemeProvider`
+  (`src/components/ThemeProvider.tsx`, wrapping `next-themes`) is mounted at
+  the root and defaults to system preference with a manual toggle, but the
+  authenticated app shell (Sidebar, TopBar, GlassPanel, every dashboard view)
+  is intentionally still hardcoded to the dark palette and does not read the
+  theme class at all — matching §2.2's "dark theme shell" framing for the
+  product itself. Only `src/components/landing/*` uses Tailwind `dark:`
+  utilities, enabled via the `@custom-variant dark` in `globals.css`.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

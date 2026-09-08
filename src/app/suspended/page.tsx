@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/brand/Logo";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
 export const metadata: Metadata = { title: "Account suspended" };
 
@@ -30,8 +31,16 @@ export default function SuspendedPage() {
             treat as a permanent breach.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-white/45">
-            If you believe this is a mistake, open a ticket in our Discord
-            support server and an administrator will review it.
+            If you believe this is a mistake, open a ticket in our{" "}
+            <a
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-green underline underline-offset-2 hover:brightness-110"
+            >
+              Discord support server
+            </a>{" "}
+            and an administrator will review it.
           </p>
 
           <form action="/auth/signout" method="post" className="mt-6">

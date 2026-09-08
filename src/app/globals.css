@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/*
+ * Class-based dark mode (next-themes sets class="dark"/"light" on <html>,
+ * defaulting to the visitor's system preference — see ThemeProvider). Without
+ * this, Tailwind v4's `dark:` variant falls back to a plain
+ * `prefers-color-scheme` media query, which can't be overridden by the
+ * in-app toggle.
+ *
+ * Only the public landing page actually uses `dark:` utilities today — the
+ * authenticated app shell (Sidebar/TopBar/GlassPanel/etc.) is intentionally
+ * still hardcoded to the dark palette below, regardless of <html>'s class,
+ * matching CLAUDE.md §2.2's "dark theme shell" framing for the product itself.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ---------------------------------------------------------------------------
    Green Light design tokens — CLAUDE.md §2.1
    Exact hex values. Do not approximate, do not reintroduce #10B981.
@@ -26,8 +40,17 @@
   --radius-glass: 20px;
 }
 
+/*
+ * The authenticated app is always dark (color-scheme: dark, unconditional).
+ * The landing page is the one surface that switches with the theme class, so
+ * native form controls / scrollbars there follow it too.
+ */
 :root {
   color-scheme: dark;
+}
+
+:root:not(.dark) {
+  color-scheme: light;
 }
 
 html,

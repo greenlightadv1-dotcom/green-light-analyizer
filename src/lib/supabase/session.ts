@@ -4,8 +4,12 @@ import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
-/** Routes reachable without a session. There is no signup route — by design (§4). */
-const PUBLIC_PATHS = ["/login", "/auth"];
+/**
+ * Routes reachable without a session. "/" is the public marketing landing
+ * page (no self-signup — its CTA routes to Discord, §4). There is still no
+ * signup route anywhere in the product.
+ */
+const PUBLIC_PATHS = ["/", "/login", "/auth"];
 
 /** Where a user with a pending forced password change is pinned (§4.2). */
 export const SET_PASSWORD_PATH = "/set-password";
@@ -105,8 +109,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // A signed-in user has no business on the login screen.
-  if (pathname === "/login") {
+  // A signed-in user goes straight to their dashboard, not the marketing
+  // landing page or the login screen.
+  if (pathname === "/" || pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";

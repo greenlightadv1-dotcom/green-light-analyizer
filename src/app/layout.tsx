@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { GlowOrbs } from "@/components/ui/GlowOrbs";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 /**
@@ -27,17 +28,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0D14",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0D14" },
+  ],
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-obsidian text-white antialiased">
-        <GlowOrbs />
-        {children}
+        <ThemeProvider>
+          <GlowOrbs />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
