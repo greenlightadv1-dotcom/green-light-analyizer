@@ -58,8 +58,22 @@ body {
   height: 100%;
 }
 
+/*
+ * Base app-shell background — a static mesh gradient in the exact §2.1
+ * hexes, sitting under GlowOrbs' animated blobs and every glass panel.
+ * Previously a flat --color-obsidian fill; this adds depth without moving
+ * off-brand. Fixed to the viewport (not the page) so it reads as one ambient
+ * backdrop rather than tiling as content scrolls taller than one screen.
+ */
 body {
   background-color: var(--color-obsidian);
+  background-image:
+    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.12), transparent 60%),
+    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.65), transparent 55%),
+    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.07), transparent 60%),
+    linear-gradient(165deg, #1f2e47 0%, #0a0d14 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #ffffff;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
