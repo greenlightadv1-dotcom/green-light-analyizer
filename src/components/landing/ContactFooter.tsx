@@ -1,4 +1,7 @@
+"use client";
+
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
+import { useTranslation } from "@/components/LocaleProvider";
 import {
   DISCORD_INVITE_URL,
   WHATSAPP_PHONE,
@@ -23,9 +26,11 @@ function DiscordIcon() {
 }
 
 export function ContactFooter() {
+  const { t } = useTranslation();
+
   return (
     <footer className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-      <div className="flex flex-col items-center gap-6 rounded-2xl border border-navy/10 bg-white/70 px-6 py-8 text-center backdrop-blur-xl sm:flex-row sm:justify-between sm:text-left dark:border-white/10 dark:bg-navy-dark/50">
+      <div className="flex flex-col items-center gap-6 rounded-2xl border border-navy/10 bg-white/70 px-6 py-8 text-center backdrop-blur-xl sm:flex-row sm:justify-between sm:text-start dark:border-white/10 dark:bg-navy-dark/50">
         <div className="flex items-center gap-3">
           <ThemedLogo size={28} />
         </div>
@@ -47,13 +52,13 @@ export function ContactFooter() {
             className="inline-flex items-center gap-2 rounded-lg border border-navy/15 bg-navy/5 px-3 py-1.5 text-xs text-ink transition hover:bg-navy/10 dark:border-white/15 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
           >
             <DiscordIcon />
-            Join our Discord
+            {t("landing.joinDiscord")}
           </a>
         </div>
       </div>
 
       <p className="mt-6 text-center text-xs text-ink/35 dark:text-white/30">
-        © {new Date().getFullYear()} Green Light. All rights reserved.
+        © {new Date().getFullYear()} Green Light. {t("landing.footerRights")}
       </p>
     </footer>
   );

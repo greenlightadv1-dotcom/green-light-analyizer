@@ -1,4 +1,7 @@
+"use client";
+
 import { CtaLink } from "@/components/landing/CtaLink";
+import { useTranslation } from "@/components/LocaleProvider";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
 /**
@@ -18,35 +21,35 @@ function HeroGlow() {
 }
 
 export function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative overflow-hidden px-4 pt-20 pb-16 text-center sm:px-6 sm:pt-28 sm:pb-24">
       <HeroGlow />
 
       <p className="mx-auto inline-flex items-center rounded-full border border-navy/15 bg-navy/5 px-3 py-1 text-xs font-medium tracking-wide text-navy uppercase dark:border-brand-green/25 dark:bg-brand-green/10 dark:text-brand-green">
-        Admin-gated sponsorship marketplace
+        {t("landing.badge")}
       </p>
 
       <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold tracking-tight text-ink sm:text-5xl md:text-6xl dark:text-white">
-        Your Personal Business Manager
+        {t("landing.headline")}
       </h1>
 
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink/60 sm:text-lg dark:text-white/60">
-        Verified creator stats, masked negotiations, and an AI co-pilot that
-        prices every offer — no screenshots, no leaked contact info, no deal
-        that skips the platform.
+        {t("landing.subheadline")}
       </p>
 
       <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <CtaLink href={DISCORD_INVITE_URL} external variant="primary" className="w-full sm:w-auto">
-          Request access
+          {t("landing.ctaRequestAccess")}
         </CtaLink>
         <CtaLink href="/login" variant="ghost" className="w-full sm:w-auto">
-          Sign in
+          {t("landing.ctaSignIn")}
         </CtaLink>
       </div>
 
       <p className="mt-4 text-xs text-ink/40 dark:text-white/35">
-        Accounts are created by an admin — no public sign-up.
+        {t("landing.noSignupNote")}
       </p>
     </section>
   );

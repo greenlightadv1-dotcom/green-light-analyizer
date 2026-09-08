@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
+import { useTranslation } from "@/components/LocaleProvider";
 
 const noopSubscribe = () => () => {};
 
@@ -64,9 +65,9 @@ function MonitorIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 const OPTIONS = [
-  { value: "light", label: "Light", Icon: SunIcon },
-  { value: "dark", label: "Dark", Icon: MoonIcon },
-  { value: "system", label: "System", Icon: MonitorIcon },
+  { value: "light", key: "theme.light", Icon: SunIcon },
+  { value: "dark", key: "theme.dark", Icon: MoonIcon },
+  { value: "system", key: "theme.system", Icon: MonitorIcon },
 ] as const;
 
 /**
@@ -78,6 +79,7 @@ const OPTIONS = [
  */
 export function ThemeMenu() {
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const mounted = useIsMounted();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -111,7 +113,7 @@ export function ThemeMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Change theme"
+        aria-label={t("theme.changeTheme")}
         className="flex h-9 w-9 items-center justify-center rounded-full border border-fg/15 bg-fg/5 text-fg transition hover:bg-fg/10"
       >
         <TriggerIcon />
@@ -120,10 +122,10 @@ export function ThemeMenu() {
       {open ? (
         <div
           role="menu"
-          aria-label="Theme"
-          className="glass-panel-solid absolute top-full right-0 z-50 mt-2 w-36 space-y-0.5 p-1.5"
+          aria-label={t("theme.changeTheme")}
+          className="glass-panel-solid absolute top-full end-0 z-50 mt-2 w-36 space-y-0.5 p-1.5"
         >
-          {OPTIONS.map(({ value, label, Icon }) => {
+          {OPTIONS.map(({ value, key, Icon }) => {
             const active = theme === value;
             return (
               <button
@@ -135,14 +137,14 @@ export function ThemeMenu() {
                   setTheme(value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition ${
+                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-sm transition ${
                   active
                     ? "bg-brand-green/12 font-medium text-brand-green"
                     : "text-fg/70 hover:bg-fg/5 hover:text-fg"
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {label}
+                {t(key)}
               </button>
             );
           })}

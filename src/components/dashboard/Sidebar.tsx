@@ -3,25 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
+import { useTranslation } from "@/components/LocaleProvider";
 import type { Role } from "@/lib/types/database";
 
 type NavItem = {
   href: string;
-  label: string;
+  labelKey: string;
   roles: Role[];
 };
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", roles: ["creator", "company", "admin"] },
-  { href: "/inbox", label: "Deal inbox", roles: ["creator", "company", "admin"] },
-  { href: "/discover", label: "Discover creators", roles: ["company", "admin"] },
-  { href: "/analyzer", label: "Manual analyzer", roles: ["creator", "admin"] },
-  { href: "/media-kit", label: "Media kit", roles: ["creator", "admin"] },
-  { href: "/settings", label: "Settings", roles: ["creator", "company", "admin"] },
-  { href: "/admin/users", label: "Accounts", roles: ["admin"] },
-  { href: "/admin/promo-codes", label: "Promo codes", roles: ["admin"] },
-  { href: "/admin/violations", label: "Violations", roles: ["admin"] },
-  { href: "/admin/system", label: "System", roles: ["admin"] },
+  { href: "/dashboard", labelKey: "nav.dashboard", roles: ["creator", "company", "admin"] },
+  { href: "/inbox", labelKey: "nav.inbox", roles: ["creator", "company", "admin"] },
+  { href: "/discover", labelKey: "nav.discover", roles: ["company", "admin"] },
+  { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
+  { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
+  { href: "/settings", labelKey: "nav.settings", roles: ["creator", "company", "admin"] },
+  { href: "/admin/users", labelKey: "nav.adminUsers", roles: ["admin"] },
+  { href: "/admin/promo-codes", labelKey: "nav.adminPromoCodes", roles: ["admin"] },
+  { href: "/admin/violations", labelKey: "nav.adminViolations", roles: ["admin"] },
+  { href: "/admin/system", labelKey: "nav.adminSystem", roles: ["admin"] },
 ];
 
 export function Sidebar({
@@ -34,6 +35,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const items = NAV.filter((item) => item.roles.includes(role));
+  const { t } = useTranslation();
 
   return (
     <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col p-4 lg:flex">
@@ -50,13 +52,13 @@ export function Sidebar({
               key={item.href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`rounded-xl border-l-2 py-2.5 pr-3 pl-2.5 text-sm transition ${
+              className={`rounded-xl border-s-2 py-2.5 ps-2.5 pe-3 text-sm transition ${
                 active
                   ? "border-brand-green bg-brand-green/12 font-medium text-brand-green"
-                  : "border-transparent text-fg/60 hover:translate-x-0.5 hover:bg-fg/5 hover:text-fg"
+                  : "border-transparent text-fg/60 hover:translate-x-0.5 rtl:hover:-translate-x-0.5 hover:bg-fg/5 hover:text-fg"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}

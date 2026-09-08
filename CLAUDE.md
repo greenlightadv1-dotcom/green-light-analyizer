@@ -506,14 +506,57 @@ admin-gated model, which is unchanged.
   with responsive gap/padding (`lg:`/`2xl:` steps), not the earlier
   `max-w-7xl` (1280px) — that read as a narrow centered column on large
   desktop monitors.
-- **Logo** (`src/components/brand/Logo.tsx`) no longer wraps the wordmark in
-  an opaque navy/white plate `<span>` — it renders the PNG directly, on the
-  assumption the asset is transparent. It currently is **not**: all three
-  files in `/public/branding/` are baked-opaque RGB PNGs with no alpha
-  channel (confirmed from their PNG header, colorType 2), so each mark shows
-  its own opaque background as a visible rectangle until real transparent —
-  or SVG — artwork replaces those files. That's expected, not a bug in the
-  component.
+- **Logo** (`src/components/brand/Logo.tsx`) — superseded by the icon-only,
+  genuinely-transparent asset switch documented in §2.3's own update note;
+  see there rather than here.
+
+---
+
+## 15. Internationalization (i18n) & RTL
+
+A Language switcher (`src/components/ui/LanguageMenu.tsx`, Globe icon,
+same glassmorphism dropdown as `ThemeMenu`) sits next to the theme toggle in
+`TopBar` and the landing nav. Five languages: English, Arabic (`ar`),
+French, Spanish, German — `src/lib/i18n/locales.ts` is the list, each with
+its own native-script name and `dir`.
+
+- **Mechanism, deliberately not next-intl.** `src/components/LocaleProvider.tsx`
+  is a custom, non-routing i18n provider — no `/ar/dashboard`-style locale
+  prefixes. `proxy.ts`/`session.ts` already carry a fair amount of custom
+  auth-guard routing logic; layering a routing-based i18n library's own
+  middleware on top risked real conflicts there for a feature that doesn't
+  need locale-specific URLs. The provider mirrors `ThemeProvider`'s shape
+  instead: a module-level external store (via `useSyncExternalStore`, not
+  `useState`+`useEffect` — reading `localStorage` inside an effect and
+  pushing it into state is exactly the "sync with an external system" case
+  that hook exists for, and the lint rule that later caught this same
+  pattern in `ThemeToggle` flagged it here too) persisted to `localStorage`,
+  with the same inline no-flash `<script>` technique next-themes uses for
+  its own class script — it sets `dir`/`lang` on `<html>` before the tree
+  paints, so a returning Arabic visitor doesn't see the page flash
+  LTR-then-flip-RTL.
+- **`t("nav.dashboard")`-style dictionaries** — `src/lib/i18n/dictionaries/
+  {en,ar,fr,es,de}.ts`. English is the structural source of truth; the other
+  four are typed against it (`Dictionary`), so a missing/extra key across
+  any of them is a type error, not a silent runtime fallback.
+- **Translation scope, deliberately partial**: the shared chrome (Sidebar
+  nav labels, TopBar, the theme/language menus' own labels) and the public
+  landing page — the two surfaces that reach every screen or every visitor,
+  same reasoning as the theming rollout in this section. Page-level content
+  (dashboard cards, deal data, admin tables and forms) stays English for
+  this pass; translating that is a much larger follow-up this file doesn't
+  claim is done.
+- **RTL layout**: the shared chrome's physical Tailwind utilities
+  (`border-l-*`, `pl-*`/`pr-*`, `right-0`/`left-0`, `text-left`) were
+  converted to logical ones (`border-s-*`, `ps-*`/`pe-*`, `end-0`/`start-0`,
+  `text-start`) so they flip automatically under `dir="rtl"` — flex-row
+  layouts (Sidebar+content, TopBar's icon row) mirror on their own, that's
+  plain CSS under `dir`, not something built here. The one manual case is
+  `hover:translate-x-0.5` (a CSS transform, which doesn't flow with `dir`
+  the way logical properties do) — paired with an explicit
+  `rtl:hover:-translate-x-0.5`. Decorative-only elements (the landing
+  hero's ambient glow blobs) were left physically positioned; they're not
+  reading content, so an unmirrored accent isn't a correctness bug.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

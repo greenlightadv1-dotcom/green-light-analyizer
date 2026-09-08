@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { GlowOrbs } from "@/components/ui/GlowOrbs";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LocaleProvider } from "@/components/LocaleProvider";
 import "./globals.css";
 
 /**
@@ -43,10 +44,12 @@ export default function RootLayout({
           selector owns background + color now (theme-reactive), and a
           class utility here would out-specificity it in light mode. */}
       <body className="min-h-screen antialiased">
-        <ThemeProvider>
-          <GlowOrbs />
-          {children}
-        </ThemeProvider>
+        <LocaleProvider>
+          <ThemeProvider>
+            <GlowOrbs />
+            {children}
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );
