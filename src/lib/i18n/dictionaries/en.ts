@@ -301,6 +301,31 @@ const en = {
     privacyFooter:
       "Your real email address never changes and never reaches a sponsor. Green Light does not connect to your Gmail account, does not ask for Google sign-in, and cannot read anything you have not forwarded.",
   },
+  outreach: {
+    sendInvite: "Send Invite",
+    modalTitle: "Send an email",
+    modalDescription: "Sends through POST /api/emails/send — admin-only.",
+    typeCreatorOutreach: "Creator outreach",
+    typeSystemNotification: "System notification",
+    recipientEmail: "Recipient email",
+    creatorName: "Creator name",
+    titleLabelOutreach: "Campaign title",
+    titleLabelNotification: "Notification title",
+    offerAmount: "Offer amount (USD)",
+    messageLabelOutreach: "Pitch details",
+    messageLabelNotification: "Message",
+    ctaUrl: "CTA link",
+    ctaLabel: "Button text",
+    ctaLabelHint: "Shown on the button. Defaults to “{default}” if left blank.",
+    defaultCtaLabelOutreach: "View details",
+    defaultCtaLabelNotification: "Learn more",
+    sendButton: "Send email",
+    successMessage: "Email sent.",
+    errorRequired: "This field is required.",
+    errorEmail: "Enter a valid email address.",
+    errorAmount: "Enter a valid, non-negative amount.",
+    errorUrl: "Enter a valid link starting with http:// or https://.",
+  },
 };
 
 export default en;

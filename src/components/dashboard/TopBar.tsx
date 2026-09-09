@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
+import { SendInviteModal } from "@/components/outreach/SendInviteModal";
 import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { useTranslation } from "@/components/LocaleProvider";
@@ -32,6 +33,7 @@ export function TopBar({
       </div>
 
       <div className="flex items-center gap-2">
+        {profile.role === "admin" ? <SendInviteModal /> : null}
         <LanguageMenu />
         <ThemeMenu />
 

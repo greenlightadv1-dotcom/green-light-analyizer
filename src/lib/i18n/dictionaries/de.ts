@@ -289,6 +289,31 @@ const de: Dictionary = {
     privacyFooter:
       "Deine echte E-Mail-Adresse ändert sich nie und erreicht nie einen Sponsor. Green Light verbindet sich nicht mit deinem Gmail-Konto, verlangt keine Google-Anmeldung und kann nichts lesen, was du nicht weitergeleitet hast.",
   },
+  outreach: {
+    sendInvite: "Einladung senden",
+    modalTitle: "E-Mail senden",
+    modalDescription: "Wird über POST /api/emails/send gesendet — nur für Admins.",
+    typeCreatorOutreach: "Creator-Kontakt",
+    typeSystemNotification: "Systembenachrichtigung",
+    recipientEmail: "E-Mail des Empfängers",
+    creatorName: "Name des Creators",
+    titleLabelOutreach: "Kampagnentitel",
+    titleLabelNotification: "Titel der Benachrichtigung",
+    offerAmount: "Angebotsbetrag (USD)",
+    messageLabelOutreach: "Pitch-Details",
+    messageLabelNotification: "Nachricht",
+    ctaUrl: "Button-Link",
+    ctaLabel: "Button-Text",
+    ctaLabelHint: "Wird auf dem Button angezeigt. Standardmäßig „{default}“, falls leer gelassen.",
+    defaultCtaLabelOutreach: "Details ansehen",
+    defaultCtaLabelNotification: "Mehr erfahren",
+    sendButton: "E-Mail senden",
+    successMessage: "E-Mail gesendet.",
+    errorRequired: "Dieses Feld ist erforderlich.",
+    errorEmail: "Gib eine gültige E-Mail-Adresse ein.",
+    errorAmount: "Gib einen gültigen, nicht negativen Betrag ein.",
+    errorUrl: "Gib einen gültigen Link ein, der mit http:// oder https:// beginnt.",
+  },
 };
 
 export default de;

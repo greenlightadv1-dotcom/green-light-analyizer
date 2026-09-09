@@ -280,6 +280,31 @@ const ar: Dictionary = {
     privacyFooter:
       "عنوان بريدك الإلكتروني الحقيقي لا يتغير أبدًا ولا يصل إلى أي راعٍ. لا يتصل Green Light بحساب Gmail الخاص بك، ولا يطلب تسجيل الدخول عبر Google، ولا يمكنه قراءة أي شيء لم تُعِد توجيهه.",
   },
+  outreach: {
+    sendInvite: "إرسال دعوة",
+    modalTitle: "إرسال بريد إلكتروني",
+    modalDescription: "يُرسَل عبر POST /api/emails/send — للمسؤولين فقط.",
+    typeCreatorOutreach: "تواصل مع صانع محتوى",
+    typeSystemNotification: "إشعار نظام",
+    recipientEmail: "بريد المستلم",
+    creatorName: "اسم صانع المحتوى",
+    titleLabelOutreach: "عنوان الحملة",
+    titleLabelNotification: "عنوان الإشعار",
+    offerAmount: "قيمة العرض (دولار أمريكي)",
+    messageLabelOutreach: "تفاصيل العرض",
+    messageLabelNotification: "الرسالة",
+    ctaUrl: "رابط الزر",
+    ctaLabel: "نص الزر",
+    ctaLabelHint: "يظهر على الزر. الافتراضي هو «{default}» إذا تُرك فارغًا.",
+    defaultCtaLabelOutreach: "عرض التفاصيل",
+    defaultCtaLabelNotification: "معرفة المزيد",
+    sendButton: "إرسال البريد",
+    successMessage: "تم إرسال البريد.",
+    errorRequired: "هذا الحقل مطلوب.",
+    errorEmail: "أدخل عنوان بريد إلكتروني صالحًا.",
+    errorAmount: "أدخل قيمة صالحة غير سالبة.",
+    errorUrl: "أدخل رابطًا صالحًا يبدأ بـ http:// أو https://.",
+  },
 };
 
 export default ar;
