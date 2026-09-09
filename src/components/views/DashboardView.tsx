@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ComingSoonCard } from "@/components/dashboard/ComingSoonCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import { canVerifyAudience } from "@/lib/media-kit/platforms";
+import { isProfileIncomplete } from "@/lib/media-kit/profile-completeness";
 import type { DealChat } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
 import type { Profile } from "@/lib/auth";
@@ -36,6 +37,7 @@ export function DashboardView({
   ).length;
   const verifiedKits = kits.filter((k) => k.audience_verified).length;
   const plan = profile.subscription_plan ?? "Starter";
+  const incompleteProfile = isProfileIncomplete(profile, kits);
 
   return (
     <>
@@ -44,18 +46,22 @@ export function DashboardView({
         description={t("dashboard.subtitle")}
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">{t("dashboard.plan")}</p>
-          <p className="mt-1.5 text-lg font-semibold text-fg">
-            {profile.subscription_plan ?? "Starter"}
-          </p>
-          {/* §4.3 — no in-app billing in the MVP; upgrades go through Discord. */}
-          <p className="mt-2 text-xs text-fg/40">
-            {t("dashboard.planNote")}
-          </p>
-        </GlassPanel>
+      {incompleteProfile ? (
+        <Link
+          href="/media-kit"
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-green/25 bg-brand-green/8 px-5 py-4 transition hover:bg-brand-green/12"
+        >
+          <div>
+            <p className="text-sm font-semibold text-fg">{t("dashboard.completeProfileTitle")}</p>
+            <p className="mt-1 text-xs leading-relaxed text-fg/55">{t("dashboard.completeProfileBody")}</p>
+          </div>
+          <span className="shrink-0 text-xs font-medium text-brand-green">
+            {t("dashboard.completeProfileCta")}
+          </span>
+        </Link>
+      ) : null}
 
+      <div className="grid gap-4 lg:grid-cols-3">
         <GlassPanel className="p-5">
           <p className="text-xs tracking-wide text-fg/45 uppercase">
             {t("dashboard.openDeals")}
@@ -68,11 +74,14 @@ export function DashboardView({
           </p>
         </GlassPanel>
 
-        <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
-            {t("dashboard.inboundAlias")}
-          </p>
-          <p className="mt-1.5 font-mono text-sm break-all text-brand-green">
+        <GlassPanel className="p-5 lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs tracking-wide text-fg/45 uppercase">
+              {t("dashboard.inboundAlias")}
+            </p>
+            {profile.inbound_alias ? <CopyButton value={profile.inbound_alias} /> : null}
+          </div>
+          <p className="mt-2 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {profile.inbound_alias ?? t("dashboard.notIssuedYet")}
           </p>
           <p className="mt-2 text-xs text-fg/40">
@@ -126,44 +135,42 @@ export function DashboardView({
               </ul>
             </GlassPanel>
           )}
-
-          {/*
-            §7.2/§7.4 made concrete: the reason to connect analytics is that
-            unverified geography caps a high-value deal at yellow. Saying that
-            beats a generic "connect your accounts" prompt.
-          */}
-          <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-fg">
-              {t("dashboard.audienceVerification")}
-            </h2>
-            {verifiedKits > 0 ? (
-              <p className="mt-2 text-sm leading-relaxed text-fg/55">
-                {t("dashboard.audienceVerifiedNote", {
-                  count: verifiedKits,
-                  total: kits.length,
-                  platformWord: t(
-                    kits.length === 1 ? "dashboard.platformSingular" : "dashboard.platformPlural",
-                  ),
-                })}
-              </p>
-            ) : (
-              <p className="mt-2 text-sm leading-relaxed text-fg/55">
-                {t("dashboard.audienceUnverifiedNote")}{" "}
-                {canVerifyAudience(plan)
-                  ? t("dashboard.audienceUnverifiedCanUpgrade")
-                  : t("dashboard.audienceUnverifiedIncluded")}
-              </p>
-            )}
-            <Link
-              href="/media-kit"
-              className="mt-3 inline-block text-xs text-brand-green transition hover:brightness-125"
-            >
-              {t("dashboard.openMediaKit")}
-            </Link>
-          </GlassPanel>
         </div>
 
-        <ComingSoonCard />
+        {/*
+          §7.2/§7.4 made concrete: the reason to connect analytics is that
+          unverified geography caps a high-value deal at yellow. Saying that
+          beats a generic "connect your accounts" prompt.
+        */}
+        <GlassPanel className="h-fit p-5">
+          <h2 className="text-sm font-semibold text-fg">
+            {t("dashboard.audienceVerification")}
+          </h2>
+          {verifiedKits > 0 ? (
+            <p className="mt-2 text-sm leading-relaxed text-fg/55">
+              {t("dashboard.audienceVerifiedNote", {
+                count: verifiedKits,
+                total: kits.length,
+                platformWord: t(
+                  kits.length === 1 ? "dashboard.platformSingular" : "dashboard.platformPlural",
+                ),
+              })}
+            </p>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-fg/55">
+              {t("dashboard.audienceUnverifiedNote")}{" "}
+              {canVerifyAudience(plan)
+                ? t("dashboard.audienceUnverifiedCanUpgrade")
+                : t("dashboard.audienceUnverifiedIncluded")}
+            </p>
+          )}
+          <Link
+            href="/media-kit"
+            className="mt-3 inline-block text-xs text-brand-green transition hover:brightness-125"
+          >
+            {t("dashboard.openMediaKit")}
+          </Link>
+        </GlassPanel>
       </div>
     </>
   );

@@ -167,6 +167,19 @@ export function readConfigReport(): ConfigReport {
       impact:
         "Deploy notifications have nowhere to post yet — point a Vercel deploy hook or CI step at a route that calls sendDiscordLog(\"deploys\", …) once one exists.",
     },
+    {
+      name: "WHATSAPP_ACCESS_TOKEN",
+      set: Boolean(process.env.WHATSAPP_ACCESS_TOKEN),
+      required: false,
+      impact:
+        "Settings' WhatsApp notification toggle still saves, but no message is ever sent — src/lib/whatsapp.ts silently no-ops.",
+    },
+    {
+      name: "WHATSAPP_PHONE_NUMBER_ID",
+      set: Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID),
+      required: false,
+      impact: "Same as WHATSAPP_ACCESS_TOKEN — both are needed together.",
+    },
   ];
 
   const missingRequired = items

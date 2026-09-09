@@ -3,14 +3,16 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
+import { toHandle } from "@/lib/alias";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchYoutubeChannelStats, fetchYoutubeRecentVideos } from "@/lib/youtube/client";
 import { deleteOAuthConnection } from "@/lib/oauth/tokens";
 import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
-import type { OAuthPlatform, Platform } from "@/lib/types/database";
+import type { Database, OAuthPlatform, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
 import {
   PLATFORMS,
@@ -526,4 +528,105 @@ export async function detectNiche(
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
   return { error: null, result: niche };
+}
+
+export type CreatorProfileState = { error: string | null; saved: boolean };
+
+const SOCIAL_KEYS = ["youtube", "instagram", "tiktok", "x", "twitch"] as const;
+const MAX_ATTEMPTS = 5;
+
+/**
+ * Generates a short, URL-safe slug from a display name, appending a random
+ * suffix on collision. Runs against the admin client because checking
+ * another profile's shareable_slug for uniqueness needs a read RLS would
+ * never grant a creator's own client (profiles_select is own-row-only) —
+ * see 0003_rls_policies.sql.
+ */
+async function generateUniqueSlug(
+  admin: SupabaseClient<Database>,
+  fullName: string,
+): Promise<string> {
+  const base = toHandle(fullName);
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const candidate = attempt === 0 ? base : `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+    const { data } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("shareable_slug", candidate)
+      .maybeSingle();
+    if (!data) return candidate;
+  }
+  return `${base}${Date.now().toString(36)}`;
+}
+
+/**
+ * Saves the Media Kit's "Creator Profile" layer (migration 0017) — bio,
+ * avatar, country, language, base rate, social handles, and generates the
+ * shareable slug on first save. Additive to §7's verified-audience model,
+ * not a replacement: nothing here touches avg_views, engagement_rate,
+ * declared/verified_top_countries or audience_verified.
+ *
+ * Runs against the admin client rather than the caller's own: the slug
+ * uniqueness check needs a cross-profile read RLS does not grant (see
+ * generateUniqueSlug above), and every column written here is already
+ * scoped to `.eq("id", profile.id)` from requireProfile(), so there is no
+ * path to touching a row that isn't the caller's own.
+ */
+export async function saveCreatorProfile(
+  _prev: CreatorProfileState,
+  formData: FormData,
+): Promise<CreatorProfileState> {
+  const profile = await requireProfile();
+
+  const bio = String(formData.get("bio") ?? "").trim().slice(0, 1000) || null;
+  const avatarUrl = String(formData.get("avatar_url") ?? "").trim() || null;
+  const country = String(formData.get("country") ?? "").trim().slice(0, 100) || null;
+  const primaryLanguage = String(formData.get("primary_language") ?? "").trim().slice(0, 100) || null;
+  const baseRateRaw = String(formData.get("base_rate_usd") ?? "").trim();
+  const baseRateUsd = baseRateRaw ? Number(baseRateRaw) : null;
+
+  if (avatarUrl) {
+    try {
+      const url = new URL(avatarUrl);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        return { error: "Avatar must be an http(s) link.", saved: false };
+      }
+    } catch {
+      return { error: "Avatar must be a valid link.", saved: false };
+    }
+  }
+  if (baseRateUsd !== null && (!Number.isFinite(baseRateUsd) || baseRateUsd < 0)) {
+    return { error: "Base rate must be a non-negative, whole number.", saved: false };
+  }
+
+  const socialLinks: SocialLinks = {};
+  for (const key of SOCIAL_KEYS) {
+    const value = String(formData.get(`social_${key}`) ?? "").trim();
+    if (value) socialLinks[key] = value.slice(0, 200);
+  }
+
+  const admin = createAdminClient();
+
+  const shareableSlug = profile.shareable_slug ?? (await generateUniqueSlug(admin, profile.full_name));
+
+  const { error } = await admin
+    .from("profiles")
+    .update({
+      bio,
+      avatar_url: avatarUrl,
+      country,
+      primary_language: primaryLanguage,
+      base_rate_usd: baseRateUsd,
+      social_links: Object.keys(socialLinks).length ? socialLinks : null,
+      shareable_slug: shareableSlug,
+    })
+    .eq("id", profile.id);
+
+  if (error) {
+    return { error: "Those details could not be saved.", saved: false };
+  }
+
+  revalidatePath("/media-kit");
+  revalidatePath("/dashboard");
+  return { error: null, saved: true };
 }

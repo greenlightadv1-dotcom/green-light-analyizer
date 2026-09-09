@@ -2,7 +2,9 @@
 
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CountryShareList } from "@/components/media-kit/CountryShareList";
+import { CreatorProfileCard } from "@/components/media-kit/CreatorProfileCard";
 import { PlatformCard } from "@/components/media-kit/PlatformCard";
+import { ShareableLinkCard } from "@/components/media-kit/ShareableLinkCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
@@ -18,18 +20,21 @@ import {
   canAddConnection,
   maxConnections,
 } from "@/lib/media-kit/platforms";
+import type { Profile } from "@/lib/auth";
 import type { CountryShare, Platform, SubscriptionPlan } from "@/lib/types/database";
 
 const REAL_OAUTH_PLATFORMS: Platform[] = ["youtube", "instagram"];
 
 /** Media kit (§7), presentation only. Shared with /preview. */
 export function MediaKitView({
+  profile,
   kits,
   plan,
   oauthConfigured = {},
   oauthConnected = null,
   oauthError = null,
 }: {
+  profile: Profile;
   kits: MediaKit[];
   plan: SubscriptionPlan;
   /** Whether each real-OAuth platform's app is actually registered. */
@@ -68,6 +73,13 @@ export function MediaKitView({
           </Alert>
         </div>
       ) : null}
+
+      <div className="mb-4 grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <CreatorProfileCard profile={profile} />
+        </div>
+        <ShareableLinkCard slug={profile.shareable_slug} />
+      </div>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">

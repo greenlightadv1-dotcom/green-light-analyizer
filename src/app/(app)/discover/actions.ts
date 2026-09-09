@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { buildEvaluationInput } from "@/lib/deals/queries";
 import { maskSensitiveData } from "@/lib/mask";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNewDeal } from "@/lib/whatsapp";
 import type { SponsorshipType } from "@/lib/types/database";
 
 const SPONSORSHIP_TYPES: SponsorshipType[] = [
@@ -138,7 +139,7 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
 
   const { data: creator } = await admin
     .from("profiles")
-    .select("id, role, banned_at")
+    .select("id, role, banned_at, whatsapp_number, whatsapp_notifications_enabled")
     .eq("id", creatorId)
     .maybeSingle();
 
@@ -173,6 +174,8 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
     .single();
 
   if (error || !chat) return;
+
+  notifyNewDeal(creator, `New in-app offer from ${profile.full_name}.`);
 
   await admin.from("messages").insert({
     chat_id: chat.id,

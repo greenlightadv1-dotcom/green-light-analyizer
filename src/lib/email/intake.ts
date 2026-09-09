@@ -2,9 +2,12 @@ import "server-only";
 
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
+import { classifySponsorship } from "@/lib/ai/spam-filter";
 import { INBOUND_DOMAIN } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
+import { runSecurityCheck } from "@/lib/security/check";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNewDeal } from "@/lib/whatsapp";
 import type { CountryShare, SponsorshipType } from "@/lib/types/database";
 import {
   buildOfferText,
@@ -132,7 +135,7 @@ export async function processInboundEmail(
   // §5.4: identify the creator by the alias.
   const { data: creator } = await admin
     .from("profiles")
-    .select("id, role, banned_at, subscription_plan")
+    .select("id, role, banned_at, subscription_plan, whatsapp_number, whatsapp_notifications_enabled")
     .ilike("inbound_alias", alias)
     .maybeSingle();
 
@@ -198,22 +201,31 @@ export async function processInboundEmail(
     const kit = kits?.[0];
     const audienceVerified = kit?.audience_verified === true;
 
-    const evaluation = await evaluateOffer({
-      avg_views: kit?.avg_views ?? null,
-      avg_ccv: kit?.avg_ccv ?? null,
-      engagement_rate: kit?.engagement_rate ?? null,
-      content_category: kit?.content_category ?? null,
-      content_language: kit?.content_language ?? null,
-      declared_top_countries: (kit?.declared_top_countries as CountryShare[] | null) ?? null,
-      // Never pass verified geography through unless the row actually says so.
-      verified_top_countries: audienceVerified
-        ? ((kit?.verified_top_countries as CountryShare[] | null) ?? null)
-        : null,
-      audience_verified: audienceVerified,
-      sponsorship_type: sponsorshipType,
-      target_countries: null, // an emailed offer rarely states them
-      offer_text: offerText,
-    });
+    // Priced, security-checked and spam-classified independently — none of
+    // the three should delay or block another, and a failure in the security
+    // check (or a hiccup in the classifier, which never throws) must never
+    // stop a real offer from becoming a deal room.
+    const [evaluation, security] = await Promise.all([
+      evaluateOffer({
+        avg_views: kit?.avg_views ?? null,
+        avg_ccv: kit?.avg_ccv ?? null,
+        engagement_rate: kit?.engagement_rate ?? null,
+        content_category: kit?.content_category ?? null,
+        content_language: kit?.content_language ?? null,
+        declared_top_countries: (kit?.declared_top_countries as CountryShare[] | null) ?? null,
+        // Never pass verified geography through unless the row actually says so.
+        verified_top_countries: audienceVerified
+          ? ((kit?.verified_top_countries as CountryShare[] | null) ?? null)
+          : null,
+        audience_verified: audienceVerified,
+        sponsorship_type: sponsorshipType,
+        target_countries: null, // an emailed offer rarely states them
+        offer_text: offerText,
+      }),
+      runSecurityCheck(email.from, offerText).catch(() => null),
+    ]);
+
+    const isLikelySponsorship = classifySponsorship(email.subject ?? "", offerText);
 
     const { data: chat, error: chatError } = await admin
       .from("deal_chats")
@@ -226,6 +238,8 @@ export async function processInboundEmail(
         ai_evaluation: evaluation.risk,
         sponsorship_type: sponsorshipType,
         target_countries: null,
+        security_check: security,
+        is_likely_sponsorship: isLikelySponsorship,
       })
       .select("id")
       .single();
@@ -239,6 +253,13 @@ export async function processInboundEmail(
     }
 
     chatId = chat.id;
+
+    notifyNewDeal(
+      creator,
+      offered !== null
+        ? `New offer from ${email.from} — $${offered.toLocaleString("en-US")}.`
+        : `New offer from ${email.from}.`,
+    );
 
     // The opening summary, posted by the platform. sender_id is null because
     // no user wrote it — the room renders that as a system message.

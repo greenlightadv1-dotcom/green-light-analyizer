@@ -36,6 +36,19 @@ export const mockProfile: Profile = {
   banned_at: null,
   banned_reason: null,
   created_at: ago(60 * 24 * 40),
+  bio: "Tech reviews and gaming streams in Arabic, reaching MENA audiences across YouTube and Twitch.",
+  avatar_url: null,
+  country: "Egypt",
+  primary_language: "Arabic",
+  base_rate_usd: 1200,
+  social_links: {
+    youtube: "@amirkhaled",
+    instagram: "@amir.khaled",
+    twitch: "amirlive",
+  },
+  shareable_slug: "amirkhaled",
+  whatsapp_number: null,
+  whatsapp_notifications_enabled: false,
 };
 
 export const mockAdminProfile: Profile = {
@@ -52,7 +65,9 @@ export const mockChats: DealChat[] = [
   {
     id: "00000000-0000-4000-8000-00000000aa01",
     creator_id: mockProfile.id,
-    company_id: null,
+    // A registered company account sent this directly, in-app (§3, Discover) —
+    // company_id set is exactly the signal the dual-source badge/filter reads.
+    company_id: "00000000-0000-4000-8000-000000000099",
     sender_email: "partnerships@northwind.example",
     deal_status: "negotiating",
     offered_amount: 1800,
@@ -60,6 +75,9 @@ export const mockChats: DealChat[] = [
     sponsorship_type: "video_dedicated",
     target_countries: ["EG", "SA", "AE"],
     created_at: ago(90),
+    // A registered company account sent this directly, in-app (§3, Discover).
+    security_check: null,
+    is_likely_sponsorship: true,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa02",
@@ -73,6 +91,22 @@ export const mockChats: DealChat[] = [
     sponsorship_type: "integration",
     target_countries: ["SA"],
     created_at: ago(300),
+    security_check: {
+      domain: "lumenapp.example",
+      trustScore: 88,
+      reasons: [],
+      whois: {
+        domain: "lumenapp.example",
+        registrantOrganization: "Lumen App Inc.",
+        registrantName: "REDACTED FOR PRIVACY",
+        registrantCountry: "US",
+        createdAt: ago(60 * 24 * 365 * 4),
+        expiresAt: ago(-60 * 24 * 365),
+        whoisServer: "whois.example-registrar.com",
+      },
+      safeBrowsing: { flagged: false, threatTypes: [] },
+    },
+    is_likely_sponsorship: true,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa03",
@@ -85,6 +119,26 @@ export const mockChats: DealChat[] = [
     sponsorship_type: "post",
     target_countries: null,
     created_at: ago(700),
+    security_check: {
+      domain: "quickcash-offers.example",
+      trustScore: 22,
+      reasons: [
+        "domain registered under 6 months ago",
+        "registrant organization is hidden",
+      ],
+      whois: {
+        domain: "quickcash-offers.example",
+        registrantOrganization: null,
+        registrantName: null,
+        registrantCountry: null,
+        createdAt: ago(60 * 24 * 40),
+        expiresAt: ago(-60 * 24 * 325),
+        whoisServer: "whois.example-registrar.com",
+      },
+      safeBrowsing: { flagged: false, threatTypes: [] },
+    },
+    // The inbound-email spam/notification filter's best guess, not a certainty.
+    is_likely_sponsorship: false,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa04",
@@ -97,6 +151,8 @@ export const mockChats: DealChat[] = [
     sponsorship_type: "story_share",
     target_countries: ["EG"],
     created_at: ago(60 * 26),
+    security_check: null,
+    is_likely_sponsorship: true,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa05",
@@ -109,6 +165,8 @@ export const mockChats: DealChat[] = [
     sponsorship_type: "live_mention",
     target_countries: ["EG", "MA"],
     created_at: ago(60 * 24 * 9),
+    security_check: null,
+    is_likely_sponsorship: true,
   },
 ];
 

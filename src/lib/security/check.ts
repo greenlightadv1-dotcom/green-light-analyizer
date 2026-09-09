@@ -8,7 +8,7 @@ import type { SecurityCheckResult } from "./types";
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi;
 const MAX_URLS_CHECKED = 5;
 
-function extractDomain(email: string): string | null {
+export function extractDomain(email: string): string | null {
   const at = email.lastIndexOf("@");
   if (at === -1) return null;
   const domain = email.slice(at + 1).trim().toLowerCase();

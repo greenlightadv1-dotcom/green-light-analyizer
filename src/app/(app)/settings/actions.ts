@@ -1,72 +1,110 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
-import { daysFromNow } from "@/lib/subscription";
+import { isValidWhatsAppNumber } from "@/lib/whatsapp";
 
-export type RedeemCodeState = {
-  error: string | null;
-  success: boolean;
-};
+/** Matches set-password/actions.ts's forced-reset policy. */
+const MIN_PASSWORD_LENGTH = 10;
 
-/**
- * Redeem a single-use promo/trial code — Settings -> Plan & billing.
- *
- * The code is claimed with one atomic conditional UPDATE before it is ever
- * applied to the caller's own profile. That ordering (not a lock, not a
- * transaction) is what makes two callers racing the same code safe:
- * whichever request's UPDATE actually matches `is_used = false` commits
- * first, and the loser gets zero rows back — its own profile is never
- * touched, so there is no path to two people ending up with the same code.
- */
-export async function redeemCode(
-  _prev: RedeemCodeState,
+export type UpdateDisplayNameState = { error: string | null; saved: boolean };
+
+/** Settings -> Account: the one profile field a creator/company can rename themselves. */
+export async function updateDisplayName(
+  _prev: UpdateDisplayNameState,
   formData: FormData,
-): Promise<RedeemCodeState> {
+): Promise<UpdateDisplayNameState> {
   const profile = await requireProfile();
 
-  const code = String(formData.get("code") ?? "")
-    .trim()
-    .toUpperCase();
-  if (!code) return { error: "Enter a code.", success: false };
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  if (!fullName) return { error: "Enter your name.", saved: false };
+  if (fullName.length > 200) return { error: "That name is too long.", saved: false };
 
-  const service = createAdminClient();
-
-  const { data: claimed } = await service
-    .from("promo_codes")
-    .update({
-      is_used: true,
-      used_by: profile.id,
-      used_at: new Date().toISOString(),
-    })
-    .eq("code", code)
-    .eq("is_used", false)
-    .gt("expires_at", new Date().toISOString())
-    .select("duration_days, target_plan")
-    .maybeSingle();
-
-  if (!claimed) {
-    // One generic message for "wrong code", "already used" and "expired" —
-    // distinguishing them would tell a guesser which one is true.
-    return { error: "That code isn't valid.", success: false };
-  }
-
-  const { error: profileError } = await service
+  // The user's own client, not the service role — full_name is the one column
+  // migration 0003 grants UPDATE on to `authenticated`, scoped by RLS to the
+  // caller's own row. No cross-row check is needed here, unlike the Media Kit
+  // slug write which does need the admin client.
+  const supabase = await createClient();
+  const { error } = await supabase
     .from("profiles")
-    .update({
-      subscription_plan: claimed.target_plan,
-      subscription_expires_at: daysFromNow(claimed.duration_days),
-    })
+    .update({ full_name: fullName })
     .eq("id", profile.id);
 
-  if (profileError) {
+  if (error) return { error: "Could not update your name.", saved: false };
+
+  revalidatePath("/settings");
+  return { error: null, saved: true };
+}
+
+export type ChangePasswordState = { error: string | null; saved: boolean };
+
+/**
+ * Settings -> Account: voluntary password change. Distinct from
+ * (auth)/set-password's forced first-login reset — there is no
+ * must_change_password gate to clear here, just `auth.updateUser`.
+ */
+export async function changePassword(
+  _prev: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  await requireProfile();
+
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return { error: `Use at least ${MIN_PASSWORD_LENGTH} characters.`, saved: false };
+  }
+  if (password !== confirm) {
+    return { error: "The two passwords don't match.", saved: false };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
     return {
-      error: "Code accepted but the plan update failed — contact support.",
-      success: false,
+      error: error.message || "That password could not be set. Try a different one.",
+      saved: false,
     };
   }
 
+  return { error: null, saved: true };
+}
+
+export type UpdateWhatsAppState = { error: string | null; saved: boolean };
+
+/** Settings -> WhatsApp: number + the notifyNewDeal() opt-in toggle (migration 0017). */
+export async function updateWhatsAppSettings(
+  _prev: UpdateWhatsAppState,
+  formData: FormData,
+): Promise<UpdateWhatsAppState> {
+  const profile = await requireProfile();
+
+  const rawNumber = String(formData.get("whatsapp_number") ?? "").trim();
+  const enabled = formData.get("whatsapp_notifications_enabled") === "on";
+
+  if (rawNumber && !isValidWhatsAppNumber(rawNumber)) {
+    return {
+      error: "Enter a valid WhatsApp number in international format, e.g. +201234567890.",
+      saved: false,
+    };
+  }
+  if (enabled && !rawNumber) {
+    return { error: "Add a WhatsApp number before enabling notifications.", saved: false };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      whatsapp_number: rawNumber || null,
+      whatsapp_notifications_enabled: enabled,
+    })
+    .eq("id", profile.id);
+
+  if (error) return { error: "Could not update your WhatsApp settings.", saved: false };
+
   revalidatePath("/settings");
-  return { error: null, success: true };
+  return { error: null, saved: true };
 }

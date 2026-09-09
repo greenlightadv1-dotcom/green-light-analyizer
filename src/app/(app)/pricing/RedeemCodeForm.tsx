@@ -37,7 +37,7 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
         htmlFor="code"
         className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
       >
-        {t("settings.promoCodeLabel")}
+        {t("pricing.promoCodeLabel")}
       </label>
       <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
         <input
@@ -57,7 +57,7 @@ export function RedeemCodeForm({ demo = false }: { demo?: boolean }) {
       ) : null}
       {state.success ? (
         <p className="mt-3 text-sm text-brand-green">
-          {t("settings.redeemed")}
+          {t("pricing.redeemed")}
         </p>
       ) : null}
     </form>

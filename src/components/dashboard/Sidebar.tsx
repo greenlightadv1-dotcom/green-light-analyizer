@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { href: "/discover", labelKey: "nav.discover", roles: ["company", "admin"] },
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
+  { href: "/pricing", labelKey: "nav.pricing", roles: ["creator", "company", "admin"] },
   { href: "/settings", labelKey: "nav.settings", roles: ["creator", "company", "admin"] },
   { href: "/admin/users", labelKey: "nav.adminUsers", roles: ["admin"] },
   { href: "/admin/promo-codes", labelKey: "nav.adminPromoCodes", roles: ["admin"] },

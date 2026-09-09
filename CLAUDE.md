@@ -147,6 +147,28 @@ creator | company | admin
 4. Payment rails referenced in support flows: Vodafone Cash / InstaPay /
    Meeza (MENA region), PayPal / Crypto (international).
 
+> **Update — Plan & billing moved out of Settings, onto its own Pricing
+> page.** `/pricing` (`src/app/(app)/pricing/`, sidebar-linked for every
+> role) now owns everything this section describes: the §8 plan cards
+> (MENA/Intl price, commission, features) each with a "manage via Discord"
+> CTA, plus the promo/discount code redemption form (`redeemCode`,
+> relocated from `settings/actions.ts` to `pricing/actions.ts`). `/settings`
+> no longer carries any plan/billing UI at all — it's Account (display name,
+> password — see below), the §5 email-forwarding alias, and WhatsApp
+> notification settings. This is the same "manage via Discord, no in-app
+> billing" policy from point 3 above, just surfaced where a creator or
+> company would actually go looking for plans rather than folded into
+> Settings.
+>
+> Settings' Account section also grew two capabilities this file didn't
+> previously describe: a creator/company can change their own **display
+> name** (`profiles.full_name`, already grantable to `authenticated` since
+> migration 0003) and their **password** (`supabase.auth.updateUser`,
+> the same call the forced first-login reset in `(auth)/set-password/`
+> uses, just without that flow's `must_change_password` gate). The primary
+> email stays plain read-only text — never an input, not even a disabled
+> one — since it's the identity Supabase Auth and every RLS policy key off.
+
 ---
 
 ## 5. Email intake pipeline (sponsorship detection)
@@ -232,6 +254,39 @@ sponsorship_type:  'video_dedicated' | 'integration' | 'story_share' | 'live_men
 target_countries:  text[]   -- countries the company wants to reach with this deal
 ```
 
+> **Update — Deal Inbox: dual sources, company intelligence, AI reply
+> drafts, WhatsApp alerts.** Migration 0017 extended the negotiation
+> workspace without a schema rework for "where did this deal come from":
+> the existing `deal_chats.company_id` already distinguishes an in-app deal
+> (non-null, created via Discover) from an inbound/manual one (null) — the
+> Deal Inbox filters and badges (`SourceBadge`) on that column rather than
+> adding a new one.
+>
+> For the null (email/manual) case, `CompanyIntelligencePanel` shows the
+> sender domain's WHOIS/trust data (`deal_chats.security_check`, populated
+> by `runSecurityCheck` at deal-creation time — the same check already used
+> elsewhere, just persisted now), a free-email-provider warning, and the
+> creator's **own** deal history with that domain (`getOwnHistoryWithDomain`
+> — deliberately scoped to the caller's own RLS-readable deals, not a
+> cross-creator aggregation, since that would leak one creator's negotiation
+> history to another via a shared sponsor domain). A heuristic (non-LLM)
+> classifier tags `deal_chats.is_likely_sponsorship` on intake for a
+> "possible spam" filter in the inbox list — best-effort, and never used to
+> silently drop a delivery.
+>
+> The negotiation workspace also gained an **AI copyable response
+> generator** (`generateReplyDraft`, NVIDIA Kimi K3 per §9) that drafts a
+> reply from the latest offer, price and risk rating — a starting point the
+> creator edits and sends themselves, not an auto-send.
+>
+> Separately, `profiles.whatsapp_number` / `whatsapp_notifications_enabled`
+> (opt-in, set in Settings) drive an instant WhatsApp alert
+> (`notifyNewDeal`, Meta's WhatsApp Business Cloud API) fired from every
+> deal-creation path — email intake, Manual Analyzer, and Discover offers —
+> on top of the in-app inbox. Quiet-degradation like every other optional
+> integration here: missing config or a failed send never blocks deal
+> creation.
+
 ---
 
 ## 7. Audience & targeting data (drives the AI evaluation — not just avg_views)
@@ -310,6 +365,25 @@ the risk rating (`green|yellow|red`) should be capped at `yellow` at best
 when the deal's value is high and the only geo data is self-reported —
 i.e., unverified audience data should never by itself produce a `green`
 rating on a high-value deal.
+
+> **Update — a friendlier Creator Profile layer, on top of this section, not
+> instead of it.** Migration 0017 added `profiles.bio` / `avatar_url` /
+> `country` / `primary_language` / `base_rate_usd` / `social_links` /
+> `shareable_slug`, and the Media Kit page now opens with a
+> `CreatorProfileCard` (profile basics + social handles) and a
+> `ShareableLinkCard` (`greenlight.com/p/<slug>`) above the existing
+> per-platform panels. Nothing in this section changed: `avg_views`,
+> `engagement_rate`, `declared_top_countries` / `verified_top_countries`,
+> `audience_verified` and the whole OAuth verification flow still live on
+> `media_kits` exactly as specified, still drive the AI evaluation exactly
+> as specified, and are untouched by the new profile fields. The public
+> `/p/[slug]` page (reachable signed-out — it's what a creator sends a
+> sponsor) reads through a SECURITY DEFINER RPC,
+> `creator_public_profile(slug)`, whose column list is hardcoded in its own
+> migration SQL and explicitly excludes `primary_email` / `inbound_alias` /
+> everything in this section — it shows the profile basics and connected
+> platforms, never audience geography or verification status, self-reported
+> or otherwise.
 
 ---
 
@@ -415,16 +489,23 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 
 ---
 
-## 11. Roadmap (post-MVP — build as a locked/disabled UI element now)
+## 11. Roadmap (post-MVP)
 
-Show an **"AI Assistant" card on the dashboard in a "Coming Soon" locked
-state** (visible but not clickable) to tease upcoming features:
 - Video/script idea generation
 - Copyright check
 - Thumbnail idea generation
 - Best posting time recommendations
 - Expanding verified audience-geo coverage to TikTok/Twitch if/when those
   platforms open up suitable API access
+
+> **Update — the dashboard teaser card is gone.** This section originally
+> called for an "AI Assistant" card on the dashboard in a locked "Coming
+> Soon" state (`ComingSoonCard.tsx`). A later dashboard redesign removed it
+> outright, on the client's explicit instruction, to make room for the
+> profile-completeness banner and a more prominent inbound-alias card (§14
+> carries the rest of that round's changes). The roadmap items above are
+> unchanged and still real future work — there is simply no in-app teaser for
+> them anymore.
 
 ---
 

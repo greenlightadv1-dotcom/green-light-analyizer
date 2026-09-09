@@ -6,6 +6,8 @@
  *   npx supabase gen types typescript --project-id <ref> > src/lib/types/database.ts
  */
 
+import type { SecurityCheckResult } from "@/lib/security/types";
+
 export type Role = "creator" | "company" | "admin";
 export type Region = "MENA" | "International";
 export type SubscriptionPlan = "Starter" | "Pro" | "Elite";
@@ -50,6 +52,32 @@ export type CreatorDirectoryEntry = {
   platforms: Platform[] | null;
 };
 
+/**
+ * One row of `public.creator_public_profile(p_slug)` — the anon-readable
+ * shareable-profile lookup (migration 0017). Not a subset of Profile for the
+ * same reason as CreatorDirectoryEntry: the function's own SQL never selects
+ * primary_email, inbound_alias, role or subscription fields.
+ */
+export type CreatorPublicProfile = {
+  full_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  country: string | null;
+  primary_language: string | null;
+  social_links: SocialLinks | null;
+  base_rate_usd: number | null;
+  platforms: Platform[] | null;
+};
+
+/** Shape stored in profiles.social_links (migration 0017). All optional. */
+export type SocialLinks = {
+  youtube?: string;
+  instagram?: string;
+  tiktok?: string;
+  x?: string;
+  twitch?: string;
+};
+
 type Profile = {
   id: string;
   full_name: string;
@@ -66,6 +94,18 @@ type Profile = {
   banned_at: string | null;
   banned_reason: string | null;
   created_at: string | null;
+  /** Creator-profile layer (migration 0017) — additive to §7, not a replacement. */
+  bio: string | null;
+  avatar_url: string | null;
+  country: string | null;
+  primary_language: string | null;
+  /** Self-reported starting rate — not part of the §7.4 pricing evaluation. */
+  base_rate_usd: number | null;
+  social_links: SocialLinks | null;
+  /** Public profile path: greenlight.com/p/<slug>. */
+  shareable_slug: string | null;
+  whatsapp_number: string | null;
+  whatsapp_notifications_enabled: boolean;
 };
 
 /** §5.3 inbound-delivery trail. provider_message_id is the idempotency key. */
@@ -136,6 +176,10 @@ type DealChat = {
   sponsorship_type: SponsorshipType | null;
   target_countries: string[] | null;
   created_at: string | null;
+  /** service_role-written only — see 0003/0017's reasoning for ai_evaluation. */
+  security_check: SecurityCheckResult | null;
+  /** Always true for in-app/Manual-Analyzer deals; only email intake can set it false. */
+  is_likely_sponsorship: boolean;
 };
 
 type Message = {
@@ -230,6 +274,15 @@ export type Database = {
           | "banned_at"
           | "banned_reason"
           | "created_at"
+          | "bio"
+          | "avatar_url"
+          | "country"
+          | "primary_language"
+          | "base_rate_usd"
+          | "social_links"
+          | "shareable_slug"
+          | "whatsapp_number"
+          | "whatsapp_notifications_enabled"
         >
       >;
       media_kits: Table<
@@ -286,6 +339,11 @@ export type Database = {
       creator_directory: {
         Args: Record<string, never>;
         Returns: CreatorDirectoryEntry[];
+      };
+      /** SECURITY DEFINER RPC (migration 0017) — see CreatorPublicProfile. */
+      creator_public_profile: {
+        Args: { p_slug: string };
+        Returns: CreatorPublicProfile[];
       };
     };
     Enums: Record<never, never>;

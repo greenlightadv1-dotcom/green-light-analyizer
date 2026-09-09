@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
+import { CompanyIntelligencePanel } from "@/components/deals/CompanyIntelligencePanel";
 import { RiskBadge } from "@/components/deals/RiskBadge";
+import { SourceBadge } from "@/components/deals/SourceBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { DealRoom } from "@/app/(app)/inbox/[chatId]/DealRoom";
 import { StatusControl } from "@/app/(app)/inbox/[chatId]/StatusControl";
 import { useTranslation } from "@/components/LocaleProvider";
+import type { OwnDomainHistory } from "@/lib/deals/company-intelligence";
 import type { DealChat, Message } from "@/lib/deals/queries";
 
 /** Deal Chat Room (§6), presentation only. Shared with /preview. */
@@ -16,6 +19,7 @@ export function DealRoomView({
   chatId,
   messages,
   currentUserId,
+  domainHistory = null,
   demo = false,
   basePath = "",
 }: {
@@ -23,6 +27,8 @@ export function DealRoomView({
   chatId: string;
   messages: Message[];
   currentUserId: string;
+  /** Null for in-app deals (company_id set) — not computed for those. */
+  domainHistory?: OwnDomainHistory | null;
   /** Preview mode: the composer echoes locally instead of calling the server. */
   demo?: boolean;
   /** Link prefix. The UI preview passes "/preview" to stay inside itself. */
@@ -41,10 +47,15 @@ export function DealRoomView({
         </Link>
       </div>
 
-      <SectionHeader
-        title={chat.sender_email}
-        description={t("inbox.contactStrippedNote")}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <SectionHeader
+          title={chat.sender_email}
+          description={t("inbox.contactStrippedNote")}
+        />
+      </div>
+      <div className="-mt-4 mb-4">
+        <SourceBadge companyId={chat.company_id} />
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -100,6 +111,8 @@ export function DealRoomView({
             current={chat.deal_status ?? "new"}
             demo={demo}
           />
+
+          <CompanyIntelligencePanel chat={chat} domainHistory={domainHistory} />
 
           <GlassPanel className="p-5">
             <h2 className="text-sm font-semibold text-fg">

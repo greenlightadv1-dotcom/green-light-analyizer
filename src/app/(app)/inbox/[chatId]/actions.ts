@@ -3,9 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
 import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
+import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
-import { getDealChat } from "@/lib/deals/queries";
+import { getDealChat, listMessages } from "@/lib/deals/queries";
 import type { DealStatus } from "@/lib/types/database";
 
 export type SendMessageState = {
@@ -169,4 +170,40 @@ export async function updateDealStatus(formData: FormData): Promise<void> {
 
   revalidatePath(`/inbox/${chatId}`);
   revalidatePath("/inbox");
+}
+
+export type ReplyDraftState = { error: string | null; draft: string | null };
+
+/**
+ * The negotiation workspace's "AI copyable response generator" — drafts a
+ * reply from the thread's own most recent message, for the creator to copy
+ * into the composer or edit first. Nothing here is persisted; a draft the
+ * creator doesn't send leaves no trace.
+ */
+export async function generateReply(
+  _prev: ReplyDraftState,
+  formData: FormData,
+): Promise<ReplyDraftState> {
+  const profile = await requireProfile();
+  const chatId = String(formData.get("chat_id") ?? "");
+  if (!chatId) return { error: "Missing conversation.", draft: null };
+
+  // RLS already scopes this read to rooms the caller is a party to.
+  const chat = await getDealChat(chatId);
+  if (!chat) return { error: "That conversation is not available.", draft: null };
+
+  const messages = await listMessages(chatId);
+  const latest = messages[messages.length - 1];
+
+  const result = await generateReplyDraft({
+    creatorName: profile.full_name,
+    latestMessage: latest?.message_text ?? "",
+    recommendedPriceUsd: null,
+    offeredAmountUsd: chat.offered_amount,
+    risk: chat.ai_evaluation,
+    dealStatus: chat.deal_status ?? "new",
+  });
+
+  if (!result.ok) return { error: result.error, draft: null };
+  return { error: null, draft: result.draft };
 }

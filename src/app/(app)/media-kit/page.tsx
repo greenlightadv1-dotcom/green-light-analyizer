@@ -23,6 +23,7 @@ export default async function MediaKitPage({
 
   return (
     <MediaKitView
+      profile={profile}
       kits={kits}
       plan={profile.subscription_plan ?? "Starter"}
       oauthConnected={oauth_connected ?? null}

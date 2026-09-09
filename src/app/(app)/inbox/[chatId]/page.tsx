@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DealRoomView } from "@/components/views/DealRoomView";
 import { requireProfile } from "@/lib/auth";
+import { getOwnHistoryWithDomain } from "@/lib/deals/company-intelligence";
 import { getDealChat, listMessages } from "@/lib/deals/queries";
 
 export const metadata: Metadata = { title: "Deal room" };
@@ -29,7 +30,12 @@ export default async function DealRoomPage({
   // and neither should the response.
   if (!chat) notFound();
 
-  const messages = await listMessages(chatId);
+  // Company & Domain Intelligence (§3): only meaningful for an external
+  // sender — an in-app deal's company_id is already a real platform account.
+  const [messages, domainHistory] = await Promise.all([
+    listMessages(chatId),
+    chat.company_id ? Promise.resolve(null) : getOwnHistoryWithDomain(chat.sender_email, chatId),
+  ]);
 
   return (
     <DealRoomView
@@ -37,6 +43,7 @@ export default async function DealRoomPage({
       chatId={chatId}
       messages={messages}
       currentUserId={profile.id}
+      domainHistory={domainHistory}
     />
   );
 }

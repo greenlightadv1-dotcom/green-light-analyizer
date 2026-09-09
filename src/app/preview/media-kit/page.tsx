@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Media kit · Preview" };
 export default function PreviewMediaKit() {
   return (
     <MediaKitView
+      profile={mockProfile}
       kits={mockKits}
       plan={mockProfile.subscription_plan ?? "Starter"}
     />

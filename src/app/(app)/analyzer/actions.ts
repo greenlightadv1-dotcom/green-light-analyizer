@@ -10,6 +10,7 @@ import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
 import type { SecurityCheckResult } from "@/lib/security/types";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNewDeal } from "@/lib/whatsapp";
 import type { SponsorshipType } from "@/lib/types/database";
 
 const SPONSORSHIP_TYPES: SponsorshipType[] = [
@@ -143,6 +144,14 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
 
   const admin = createAdminClient();
 
+  // Re-run rather than trust a hidden field carrying the analyzeOffer() result:
+  // a WHOIS/Safe Browsing lookup is idempotent, and re-fetching avoids adding
+  // a client-tamperable JSON blob to the form for what is otherwise a cheap
+  // recomputation.
+  const security: SecurityCheckResult | null = await runSecurityCheck(senderEmail, offerText).catch(
+    () => null,
+  );
+
   const { data: chat, error } = await admin
     .from("deal_chats")
     .insert({
@@ -156,11 +165,19 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
         : null,
       sponsorship_type: sponsorshipType,
       target_countries: targetCountries.length ? targetCountries : null,
+      security_check: security,
     })
     .select("id")
     .single();
 
   if (error || !chat) return;
+
+  notifyNewDeal(
+    profile,
+    Number.isFinite(price) && price > 0
+      ? `New offer from ${senderEmail} — $${price.toLocaleString("en-US")}.`
+      : `New offer from ${senderEmail}.`,
+  );
 
   const { maskedText, isMasked, matched } = maskSensitiveData(offerText);
 
