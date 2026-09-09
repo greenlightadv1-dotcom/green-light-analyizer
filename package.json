@@ -11,6 +11,8 @@
     "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/ai/*.test.ts src/lib/media-kit/*.test.ts src/lib/email/*.test.ts src/lib/security/*.test.ts src/lib/youtube/*.test.ts"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "@react-email/render": "^2.1.0",
     "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.115.0",
     "framer-motion": "^13.2.0",

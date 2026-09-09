@@ -69,7 +69,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.RESEND_API_KEY),
       required: false,
       impact:
-        "Creator replies are stored but never reach the company (§6). The conversation looks fine in-app and is silently one-way.",
+        "Creator replies are stored but never reach the company (§6), and POST /api/emails/send returns 503 — the outreach/system-notification dispatcher (src/lib/resend.ts) sends nothing.",
     },
     {
       name: "RESEND_INBOUND_WEBHOOK_SECRET",
