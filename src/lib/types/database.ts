@@ -69,6 +69,13 @@ export type CreatorPublicProfile = {
   platforms: Platform[] | null;
 };
 
+/** One row from consume_rate_limit() (migration 0019). */
+export type RateLimitConsumption = {
+  allowed: boolean;
+  remaining: number;
+  retry_after_seconds: number;
+};
+
 /** Shape stored in profiles.social_links (migration 0017). All optional. */
 export type SocialLinks = {
   youtube?: string;
@@ -347,6 +354,11 @@ export type Database = {
       creator_public_profile: {
         Args: { p_slug: string };
         Returns: CreatorPublicProfile[];
+      };
+      /** service_role-only counter (migration 0019) — see lib/rate-limit.ts. */
+      consume_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: RateLimitConsumption[];
       };
     };
     Enums: Record<never, never>;

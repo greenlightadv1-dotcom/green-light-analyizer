@@ -8,6 +8,7 @@ import { requireProfile } from "@/lib/auth";
 import { buildEvaluationInput } from "@/lib/deals/queries";
 import { extractOfferedAmount } from "@/lib/email/parse";
 import { maskSensitiveData } from "@/lib/mask";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { runSecurityCheck } from "@/lib/security/check";
 import type { SecurityCheckResult } from "@/lib/security/types";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -82,6 +83,12 @@ export async function analyzeOffer(
   if (offerText.length > 20000) {
     return { error: "That offer is too long to analyse.", result: null };
   }
+
+  // Charged after validation, before the spend: a mistyped form should not
+  // cost the user quota. This one press buys an AI evaluation, a WHOIS lookup
+  // and a Safe Browsing call.
+  const limit = await consumeRateLimit("ai_analyze_offer", profile.id);
+  if (!limit.allowed) return { error: limit.message, result: null };
 
   const input = await buildEvaluationInput(profile.id, {
     sponsorship_type: sponsorshipType,

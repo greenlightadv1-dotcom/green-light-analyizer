@@ -7,6 +7,7 @@ import type { EvaluationResult } from "@/lib/ai/types";
 import { requireRole } from "@/lib/auth";
 import { buildEvaluationInput } from "@/lib/deals/queries";
 import { maskSensitiveData } from "@/lib/mask";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewDeal } from "@/lib/whatsapp";
 import type { SponsorshipType } from "@/lib/types/database";
@@ -56,7 +57,7 @@ export async function previewOfferToCreator(
   _prev: OfferPreviewState,
   formData: FormData,
 ): Promise<OfferPreviewState> {
-  await requireRole("company", "admin");
+  const profile = await requireRole("company", "admin");
 
   const creatorId = String(formData.get("creator_id") ?? "").trim();
   const creatorName = String(formData.get("creator_name") ?? "").trim();
@@ -79,6 +80,12 @@ export async function previewOfferToCreator(
   if (offerText.length > 20000) {
     return { error: "That offer is too long to analyse.", result: null };
   }
+
+  // Keyed to the company doing the previewing, not the creator being priced —
+  // otherwise one company could exhaust a creator's quota and lock every other
+  // company out of offering to them.
+  const limit = await consumeRateLimit("ai_offer_preview", profile.id);
+  if (!limit.allowed) return { error: limit.message, result: null };
 
   const input = await buildEvaluationInput(creatorId, {
     sponsorship_type: sponsorshipType,

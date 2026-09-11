@@ -12,6 +12,7 @@ import { deleteOAuthConnection } from "@/lib/oauth/tokens";
 import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import type { Database, OAuthPlatform, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
 import {
@@ -460,6 +461,11 @@ export async function detectNiche(
   if (!kit || kit.creator_id !== profile.id) {
     return { error: "That media kit could not be found.", result: null };
   }
+
+  // Gated before the platform fetch, not just before the AI call: this action
+  // also spends YouTube Data API or Instagram Graph quota on the way.
+  const limit = await consumeRateLimit("ai_detect_niche", profile.id);
+  if (!limit.allowed) return { error: limit.message, result: null };
 
   let items: string[] = [];
   if (kit.platform === "youtube") {

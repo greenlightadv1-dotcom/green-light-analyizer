@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
 import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
 import { getDealChat, latestIncomingMessage } from "@/lib/deals/queries";
@@ -191,6 +192,10 @@ export async function generateReply(
   // RLS already scopes this read to rooms the caller is a party to.
   const chat = await getDealChat(chatId);
   if (!chat) return { error: "That conversation is not available.", draft: null };
+
+  // Regenerating a draft a few times per deal is normal use; a held key is not.
+  const limit = await consumeRateLimit("ai_reply_draft", profile.id);
+  if (!limit.allowed) return { error: limit.message, draft: null };
 
   // The message being replied TO is the other side's most recent one — not
   // simply the last row in the thread, which is usually the caller's own
