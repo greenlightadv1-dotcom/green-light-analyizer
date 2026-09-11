@@ -10,7 +10,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import { canVerifyAudience } from "@/lib/media-kit/platforms";
 import { isProfileIncomplete } from "@/lib/media-kit/profile-completeness";
-import type { DealChat } from "@/lib/deals/queries";
+import type { DealChatListItem } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
 import type { Profile } from "@/lib/auth";
 
@@ -27,7 +27,7 @@ export function DashboardView({
   kits,
 }: {
   profile: Profile;
-  chats: DealChat[];
+  chats: DealChatListItem[];
   kits: MediaKit[];
 }) {
   const { t } = useTranslation();

@@ -186,6 +186,7 @@ const en = {
     contactStrippedNote: "Contact details are stripped before a message is stored. Everything stays on-platform.",
     deal: "Deal",
     offer: "Offer",
+    recommended: "Recommended",
     deliverable: "Deliverable",
     targetingLabel: "Targeting",
     coPilot: "Co-Pilot",

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { escapeLikePattern } from "@/lib/supabase/like";
 import { extractDomain } from "@/lib/security/check";
 
 /**
@@ -63,7 +64,7 @@ export async function getOwnHistoryWithDomain(
   let query = supabase
     .from("deal_chats")
     .select("id, deal_status, created_at")
-    .ilike("sender_email", `%@${domain}`);
+    .ilike("sender_email", `%@${escapeLikePattern(domain)}`);
 
   if (excludeChatId) query = query.neq("id", excludeChatId);
 

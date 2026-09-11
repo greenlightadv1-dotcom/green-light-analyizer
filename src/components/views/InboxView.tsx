@@ -9,7 +9,7 @@ import { SourceBadge } from "@/components/deals/SourceBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
-import type { DealChat } from "@/lib/deals/queries";
+import type { DealChatListItem } from "@/lib/deals/queries";
 
 type SourceFilter = "all" | "in_app" | "forwarded";
 
@@ -23,7 +23,7 @@ export function InboxView({
   chats,
   basePath = "",
 }: {
-  chats: DealChat[];
+  chats: DealChatListItem[];
   /** Link prefix. The UI preview passes "/preview" to stay inside itself. */
   basePath?: string;
 }) {

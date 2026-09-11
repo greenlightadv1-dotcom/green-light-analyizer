@@ -171,11 +171,14 @@ type DealChat = {
   company_id: string | null;
   sender_email: string;
   deal_status: DealStatus | null;
+  /** What the sponsor offered — never the platform's own suggestion (0018). */
   offered_amount: number | null;
   ai_evaluation: AiEvaluation | null;
   sponsorship_type: SponsorshipType | null;
   target_countries: string[] | null;
   created_at: string | null;
+  /** Co-Pilot recommendation at creation time. Null on pre-0018 rows. */
+  recommended_price_usd: number | null;
   /** service_role-written only — see 0003/0017's reasoning for ai_evaluation. */
   security_check: SecurityCheckResult | null;
   /** Always true for in-app/Manual-Analyzer deals; only email intake can set it false. */

@@ -7,6 +7,7 @@ import { INBOUND_DOMAIN } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { escapeLikePattern } from "@/lib/supabase/like";
 import { notifyNewDeal } from "@/lib/whatsapp";
 import type { CountryShare, SponsorshipType } from "@/lib/types/database";
 import {
@@ -136,7 +137,9 @@ export async function processInboundEmail(
   const { data: creator } = await admin
     .from("profiles")
     .select("id, role, banned_at, subscription_plan, whatsapp_number, whatsapp_notifications_enabled")
-    .ilike("inbound_alias", alias)
+    // Escaped: the alias is read off a sender-controlled To header, and an
+    // unescaped `%` there would match somebody else's alias entirely.
+    .ilike("inbound_alias", escapeLikePattern(alias))
     .maybeSingle();
 
   if (!creator) {
@@ -172,7 +175,7 @@ export async function processInboundEmail(
     .from("deal_chats")
     .select("id, deal_status")
     .eq("creator_id", creator.id)
-    .ilike("sender_email", email.from)
+    .ilike("sender_email", escapeLikePattern(email.from))
     .neq("deal_status", "paid")
     .order("created_at", { ascending: false })
     .limit(1);
@@ -235,6 +238,7 @@ export async function processInboundEmail(
         sender_email: email.from,
         deal_status: "new",
         offered_amount: offered,
+        recommended_price_usd: evaluation.recommended_price_usd,
         ai_evaluation: evaluation.risk,
         sponsorship_type: sponsorshipType,
         target_countries: null,

@@ -279,6 +279,21 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > reply from the latest offer, price and risk rating — a starting point the
 > creator edits and sends themselves, not an auto-send.
 >
+> **Migration 0018 — `deal_chats.recommended_price_usd`.** The Co-Pilot's
+> price recommendation used to exist only as prose inside a room's opening
+> system message, which nothing could read back. That caused two real bugs:
+> the Manual Analyzer had nowhere to put it and wrote it into
+> `offered_amount` (the column meaning *what the sponsor offered*, so every
+> analyzer deal showed the platform's own suggestion as the sponsor's), and
+> the reply generator could not tell the model the recommended price, so its
+> central instruction could never fire. It is now stored at creation time by
+> all three paths, server-authoritative like `ai_evaluation`/`offered_amount`
+> (never granted to `authenticated`), and shown in the deal sidebar beside
+> the offer. Null on pre-0018 rows, which render without the row rather than
+> showing a fabricated number. The analyzer now derives `offered_amount` from
+> the pasted text with the same `extractOfferedAmount` helper the email path
+> uses, so "Offer" means one thing everywhere.
+>
 > Separately, `profiles.whatsapp_number` / `whatsapp_notifications_enabled`
 > (opt-in, set in Settings) drive an instant WhatsApp alert
 > (`notifyNewDeal`, Meta's WhatsApp Business Cloud API) fired from every

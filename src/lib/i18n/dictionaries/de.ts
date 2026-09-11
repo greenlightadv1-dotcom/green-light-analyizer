@@ -174,6 +174,7 @@ const de: Dictionary = {
     contactStrippedNote: "Kontaktdaten werden entfernt, bevor eine Nachricht gespeichert wird. Alles bleibt auf der Plattform.",
     deal: "Deal",
     offer: "Angebot",
+    recommended: "Empfohlen",
     deliverable: "Deliverable",
     targetingLabel: "Targeting",
     coPilot: "Co-Pilot",

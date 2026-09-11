@@ -6,6 +6,7 @@ import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
 import { requireProfile } from "@/lib/auth";
 import { buildEvaluationInput } from "@/lib/deals/queries";
+import { extractOfferedAmount } from "@/lib/email/parse";
 import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
 import type { SecurityCheckResult } from "@/lib/security/types";
@@ -136,11 +137,21 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
     String(formData.get("target_countries") ?? ""),
   );
   const risk = String(formData.get("risk") ?? "");
-  const price = Number(formData.get("recommended_price_usd") ?? 0);
+  const rawPrice = Number(formData.get("recommended_price_usd") ?? 0);
+  const recommendedPrice =
+    Number.isFinite(rawPrice) && rawPrice > 0 ? rawPrice : null;
 
   if (!senderEmail || !offerText || !SPONSORSHIP_TYPES.includes(sponsorshipType)) {
     return;
   }
+
+  // What the sponsor actually put on the table, read out of their own words —
+  // the same helper the inbound-email path uses, so "Offer" means the same
+  // thing on an analyzer deal as on a forwarded one. It is deliberately NOT
+  // the Co-Pilot's recommendation: that is the platform's suggestion, it goes
+  // in its own column (0018), and writing it here would show the creator our
+  // own number back as if the sponsor had proposed it.
+  const offeredAmount = extractOfferedAmount(offerText);
 
   const admin = createAdminClient();
 
@@ -159,7 +170,8 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
       company_id: null, // a pasted offer has no platform account behind it
       sender_email: senderEmail,
       deal_status: "new",
-      offered_amount: Number.isFinite(price) && price > 0 ? price : null,
+      offered_amount: offeredAmount,
+      recommended_price_usd: recommendedPrice,
       ai_evaluation: ["green", "yellow", "red"].includes(risk)
         ? (risk as "green" | "yellow" | "red")
         : null,
@@ -174,8 +186,8 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
 
   notifyNewDeal(
     profile,
-    Number.isFinite(price) && price > 0
-      ? `New offer from ${senderEmail} — $${price.toLocaleString("en-US")}.`
+    offeredAmount !== null
+      ? `New offer from ${senderEmail} — $${offeredAmount.toLocaleString("en-US")}.`
       : `New offer from ${senderEmail}.`,
   );
 

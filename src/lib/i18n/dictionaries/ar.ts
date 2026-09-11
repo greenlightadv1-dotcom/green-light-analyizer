@@ -171,6 +171,7 @@ const ar: Dictionary = {
     contactStrippedNote: "تُحذف بيانات التواصل قبل حفظ أي رسالة. يبقى كل شيء داخل المنصة.",
     deal: "الصفقة",
     offer: "العرض",
+    recommended: "السعر المقترح",
     deliverable: "التسليم",
     targetingLabel: "الاستهداف",
     coPilot: "المساعد الذكي",

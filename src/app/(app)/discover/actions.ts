@@ -164,6 +164,10 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
           : Number.isFinite(price) && price > 0
             ? price
             : null,
+      // Kept distinct from offered_amount above: here they can legitimately be
+      // equal (a company sending the recommendation as its offer), but they
+      // mean different things and the deal room shows both.
+      recommended_price_usd: Number.isFinite(price) && price > 0 ? price : null,
       ai_evaluation: ["green", "yellow", "red"].includes(risk)
         ? (risk as "green" | "yellow" | "red")
         : null,

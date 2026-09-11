@@ -6,7 +6,7 @@ import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
-import { getDealChat, listMessages } from "@/lib/deals/queries";
+import { getDealChat, latestIncomingMessage } from "@/lib/deals/queries";
 import type { DealStatus } from "@/lib/types/database";
 
 export type SendMessageState = {
@@ -192,13 +192,16 @@ export async function generateReply(
   const chat = await getDealChat(chatId);
   if (!chat) return { error: "That conversation is not available.", draft: null };
 
-  const messages = await listMessages(chatId);
-  const latest = messages[messages.length - 1];
+  // The message being replied TO is the other side's most recent one — not
+  // simply the last row in the thread, which is usually the caller's own
+  // message once they have written anything. Drafting a reply to yourself
+  // produced confident nonsense.
+  const incoming = await latestIncomingMessage(chatId, profile.id);
 
   const result = await generateReplyDraft({
     creatorName: profile.full_name,
-    latestMessage: latest?.message_text ?? "",
-    recommendedPriceUsd: null,
+    latestMessage: incoming?.message_text ?? "",
+    recommendedPriceUsd: chat.recommended_price_usd,
     offeredAmountUsd: chat.offered_amount,
     risk: chat.ai_evaluation,
     dealStatus: chat.deal_status ?? "new",

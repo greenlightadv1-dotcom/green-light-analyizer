@@ -174,6 +174,7 @@ const fr: Dictionary = {
     contactStrippedNote: "Les coordonnées sont retirées avant l'enregistrement d'un message. Tout reste sur la plateforme.",
     deal: "Deal",
     offer: "Offre",
+    recommended: "Recommandé",
     deliverable: "Livrable",
     targetingLabel: "Ciblage",
     coPilot: "Copilote",

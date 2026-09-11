@@ -79,6 +79,24 @@ export function DealRoomView({
                     : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}
                 </dd>
               </div>
+              {/*
+                The Co-Pilot's own number, sitting directly under the sponsor's
+                so the two are read together — the comparison is the single most
+                actionable fact in the room. Deliberately styled identically to
+                the offer rather than in the accent green: the risk badge below
+                already carries that signal, and DESIGN.md's One Voice Rule
+                keeps green meaning one thing per screen. Null on deals created
+                before migration 0018, which render without this row rather than
+                showing a fabricated figure.
+              */}
+              {chat.recommended_price_usd !== null ? (
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-xs text-fg/45">{t("inbox.recommended")}</dt>
+                  <dd className="font-semibold text-fg tabular-nums">
+                    ${Number(chat.recommended_price_usd).toLocaleString("en-US")}
+                  </dd>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-xs text-fg/45">{t("inbox.deliverable")}</dt>
                 <dd className="text-fg capitalize">

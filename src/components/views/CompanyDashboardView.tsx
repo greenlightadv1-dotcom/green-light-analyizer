@@ -5,7 +5,7 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import type { DealChat } from "@/lib/deals/queries";
+import type { DealChatListItem } from "@/lib/deals/queries";
 import type { Profile } from "@/lib/auth";
 
 /**
@@ -19,7 +19,7 @@ export function CompanyDashboardView({
   chats,
 }: {
   profile: Profile;
-  chats: DealChat[];
+  chats: DealChatListItem[];
 }) {
   const recent = chats.slice(0, 5);
   const openDeals = chats.filter(

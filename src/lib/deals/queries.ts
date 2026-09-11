@@ -18,11 +18,22 @@ export type Message = Database["public"]["Tables"]["messages"]["Row"];
  * access control.
  */
 
-export async function listDealChats(): Promise<DealChat[]> {
+/**
+ * A deal as the list views need it. Everything but `security_check`, which is
+ * the one genuinely large column on the table (a full WHOIS record plus Safe
+ * Browsing verdict per row) and is read only by the deal room's Company &
+ * Domain Intelligence panel — never by the inbox or the dashboard.
+ */
+export type DealChatListItem = Omit<DealChat, "security_check">;
+
+const LIST_COLUMNS =
+  "id, creator_id, company_id, sender_email, deal_status, offered_amount, recommended_price_usd, ai_evaluation, sponsorship_type, target_countries, created_at, is_likely_sponsorship";
+
+export async function listDealChats(): Promise<DealChatListItem[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("deal_chats")
-    .select("*")
+    .select(LIST_COLUMNS)
     .order("created_at", { ascending: false });
   return data ?? [];
 }
@@ -45,6 +56,45 @@ export async function listMessages(chatId: string): Promise<Message[]> {
     .eq("chat_id", chatId)
     .order("created_at", { ascending: true });
   return data ?? [];
+}
+
+/**
+ * The most recent message the caller did not write — what a reply is actually
+ * replying to.
+ *
+ * `sender_id is null` has to be included explicitly: a bare `neq` compares to
+ * NULL and drops exactly the rows that matter most here, since both the
+ * sponsor's relayed email and the Co-Pilot's own summary are stored with a
+ * null sender (no platform account wrote them).
+ *
+ * Falls back to the thread's last message when every row is the caller's own.
+ * That is the Manual Analyzer case: the creator pastes the sponsor's offer, so
+ * the offer is stored under the creator's id even though the sponsor wrote it.
+ */
+export async function latestIncomingMessage(
+  chatId: string,
+  callerId: string,
+): Promise<Message | null> {
+  const supabase = await createClient();
+
+  const { data: incoming } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .or(`sender_id.is.null,sender_id.neq.${callerId}`)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (incoming?.[0]) return incoming[0];
+
+  const { data: fallback } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  return fallback?.[0] ?? null;
 }
 
 /**
