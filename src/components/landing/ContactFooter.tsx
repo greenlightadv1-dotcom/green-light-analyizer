@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { useTranslation } from "@/components/LocaleProvider";
 import {
@@ -57,7 +58,27 @@ export function ContactFooter() {
         </div>
       </div>
 
-      <p className="mt-6 text-center text-xs text-ink/35 dark:text-white/30">
+      {/*
+        Untranslated on purpose — the legal pages themselves are English only
+        (a mistranslated term of art changes the agreement), so a translated
+        link into an English document would be misleading about what's behind it.
+      */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-ink/35 dark:text-white/30">
+        <Link
+          href="/terms"
+          className="transition hover:text-ink/70 dark:hover:text-white/60"
+        >
+          Terms of Service
+        </Link>
+        <Link
+          href="/privacy"
+          className="transition hover:text-ink/70 dark:hover:text-white/60"
+        >
+          Privacy Policy
+        </Link>
+      </div>
+
+      <p className="mt-3 text-center text-xs text-ink/35 dark:text-white/30">
         © {new Date().getFullYear()} Green Light. {t("landing.footerRights")}
       </p>
     </footer>

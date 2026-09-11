@@ -8,8 +8,18 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
  * Routes reachable without a session. "/" is the public marketing landing
  * page (no self-signup — its CTA routes to Discord, §4). There is still no
  * signup route anywhere in the product.
+ *
+ * "/p" is a creator's shareable public profile. It exists to be sent to a
+ * sponsor who has no Green Light account, so bouncing it to /login defeats
+ * the entire feature — and the reason migration 0017 grants EXECUTE on
+ * creator_public_profile() to `anon` in the first place.
+ *
+ * "/terms" and "/privacy" must be reachable signed-out both because a person
+ * has to be able to read an agreement before accepting it, and because
+ * Google's OAuth verification and Meta's App Review fetch the privacy URL
+ * without a session.
  */
-const PUBLIC_PATHS = ["/", "/login", "/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/p", "/terms", "/privacy"];
 
 /** Where a user with a pending forced password change is pinned (§4.2). */
 export const SET_PASSWORD_PATH = "/set-password";

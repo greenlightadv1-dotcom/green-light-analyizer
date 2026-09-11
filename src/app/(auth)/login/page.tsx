@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { LoginForm } from "./LoginForm";
 
@@ -30,6 +31,18 @@ export default async function LoginPage({
         Green Light accounts are created by an administrator — there is no
         public sign-up. Need access, or a plan change? Open a ticket in our
         Discord support server.
+      </p>
+
+      <p className="mt-4 text-xs leading-relaxed text-fg/35">
+        Signing in means you accept our{" "}
+        <Link href="/terms" className="text-brand-green underline underline-offset-2">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-brand-green underline underline-offset-2">
+          Privacy Policy
+        </Link>
+        .
       </p>
     </GlassPanel>
   );
