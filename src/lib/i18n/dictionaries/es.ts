@@ -362,6 +362,19 @@ const es: Dictionary = {
     billingNote:
       "Las mejoras, degradaciones y confirmaciones de pago las gestiona nuestro equipo por Discord — Vodafone Cash, InstaPay y Meeza para MENA, PayPal o cripto a nivel internacional.",
   },
+  errors: {
+    notFoundTitle: "No hemos encontrado esa página",
+    notFoundBody:
+      "Puede que el enlace esté obsoleto, o que la sala de trato o el perfil al que apuntaba ya no exista.",
+    backHome: "Volver a Green Light",
+    errorTitle: "Algo ha salido mal",
+    errorBody:
+      "Esta página no se ha cargado. Reintentar suele resolverlo — si no, indica la referencia de abajo y soporte podrá ver exactamente qué ha fallado.",
+    reference: "Referencia",
+    tryAgain: "Reintentar",
+    stillStuck: "¿Sigue sin funcionar?",
+    discordSupport: "Abrir un ticket en nuestro Discord",
+  },
   outreach: {
     sendInvite: "Enviar invitación",
     modalTitle: "Enviar un email",

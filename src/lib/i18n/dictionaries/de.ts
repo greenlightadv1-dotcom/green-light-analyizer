@@ -362,6 +362,19 @@ const de: Dictionary = {
     billingNote:
       "Upgrades, Downgrades und Zahlungsbestätigungen werden von unserem Team über Discord abgewickelt — Vodafone Cash, InstaPay und Meeza für MENA, PayPal oder Krypto international.",
   },
+  errors: {
+    notFoundTitle: "Diese Seite konnten wir nicht finden",
+    notFoundBody:
+      "Der Link ist möglicherweise veraltet, oder der Deal-Raum bzw. das Profil dahinter existiert nicht mehr.",
+    backHome: "Zurück zu Green Light",
+    errorTitle: "Etwas ist schiefgelaufen",
+    errorBody:
+      "Diese Seite wurde nicht geladen. Ein erneuter Versuch behebt das meistens — falls nicht, nenne die Referenz unten, dann kann der Support genau nachsehen, was fehlgeschlagen ist.",
+    reference: "Referenz",
+    tryAgain: "Erneut versuchen",
+    stillStuck: "Immer noch blockiert?",
+    discordSupport: "Ticket in unserem Discord öffnen",
+  },
   outreach: {
     sendInvite: "Einladung senden",
     modalTitle: "E-Mail senden",

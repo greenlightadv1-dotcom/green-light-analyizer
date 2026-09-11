@@ -3,11 +3,11 @@
 import { CopyButton } from "@/components/ui/CopyButton";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
+import { siteUrl } from "@/lib/constants/site";
 
 /** Public path for the anon-readable creator_public_profile() RPC (migration 0017). */
 export function shareableProfileUrl(slug: string): string {
-  const base = (process.env.NEXT_PUBLIC_APP_URL ?? "https://greenlight.com").replace(/\/$/, "");
-  return `${base}/p/${slug}`;
+  return `${siteUrl()}/p/${slug}`;
 }
 
 /**

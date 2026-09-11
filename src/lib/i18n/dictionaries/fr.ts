@@ -362,6 +362,19 @@ const fr: Dictionary = {
     billingNote:
       "Les mises à niveau, rétrogradations et confirmations de paiement sont gérées par notre équipe via Discord — Vodafone Cash, InstaPay et Meeza pour le MENA, PayPal ou crypto à l'international.",
   },
+  errors: {
+    notFoundTitle: "Nous n'avons pas trouvé cette page",
+    notFoundBody:
+      "Le lien est peut-être obsolète, ou la salle de deal ou le profil vers lequel il pointait n'existe plus.",
+    backHome: "Retour à Green Light",
+    errorTitle: "Une erreur est survenue",
+    errorBody:
+      "Cette page ne s'est pas chargée. Réessayer suffit généralement — sinon, indiquez la référence ci-dessous et le support pourra identifier précisément la panne.",
+    reference: "Référence",
+    tryAgain: "Réessayer",
+    stillStuck: "Toujours bloqué ?",
+    discordSupport: "Ouvrir un ticket sur notre Discord",
+  },
   outreach: {
     sendInvite: "Envoyer une invitation",
     modalTitle: "Envoyer un email",

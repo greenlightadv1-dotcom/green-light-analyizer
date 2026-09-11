@@ -374,6 +374,19 @@ const en = {
     billingNote:
       "Upgrades, downgrades and payment confirmation are handled by our team over Discord — Vodafone Cash, InstaPay and Meeza for MENA, PayPal or crypto internationally.",
   },
+  errors: {
+    notFoundTitle: "We couldn't find that page",
+    notFoundBody:
+      "The link may be out of date, or the deal room or profile it pointed to may no longer exist.",
+    backHome: "Back to Green Light",
+    errorTitle: "Something went wrong",
+    errorBody:
+      "This page didn't load. Trying again usually clears it — if it doesn't, quote the reference below and support can look up exactly what failed.",
+    reference: "Reference",
+    tryAgain: "Try again",
+    stillStuck: "Still stuck?",
+    discordSupport: "Open a ticket in our Discord",
+  },
   outreach: {
     sendInvite: "Send Invite",
     modalTitle: "Send an email",
