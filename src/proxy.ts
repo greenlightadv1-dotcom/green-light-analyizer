@@ -19,9 +19,15 @@ export const config = {
      * renders mock data outside the auth gate and must not be redirected into
      * a login it has no credentials for.
      *
+     * api/dev/ is the local-only harness (see api/dev/send-test): curl has no
+     * session cookie, so the guard would bounce it to /login and the harness
+     * would report a cheerful 200 for a request that never ran. The routes
+     * under it 404 outright when NODE_ENV is production, so nothing is
+     * reachable there in a deployment.
+     *
      * Auth route handlers are intentionally NOT excluded: the guard treats
      * /auth/* as public itself, so the session still refreshes on those.
      */
-    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|api/dev/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
