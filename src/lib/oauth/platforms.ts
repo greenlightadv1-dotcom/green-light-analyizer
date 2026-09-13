@@ -10,15 +10,18 @@
  * none of this touches that schema. Meta was removed from this list once
  * Instagram (its actual product in the `Platform` enum) got a real
  * connector — a separate "Meta" placeholder next to a working Instagram one
- * would just be confusing.
+ * would just be confusing. Facebook is listed, though: Pages are a distinct
+ * surface from Instagram with their own insights, not a second name for the
+ * same connection, and the Settings connect list treats them separately.
  */
-export const OAUTH_PLACEHOLDER_PLATFORMS = ["x", "tiktok", "twitch"] as const;
+export const OAUTH_PLACEHOLDER_PLATFORMS = ["x", "tiktok", "twitch", "facebook"] as const;
 export type OAuthPlaceholderPlatform = (typeof OAUTH_PLACEHOLDER_PLATFORMS)[number];
 
 export const OAUTH_PLACEHOLDER_LABELS: Record<OAuthPlaceholderPlatform, string> = {
   x: "X (Twitter)",
   tiktok: "TikTok",
   twitch: "Twitch",
+  facebook: "Facebook",
 };
 
 export function isOAuthPlaceholderPlatform(
