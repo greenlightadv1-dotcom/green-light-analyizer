@@ -25,6 +25,9 @@ const ICONS: Record<OAuthPlatform, ReactNode> = {
   ),
 };
 
+const CONNECT_CLASSNAME =
+  "inline-flex items-center justify-center rounded-lg border border-brand-green/30 bg-brand-green/10 px-3.5 py-2 text-xs font-medium text-brand-green transition hover:bg-brand-green/20";
+
 function StatusBadge({ connected }: { connected: boolean }) {
   const { t } = useTranslation();
 
@@ -55,8 +58,11 @@ function StatusBadge({ connected }: { connected: boolean }) {
  */
 export function SocialConnections({
   connections = {},
+  demo = false,
 }: {
   connections?: Partial<Record<OAuthPlatform, boolean>>;
+  /** /preview renders the shell with no session — the link must not navigate. */
+  demo?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -95,10 +101,17 @@ export function SocialConnections({
                 the client router. The route itself re-checks the session and
                 the plan gate — this markup is never the gate.
               */}
-              {connected ? null : (
+              {connected ? null : demo ? (
+                <span
+                  aria-disabled="true"
+                  className={`${CONNECT_CLASSNAME} ms-auto opacity-50`}
+                >
+                  {t("common.connect")}
+                </span>
+              ) : (
                 <a
                   href={`/api/oauth/${platform}/start`}
-                  className="ms-auto inline-flex items-center justify-center rounded-lg border border-brand-green/30 bg-brand-green/10 px-3.5 py-2 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
+                  className={`${CONNECT_CLASSNAME} ms-auto`}
                 >
                   {t("common.connect")}
                 </a>
