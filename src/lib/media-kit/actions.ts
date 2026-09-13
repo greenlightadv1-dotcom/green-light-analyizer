@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { toHandle } from "@/lib/alias";
@@ -13,18 +12,10 @@ import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
-import type { Database, OAuthPlatform, Platform, SocialLinks } from "@/lib/types/database";
+import type { Database, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
-import {
-  PLATFORMS,
-  canAddConnection,
-  verificationAvailability,
-} from "./platforms";
-
-const REAL_OAUTH_PLATFORMS = ["youtube", "instagram"] as const;
-function isRealOAuthPlatform(value: string): value is OAuthPlatform {
-  return (REAL_OAUTH_PLATFORMS as readonly string[]).includes(value);
-}
+import { PLATFORMS, canAddConnection } from "./platforms";
+import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 
 export type MediaKitState = {
   error: string | null;
@@ -160,41 +151,6 @@ export async function disconnectAnalytics(formData: FormData): Promise<void> {
 
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
-}
-
-/**
- * Begin the §7.3 OAuth handshake for youtube/instagram — everything else
- * still fails loudly rather than pretending, since no credentials exist for
- * those platforms yet (see src/lib/oauth/platforms.ts).
- *
- * The actual redirect-to-provider logic lives in
- * /api/oauth/[platform]/start, not here: a Server Action can redirect, but
- * the OAuth flow is naturally a GET-navigable URL (the provider redirects
- * back to a GET callback), so the route handler is the more direct fit and
- * this action's whole job is just sending the browser there.
- */
-export async function connectAnalytics(formData: FormData): Promise<void> {
-  const profile = await requireProfile();
-  const platform = String(formData.get("platform") ?? "") as Platform;
-
-  if (!PLATFORMS.includes(platform)) return;
-
-  const availability = verificationAvailability(
-    platform,
-    profile.subscription_plan ?? "Starter",
-  );
-  if (availability !== "available") return;
-
-  if (isRealOAuthPlatform(platform)) {
-    redirect(`/api/oauth/${platform}/start`);
-  }
-
-  // No provider credentials are configured for this platform, and no start
-  // route exists for it that could redirect anywhere real. Returning
-  // silently would look like a broken button; this is a real state.
-  throw new Error(
-    `Analytics OAuth for ${platform} is not configured on this environment yet.`,
-  );
 }
 
 export type SyncVerifiedGeoState = {

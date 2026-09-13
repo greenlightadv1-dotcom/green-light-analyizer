@@ -1,18 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isOAuthPlaceholderPlatform } from "@/lib/oauth/platforms";
+import {
+  isOAuthPlaceholderPlatform,
+  isRealOAuthPlatform,
+} from "@/lib/oauth/platforms";
 import { verifyOAuthState } from "@/lib/oauth/state";
 import { saveOAuthTokens } from "@/lib/oauth/tokens";
 import * as youtube from "@/lib/oauth/youtube";
 import * as instagram from "@/lib/oauth/instagram";
-import type { OAuthPlatform } from "@/lib/types/database";
-
-const REAL_OAUTH_PLATFORMS = ["youtube", "instagram"] as const;
-
-function isRealOAuthPlatform(value: string): value is OAuthPlatform {
-  return (REAL_OAUTH_PLATFORMS as readonly string[]).includes(value);
-}
 
 /**
  * OAuth callback — completes what start/route.ts began.

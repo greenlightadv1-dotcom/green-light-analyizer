@@ -78,6 +78,9 @@ const en = {
     detecting: "Detecting…",
     comingSoon: "Coming soon",
     and: "and",
+    connect: "Connect",
+    connected: "Connected",
+    notConnected: "Not connected",
   },
   badges: {
     greenLight: "Green light",
@@ -347,6 +350,9 @@ const en = {
     step5: "Optional but recommended: use Filters instead, so only business enquiries are forwarded rather than your whole inbox.",
     privacyFooter:
       "Your real email address never changes and never reaches a sponsor. Green Light does not connect to your Gmail account, does not ask for Google sign-in, and cannot read anything you have not forwarded.",
+    socialTitle: "Connected accounts",
+    socialNote: "Connect a platform to verify your audience through its official API — never a screenshot.",
+    socialManageNote: "Reach, category and self-reported audience geography are edited on your Media Kit.",
   },
   pricing: {
     title: "Pricing & plans",

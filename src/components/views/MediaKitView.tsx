@@ -12,6 +12,7 @@ import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCar
 import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
+import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 import { kitByPlatform, type MediaKit } from "@/lib/media-kit/helpers";
 import {
   PLATFORMS,
@@ -22,8 +23,6 @@ import {
 } from "@/lib/media-kit/platforms";
 import type { Profile } from "@/lib/auth";
 import type { CountryShare, Platform, SubscriptionPlan } from "@/lib/types/database";
-
-const REAL_OAUTH_PLATFORMS: Platform[] = ["youtube", "instagram"];
 
 /** Media kit (§7), presentation only. Shared with /preview. */
 export function MediaKitView({
@@ -141,7 +140,7 @@ export function MediaKitView({
                   platform: PLATFORM_LABELS[platform],
                 })}
                 verifiedGeoConnected={
-                  REAL_OAUTH_PLATFORMS.includes(platform) &&
+                  isRealOAuthPlatform(platform) &&
                   kit?.audience_verified === true
                 }
               />

@@ -66,6 +66,9 @@ const de: Dictionary = {
     detecting: "Wird erkannt…",
     comingSoon: "Demnächst verfügbar",
     and: "und",
+    connect: "Verbinden",
+    connected: "Verbunden",
+    notConnected: "Nicht verbunden",
   },
   badges: {
     greenLight: "Grünes Licht",
@@ -335,6 +338,9 @@ const de: Dictionary = {
     step5: "Optional, aber empfohlen: Verwende stattdessen Filter, sodass nur geschäftliche Anfragen weitergeleitet werden statt deines gesamten Posteingangs.",
     privacyFooter:
       "Deine echte E-Mail-Adresse ändert sich nie und erreicht nie einen Sponsor. Green Light verbindet sich nicht mit deinem Gmail-Konto, verlangt keine Google-Anmeldung und kann nichts lesen, was du nicht weitergeleitet hast.",
+    socialTitle: "Verbundene Konten",
+    socialNote: "Verbinde eine Plattform, um deine Audience über ihre offizielle API zu verifizieren — nie per Screenshot.",
+    socialManageNote: "Reichweite, Kategorie und selbst angegebene Audience-Geografie werden im Media Kit bearbeitet.",
   },
   pricing: {
     title: "Preise & Tarife",

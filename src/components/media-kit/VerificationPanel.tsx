@@ -4,18 +4,16 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useTranslation } from "@/components/LocaleProvider";
 import {
-  connectAnalytics,
   disconnectAnalytics,
   syncVerifiedGeo,
   type SyncVerifiedGeoState,
 } from "@/lib/media-kit/actions";
+import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 import {
   VERIFICATION_SUPPORT,
   verificationAvailability,
 } from "@/lib/media-kit/platforms";
 import type { Platform, SubscriptionPlan } from "@/lib/types/database";
-
-const REAL_OAUTH_PLATFORMS: Platform[] = ["youtube", "instagram"];
 
 function SyncButton() {
   const { pending } = useFormStatus();
@@ -71,7 +69,7 @@ export function VerificationPanel({
         </p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-4">
-          {REAL_OAUTH_PLATFORMS.includes(platform) ? (
+          {isRealOAuthPlatform(platform) ? (
             <form action={syncAction}>
               <input type="hidden" name="platform" value={platform} />
               <SyncButton />
@@ -127,15 +125,19 @@ export function VerificationPanel({
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
       <p className="text-xs leading-relaxed text-fg/55">{support.note}</p>
-      <form action={connectAnalytics} className="mt-2.5">
-        <input type="hidden" name="platform" value={platform} />
-        <button
-          type="submit"
-          className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
-        >
-          {t("mediaKit.connectAnalytics", { source: support.source.split(" ")[0] })}
-        </button>
-      </form>
+      {/*
+        A plain <a>, not next/link and not a server action wrapping a hidden
+        input: /api/oauth/<platform>/start answers with a 302 to the
+        provider's consent screen, so the navigation has to leave the client
+        router. The route re-checks the session and the §8 plan gate itself,
+        so nothing is trusted to this markup.
+      */}
+      <a
+        href={`/api/oauth/${platform}/start`}
+        className="mt-2.5 inline-flex rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
+      >
+        {t("mediaKit.connectAnalytics", { source: support.source.split(" ")[0] })}
+      </a>
       {!configured ? (
         <p className="mt-2 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
           {t("mediaKit.pendingReview")}

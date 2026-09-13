@@ -1,3 +1,5 @@
+import type { OAuthPlatform } from "@/lib/types/database";
+
 /**
  * Placeholder platforms with no registered OAuth app yet.
  *
@@ -28,4 +30,20 @@ export function isOAuthPlaceholderPlatform(
   value: string,
 ): value is OAuthPlaceholderPlatform {
   return (OAUTH_PLACEHOLDER_PLATFORMS as readonly string[]).includes(value);
+}
+
+/**
+ * The platforms with a registered OAuth app and a working
+ * /api/oauth/<platform>/start -> /callback round trip (§7.3).
+ *
+ * Single source of truth: the start route, the callback, the media-kit
+ * actions and every UI that offers a connect control all read this. It used
+ * to be copy-pasted into five files, which is one edit away from a UI that
+ * offers a connection the backend does not implement.
+ */
+export const REAL_OAUTH_PLATFORMS = ["youtube", "instagram"] as const satisfies
+  readonly OAuthPlatform[];
+
+export function isRealOAuthPlatform(value: string): value is OAuthPlatform {
+  return (REAL_OAUTH_PLATFORMS as readonly string[]).includes(value);
 }

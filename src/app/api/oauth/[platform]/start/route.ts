@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireProfile } from "@/lib/auth";
-import { isOAuthPlaceholderPlatform } from "@/lib/oauth/platforms";
+import {
+  isOAuthPlaceholderPlatform,
+  isRealOAuthPlatform,
+} from "@/lib/oauth/platforms";
 import { signOAuthState } from "@/lib/oauth/state";
 import { verificationAvailability } from "@/lib/media-kit/platforms";
 import * as youtube from "@/lib/oauth/youtube";
 import * as instagram from "@/lib/oauth/instagram";
-import type { OAuthPlatform } from "@/lib/types/database";
-
-const REAL_OAUTH_PLATFORMS = ["youtube", "instagram"] as const;
-
-function isRealOAuthPlatform(value: string): value is OAuthPlatform {
-  return (REAL_OAUTH_PLATFORMS as readonly string[]).includes(value);
-}
 
 /**
  * OAuth entry point.
