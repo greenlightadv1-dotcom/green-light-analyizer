@@ -1,7 +1,7 @@
 /**
  * Inbound alias generation — CLAUDE.md §5.1
  *
- *   {handle}.{random}@analyze.greenlight.com
+ *   {handle}.{random}@analyze.greenlightadvs.com
  *
  * Issued to every creator at account creation. The creator then sets up a
  * one-time Gmail auto-forwarding rule from their real public address to this
@@ -10,7 +10,7 @@
  */
 
 export const INBOUND_DOMAIN =
-  process.env.NEXT_PUBLIC_INBOUND_DOMAIN ?? "analyze.greenlight.com";
+  process.env.NEXT_PUBLIC_INBOUND_DOMAIN ?? "analyze.greenlightadvs.com";
 
 const ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789"; // no look-alike glyphs
 

@@ -35,10 +35,10 @@ export const LEGAL_ENTITY_UNRESOLVED = true;
  * GDPR Art. 15–21, and a reviewer expects an address on the product's own
  * domain rather than free webmail.
  */
-export const PRIVACY_EMAIL = "privacy@greenlight.com";
+export const PRIVACY_EMAIL = "privacy@greenlightadvs.com";
 
 /** General enquiries that are not data-protection requests. */
-export const SUPPORT_EMAIL = "support@greenlight.com";
+export const SUPPORT_EMAIL = "support@greenlightadvs.com";
 
 /**
  * Both documents carry the same date so a reader can tell at a glance whether

@@ -30,7 +30,7 @@ export const mockProfile: Profile = {
   region: "MENA",
   subscription_plan: "Starter",
   subscription_expires_at: null,
-  inbound_alias: "amir.k3f9x2@analyze.greenlight.com",
+  inbound_alias: "amir.k3f9x2@analyze.greenlightadvs.com",
   primary_email: "amir@example.com",
   must_change_password: false,
   banned_at: null,

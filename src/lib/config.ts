@@ -55,7 +55,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.NEXT_PUBLIC_INBOUND_DOMAIN),
       required: false,
       impact:
-        "Falls back to analyze.greenlight.com. Wrong only if the real inbound domain differs.",
+        "Falls back to analyze.greenlightadvs.com. Wrong only if the real inbound domain differs.",
     },
     {
       name: "NVIDIA_API_KEY",

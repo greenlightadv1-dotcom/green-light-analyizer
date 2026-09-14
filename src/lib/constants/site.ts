@@ -8,5 +8,5 @@
  * Set NEXT_PUBLIC_APP_URL in any environment where those links are real.
  */
 export function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://greenlight.com").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://greenlightadvs.com").replace(/\/$/, "");
 }

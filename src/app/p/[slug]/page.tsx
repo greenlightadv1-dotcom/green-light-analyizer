@@ -8,7 +8,7 @@ import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
 import type { CreatorPublicProfile } from "@/lib/types/database";
 
 /**
- * Public shareable profile — greenlight.com/p/<slug> (§ Media Kit's
+ * Public shareable profile — greenlightadvs.com/p/<slug> (§ Media Kit's
  * "Shareable Profile Link generator"). Reachable signed-out, on purpose: this
  * is what a creator sends a sponsor. Reads exclusively through
  * public.creator_public_profile() (migration 0017), a SECURITY DEFINER RPC

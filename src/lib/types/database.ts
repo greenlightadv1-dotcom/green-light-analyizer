@@ -109,7 +109,7 @@ type Profile = {
   /** Self-reported starting rate — not part of the §7.4 pricing evaluation. */
   base_rate_usd: number | null;
   social_links: SocialLinks | null;
-  /** Public profile path: greenlight.com/p/<slug>. */
+  /** Public profile path: greenlightadvs.com/p/<slug>. */
   shareable_slug: string | null;
   whatsapp_number: string | null;
   whatsapp_notifications_enabled: boolean;
