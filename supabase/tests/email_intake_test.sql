@@ -18,6 +18,13 @@
 
 BEGIN;
 
+-- What the project already holds, captured before any fixture is inserted.
+-- Only the admin policy reads across owners, so its counts are the only ones a
+-- non-empty database perturbs — every other assertion here is already scoped to
+-- the impersonated caller by RLS itself.
+CREATE TEMP TABLE baseline ON COMMIT DROP AS
+SELECT (SELECT count(*) FROM public.inbound_emails) AS base_count;
+
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, created_at, updated_at)
 VALUES
   ('11111111-1111-1111-1111-111111111111','00000000-0000-0000-0000-000000000000','authenticated','authenticated','a@test.local','x',NOW(),NOW()),
@@ -37,8 +44,10 @@ DECLARE
   a uuid := '11111111-1111-1111-1111-111111111111';
   b uuid := '22222222-2222-2222-2222-222222222222';
   adm uuid := '33333333-3333-3333-3333-333333333333';
-  n int; resolved uuid; chat uuid;
+  n int; base int; resolved uuid; chat uuid;
 BEGIN
+  SELECT base_count INTO base FROM baseline;
+
   -- ===== §5.4 alias resolution =====
   -- Case-insensitive because a forwarding rule emits whatever case it likes,
   -- and a creator whose offers silently vanish over letter case has no way to
@@ -110,7 +119,7 @@ BEGIN
   RESET ROLE; SET LOCAL ROLE authenticated;
   PERFORM set_config('request.jwt.claims', json_build_object('sub',adm,'role','authenticated')::text, true);
   SELECT count(*) INTO n FROM public.inbound_emails;
-  INSERT INTO r VALUES (11,'admin reads the intake trail','1 rows', n||' rows');
+  INSERT INTO r VALUES (11,'admin reads the intake trail',(base+1)||' rows', n||' rows');
 
   RESET ROLE; SET LOCAL ROLE anon;
   PERFORM set_config('request.jwt.claims', '', true);

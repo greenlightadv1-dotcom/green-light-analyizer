@@ -19,7 +19,8 @@ variables under **Project Settings → Environment Variables**:
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://kpuecrvdrkhemyvibyfa.supabase.co` | Nothing works |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API | Nobody can sign in |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API (`service_role`) | Most of the product is inert |
-| `NEXT_PUBLIC_INBOUND_DOMAIN` | your real inbound domain | Falls back to `analyze.greenlight.com` |
+| `NEXT_PUBLIC_APP_URL` | `https://greenlightadvs.com` | Falls back to the same value, so links look right but a preview deploy advertises production |
+| `NEXT_PUBLIC_INBOUND_DOMAIN` | `analyze.greenlightadvs.com` | Falls back to the same value |
 | `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com/moonshotai/kimi-k3) | Rule-based pricing, labelled as such |
 | `RESEND_API_KEY` | Resend dashboard | Replies never reach companies |
 | `RESEND_INBOUND_WEBHOOK_SECRET` | Resend → Webhooks (`whsec_…`) | Webhook returns 503 |
@@ -32,6 +33,33 @@ chat message. If it has ever been in one, rotate it in the Supabase dashboard.
 
 Next.js reads server env vars at build and request time, so **changing one needs
 a redeploy** to take effect.
+
+### Domain and DNS
+
+`greenlightadvs.com` is the production domain. Add it under **Project Settings
+→ Domains**; Vercel prints the exact records to create at the registrar — an
+`A` for the apex and a `CNAME` for `www`. Copy them from the dashboard rather
+than from memory; the values change.
+
+Two records that are **not** Vercel's and are easy to forget:
+
+| Host | Type | Purpose |
+|---|---|---|
+| `analyze.greenlightadvs.com` | `MX` | Receives forwarded offers. Value comes from Resend → Domains. |
+| `greenlightadvs.com` | `TXT` (SPF) | Lets Resend send relayed replies as you. |
+| `resend._domainkey.greenlightadvs.com` | `TXT`/`CNAME` (DKIM) | Same; without it replies land in spam. |
+| `_dmarc.greenlightadvs.com` | `TXT` | Start at `v=DMARC1; p=none; rua=mailto:dmarc@greenlightadvs.com`, tighten to `p=quarantine` once reports are clean. |
+
+The mail subdomain is unaffected by HSTS — that header governs browsers, not
+SMTP — but every subdomain that *is* served to a browser must have a valid
+certificate, because the HSTS header now carries `preload` (see
+`next.config.ts`). Submit the domain at
+[hstspreload.org](https://hstspreload.org) once DNS resolves; removal from that
+list takes months, so do it after the domain is settled, not before.
+
+`privacy@greenlightadvs.com` and `support@greenlightadvs.com` are published in
+the Terms and Privacy Policy and must actually receive mail. A Google or Meta
+reviewer emails them, and GDPR Art. 15–21 requests have a one-month clock.
 
 ### Verify
 
@@ -64,7 +92,7 @@ DNS on the inbound domain.
 1. **Add the domain in Resend** and create the DNS records it gives you (MX for
    receiving; SPF/DKIM for sending). Both matter: without SPF/DKIM, relayed
    replies land in spam, which looks exactly like the relay being broken.
-2. **Point inbound mail at the webhook**: `https://<your-domain>/api/webhooks/resend`
+2. **Point inbound mail at the webhook**: `https://greenlightadvs.com/api/webhooks/resend`
 3. **Copy the signing secret** into `RESEND_INBOUND_WEBHOOK_SECRET` and redeploy.
 4. **Verify the sender address** in `RESEND_FROM_ADDRESS` — Resend refuses to
    send from an unverified one.

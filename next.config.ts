@@ -71,11 +71,23 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "Content-Security-Policy", value: contentSecurityPolicy() },
-          // No `preload`: that ships the domain to a browser-baked list which
-          // is slow and painful to reverse. Add it once the domain is settled.
+          // `preload` is on now that greenlightadvs.com is the settled domain.
+          //
+          // Two things this commits to, because removal from the browser-baked
+          // list takes months rather than a redeploy:
+          //   - every greenlightadvs.com subdomain must serve valid HTTPS, not
+          //     just the apex. A subdomain added later without a certificate
+          //     becomes unreachable rather than merely insecure. Mail hosts
+          //     (analyze.greenlightadvs.com and the Resend records) are fine —
+          //     HSTS governs browsers, not SMTP.
+          //   - plain http:// on the domain stops being reachable at all in
+          //     any browser that has the entry, which is the point.
+          //
+          // The header alone does not enrol the domain; it makes it eligible.
+          // Submit it at https://hstspreload.org once DNS is live.
           {
             key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains",
+            value: "max-age=63072000; includeSubDomains; preload",
           },
           { key: "X-Content-Type-Options", value: "nosniff" },
           // Redundant with frame-ancestors for modern browsers, kept for old ones.
