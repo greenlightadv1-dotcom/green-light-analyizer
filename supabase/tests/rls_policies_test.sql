@@ -22,11 +22,21 @@
 --   12    creator A cannot forge the AI risk rating
 --   13-14 creator A can negotiate but cannot mark a deal paid (§12 escrow)
 --   15    creator A can still edit their own display name
---   16-18 admin sees everything
+--   16-18 admin sees everything (counted against a baseline taken before
+--         the fixtures, so this passes on a populated project too)
 --   19-23 anon can reach nothing at all (since 0005 it holds no grant either)
 -- ---------------------------------------------------------------------------
 
 BEGIN;
+
+-- What the project already holds, captured before any fixture is inserted.
+-- The admin policy is the only one that reads across owners, so its counts are
+-- the only ones a non-empty database perturbs — every other assertion here is
+-- already scoped to the impersonated caller by RLS itself.
+CREATE TEMP TABLE baseline ON COMMIT DROP AS
+SELECT (SELECT count(*) FROM public.profiles)   AS profiles,
+       (SELECT count(*) FROM public.deal_chats) AS deal_chats,
+       (SELECT count(*) FROM public.messages)   AS messages;
 
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, created_at, updated_at)
 VALUES
@@ -57,7 +67,12 @@ DECLARE
   b   uuid := '22222222-2222-2222-2222-222222222222';
   adm uuid := '33333333-3333-3333-3333-333333333333';
   n   int;
+  bp  int;
+  bc  int;
+  bm  int;
 BEGIN
+  SELECT profiles, deal_chats, messages INTO bp, bc, bm FROM baseline;
+
   -- ===== creator B: must see and touch nothing of A's =====
   SET LOCAL ROLE authenticated;
   PERFORM set_config('request.jwt.claims', json_build_object('sub',b,'role','authenticated')::text, true);
@@ -144,11 +159,11 @@ BEGIN
   PERFORM set_config('request.jwt.claims', json_build_object('sub',adm,'role','authenticated')::text, true);
 
   SELECT count(*) INTO n FROM public.profiles;
-  INSERT INTO r VALUES (16,'Admin reads all profiles','3 rows', n||' rows');
+  INSERT INTO r VALUES (16,'Admin reads all profiles',(bp+3)||' rows', n||' rows');
   SELECT count(*) INTO n FROM public.deal_chats;
-  INSERT INTO r VALUES (17,'Admin reads all deal_chats','1 rows', n||' rows');
+  INSERT INTO r VALUES (17,'Admin reads all deal_chats',(bc+1)||' rows', n||' rows');
   SELECT count(*) INTO n FROM public.messages;
-  INSERT INTO r VALUES (18,'Admin reads all messages','1 rows', n||' rows');
+  INSERT INTO r VALUES (18,'Admin reads all messages',(bm+1)||' rows', n||' rows');
 
   -- ===== anon: nothing =====
   RESET ROLE; SET LOCAL ROLE anon;

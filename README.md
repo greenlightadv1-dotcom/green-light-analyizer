@@ -469,7 +469,7 @@ connection limit.
 
 ```bash
 npm test        # masking, §7.4 cap, geo parsing, tier rules, email
-                # parsing, webhook signatures, HTML escaping — 79 assertions
+                # parsing, webhook signatures, HTML escaping — 105 assertions
 npm run build   # typecheck + lint + production build
 ```
 

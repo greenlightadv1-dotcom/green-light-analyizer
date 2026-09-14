@@ -1,7 +1,7 @@
 # Deploying Green Light
 
 The app is stateless: everything lives in Supabase (`kpuecrvdrkhemyvibyfa`,
-eu-central-1) and Vercel runs the Next.js front of it. All nine migrations are
+eu-central-1) and Vercel runs the Next.js front of it. All 19 migrations are
 already applied to that project, so a deploy is configuration plus DNS.
 
 Nothing here needs a secret at **build** time. Every key is read per request, so
@@ -89,7 +89,7 @@ Until a real delivery has been through, treat §5 as untested in production.
 
 ```bash
 npm ci
-npm test                    # 79 unit assertions
+npm test                    # 105 unit assertions
 npm run build
 node scripts/webhook-e2e.mjs   # 8, against a running build
 ```
