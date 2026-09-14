@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/*
+ * Class-based dark mode (next-themes sets class="dark"/"light" on <html>,
+ * defaulting to the visitor's system preference — see ThemeProvider).
+ * Without this, Tailwind v4's `dark:` variant falls back to a plain
+ * `prefers-color-scheme` media query, which can't be overridden by the
+ * in-app toggle.
+ *
+ * The authenticated app shell (Sidebar/TopBar/every dashboard view) now
+ * themes too, via the --color-fg token below rather than per-utility `dark:`
+ * pairs sprinkled through 30+ files — see that token's own comment.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Green Light design tokens — CLAUDE.md §2.1
+   Exact hex values. Do not approximate, do not reintroduce #10B981.
+
+   Tailwind v4 is CSS-configured, so this @theme block is the equivalent of the
+   `tailwind.config.js` sketch in the spec and produces the same utility names:
+     navy        -> bg-navy / text-navy
+     navy-dark   -> bg-navy-dark
+     brand-green -> text-brand-green / bg-brand-green
+     ink         -> text-ink
+--------------------------------------------------------------------------- */
+@theme {
+  --color-navy: #293e61;
+  --color-navy-dark: #1f2e47;
+  --color-brand-green: #62e823;
+  /* Always ink regardless of theme — e.g. text on the neon-green CTA fill,
+     which needs the same dark text in light or dark mode. Not the same
+     token as --color-fg below, which is the one that actually flips. */
+  --color-ink: #231f20;
+
+  /* Base app background — deep obsidian shell the glass panels float on (§2.2) */
+  --color-obsidian: #0a0d14;
+
+  /*
+   * Theme-reactive foreground token. Every "text-white/NN",
+   * "border-white/NN" and "bg-white/NN" utility across the dashboard (nearly
+   * all of them tints/opacity of a single foreground color, not literal
+   * brand white) uses --color-fg instead, so flipping this one variable
+   * under .dark re-themes the whole app — Tailwind still generates the
+   * full text-fg/border-fg/bg-fg/NN opacity-modifier utility set for any
+   * color registered here, same as it does for navy/brand-green/ink above.
+   * Literal, always-white surfaces (Logo's plate, landing page's white
+   * cards) keep using the real `white` token and are unaffected.
+   */
+  --color-fg: #231f20;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-glass: 20px;
+}
+
+:root.dark {
+  --color-fg: #ffffff;
+}
+
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/*
+ * Base app-shell background — a static mesh gradient in the exact §2.1
+ * hexes, sitting under GlowOrbs' animated blobs and every glass panel.
+ * Fixed to the viewport (not the page) so it reads as one ambient backdrop
+ * rather than tiling as content scrolls taller than one screen. Light and
+ * dark each get their own mesh — same brand hues, different base.
+ */
+body {
+  background-color: #f6f7fb;
+  background-image:
+    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.14), transparent 60%),
+    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.12), transparent 55%),
+    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.08), transparent 60%),
+    linear-gradient(165deg, #eef1f7 0%, #f6f7fb 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:root.dark body {
+  background-color: var(--color-obsidian);
+  background-image:
+    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.12), transparent 60%),
+    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.65), transparent 55%),
+    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.07), transparent 60%),
+    linear-gradient(165deg, #1f2e47 0%, #0a0d14 55%);
+}
+
+/* ---------------------------------------------------------------------------
+   "Liquid Glass" — §2.2. The dark recipe (:root.dark overrides below) is the
+   spec's, verbatim, plus a soft outer drop shadow (panels float above the
+   shell rather than sitting flush with it) and a hairline inset top
+   highlight (the standard glassmorphism "lit edge" cue). The light recipe
+   is the same idea in the light palette: navy-tinted glass over the app's
+   off-white mesh instead of white-tinted glass over obsidian.
+--------------------------------------------------------------------------- */
+@utility glass-panel {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(41, 62, 97, 0.12);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 40px -26px rgba(41, 62, 97, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+:root.dark .glass-panel {
+  background: rgba(41, 62, 97, 0.35); /* navy tint */
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 48px -28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Slightly denser variant for nav rails and sticky headers. */
+@utility glass-panel-solid {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(41, 62, 97, 0.14);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 40px -26px rgba(41, 62, 97, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+}
+
+:root.dark .glass-panel-solid {
+  background: rgba(31, 46, 71, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 48px -28px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Green focus ring used across inputs and interactive glass surfaces. */
+@utility focus-glow {
+  outline: none;
+  border-color: rgba(98, 232, 35, 0.5);
+  box-shadow: 0 0 0 3px rgba(98, 232, 35, 0.15);
+}
+
+::selection {
+  background: rgba(98, 232, 35, 0.3);
+  color: #ffffff;
+}
+
+/* Motion (§2.2) is Framer Motion driven, but honour reduced-motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

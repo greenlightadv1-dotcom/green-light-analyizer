@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T16:44:47Z",
+  "title": "Design System: Green Light",
+  "extensions": {
+    "colorMeta": {
+      "brand-green": {
+        "role": "primary",
+        "displayName": "Electric Signal Green",
+        "canonical": "oklch(82.3% 0.247 138.6)",
+        "tonalRamp": ["oklch(15.0% 0.247 138.6)", "oklch(27.0% 0.247 138.6)", "oklch(39.0% 0.247 138.6)", "oklch(51.0% 0.247 138.6)", "oklch(63.0% 0.247 138.6)", "oklch(75.0% 0.247 138.6)", "oklch(87.0% 0.247 138.6)", "oklch(95.0% 0.247 138.6)"]
+      },
+      "deep-navy": {
+        "role": "neutral",
+        "displayName": "Deep Navy",
+        "canonical": "oklch(36.4% 0.067 260.2)",
+        "tonalRamp": ["oklch(15.0% 0.067 260.2)", "oklch(27.0% 0.067 260.2)", "oklch(39.0% 0.067 260.2)", "oklch(51.0% 0.067 260.2)", "oklch(63.0% 0.067 260.2)", "oklch(75.0% 0.067 260.2)", "oklch(87.0% 0.067 260.2)", "oklch(95.0% 0.067 260.2)"]
+      },
+      "navy-dark": {
+        "role": "neutral",
+        "displayName": "Navy Dark",
+        "canonical": "oklch(30.1% 0.050 260.2)",
+        "tonalRamp": ["oklch(15.0% 0.050 260.2)", "oklch(27.0% 0.050 260.2)", "oklch(39.0% 0.050 260.2)", "oklch(51.0% 0.050 260.2)", "oklch(63.0% 0.050 260.2)", "oklch(75.0% 0.050 260.2)", "oklch(87.0% 0.050 260.2)", "oklch(95.0% 0.050 260.2)"]
+      },
+      "deep-obsidian": {
+        "role": "neutral",
+        "displayName": "Deep Obsidian",
+        "canonical": "oklch(15.9% 0.016 266.6)",
+        "tonalRamp": ["oklch(15.0% 0.016 266.6)", "oklch(27.0% 0.016 266.6)", "oklch(39.0% 0.016 266.6)", "oklch(51.0% 0.016 266.6)", "oklch(63.0% 0.016 266.6)", "oklch(75.0% 0.016 266.6)", "oklch(87.0% 0.016 266.6)", "oklch(95.0% 0.016 266.6)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(24.4% 0.006 0.6)",
+        "tonalRamp": ["oklch(15.0% 0.006 0.6)", "oklch(27.0% 0.006 0.6)", "oklch(39.0% 0.006 0.6)", "oklch(51.0% 0.006 0.6)", "oklch(63.0% 0.006 0.6)", "oklch(75.0% 0.006 0.6)", "oklch(87.0% 0.006 0.6)", "oklch(95.0% 0.006 0.6)"]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "oklch(100% 0 0)",
+        "tonalRamp": ["oklch(15.0% 0 0)", "oklch(27.0% 0 0)", "oklch(39.0% 0 0)", "oklch(51.0% 0 0)", "oklch(63.0% 0 0)", "oklch(75.0% 0 0)", "oklch(87.0% 0 0)", "oklch(95.0% 0 0)"]
+      },
+      "warning": {
+        "role": "state",
+        "displayName": "Warning Amber",
+        "canonical": "oklch(87.9% 0.169 91.605)",
+        "tonalRamp": ["oklch(15.0% 0.169 91.6)", "oklch(27.0% 0.169 91.6)", "oklch(39.0% 0.169 91.6)", "oklch(51.0% 0.169 91.6)", "oklch(63.0% 0.169 91.6)", "oklch(75.0% 0.169 91.6)", "oklch(87.0% 0.169 91.6)", "oklch(95.0% 0.169 91.6)"]
+      },
+      "danger": {
+        "role": "state",
+        "displayName": "Danger Red",
+        "canonical": "oklch(63.7% 0.237 25.331)",
+        "tonalRamp": ["oklch(15.0% 0.237 25.3)", "oklch(27.0% 0.237 25.3)", "oklch(39.0% 0.237 25.3)", "oklch(51.0% 0.237 25.3)", "oklch(63.0% 0.237 25.3)", "oklch(75.0% 0.237 25.3)", "oklch(87.0% 0.237 25.3)", "oklch(95.0% 0.237 25.3)"]
+      },
+      "info": {
+        "role": "state",
+        "displayName": "Info Sky",
+        "canonical": "oklch(74.6% 0.16 232.661)",
+        "tonalRamp": ["oklch(15.0% 0.160 232.7)", "oklch(27.0% 0.160 232.7)", "oklch(39.0% 0.160 232.7)", "oklch(51.0% 0.160 232.7)", "oklch(63.0% 0.160 232.7)", "oklch(75.0% 0.160 232.7)", "oklch(87.0% 0.160 232.7)", "oklch(95.0% 0.160 232.7)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page-level H1s and the rare large numeric callout. Never used elsewhere." },
+      "title": { "displayName": "Title", "purpose": "Panel and card headings — deliberately close in size to Body, not a large headline tier." },
+      "body": { "displayName": "Body", "purpose": "Prose, descriptions, table and list content." },
+      "label": { "displayName": "Label", "purpose": "Form field labels and small uppercase metadata, always at reduced fg opacity." },
+      "mono": { "displayName": "Mono", "purpose": "Alias emails, shareable slugs, and other literal copyable/machine-readable strings only." }
+    },
+    "shadows": [
+      { "name": "panel-lift-dark", "value": "0 24px 48px -28px rgba(0,0,0,0.55)", "purpose": "Outer shadow lifting a glass panel off the obsidian shell, dark theme." },
+      { "name": "panel-lift-light", "value": "0 20px 40px -26px rgba(41,62,97,0.35)", "purpose": "Outer shadow lifting a glass panel off the mesh background, light theme." },
+      { "name": "panel-inset-highlight", "value": "inset 0 1px 0 0 rgba(255,255,255,0.06)", "purpose": "Lit top edge on every glass panel — the glassmorphism 'catching the light' cue." },
+      { "name": "cta-glow", "value": "0 8px 30px -12px rgba(98,232,35,0.7)", "purpose": "Reserved for the primary green button only." },
+      { "name": "focus-glow", "value": "0 0 0 3px rgba(98,232,35,0.15)", "purpose": "Shared focus ring for every interactive control, paired with a rgba(98,232,35,0.5) border." }
+    ],
+    "motion": [
+      { "name": "glow-orb-drift", "value": "26s-44s ease-in-out infinite, per-orb x/y keyframes via Framer Motion", "purpose": "Slow ambient drift of the background glow orbs; never abrupt." },
+      { "name": "panel-transition", "value": "fade + slight scale/translate via Framer Motion", "purpose": "Panel and route transitions app-wide (CLAUDE.md §2.2) — nothing abrupt." },
+      { "name": "control-hover", "value": "150ms ease", "purpose": "Buttons, fields, nav items — background/border/filter transitions on hover and focus." }
+    ],
+    "breakpoints": [
+      { "name": "lg", "value": "1024px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single call-to-action style. Electric green fill, ink text, green-tinted glow shadow.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 12px; background: var(--color-brand-green); color: var(--color-ink); font-size: 14px; font-weight: 600; border: none; box-shadow: 0 8px 30px -12px rgba(98, 232, 35, 0.7); transition: filter 0.15s ease; cursor: pointer; } .ds-btn-primary:hover { filter: brightness(1.1); } .ds-btn-primary:active { filter: brightness(0.95); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-brand-green); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action style used everywhere a primary button isn't.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 12px; background: color-mix(in oklab, var(--color-fg) 5%, transparent); color: var(--color-fg); border: 1px solid color-mix(in oklab, var(--color-fg) 10%, transparent); backdrop-filter: blur(8px); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s ease; } .ds-btn-ghost:hover { background: color-mix(in oklab, var(--color-fg) 10%, transparent); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--color-brand-green); outline-offset: 2px; }"
+    },
+    {
+      "name": "Glass Panel",
+      "kind": "card",
+      "refersTo": "glass-panel",
+      "description": "The structural surface every card/panel in the product is built from. Dark-theme recipe shown.",
+      "html": "<div class=\"ds-glass-panel\"><h3 class=\"ds-glass-panel-title\">Panel title</h3><p class=\"ds-glass-panel-body\">Supporting copy goes here.</p></div>",
+      "css": ".ds-glass-panel { background: rgba(41, 62, 97, 0.35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 24px; box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.06); } .ds-glass-panel-title { font-size: 14px; font-weight: 600; color: var(--color-fg); margin: 0 0 8px; } .ds-glass-panel-body { font-size: 14px; line-height: 1.625; color: color-mix(in oklab, var(--color-fg) 50%, transparent); margin: 0; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Labeled text input — translucent fill, green focus ring, uppercase label.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email</span><input class=\"ds-field-input\" type=\"text\" placeholder=\"you@example.com\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-size: 12px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: color-mix(in oklab, var(--color-fg) 70%, transparent); } .ds-field-input { height: 44px; border-radius: 12px; border: 1px solid color-mix(in oklab, var(--color-fg) 10%, transparent); background: color-mix(in oklab, var(--color-fg) 5%, transparent); padding: 0 14px; font-size: 14px; color: var(--color-fg); transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-field-input::placeholder { color: color-mix(in oklab, var(--color-fg) 30%, transparent); } .ds-field-input:focus { outline: none; border-color: rgba(98, 232, 35, 0.5); box-shadow: 0 0 0 3px rgba(98, 232, 35, 0.15); }"
+    },
+    {
+      "name": "Risk Badge",
+      "kind": "chip",
+      "refersTo": "badge-pill",
+      "description": "Deal Co-Pilot risk-rating pill — color, dot, and label always travel together.",
+      "html": "<span class=\"ds-badge ds-badge-green\"><i class=\"ds-badge-dot\"></i>Green light</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 9999px; border: 1px solid transparent; padding: 2px 10px; font-size: 12px; font-weight: 500; } .ds-badge-dot { width: 6px; height: 6px; border-radius: 9999px; background: currentColor; } .ds-badge-green { border-color: rgba(98, 232, 35, 0.3); background: rgba(98, 232, 35, 0.1); color: var(--color-brand-green); }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Active/inactive navigation row — logical start-edge accent border so it mirrors under RTL.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Dashboard</a>",
+      "css": ".ds-nav-item { display: block; border-inline-start: 2px solid transparent; padding-block: 10px; padding-inline-start: 10px; padding-inline-end: 12px; border-radius: 12px; font-size: 14px; color: color-mix(in oklab, var(--color-fg) 60%, transparent); text-decoration: none; transition: background 0.15s ease, transform 0.15s ease; } .ds-nav-item:hover { background: color-mix(in oklab, var(--color-fg) 5%, transparent); color: var(--color-fg); transform: translateX(2px); } .ds-nav-item-active { border-inline-start-color: var(--color-brand-green); background: rgba(98, 232, 35, 0.12); color: var(--color-brand-green); font-weight: 500; }"
+    },
+    {
+      "name": "Code / Alias Chip",
+      "kind": "custom",
+      "refersTo": "code-chip",
+      "description": "Signature component: literal copyable strings (inbound alias, shareable slug) in monospace green-on-navy, one of the system's few deliberately theme-fixed surfaces.",
+      "html": "<code class=\"ds-code-chip\">amir.k3f9x2@analyze.greenlight.com</code>",
+      "css": ".ds-code-chip { display: inline-block; border-radius: 12px; border: 1px solid color-mix(in oklab, var(--color-fg) 10%, transparent); background: rgba(31, 46, 71, 0.7); padding: 10px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 14px; color: var(--color-brand-green); word-break: break-all; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Liquid Glass",
+    "overview": "Green Light lives on a near-black obsidian shell with translucent, blurred panels floating above it, lit from within by a single electric-green signal and two slow-drifting ambient glow orbs (green and navy) that give the whole surface a sense of depth without ever calling attention to themselves directly. The system is disciplined rather than decorative: one accent color, one foreground color used only at different opacities, and one radius family that scales from tight badges up to soft 20px panels. Where the product's whole pitch is \"nothing is verified unless it provably is,\" the interface echoes that restraint — quiet by default, and unmistakable the one time green appears to mean \"go.\"\n\nThe palette and glass recipe are confirmed, exact brand constraints (CLAUDE.md §2.1–§2.2): do not approximate the five core hexes, and do not reintroduce the earlier placeholder teal-green (#10B981) anywhere. Both a dark theme (obsidian shell, the system default) and a light theme (an off-white mesh gradient in the same brand hues) are fully supported and mechanically linked through one CSS variable, --color-fg, rather than per-component light/dark pairs.",
+    "keyCharacteristics": [
+      "Near-black obsidian base in dark mode, an off-white brand-tinted mesh gradient in light mode — never a flat solid background in either theme.",
+      "Exactly one accent color (electric green), used sparingly for CTAs, active states, success, and the one place the whole product's trust promise becomes visible: a \"verified\" badge.",
+      "Translucent, blurred glass panels are how every surface separates from the shell — not a flat card-with-border convention.",
+      "One foreground color (ink/white, theme-reactive as fg) carries the entire text hierarchy through opacity alone; there is no separate gray scale.",
+      "Soft, rounded geometry throughout — nothing in the system has a sharp corner.",
+      "Full RTL mirroring (Arabic) is a first-class layout requirement, not an afterthought bolted onto an LTR design."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Green appears on a small fraction of any given screen; its rarity is what makes it legible as a signal rather than decoration. It is never used for two different meanings on the same screen.", "section": "colors" },
+      { "name": "The Single Ink Rule", "body": "If a design needs a less prominent version of any text or hairline border, reach for a lower opacity of fg — never a new gray value.", "section": "colors" },
+      { "name": "The Quiet Hierarchy Rule", "body": "Display is only 1.71× the size of Body. Hierarchy is carried by weight, letter-spacing, uppercase casing, and opacity — not by scale. A screen should never need a font size larger than Display to feel organized.", "section": "typography" },
+      { "name": "The Structural Glass Rule", "body": "Every panel in the product is one of two glass-panel utilities, never a hand-rolled bg-white/border card: a semi-transparent, brand-tinted background at blur(16-20px), a hairline border, an outer drop shadow, and an inset top highlight.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do treat green as a single, rare signal — CTAs, active nav, success, \"verified.\" Never introduce it as a second background/fill color for large surfaces.",
+      "Do reach for a lower opacity of fg for any less-prominent text or border. Never introduce a new gray value.",
+      "Do build every panel from glass-panel / glass-panel-solid. Never hand-roll a flat bg-white/bg-navy card with a plain border as a substitute.",
+      "Do use logical Tailwind utilities (ps-*/pe-*, border-s-*, start-0/end-0, text-start) for anything in shared chrome or any surface that must mirror under dir=\"rtl\".",
+      "Do pair every status/risk color with a text label (and, for risk badges, the small dot) — color alone never carries meaning."
+    ],
+    "donts": [
+      "Don't approximate the five confirmed hexes, and never reintroduce the retired placeholder teal-green (#10B981).",
+      "Don't give Deep Navy a second-accent role competing with green — it is a structural/surface color only.",
+      "Don't apply a plain box-shadow card as a substitute for the glass recipe; depth here is translucency + blur first, shadow second.",
+      "Don't use physical positioning/alignment utilities (text-left, pl-*/pr-*, right-0/left-0) in shared chrome or any RTL-facing surface.",
+      "Don't extend the fixed dark \"code chip\" treatment beyond its confirmed list (alias/slug chips, violation-log excerpt, the system chat bubble) — every other surface stays theme-reactive."
+    ]
+  }
+}

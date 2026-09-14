@@ -96,6 +96,20 @@ Rules:
 - On the dark theme (the app's default), prefer `logo_dark_full.png` in the
   nav/header and `icon_color.png` as the favicon / collapsed sidebar mark.
 
+> **Update — icon-only, real transparency.** The client later supplied two
+> genuinely transparent icon files (confirmed via each WebP's VP8X alpha
+> flag, not just visual inspection) and asked that the wordmark be dropped
+> everywhere in favor of the icon alone, switching with the active theme:
+> `public/branding/icon_dark.webp` (white mark, for dark surfaces) and
+> `icon_light.webp` (navy mark, for light surfaces) — same "suffix names the
+> surface, not the mark's own color" convention as the two `_full.png`
+> files above. `src/components/brand/Logo.tsx` and `ThemedLogo.tsx` render
+> these directly with no plate wrapper, since — unlike the three files
+> above, which are still baked-opaque — these two actually have alpha. The
+> `_full.png` lockups and `icon_color.png` are unused in the app now but
+> left on disk; the favicon (`app/layout.tsx` metadata) still points at
+> `icon_color.png`, not touched by this change.
+
 ### 2.4 Typography
 - No custom typeface was supplied — use a clean geometric/grotesk sans
   (e.g. `Inter` or `Manrope`) for UI text.
@@ -132,6 +146,28 @@ creator | company | admin
    building its own billing UI for the MVP.
 4. Payment rails referenced in support flows: Vodafone Cash / InstaPay /
    Meeza (MENA region), PayPal / Crypto (international).
+
+> **Update — Plan & billing moved out of Settings, onto its own Pricing
+> page.** `/pricing` (`src/app/(app)/pricing/`, sidebar-linked for every
+> role) now owns everything this section describes: the §8 plan cards
+> (MENA/Intl price, commission, features) each with a "manage via Discord"
+> CTA, plus the promo/discount code redemption form (`redeemCode`,
+> relocated from `settings/actions.ts` to `pricing/actions.ts`). `/settings`
+> no longer carries any plan/billing UI at all — it's Account (display name,
+> password — see below), the §5 email-forwarding alias, and WhatsApp
+> notification settings. This is the same "manage via Discord, no in-app
+> billing" policy from point 3 above, just surfaced where a creator or
+> company would actually go looking for plans rather than folded into
+> Settings.
+>
+> Settings' Account section also grew two capabilities this file didn't
+> previously describe: a creator/company can change their own **display
+> name** (`profiles.full_name`, already grantable to `authenticated` since
+> migration 0003) and their **password** (`supabase.auth.updateUser`,
+> the same call the forced first-login reset in `(auth)/set-password/`
+> uses, just without that flow's `must_change_password` gate). The primary
+> email stays plain read-only text — never an input, not even a disabled
+> one — since it's the identity Supabase Auth and every RLS policy key off.
 
 ---
 
@@ -218,6 +254,54 @@ sponsorship_type:  'video_dedicated' | 'integration' | 'story_share' | 'live_men
 target_countries:  text[]   -- countries the company wants to reach with this deal
 ```
 
+> **Update — Deal Inbox: dual sources, company intelligence, AI reply
+> drafts, WhatsApp alerts.** Migration 0017 extended the negotiation
+> workspace without a schema rework for "where did this deal come from":
+> the existing `deal_chats.company_id` already distinguishes an in-app deal
+> (non-null, created via Discover) from an inbound/manual one (null) — the
+> Deal Inbox filters and badges (`SourceBadge`) on that column rather than
+> adding a new one.
+>
+> For the null (email/manual) case, `CompanyIntelligencePanel` shows the
+> sender domain's WHOIS/trust data (`deal_chats.security_check`, populated
+> by `runSecurityCheck` at deal-creation time — the same check already used
+> elsewhere, just persisted now), a free-email-provider warning, and the
+> creator's **own** deal history with that domain (`getOwnHistoryWithDomain`
+> — deliberately scoped to the caller's own RLS-readable deals, not a
+> cross-creator aggregation, since that would leak one creator's negotiation
+> history to another via a shared sponsor domain). A heuristic (non-LLM)
+> classifier tags `deal_chats.is_likely_sponsorship` on intake for a
+> "possible spam" filter in the inbox list — best-effort, and never used to
+> silently drop a delivery.
+>
+> The negotiation workspace also gained an **AI copyable response
+> generator** (`generateReplyDraft`, NVIDIA Kimi K3 per §9) that drafts a
+> reply from the latest offer, price and risk rating — a starting point the
+> creator edits and sends themselves, not an auto-send.
+>
+> **Migration 0018 — `deal_chats.recommended_price_usd`.** The Co-Pilot's
+> price recommendation used to exist only as prose inside a room's opening
+> system message, which nothing could read back. That caused two real bugs:
+> the Manual Analyzer had nowhere to put it and wrote it into
+> `offered_amount` (the column meaning *what the sponsor offered*, so every
+> analyzer deal showed the platform's own suggestion as the sponsor's), and
+> the reply generator could not tell the model the recommended price, so its
+> central instruction could never fire. It is now stored at creation time by
+> all three paths, server-authoritative like `ai_evaluation`/`offered_amount`
+> (never granted to `authenticated`), and shown in the deal sidebar beside
+> the offer. Null on pre-0018 rows, which render without the row rather than
+> showing a fabricated number. The analyzer now derives `offered_amount` from
+> the pasted text with the same `extractOfferedAmount` helper the email path
+> uses, so "Offer" means one thing everywhere.
+>
+> Separately, `profiles.whatsapp_number` / `whatsapp_notifications_enabled`
+> (opt-in, set in Settings) drive an instant WhatsApp alert
+> (`notifyNewDeal`, Meta's WhatsApp Business Cloud API) fired from every
+> deal-creation path — email intake, Manual Analyzer, and Discover offers —
+> on top of the in-app inbox. Quiet-degradation like every other optional
+> integration here: missing config or a failed send never blocks deal
+> creation.
+
 ---
 
 ## 7. Audience & targeting data (drives the AI evaluation — not just avg_views)
@@ -297,6 +381,25 @@ when the deal's value is high and the only geo data is self-reported —
 i.e., unverified audience data should never by itself produce a `green`
 rating on a high-value deal.
 
+> **Update — a friendlier Creator Profile layer, on top of this section, not
+> instead of it.** Migration 0017 added `profiles.bio` / `avatar_url` /
+> `country` / `primary_language` / `base_rate_usd` / `social_links` /
+> `shareable_slug`, and the Media Kit page now opens with a
+> `CreatorProfileCard` (profile basics + social handles) and a
+> `ShareableLinkCard` (`greenlight.com/p/<slug>`) above the existing
+> per-platform panels. Nothing in this section changed: `avg_views`,
+> `engagement_rate`, `declared_top_countries` / `verified_top_countries`,
+> `audience_verified` and the whole OAuth verification flow still live on
+> `media_kits` exactly as specified, still drive the AI evaluation exactly
+> as specified, and are untouched by the new profile fields. The public
+> `/p/[slug]` page (reachable signed-out — it's what a creator sends a
+> sponsor) reads through a SECURITY DEFINER RPC,
+> `creator_public_profile(slug)`, whose column list is hardcoded in its own
+> migration SQL and explicitly excludes `primary_email` / `inbound_alias` /
+> everything in this section — it shows the profile basics and connected
+> platforms, never audience geography or verification status, self-reported
+> or otherwise.
+
 ---
 
 ## 8. Pricing tiers
@@ -318,10 +421,19 @@ deal, not on company seats.
 |---|---|
 | Frontend / Hosting | Next.js + Vercel (Hobby free tier) |
 | Backend / DB | Supabase free tier (Postgres + Realtime websockets + RLS) |
-| AI engine | **Google Gemini API** (AI Studio free tier) — intentionally not Claude, for cost reasons on the high-volume analysis path |
+| AI engine | **NVIDIA NIM API** running Kimi K3 (`moonshotai/kimi-k3`) — see amendment below |
 | Email | Resend free tier (3,000 emails/mo + inbound webhooks) |
 | Platform stats (basic) | YouTube Data API v3, Twitch Helix API |
 | Platform stats (verified audience geo, opt-in) | YouTube Analytics API (OAuth), Instagram Graph API insights (OAuth) |
+
+> Note: this spec originally named **Google Gemini API** here, intentionally
+> not Claude, for cost reasons on the high-volume analysis path. The client
+> explicitly instructed a switch to **NVIDIA-hosted Kimi K3** instead — an
+> NVIDIA-provided key was supplied directly for this purpose. Reasoning behind
+> the swap, and the §12 data-handling implications, are documented in
+> `src/lib/ai/nvidia.ts` and the README's Engine section. Build against Kimi
+> K3 going forward; do not reintroduce Gemini without asking first, per this
+> file's own rule at the top.
 
 ---
 
@@ -392,16 +504,23 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 
 ---
 
-## 11. Roadmap (post-MVP — build as a locked/disabled UI element now)
+## 11. Roadmap (post-MVP)
 
-Show an **"AI Assistant" card on the dashboard in a "Coming Soon" locked
-state** (visible but not clickable) to tease upcoming features:
 - Video/script idea generation
 - Copyright check
 - Thumbnail idea generation
 - Best posting time recommendations
 - Expanding verified audience-geo coverage to TikTok/Twitch if/when those
   platforms open up suitable API access
+
+> **Update — the dashboard teaser card is gone.** This section originally
+> called for an "AI Assistant" card on the dashboard in a locked "Coming
+> Soon" state (`ComingSoonCard.tsx`). A later dashboard redesign removed it
+> outright, on the client's explicit instruction, to make room for the
+> profile-completeness banner and a more prominent inbound-alias card (§14
+> carries the rest of that round's changes). The roadmap items above are
+> unchanged and still real future work — there is simply no in-app teaser for
+> them anymore.
 
 ---
 
@@ -439,3 +558,127 @@ state** (visible but not clickable) to tease upcoming features:
 - Whether verified audience-geo (YouTube/Instagram OAuth, §7) ships in v1
   or is fast-followed shortly after MVP launch, given the extra OAuth
   review lead time.
+
+---
+
+## 14. Public landing page & theming
+
+`/` is now a real public marketing page (`src/components/landing/`), reachable
+without a session — previously the root just redirected straight to
+`/dashboard` or `/login`. This does **not** add self-signup: the "Request
+access" CTA and every other contact point route to Discord/WhatsApp, per §4's
+admin-gated model, which is unchanged.
+
+- **Contact channels** — `src/lib/constants/contact.ts` is the one place
+  Discord/WhatsApp URLs are defined. Reused by the landing page, `/settings`'
+  Plan & billing card, and `/suspended`.
+- **Palette** — still exactly §2.1's hexes (`#293E61` / `#1F2E47` / `#62E823`).
+  A later design pass proposed a different navy/green pair; it was rejected in
+  favor of the confirmed brand colors already implemented everywhere else.
+- **Light/dark mode is app-wide.** `ThemeProvider`
+  (`src/components/ThemeProvider.tsx`, wrapping `next-themes`) is mounted at
+  the root, defaults to system preference, and is switchable via `ThemeMenu`
+  (`src/components/ui/ThemeMenu.tsx` — Light/Dark/System, in the dashboard
+  `TopBar` and the landing nav). This reverses this section's original
+  "landing-page-only" scoping decision, made before the client asked for a
+  fully themeable dashboard.
+  - Almost every `text-white`/`border-white`/`bg-white`/`divide-white`
+    utility across the app (Sidebar, TopBar, every dashboard/admin view) was
+    a foreground tint, not literal brand white, so those were converted to
+    the theme-reactive `--color-fg` token (§2.1's `@theme` block) rather
+    than adding a `dark:` pair to every one — flip that one CSS variable
+    under `:root.dark` and the whole app re-themes. `glass-panel` /
+    `glass-panel-solid` and the body mesh gradient (§2.2) each carry their
+    own light/dark recipe the same way.
+  - The exception: a few surfaces are deliberately a fixed dark "code
+    block" regardless of theme (§2.1's navy-dark usage) — generated
+    codes/passwords, the violation log excerpt, and the deal room's
+    "via Green Light" system bubble. Those keep literal `text-white`, since
+    ink-on-navy in light mode would be close to unreadable.
+  - Literal, always-white surfaces (the Logo's own asset, landing's white
+    cards) still use the real `white` token and are untouched by this.
+- **Desktop layout** — the authenticated app shell's outer container
+  (`(app)/layout.tsx`, mirrored in `preview/layout.tsx`) is `max-w-[1680px]`
+  with responsive gap/padding (`lg:`/`2xl:` steps), not the earlier
+  `max-w-7xl` (1280px) — that read as a narrow centered column on large
+  desktop monitors.
+- **Logo** (`src/components/brand/Logo.tsx`) — superseded by the icon-only,
+  genuinely-transparent asset switch documented in §2.3's own update note;
+  see there rather than here.
+
+---
+
+## 15. Internationalization (i18n) & RTL
+
+A Language switcher (`src/components/ui/LanguageMenu.tsx`, Globe icon,
+same glassmorphism dropdown as `ThemeMenu`) sits next to the theme toggle in
+`TopBar` and the landing nav. Five languages: English, Arabic (`ar`),
+French, Spanish, German — `src/lib/i18n/locales.ts` is the list, each with
+its own native-script name and `dir`.
+
+- **Mechanism, deliberately not next-intl.** `src/components/LocaleProvider.tsx`
+  is a custom, non-routing i18n provider — no `/ar/dashboard`-style locale
+  prefixes. `proxy.ts`/`session.ts` already carry a fair amount of custom
+  auth-guard routing logic; layering a routing-based i18n library's own
+  middleware on top risked real conflicts there for a feature that doesn't
+  need locale-specific URLs. The provider mirrors `ThemeProvider`'s shape
+  instead: a module-level external store (via `useSyncExternalStore`, not
+  `useState`+`useEffect` — reading `localStorage` inside an effect and
+  pushing it into state is exactly the "sync with an external system" case
+  that hook exists for, and the lint rule that later caught this same
+  pattern in `ThemeToggle` flagged it here too) persisted to `localStorage`,
+  with the same inline no-flash `<script>` technique next-themes uses for
+  its own class script — it sets `dir`/`lang` on `<html>` before the tree
+  paints, so a returning Arabic visitor doesn't see the page flash
+  LTR-then-flip-RTL.
+- **`t("nav.dashboard")`-style dictionaries** — `src/lib/i18n/dictionaries/
+  {en,ar,fr,es,de}.ts`. English is the structural source of truth; the other
+  four are typed against it (`Dictionary`), so a missing/extra key across
+  any of them is a type error, not a silent runtime fallback.
+- **Translation scope, deliberately partial.** The shared chrome (Sidebar
+  nav labels, TopBar, the theme/language menus' own labels), the public
+  landing page, and — as of a later pass — the inner content of Dashboard,
+  Manual Analyzer, Deal Inbox, Media Kit and Settings (form fields, card
+  titles, table headings, badges, empty/error states) all run through the
+  `t()` dictionaries via seven namespaces (`common`, `badges`, `dashboard`,
+  `analyzer`, `inbox`, `mediaKit`, `settings`) on top of the original
+  `nav`/`topbar`/`theme`/`language`/`landing`. Still English, disclosed
+  rather than silently missed:
+  - **Admin pages** (`/admin/*`) — not part of this pass.
+  - **Data-driven strings that live in `lib/` files, not JSX** — the
+    per-platform verification notes in `lib/media-kit/platforms.ts`
+    (`VERIFICATION_SUPPORT[...].note`, e.g. "Twitch exposes no per-viewer
+    country data…") and the `sponsorship_type` values stored in and read
+    back from the database (`chat.sponsorship_type?.replace(/_/g, " ")`).
+    Translating those means making a data module locale-aware, a real
+    follow-up this file doesn't claim is done.
+  - **User- and AI-generated content** — chat message text, the Manual
+    Analyzer's canned `reasoning` string, and anything else that is data
+    rather than UI chrome is never translated; per §12, offer/chat text is
+    evaluation-only and isn't rerouted through translation either.
+  - The `<option>` elements under the Analyzer's sponsorship-type `<select>`
+    carry an explicit `bg-slate-900 text-white dark:bg-slate-900
+    dark:text-white` class: native option popups don't reliably inherit the
+    app's `--color-fg` theme token in dark mode, so they're pinned dark and
+    readable regardless of theme rather than left to inherit.
+- **RTL layout**: the shared chrome's physical Tailwind utilities
+  (`border-l-*`, `pl-*`/`pr-*`, `right-0`/`left-0`, `text-left`) were
+  converted to logical ones (`border-s-*`, `ps-*`/`pe-*`, `end-0`/`start-0`,
+  `text-start`) so they flip automatically under `dir="rtl"` — flex-row
+  layouts (Sidebar+content, TopBar's icon row) mirror on their own, that's
+  plain CSS under `dir`, not something built here. The one manual case is
+  `hover:translate-x-0.5` (a CSS transform, which doesn't flow with `dir`
+  the way logical properties do) — paired with an explicit
+  `rtl:hover:-translate-x-0.5`. Decorative-only elements (the landing
+  hero's ambient glow blobs) were left physically positioned; they're not
+  reading content, so an unmirrored accent isn't a correctness bug.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint
+
+      - name: Unit tests
+        run: npm test
+
+      # Builds with placeholder values. Every secret in this project is read at
+      # request time, never at build time, so a build proves the code compiles
+      # without needing — or risking — a real key in CI.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+      # Proves the webhook's signature gate holds on the built artifact, using
+      # a throwaway secret. This is the check that caught the auth proxy
+      # swallowing /api/webhooks/* — a route can be correct and unreachable.
+      - name: Webhook end-to-end
+        run: |
+          npm run start -- -p 3666 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null "http://127.0.0.1:3666/login" && break
+            sleep 1
+          done
+          node scripts/webhook-e2e.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          RESEND_INBOUND_WEBHOOK_SECRET: whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw
