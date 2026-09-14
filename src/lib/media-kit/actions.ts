@@ -151,6 +151,9 @@ export async function disconnectAnalytics(formData: FormData): Promise<void> {
 
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
+  // Settings owns the connect/sync/disconnect controls now, so its
+  // cached render of the same state has to go with them.
+  revalidatePath("/settings");
 }
 
 export type SyncVerifiedGeoState = {
@@ -235,6 +238,9 @@ export async function syncVerifiedGeo(
 
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
+  // Settings owns the connect/sync/disconnect controls now, so its
+  // cached render of the same state has to go with them.
+  revalidatePath("/settings");
   return { error: null, synced: true };
 }
 

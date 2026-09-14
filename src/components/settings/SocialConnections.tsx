@@ -1,11 +1,21 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useActionState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
-import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
+import {
+  disconnectAnalytics,
+  syncVerifiedGeo,
+  type SyncVerifiedGeoState,
+} from "@/lib/media-kit/actions";
+import {
+  PLATFORM_LABELS,
+  VERIFICATION_SUPPORT,
+  verificationAvailability,
+} from "@/lib/media-kit/platforms";
 import { REAL_OAUTH_PLATFORMS } from "@/lib/oauth/platforms";
-import type { OAuthPlatform } from "@/lib/types/database";
+import type { OAuthPlatform, SubscriptionPlan } from "@/lib/types/database";
 
 const ICON_CLASSNAMES: Record<OAuthPlatform, string> = {
   youtube: "bg-[#FF0000]/10 text-[#FF0000]",
@@ -44,24 +54,162 @@ function StatusBadge({ connected }: { connected: boolean }) {
   );
 }
 
+function SyncButton({ demo }: { demo: boolean }) {
+  const { pending } = useFormStatus();
+  const { t } = useTranslation();
+  return (
+    <button
+      type={demo ? "button" : "submit"}
+      disabled={pending}
+      className="text-xs text-brand-green underline underline-offset-4 transition hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {pending ? t("common.syncing") : t("mediaKit.syncNow")}
+    </button>
+  );
+}
+
 /**
- * Read-only summary of the §7.3 analytics connections.
+ * One platform row: the whole §7.3 connection lifecycle for it.
  *
- * Deliberately holds no inputs of its own. Everything a creator types —
- * reach, category, language, self-reported audience geography (§7.1) — lives
- * on the Media Kit's PlatformCard, and everything verified arrives through
- * OAuth. A field here would be a third place the same data could come from.
+ * Its own useActionState rather than one shared by the card — a failed sync
+ * on YouTube must not surface an error under Instagram.
+ */
+function ConnectionRow({
+  platform,
+  connected,
+  plan,
+  configured,
+  demo,
+}: {
+  platform: OAuthPlatform;
+  connected: boolean;
+  plan: SubscriptionPlan;
+  configured: boolean;
+  demo: boolean;
+}) {
+  const { t } = useTranslation();
+  const availability = verificationAvailability(platform, plan);
+  const support = VERIFICATION_SUPPORT[platform];
+  const [syncState, syncAction] = useActionState<SyncVerifiedGeoState, FormData>(
+    syncVerifiedGeo,
+    { error: null, synced: false },
+  );
+
+  return (
+    <li className="rounded-xl border border-fg/10 bg-fg/5 p-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${ICON_CLASSNAMES[platform]}`}
+        >
+          {ICONS[platform]}
+        </span>
+
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-fg">
+            {PLATFORM_LABELS[platform]}
+          </span>
+          <StatusBadge connected={connected} />
+        </div>
+
+        {/*
+          Connect is a plain <a>: /api/oauth/<platform>/start answers with a
+          302 to the provider's consent screen, so it has to leave the client
+          router. Disconnect and sync stay POST forms — they mutate, and a GET
+          link that clears verified audience data would fire on prefetch.
+        */}
+        {!connected && availability === "available" ? (
+          demo ? (
+            <span
+              aria-disabled="true"
+              className={`${CONNECT_CLASSNAME} ms-auto opacity-50`}
+            >
+              {t("common.connect")}
+            </span>
+          ) : (
+            <a
+              href={`/api/oauth/${platform}/start`}
+              className={`${CONNECT_CLASSNAME} ms-auto`}
+            >
+              {t("common.connect")}
+            </a>
+          )
+        ) : null}
+      </div>
+
+      {connected ? (
+        <div className="mt-3 border-t border-fg/8 pt-3">
+          <p className="text-xs leading-relaxed text-fg/55">
+            {t("mediaKit.syncingFromSource", { source: support.source })}
+          </p>
+
+          <div className="mt-2.5 flex flex-wrap items-center gap-4">
+            <form action={demo ? undefined : syncAction}>
+              <input type="hidden" name="platform" value={platform} />
+              <SyncButton demo={demo} />
+            </form>
+
+            <form action={demo ? undefined : disconnectAnalytics}>
+              <input type="hidden" name="platform" value={platform} />
+              <button
+                type={demo ? "button" : "submit"}
+                className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
+              >
+                {t("common.disconnect")}
+              </button>
+            </form>
+          </div>
+
+          {syncState.error ? (
+            <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">
+              {syncState.error}
+            </p>
+          ) : null}
+          {syncState.synced ? (
+            <p className="mt-2 text-[11px] text-brand-green">
+              {t("common.synced")}
+            </p>
+          ) : null}
+
+          <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
+            {t("mediaKit.disconnectClearsNote")}
+          </p>
+        </div>
+      ) : availability === "needs-upgrade" ? (
+        <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg/45">
+          {t("mediaKit.includedProElite", { source: support.source })}
+        </p>
+      ) : !configured ? (
+        <p className="mt-3 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
+          {t("mediaKit.pendingReview")}
+        </p>
+      ) : null}
+    </li>
+  );
+}
+
+/**
+ * The one place a creator connects, syncs or disconnects a platform (§7.3).
  *
- * Only platforms with a working connector are listed; the rest are the
- * OAuthPlaceholderCard's job, so a button here never points at a route that
+ * The Media Kit shows the same connections read-only and links here, so the
+ * lifecycle lives in exactly one component. This card holds no inputs of its
+ * own either: reach, category and self-reported audience geography (§7.1)
+ * are still edited on the Media Kit, beside the data they describe.
+ *
+ * Only platforms with a working connector are listed — the rest are the
+ * OAuthPlaceholderCard's job, so no control here points at a route that
  * cannot complete.
  */
 export function SocialConnections({
   connections = {},
+  plan = "Starter",
+  configured = {},
   demo = false,
 }: {
   connections?: Partial<Record<OAuthPlatform, boolean>>;
-  /** /preview renders the shell with no session — the link must not navigate. */
+  plan?: SubscriptionPlan;
+  /** Whether each platform's OAuth app is actually registered on this env. */
+  configured?: Partial<Record<OAuthPlatform, boolean>>;
+  /** /preview renders the shell with no session — nothing may navigate or post. */
   demo?: boolean;
 }) {
   const { t } = useTranslation();
@@ -74,51 +222,16 @@ export function SocialConnections({
       </p>
 
       <ul className="mt-5 space-y-3">
-        {REAL_OAUTH_PLATFORMS.map((platform) => {
-          const connected = connections[platform] === true;
-
-          return (
-            <li
-              key={platform}
-              className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-fg/10 bg-fg/5 p-4"
-            >
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${ICON_CLASSNAMES[platform]}`}
-              >
-                {ICONS[platform]}
-              </span>
-
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-fg">
-                  {PLATFORM_LABELS[platform]}
-                </span>
-                <StatusBadge connected={connected} />
-              </div>
-
-              {/*
-                A plain <a>: /api/oauth/<platform>/start answers with a 302 to
-                the provider's consent screen, so the navigation has to leave
-                the client router. The route itself re-checks the session and
-                the plan gate — this markup is never the gate.
-              */}
-              {connected ? null : demo ? (
-                <span
-                  aria-disabled="true"
-                  className={`${CONNECT_CLASSNAME} ms-auto opacity-50`}
-                >
-                  {t("common.connect")}
-                </span>
-              ) : (
-                <a
-                  href={`/api/oauth/${platform}/start`}
-                  className={`${CONNECT_CLASSNAME} ms-auto`}
-                >
-                  {t("common.connect")}
-                </a>
-              )}
-            </li>
-          );
-        })}
+        {REAL_OAUTH_PLATFORMS.map((platform) => (
+          <ConnectionRow
+            key={platform}
+            platform={platform}
+            connected={connections[platform] === true}
+            plan={plan}
+            configured={configured[platform] === true}
+            demo={demo}
+          />
+        ))}
       </ul>
 
       <p className="mt-4 text-[11px] leading-relaxed text-fg/30">

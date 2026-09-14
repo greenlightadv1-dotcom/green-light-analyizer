@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SettingsView } from "@/components/views/SettingsView";
 import { requireProfile } from "@/lib/auth";
 import { listAnalyticsConnections } from "@/lib/media-kit/queries";
+import { oauthConfigured } from "@/lib/oauth/config";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -16,5 +17,11 @@ export default async function SettingsPage() {
       ? await listAnalyticsConnections(profile.id)
       : undefined;
 
-  return <SettingsView profile={profile} connections={connections} />;
+  return (
+    <SettingsView
+      profile={profile}
+      connections={connections}
+      oauthConfigured={oauthConfigured()}
+    />
+  );
 }

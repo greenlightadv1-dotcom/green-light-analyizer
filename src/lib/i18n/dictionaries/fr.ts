@@ -308,6 +308,8 @@ const fr: Dictionary = {
     shareableLink: "Lien de profil partageable",
     shareableLinkNote: "Envoyez ceci à un sponsor, ou ajoutez-le à votre bio ailleurs.",
     shareableLinkPending: "Enregistrez votre profil ci-dessus pour générer votre lien.",
+    manageInSettings: "Synchroniser ou déconnecter dans les Paramètres",
+    connectInSettings: "Connecter cette plateforme dans les Paramètres",
   },
   settings: {
     title: "Paramètres",

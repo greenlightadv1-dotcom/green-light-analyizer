@@ -15,5 +15,15 @@ const connections: Partial<Record<OAuthPlatform, boolean>> = Object.fromEntries(
 );
 
 export default function PreviewSettings() {
-  return <SettingsView profile={mockProfile} connections={connections} demo />;
+  return (
+    <SettingsView
+      profile={mockProfile}
+      connections={connections}
+      // Asserted, not read from the environment: the preview should show the
+      // real connection states, not "waiting on platform review" because this
+      // deployment happens to have no client IDs.
+      oauthConfigured={{ youtube: true, instagram: true }}
+      demo
+    />
+  );
 }

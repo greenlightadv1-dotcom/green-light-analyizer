@@ -7,7 +7,7 @@ import { SocialConnections } from "@/components/settings/SocialConnections";
 import { WhatsAppSettingsCard } from "@/components/settings/WhatsAppSettingsCard";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Profile } from "@/lib/auth";
-import type { OAuthPlatform } from "@/lib/types/database";
+import type { OAuthPlatform, SubscriptionPlan } from "@/lib/types/database";
 
 /**
  * Settings, presentation only. Shared with /preview.
@@ -25,6 +25,7 @@ export function SettingsView({
   profile,
   demo = false,
   connections,
+  oauthConfigured,
 }: {
   profile: Profile;
   demo?: boolean;
@@ -33,6 +34,8 @@ export function SettingsView({
    * so the card is not rendered for them at all rather than shown empty.
    */
   connections?: Partial<Record<OAuthPlatform, boolean>>;
+  /** Whether each connector's app is registered on this environment. */
+  oauthConfigured?: Partial<Record<OAuthPlatform, boolean>>;
 }) {
   const { t } = useTranslation();
 
@@ -56,7 +59,12 @@ export function SettingsView({
         <div className="space-y-4">
           <WhatsAppSettingsCard profile={profile} demo={demo} />
           {profile.role === "creator" ? (
-            <SocialConnections connections={connections} demo={demo} />
+            <SocialConnections
+              connections={connections}
+              plan={(profile.subscription_plan ?? "Starter") as SubscriptionPlan}
+              configured={oauthConfigured}
+              demo={demo}
+            />
           ) : null}
         </div>
 

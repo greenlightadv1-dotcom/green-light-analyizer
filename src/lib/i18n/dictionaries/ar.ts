@@ -299,6 +299,8 @@ const ar: Dictionary = {
     shareableLink: "رابط الملف الشخصي القابل للمشاركة",
     shareableLinkNote: "أرسل هذا إلى الراعي، أو أضفه إلى سيرتك الذاتية في مكان آخر.",
     shareableLinkPending: "احفظ ملفك الشخصي أعلاه لإنشاء رابطك.",
+    manageInSettings: "المزامنة أو إلغاء الربط من الإعدادات",
+    connectInSettings: "اربط هذه المنصة من الإعدادات",
   },
   settings: {
     title: "الإعدادات",

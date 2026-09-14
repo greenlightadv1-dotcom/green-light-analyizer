@@ -308,6 +308,8 @@ const de: Dictionary = {
     shareableLink: "Teilbarer Profillink",
     shareableLinkNote: "Sende das direkt an Marken — sie brauchen kein Konto, um es zu sehen.",
     shareableLinkPending: "Speichere dein Profil oben, um deinen Link zu erzeugen.",
+    manageInSettings: "In den Einstellungen synchronisieren oder trennen",
+    connectInSettings: "Diese Plattform in den Einstellungen verbinden",
   },
   settings: {
     title: "Einstellungen",

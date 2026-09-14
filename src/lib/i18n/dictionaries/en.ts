@@ -320,6 +320,8 @@ const en = {
     shareableLink: "Shareable profile link",
     shareableLinkNote: "Send this to a sponsor, or add it to your bio elsewhere.",
     shareableLinkPending: "Save your profile above to generate your link.",
+    manageInSettings: "Sync or disconnect in Settings",
+    connectInSettings: "Connect this platform in Settings",
   },
   settings: {
     title: "Settings",

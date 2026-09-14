@@ -29,15 +29,12 @@ export function MediaKitView({
   profile,
   kits,
   plan,
-  oauthConfigured = {},
   oauthConnected = null,
   oauthError = null,
 }: {
   profile: Profile;
   kits: MediaKit[];
   plan: SubscriptionPlan;
-  /** Whether each real-OAuth platform's app is actually registered. */
-  oauthConfigured?: Partial<Record<Platform, boolean>>;
   /** Set right after a successful /api/oauth/[platform]/callback redirect. */
   oauthConnected?: string | null;
   oauthError?: string | null;
@@ -168,7 +165,6 @@ export function MediaKitView({
                     platform={platform}
                     plan={plan}
                     connected={kit.analytics_oauth_connected === true}
-                    configured={oauthConfigured[platform] === true}
                   />
 
                   {platform === "youtube" ? (

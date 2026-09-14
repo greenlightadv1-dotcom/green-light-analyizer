@@ -28,18 +28,6 @@ export default async function MediaKitPage({
       plan={profile.subscription_plan ?? "Starter"}
       oauthConnected={oauth_connected ?? null}
       oauthError={oauth_error ?? null}
-      oauthConfigured={{
-        youtube: Boolean(
-          process.env.GOOGLE_OAUTH_CLIENT_ID &&
-            process.env.GOOGLE_OAUTH_CLIENT_SECRET &&
-            process.env.NEXT_PUBLIC_APP_URL,
-        ),
-        instagram: Boolean(
-          process.env.META_APP_ID &&
-            process.env.META_APP_SECRET &&
-            process.env.NEXT_PUBLIC_APP_URL,
-        ),
-      }}
     />
   );
 }
