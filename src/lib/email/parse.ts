@@ -115,6 +115,29 @@ export function htmlToText(html: string): string {
 const TEXTUAL = /^text\/|^application\/(json|xml)$/i;
 const MAX_ATTACHMENT_TEXT = 5000;
 
+/**
+ * Attachment bodies arrive base64-encoded more often than not, and an
+ * undecoded one is not merely unhelpful: buildOfferText feeds it to the
+ * evaluator, so five thousand characters of base64 reach the model in place of
+ * the rate card the sponsor attached.
+ *
+ * Only an explicit `encoding: "base64"` triggers a decode. Sniffing the
+ * character set cannot work — ordinary prose is made of base64's own alphabet,
+ * so "Hello Greenlight Team" is indistinguishable from an encoded payload and
+ * would be mangled into bytes.
+ *
+ * Buffer rather than atob(): atob decodes to latin1 and would corrupt every
+ * non-ASCII offer, which for a MENA-first product means most of them.
+ */
+function decodeAttachmentText(raw: string, encoding: unknown): string {
+  if (encoding !== "base64") return raw;
+  try {
+    return Buffer.from(raw, "base64").toString("utf8");
+  } catch {
+    return raw;
+  }
+}
+
 export function normalizeAttachments(value: unknown): InboundAttachment[] {
   if (!Array.isArray(value)) return [];
 
@@ -130,11 +153,7 @@ export function normalizeAttachments(value: unknown): InboundAttachment[] {
     if (TEXTUAL.test(contentType)) {
       const raw = a.content ?? a.text;
       if (typeof raw === "string") {
-        const decoded =
-          a.encoding === "base64" || /^[A-Za-z0-9+/=\s]+$/.test(raw) === false
-            ? raw
-            : raw;
-        text = decoded.slice(0, MAX_ATTACHMENT_TEXT);
+        text = decodeAttachmentText(raw, a.encoding).slice(0, MAX_ATTACHMENT_TEXT);
       }
     }
 
