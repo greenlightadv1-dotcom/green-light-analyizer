@@ -1,7 +1,7 @@
 import "server-only";
 
-import { INBOUND_DOMAIN } from "@/lib/alias";
 import { escapeHtml, relaySubject } from "./format";
+import { fromAddress } from "./from";
 
 /**
  * Outbound relay — CLAUDE.md §6.
@@ -26,13 +26,6 @@ import { escapeHtml, relaySubject } from "./format";
 export type RelayResult =
   | { ok: true; providerId: string | null }
   | { ok: false; error: string };
-
-/** Sending identity. A subdomain of the inbound domain by default. */
-function fromAddress(): string {
-  return (
-    process.env.RESEND_FROM_ADDRESS ?? `Green Light <deals@${INBOUND_DOMAIN}>`
-  );
-}
 
 /**
  * Relay one message to the company.
