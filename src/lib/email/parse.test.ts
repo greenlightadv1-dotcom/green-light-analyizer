@@ -222,3 +222,33 @@ test("buildOfferText is bounded", () => {
   });
   assert.ok(buildOfferText(email).length <= 20_000);
 });
+
+test("decodes a base64 text attachment, and leaves a plain one alone", () => {
+  const email = normalizeInboundEmail({
+    from: "deals@brand.com",
+    to: ["amir.k3f9x2@analyze.greenlight.com"],
+    subject: "Rate card",
+    text: "See attached.",
+    attachments: [
+      {
+        filename: "rate-card.txt",
+        content_type: "text/plain",
+        encoding: "base64",
+        // "Dedicated video: $1,400 — مرحبا" — non-ASCII on purpose: atob()
+        // would corrupt this, Buffer does not.
+        content: Buffer.from("Dedicated video: $1,400 — مرحبا", "utf8").toString("base64"),
+      },
+      {
+        filename: "note.txt",
+        content_type: "text/plain",
+        content: "Plain text, no encoding field.",
+      },
+    ],
+  });
+
+  assert.equal(email.attachments[0].text, "Dedicated video: $1,400 — مرحبا");
+  assert.equal(email.attachments[1].text, "Plain text, no encoding field.");
+
+  // And the decoded figure is what reaches the evaluator.
+  assert.equal(extractOfferedAmount(buildOfferText(email)), 1400);
+});

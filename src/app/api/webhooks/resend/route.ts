@@ -65,15 +65,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const email = normalizeInboundEmail(payload);
-
   try {
-    const outcome = await processInboundEmail(email);
+    // Inside the guard: normalizeInboundEmail is written to tolerate any shape,
+    // but "written to" is not "proven to" against a provider payload this code
+    // has never been pinned against.
+    const outcome = await processInboundEmail(normalizeInboundEmail(payload));
 
     if (outcome.status === "failed") {
       // Genuinely our fault and possibly transient — let the provider retry.
       console.error(`resend webhook: ${outcome.detail}`);
       return NextResponse.json({ status: outcome.status }, { status: 500 });
+    }
+
+    // A delivery we decided about but did not act on still has to be visible.
+    // A misrouted receiving domain, or an alias nobody owns, refuses every
+    // message while answering 200 — from the outside that is indistinguishable
+    // from a healthy endpoint, and the first symptom is a creator asking where
+    // their offers went.
+    if (outcome.status === "rejected" || outcome.status === "unknown_alias") {
+      console.warn(`resend webhook: ${outcome.status} — ${outcome.detail}`);
     }
 
     return NextResponse.json({ status: outcome.status, chat_id: outcome.chatId ?? null });
