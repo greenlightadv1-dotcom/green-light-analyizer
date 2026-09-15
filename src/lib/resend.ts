@@ -10,6 +10,7 @@ import {
   SystemNotification,
   type SystemNotificationProps,
 } from "@/components/emails/SystemNotification";
+import { fromAddress } from "./email/from";
 
 /**
  * Resend dispatcher for the React Email templates in src/components/emails.
@@ -17,9 +18,12 @@ import {
  * Separate from src/lib/email/outbound.ts: that module relays a creator's
  * in-app reply to a company as the masked-chat identity (§6) and must never
  * take an arbitrary `from`. This module sends a different category of mail —
- * outreach and system notifications — and defaults to Resend's shared,
- * pre-verified `onboarding@resend.dev` sender so it works before any custom
- * domain is verified in Resend.
+ * outreach and system notifications — but both now send from the same
+ * verified identity, via fromAddress() in ./email/from. It used to default to
+ * Resend's shared `onboarding@resend.dev` sandbox sender, which is restricted
+ * to the account owner's own address and carries none of this domain's SPF or
+ * DKIM: every outreach and notification would have been rejected or filed as
+ * spam once real creators were on the platform.
  *
  * Same "degrade quietly" contract as outbound.ts: a missing key or a failed
  * send returns a typed error, never throws — a notification failing must
@@ -30,7 +34,6 @@ export type SendResult =
   | { ok: true; providerId: string | null }
   | { ok: false; error: string };
 
-const DEFAULT_FROM = "Green Light <onboarding@resend.dev>";
 const TIMEOUT_MS = 15_000;
 
 async function sendRenderedEmail({
@@ -74,7 +77,7 @@ async function sendRenderedEmail({
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        from: from ?? DEFAULT_FROM,
+        from: from ?? fromAddress(),
         to: [to],
         subject,
         html,

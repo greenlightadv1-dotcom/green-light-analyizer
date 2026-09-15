@@ -24,7 +24,7 @@ variables under **Project Settings → Environment Variables**:
 | `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com/moonshotai/kimi-k3) | Rule-based pricing, labelled as such |
 | `RESEND_API_KEY` | Resend dashboard | Replies never reach companies |
 | `RESEND_INBOUND_WEBHOOK_SECRET` | Resend → Webhooks (`whsec_…`) | Webhook returns 503 |
-| `RESEND_FROM_ADDRESS` | e.g. `Green Light <deals@…>` | Falls back to `deals@<inbound domain>` |
+| `RESEND_FROM_ADDRESS` | e.g. `Green Light <deals@greenlightadvs.com>` | Falls back to `deals@greenlightadvs.com` — must be a domain verified for **sending** in Resend |
 
 `SUPABASE_SERVICE_ROLE_KEY` bypasses every RLS policy in this repo — anyone
 holding it can read and write every row. It must never be prefixed
