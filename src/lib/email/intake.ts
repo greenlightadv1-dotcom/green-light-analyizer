@@ -3,7 +3,7 @@ import "server-only";
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
 import { classifySponsorship } from "@/lib/ai/spam-filter";
-import { INBOUND_DOMAIN } from "@/lib/alias";
+import { ACCEPTED_INBOUND_DOMAINS } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -82,6 +82,47 @@ function summaryMessage(
  * already handled, and the whole delivery is a no-op — which is what stops a
  * provider retry minting a second room and a second paid AI call.
  */
+const CREATOR_COLUMNS =
+  "id, role, banned_at, subscription_plan, whatsapp_number, whatsapp_notifications_enabled";
+
+// Mirrors CREATOR_COLUMNS above. Nullability matches public.profiles: the
+// WhatsApp flag is NOT NULL with a default, the rest are nullable.
+type AliasMatch = {
+  id: string;
+  role: string | null;
+  banned_at: string | null;
+  subscription_plan: string | null;
+  whatsapp_number: string | null;
+  whatsapp_notifications_enabled: boolean;
+};
+
+/**
+ * The creator an alias belongs to, current alias first.
+ *
+ * Escaped on both columns: the alias is read off a sender-controlled header,
+ * and an unescaped `%` there would match somebody else's alias entirely.
+ */
+async function findCreatorByAlias(
+  admin: ReturnType<typeof createAdminClient>,
+  alias: string,
+): Promise<AliasMatch | null> {
+  const pattern = escapeLikePattern(alias);
+
+  const { data: current } = await admin
+    .from("profiles")
+    .select(CREATOR_COLUMNS)
+    .ilike("inbound_alias", pattern)
+    .maybeSingle();
+  if (current) return current as AliasMatch;
+
+  const { data: previous } = await admin
+    .from("profiles")
+    .select(CREATOR_COLUMNS)
+    .ilike("previous_inbound_alias", pattern)
+    .maybeSingle();
+  return (previous as AliasMatch | null) ?? null;
+}
+
 export async function processInboundEmail(
   email: NormalizedEmail,
 ): Promise<IntakeOutcome> {
@@ -91,7 +132,7 @@ export async function processInboundEmail(
     return { status: "rejected", detail: "delivery carried no message id" };
   }
 
-  const alias = findInboundAlias(email.to, INBOUND_DOMAIN);
+  const alias = findInboundAlias(email.to, ACCEPTED_INBOUND_DOMAINS);
 
   // Claim the delivery before doing any work.
   const { error: claimError } = await admin.from("inbound_emails").insert({
@@ -129,18 +170,19 @@ export async function processInboundEmail(
   if (!alias) {
     return finish({
       status: "rejected",
-      detail: `no @${INBOUND_DOMAIN} recipient on the delivery`,
+      detail: `no recipient on an accepted inbound domain (${ACCEPTED_INBOUND_DOMAINS.join(", ")})`,
     });
   }
 
-  // §5.4: identify the creator by the alias.
-  const { data: creator } = await admin
-    .from("profiles")
-    .select("id, role, banned_at, subscription_plan, whatsapp_number, whatsapp_notifications_enabled")
-    // Escaped: the alias is read off a sender-controlled To header, and an
-    // unescaped `%` there would match somebody else's alias entirely.
-    .ilike("inbound_alias", escapeLikePattern(alias))
-    .maybeSingle();
+  // §5.4: identify the creator by the alias — the one they hold now, or the
+  // one they were issued before a rotation and still have in their Gmail
+  // forwarding rule.
+  //
+  // Two queries rather than one .or(): a PostgREST filter string is parsed,
+  // and the alias comes off a sender-controlled header that may legally
+  // contain a comma or a parenthesis. The second query only runs for a
+  // delivery the current column did not match.
+  const creator = await findCreatorByAlias(admin, alias);
 
   if (!creator) {
     return finish({ status: "unknown_alias", detail: `alias ${alias} matched no account` });

@@ -83,13 +83,19 @@ export function collectAddresses(value: unknown): string[] {
  * A forwarded email routinely carries several recipients — the creator's real
  * address in To, ours in X-Forwarded-To or Cc. Matching on domain is what makes
  * the alias, not position in the list.
+ *
+ * Takes more than one domain because a creator's Gmail forwarding rule holds
+ * whichever alias they were issued: after a domain change the sender keeps
+ * forwarding to the old one, and refusing it would read as offers vanishing.
  */
 export function findInboundAlias(
   recipients: string[],
-  inboundDomain: string,
+  inboundDomain: string | readonly string[],
 ): string | null {
-  const domain = `@${inboundDomain.toLowerCase()}`;
-  return recipients.find((r) => r.endsWith(domain)) ?? null;
+  const domains = (
+    typeof inboundDomain === "string" ? [inboundDomain] : inboundDomain
+  ).map((d) => `@${d.toLowerCase()}`);
+  return recipients.find((r) => domains.some((d) => r.endsWith(d))) ?? null;
 }
 
 // --- content ---------------------------------------------------------------

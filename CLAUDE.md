@@ -178,7 +178,7 @@ introduce Google OAuth, the Gmail API, or a CASA security review anywhere in
 this flow; it's intentionally OAuth-free.
 
 1. On signup, each creator is issued a unique inbound alias:
-   `{handle}.{random}@analyze.greenlight.com`
+   `{handle}.{random}@analyze.greenlightadvs.com`
 2. The creator sets up a **one-time Gmail auto-forwarding rule** from their
    real, unchanged public email to that alias (a manual, one-time Gmail
    setting — not something the app configures for them).
@@ -189,6 +189,20 @@ this flow; it's intentionally OAuth-free.
    evaluation (price recommendation + risk rating).
 5. The email is auto-converted into a new **Deal Chat Room** inside the
    creator's in-app inbox.
+
+> **Update — alias domain, suffix length, and rotation.** The inbound domain
+> is `analyze.greenlightadvs.com`, matching the Resend receiving configuration;
+> `NEXT_PUBLIC_INBOUND_DOMAIN` overrides it. `{random}` is four characters from
+> a 32-glyph alphabet with no look-alikes (~1.05M per handle) — short enough to
+> read aloud, and still unguessable, which matters because every delivery to an
+> alias opens a deal room and spends a paid evaluation.
+>
+> Because an alias also lives in the creator's Gmail forwarding rule, changing
+> one cannot be a single-column update. Migration 0020 adds
+> `profiles.previous_inbound_alias`, and the §5.3 intake accepts either column,
+> so a rule pointing at a retired alias keeps delivering until the creator
+> re-points it. `scripts/rotate-inbound-aliases.mjs` performs the move and is
+> idempotent.
 
 ### 5.1 Manual Analyzer (fallback / quick path)
 A lightweight alternate entry point with these fields:

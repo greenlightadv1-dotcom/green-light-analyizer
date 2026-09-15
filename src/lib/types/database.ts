@@ -94,6 +94,12 @@ type Profile = {
   /** NULL = no expiry. Only the service-role client ever writes it. */
   subscription_expires_at: string | null;
   inbound_alias: string | null;
+  /**
+   * The alias held before the most recent rotation (migration 0020). Still
+   * accepted by the §5.3 intake, so a Gmail forwarding rule pointing at it
+   * keeps working. Server-written only.
+   */
+  previous_inbound_alias: string | null;
   /** Creator PII — must never reach a company's client (§6, §12). */
   primary_email: string;
   must_change_password: boolean;
@@ -280,6 +286,7 @@ export type Database = {
           | "subscription_plan"
           | "subscription_expires_at"
           | "inbound_alias"
+          | "previous_inbound_alias"
           | "must_change_password"
           | "banned_at"
           | "banned_reason"

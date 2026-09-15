@@ -30,7 +30,8 @@ export const mockProfile: Profile = {
   region: "MENA",
   subscription_plan: "Starter",
   subscription_expires_at: null,
-  inbound_alias: "amir.k3f9x2@analyze.greenlightadvs.com",
+  inbound_alias: "amir.k3f9@analyze.greenlightadvs.com",
+  previous_inbound_alias: null,
   primary_email: "amir@example.com",
   must_change_password: false,
   banned_at: null,
@@ -58,6 +59,7 @@ export const mockAdminProfile: Profile = {
   role: "admin",
   subscription_plan: "Elite",
   inbound_alias: null,
+  previous_inbound_alias: null,
   primary_email: "nour@example.com",
 };
 
