@@ -65,6 +65,11 @@ function contentSecurityPolicy(): string {
 }
 
 const nextConfig: NextConfig = {
+  // Next advertises itself in an X-Powered-By header on every response. It
+  // tells an attacker which framework and therefore which CVE list to work
+  // from, and buys nothing in return.
+  poweredByHeader: false,
+
   async headers() {
     return [
       {
