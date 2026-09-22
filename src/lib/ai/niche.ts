@@ -103,7 +103,13 @@ export async function detectNiche(items: string[]): Promise<NicheResult | null> 
       : [];
 
     return { category: parsed.category.trim(), tags };
-  } catch {
+  } catch (error) {
+    // Null is the right answer for the caller — niche detection is a
+    // supplement, not a step anything depends on — but a rejected key looks
+    // identical to no key from outside, so say which one happened.
+    console.error(
+      `Niche detection failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
     return null;
   }
 }

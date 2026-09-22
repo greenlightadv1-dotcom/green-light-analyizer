@@ -48,7 +48,12 @@ export async function checkSafeBrowsing(
       flagged: matches.length > 0,
       threatTypes: [...new Set(matches.map((m) => m.threatType))],
     };
-  } catch {
+  } catch (error) {
+    // Same as whois.ts: null is "could not check", and a rejected key must be
+    // distinguishable from an absent one somewhere an operator can look.
+    console.error(
+      `Safe Browsing check failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
     return null;
   }
 }

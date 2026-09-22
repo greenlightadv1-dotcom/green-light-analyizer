@@ -45,7 +45,14 @@ export async function lookupWhois(domain: string): Promise<WhoisResult | null> {
       registrantCountry: body.registrant?.country ?? null,
       whoisServer: body.whois_server ?? null,
     };
-  } catch {
+  } catch (error) {
+    // Null means "could not check", never "checked and clean" (see types.ts).
+    // That distinction only survives if an operator can find out *why* — a
+    // wrong IP2WHOIS_API_KEY otherwise reads on screen as "WHOIS unavailable"
+    // forever, indistinguishable from never having configured one.
+    console.error(
+      `WHOIS lookup failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
     return null;
   }
 }

@@ -155,9 +155,22 @@ export async function evaluateOffer(
           : "none",
       engine: "nvidia",
     };
-  } catch {
+  } catch (error) {
     // A creator waiting on an offer is better served by a rule-based number
     // than by an error. The engine field tells the UI which one they got.
+    //
+    // But the fallback must not be silent. A rejected key and a typo'd
+    // NVIDIA_MODEL both land here and both look, on screen, exactly like
+    // "no key configured" — so without this line a deployment can price every
+    // single offer by the rule-based engine and give no indication anywhere
+    // that the AI it is paying for is being refused. The messages thrown by
+    // nvidia.ts are status codes and shape complaints, never the response
+    // body, so nothing here can carry offer text into a log (§12).
+    console.error(
+      `AI evaluation fell back to the rule-based engine: ${
+        error instanceof Error ? error.message : "unknown error"
+      }`,
+    );
     return heuristicEvaluate(input);
   }
 }

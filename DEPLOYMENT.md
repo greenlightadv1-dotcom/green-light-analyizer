@@ -34,6 +34,37 @@ chat message. If it has ever been in one, rotate it in the Supabase dashboard.
 Next.js reads server env vars at build and request time, so **changing one needs
 a redeploy** to take effect.
 
+Everything above is what the product needs to function at all. The rest are
+optional integrations, each of which **degrades quietly by design** — which is
+the right behaviour and also how a deployment ends up half-working with nobody
+able to say which half. Set what you have; leave the rest unset deliberately
+rather than by accident:
+
+| Variable | Powers | Unset |
+|---|---|---|
+| `NVIDIA_MODEL` | Which model on NIM answers | Defaults to `moonshotai/kimi-k3`. A **typo here is not an error** — the call 404s and pricing silently falls back to the rule-based engine |
+| `NVIDIA_REASONING_EFFORT` | Opt-in reasoning depth on the pricing call | Not sent. Only set it if the configured model honours the field |
+| `YOUTUBE_API_KEY` | Media Kit stats sync | No YouTube stats |
+| `GOOGLE_SAFE_BROWSING_API_KEY` | Sender-URL threat check | Renders "could not check", never an all-clear |
+| `IP2WHOIS_API_KEY` | Sender-domain WHOIS in the deal room | Same — "could not check" |
+| `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | Verified audience geography, YouTube (§7.3) | Connect button returns a clear "not configured" state |
+| `META_APP_ID` / `META_APP_SECRET` | Verified audience geography, Instagram (§7.3) | Same |
+| `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` | New-deal WhatsApp alerts | Toggle still saves; no message is ever sent |
+| `SUPABASE_WEBHOOK_SECRET` | `POST /api/webhooks/supabase` | Endpoint returns 503 rather than accepting unauthenticated calls |
+| `DISCORD_SUPABASE_WEBHOOK_URL` / `_GITHUB_` / `_DEPLOYS_` | Ops notifications to Discord | No notifications. Each value **is** the credential for posting to that channel |
+| `NEXT_PUBLIC_ENABLE_UI_PREVIEW` | `/preview`, the signed-out mock UI | Preview is off — which is what production wants |
+
+`TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` appear in `.env.example` but no code
+reads them yet; the Twitch sync §9 describes is not built. Setting them in
+Vercel does nothing.
+
+**The names above are exact.** They are the strings `process.env.<NAME>` is
+read with in the code, and Vercel matches them literally — a variable named
+`OPENAI_API_KEY`, `NVIDIA_KEY` or `NVIDIA_API_TOKEN` is simply not read, and
+nothing will report an error. `/admin/system` renders the live presence of
+every one of them (presence only — never a value, prefix or length), which is
+the fastest way to confirm a deploy picked up what you set.
+
 ### Domain and DNS
 
 `greenlightadvs.com` is the production domain. Add it under **Project Settings
