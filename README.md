@@ -391,7 +391,7 @@ button that dead-ends.
 ## Email intake (§5)
 
 `POST /api/webhooks/resend`. A creator forwards their business mail to
-`{handle}.{random}@analyze.greenlight.com` with a one-time Gmail rule; Resend
+`{handle}.{random}@analyze.greenlightadvs.com` with a one-time Gmail rule; Resend
 receives it and calls this endpoint. No Google OAuth, no Gmail API, no CASA —
 that is the whole point of the design.
 
@@ -468,8 +468,9 @@ connection limit.
 ## Tests
 
 ```bash
-npm test        # masking, §7.4 cap, geo parsing, tier rules, email
-                # parsing, webhook signatures, HTML escaping — 105 assertions
+npm test        # masking, §7.4 cap, geo parsing, tier rules, email parsing,
+                # inbound screening, reply templates, webhook signatures,
+                # HTML escaping — 135 assertions
 npm run build   # typecheck + lint + production build
 ```
 

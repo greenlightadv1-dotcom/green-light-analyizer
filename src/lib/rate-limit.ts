@@ -26,7 +26,8 @@ export type RateLimitAction =
   | "ai_analyze_offer"
   | "ai_offer_preview"
   | "ai_reply_draft"
-  | "ai_detect_niche";
+  | "ai_detect_niche"
+  | "ai_company_intel";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -56,6 +57,13 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   ai_detect_niche: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 30, windowSeconds: DAY, label: "day" },
+  ],
+  // Tighter than the reply drafter: a company profile is cached on the deal
+  // row, so the honest usage pattern is once per deal and occasionally a
+  // re-run, not a button somebody leans on.
+  ai_company_intel: [
+    { limit: 10, windowSeconds: HOUR, label: "hour" },
+    { limit: 40, windowSeconds: DAY, label: "day" },
   ],
 };
 

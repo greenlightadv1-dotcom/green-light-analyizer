@@ -10,6 +10,7 @@ import {
   htmlToText,
   inferSponsorshipType,
   normalizeAddress,
+  normalizeHeaders,
   normalizeInboundEmail,
   stripQuotedReply,
   summarizeAttachments,
@@ -251,4 +252,41 @@ test("decodes a base64 text attachment, and leaves a plain one alone", () => {
 
   // And the decoded figure is what reaches the evaluator.
   assert.equal(extractOfferedAmount(buildOfferText(email)), 1400);
+});
+
+test("headers normalize from an object, lowercased", () => {
+  const headers = normalizeHeaders({
+    "List-Unsubscribe": "<https://example.com/u/1>",
+    Precedence: "bulk",
+  });
+  assert.equal(headers["list-unsubscribe"], "<https://example.com/u/1>");
+  assert.equal(headers["precedence"], "bulk");
+});
+
+test("headers normalize from the array-of-pairs shape too", () => {
+  // Which of the two a provider sends is not pinned anywhere (see the SCHEMA
+  // ASSUMPTION note at the top of parse.ts), so both have to work.
+  const headers = normalizeHeaders([
+    { name: "Auto-Submitted", value: "auto-replied" },
+    { name: "Authentication-Results", value: "mx.google.com; spf=fail" },
+  ]);
+  assert.equal(headers["auto-submitted"], "auto-replied");
+  assert.match(headers["authentication-results"], /spf=fail/);
+});
+
+test("a missing or unusable header bag is an empty object, never undefined", () => {
+  assert.deepEqual(normalizeHeaders(undefined), {});
+  assert.deepEqual(normalizeHeaders("List-Unsubscribe: x"), {});
+  assert.deepEqual(normalizeInboundEmail({}).headers, {});
+});
+
+test("normalizeInboundEmail carries the headers through to the screener", () => {
+  const email = normalizeInboundEmail({
+    from: "news@example.com",
+    to: "ayman.k3f9@analyze.greenlightadvs.com",
+    subject: "Digest",
+    text: "Stories.",
+    headers: { "List-Id": "<news.example.com>" },
+  });
+  assert.equal(email.headers["list-id"], "<news.example.com>");
 });

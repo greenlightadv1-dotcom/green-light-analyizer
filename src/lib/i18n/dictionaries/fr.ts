@@ -224,6 +224,35 @@ const fr: Dictionary = {
     generateDraft: "Générer une réponse IA",
     generatingDraft: "Génération…",
     useDraft: "Utiliser cette ébauche",
+    draftFromTemplate:
+      "Modèle standard — le moteur d'IA n'était pas disponible, ceci a donc été construit à partir des chiffres de l'offre.",
+    measuredTag: "Vérification effectuée",
+    aiCompanyBrief: "Fiche entreprise par l'IA",
+    aiGeneratedTag: "Généré par IA",
+    aiCompanyIntro:
+      "Une lecture par l'IA de qui se cache derrière cette offre, à partir du domaine de l'expéditeur et du message lui-même. Ce n'est pas une consultation de registre — à prendre comme un second avis, pas comme un fait.",
+    analyzeCompany: "Analyser cette entreprise",
+    analyzingCompany: "Analyse…",
+    reanalyzeCompany: "Relancer",
+    aiCompanyUnknown:
+      "Aucune information publique fiable sur ce domaine. C'est courant pour un sponsor petit ou récent et ce n'est pas en soi un signal d'alerte — fiez-vous plutôt à la vérification ci-dessus.",
+    aiTrustRead: "Indice de confiance IA",
+    aiBackground: "Présentation",
+    aiHistory: "Historique",
+    aiSignals: "Points de vigilance",
+    aiConfidence: "Confiance : {level}",
+    aiGeneratedAt: "Généré le {date}",
+    confidenceLow: "faible",
+    confidenceMedium: "moyenne",
+    confidenceHigh: "élevée",
+    directReply: "Réponse directe",
+    directReplyIntro:
+      "Une réponse prête à envoyer à {sender}, pré-remplie avec les chiffres de cette offre. Modifiez-la si vous le souhaitez.",
+    directReplySend: "Envoyer via Green Light",
+    directReplySending: "Envoi…",
+    directReplySent: "Envoyé — c'est dans le fil et en route vers eux.",
+    directReplyFrom:
+      "Envoyé depuis l'adresse de Green Light, avec votre alias de réception en adresse de réponse, pour que leur réponse revienne dans cette conversation. Votre véritable adresse e-mail ne leur est jamais montrée.",
   },
   mediaKit: {
     title: "Kit média",

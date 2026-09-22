@@ -62,11 +62,11 @@ export function Composer({
   const { t } = useTranslation();
   const [state, formAction] = useActionState<SendMessageState, FormData>(
     sendMessage,
-    { error: null, violation: null, relayFailed: false },
+    { sent: false, error: null, violation: null, relayFailed: false },
   );
   const [draftState, draftAction] = useActionState<ReplyDraftState, FormData>(
     generateReply,
-    { error: null, draft: null },
+    { error: null, draft: null, source: null },
   );
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -132,6 +132,16 @@ export function Composer({
         {draft ? (
           <div className="mt-2 rounded-xl border border-brand-green/20 bg-brand-green/5 p-3">
             <p className="text-xs leading-relaxed text-fg/70 whitespace-pre-wrap">{draft}</p>
+            {/*
+              A template and a model-written reply look identical on screen,
+              and they are not the same thing — one was written for this
+              thread, the other is a sensible default assembled from the
+              deal's own figures. Saying which is the same honesty rule §7.2
+              applies to audience data.
+            */}
+            {!demo && draftState.source === "template" ? (
+              <p className="mt-1.5 text-[11px] text-fg/35">{t("inbox.draftFromTemplate")}</p>
+            ) : null}
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="button"

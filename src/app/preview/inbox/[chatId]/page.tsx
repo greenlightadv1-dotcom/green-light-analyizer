@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DealRoomView } from "@/components/views/DealRoomView";
+import { buildDirectReply } from "@/lib/deals/reply-template";
 import { mockChats, mockMessages, mockProfile } from "@/lib/preview/mock";
 
 export const metadata: Metadata = { title: "Deal room · Preview" };
@@ -40,6 +41,17 @@ export default async function PreviewDealRoom({
       messages={messages}
       currentUserId={mockProfile.id}
       domainHistory={domainHistory}
+      directReplyBody={
+        chat.company_id
+          ? null
+          : buildDirectReply({
+              creatorName: mockProfile.full_name,
+              offeredAmountUsd: chat.offered_amount,
+              recommendedPriceUsd: chat.recommended_price_usd,
+              sponsorshipType: chat.sponsorship_type,
+              dealStatus: chat.deal_status,
+            })
+      }
       demo
       basePath="/preview"
     />

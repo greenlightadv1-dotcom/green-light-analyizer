@@ -6,6 +6,7 @@
  *   npx supabase gen types typescript --project-id <ref> > src/lib/types/database.ts
  */
 
+import type { CompanyProfile } from "@/lib/ai/company-intel-types";
 import type { SecurityCheckResult } from "@/lib/security/types";
 
 export type Role = "creator" | "company" | "admin";
@@ -94,6 +95,12 @@ type Profile = {
   /** NULL = no expiry. Only the service-role client ever writes it. */
   subscription_expires_at: string | null;
   inbound_alias: string | null;
+  /**
+   * The alias held before the most recent rotation (migration 0020). Still
+   * accepted by the §5.3 intake, so a Gmail forwarding rule pointing at it
+   * keeps working. Server-written only.
+   */
+  previous_inbound_alias: string | null;
   /** Creator PII — must never reach a company's client (§6, §12). */
   primary_email: string;
   must_change_password: boolean;
@@ -126,6 +133,12 @@ type InboundEmail = {
   status: "processed" | "unknown_alias" | "rejected" | "failed";
   /** Operator-facing note only — never the message body. */
   detail: string | null;
+  /** Subject line only, truncated. The body is still never stored here (0021). */
+  subject: string | null;
+  /** Screener score 0-100 (0021). Null when the delivery never got screened. */
+  spam_score: number | null;
+  /** The screener rules that fired, in plain language. */
+  spam_reasons: string[] | null;
   created_at: string | null;
 };
 
@@ -190,6 +203,12 @@ type DealChat = {
   security_check: SecurityCheckResult | null;
   /** Always true for in-app/Manual-Analyzer deals; only email intake can set it false. */
   is_likely_sponsorship: boolean;
+  /**
+   * AI-GENERATED account of the sender's company (0021) — distinct from
+   * `security_check`, which is measured. Null until a creator runs it.
+   * service_role-written only.
+   */
+  company_profile: CompanyProfile | null;
 };
 
 type Message = {
@@ -280,6 +299,7 @@ export type Database = {
           | "subscription_plan"
           | "subscription_expires_at"
           | "inbound_alias"
+          | "previous_inbound_alias"
           | "must_change_password"
           | "banned_at"
           | "banned_reason"

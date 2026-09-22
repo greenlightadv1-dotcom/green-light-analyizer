@@ -30,6 +30,12 @@ export type NormalizedEmail = {
   subject: string;
   text: string;
   attachments: InboundAttachment[];
+  /**
+   * Lowercased header name → value. Empty when the provider sends none, which
+   * every consumer must tolerate: the screener treats a missing header as
+   * "not asserted", never as "asserted false".
+   */
+  headers: Record<string, string>;
 };
 
 // --- address helpers --------------------------------------------------------
@@ -78,18 +84,56 @@ export function collectAddresses(value: unknown): string[] {
 }
 
 /**
+ * Flattens the header bag into lowercased name → value.
+ *
+ * Providers send this either as a plain object or as an array of
+ * `{ name, value }` pairs, and some send nothing at all. Repeated headers
+ * (Received, and legitimately several List-* on a mailing) collapse to the
+ * last one seen; nothing downstream reads a header where the earlier copy
+ * carries different meaning, and the alternative — a string[] per name —
+ * would complicate every reader for a case that does not arise.
+ */
+export function normalizeHeaders(value: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  const set = (name: unknown, headerValue: unknown) => {
+    if (typeof name !== "string" || !name.trim()) return;
+    out[name.trim().toLowerCase()] =
+      typeof headerValue === "string" ? headerValue : String(headerValue ?? "");
+  };
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (!item || typeof item !== "object") continue;
+      const h = item as Record<string, unknown>;
+      set(h.name ?? h.key, h.value ?? h.val);
+    }
+  } else if (value && typeof value === "object") {
+    for (const [name, headerValue] of Object.entries(value)) set(name, headerValue);
+  }
+
+  return out;
+}
+
+/**
  * Picks the recipient that is one of our aliases (§5.1).
  *
  * A forwarded email routinely carries several recipients — the creator's real
  * address in To, ours in X-Forwarded-To or Cc. Matching on domain is what makes
  * the alias, not position in the list.
+ *
+ * Takes more than one domain because a creator's Gmail forwarding rule holds
+ * whichever alias they were issued: after a domain change the sender keeps
+ * forwarding to the old one, and refusing it would read as offers vanishing.
  */
 export function findInboundAlias(
   recipients: string[],
-  inboundDomain: string,
+  inboundDomain: string | readonly string[],
 ): string | null {
-  const domain = `@${inboundDomain.toLowerCase()}`;
-  return recipients.find((r) => r.endsWith(domain)) ?? null;
+  const domains = (
+    typeof inboundDomain === "string" ? [inboundDomain] : inboundDomain
+  ).map((d) => `@${d.toLowerCase()}`);
+  return recipients.find((r) => domains.some((d) => r.endsWith(d))) ?? null;
 }
 
 // --- content ---------------------------------------------------------------
@@ -297,5 +341,6 @@ export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
     subject: typeof data.subject === "string" ? data.subject.slice(0, 300) : "",
     text: plain || (html ? htmlToText(html) : ""),
     attachments: normalizeAttachments(data.attachments),
+    headers: normalizeHeaders(data.headers),
   };
 }

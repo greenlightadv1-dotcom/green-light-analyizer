@@ -30,7 +30,8 @@ export const mockProfile: Profile = {
   region: "MENA",
   subscription_plan: "Starter",
   subscription_expires_at: null,
-  inbound_alias: "amir.k3f9x2@analyze.greenlightadvs.com",
+  inbound_alias: "amir.k3f9@analyze.greenlightadvs.com",
+  previous_inbound_alias: null,
   primary_email: "amir@example.com",
   must_change_password: false,
   banned_at: null,
@@ -58,6 +59,7 @@ export const mockAdminProfile: Profile = {
   role: "admin",
   subscription_plan: "Elite",
   inbound_alias: null,
+  previous_inbound_alias: null,
   primary_email: "nour@example.com",
 };
 
@@ -79,6 +81,7 @@ export const mockChats: DealChat[] = [
     // No WHOIS/trust lookup on an in-app deal: there is no unknown domain to check.
     security_check: null,
     is_likely_sponsorship: true,
+    company_profile: null,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa02",
@@ -109,6 +112,25 @@ export const mockChats: DealChat[] = [
       safeBrowsing: { flagged: false, threatTypes: [] },
     },
     is_likely_sponsorship: true,
+    // The populated state of the AI brief, so the preview shows both halves of
+    // the intelligence panel — measured above the rule, generated below it.
+    company_profile: {
+      domain: "lumenapp.example",
+      isKnownToModel: true,
+      background:
+        "A mid-size productivity software company selling a subscription note-taking app, marketing mainly to students and knowledge workers.",
+      history:
+        "Trading for around four years with steady creator sponsorships in the tech and study-vlog space. No disputes or chargebacks surfaced.",
+      trustworthinessScore: 82,
+      band: "high",
+      signals: [
+        "Brief names a deliverable, a timeline and a budget up front — typical of an in-house marketing team rather than a broker.",
+        "Registrant organization is public and matches the domain.",
+        "Rate offered sits slightly above the platform's recommendation, which is unusual and worth confirming in writing.",
+      ],
+      confidence: "medium",
+      generatedAt: ago(45),
+    },
   },
   {
     id: "00000000-0000-4000-8000-00000000aa03",
@@ -142,6 +164,7 @@ export const mockChats: DealChat[] = [
     },
     // The inbound-email spam/notification filter's best guess, not a certainty.
     is_likely_sponsorship: false,
+    company_profile: null,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa04",
@@ -157,6 +180,7 @@ export const mockChats: DealChat[] = [
     created_at: ago(60 * 26),
     security_check: null,
     is_likely_sponsorship: true,
+    company_profile: null,
   },
   {
     id: "00000000-0000-4000-8000-00000000aa05",
@@ -172,6 +196,7 @@ export const mockChats: DealChat[] = [
     created_at: ago(60 * 24 * 9),
     security_check: null,
     is_likely_sponsorship: true,
+    company_profile: null,
   },
 ];
 

@@ -19,12 +19,15 @@ export type Message = Database["public"]["Tables"]["messages"]["Row"];
  */
 
 /**
- * A deal as the list views need it. Everything but `security_check`, which is
- * the one genuinely large column on the table (a full WHOIS record plus Safe
- * Browsing verdict per row) and is read only by the deal room's Company &
- * Domain Intelligence panel — never by the inbox or the dashboard.
+ * A deal as the list views need it. Everything but the two large JSONB
+ * columns — `security_check` (a full WHOIS record plus a Safe Browsing
+ * verdict per row) and `company_profile` (several paragraphs of generated
+ * prose per row). Both are read only by the deal room's Company & Domain
+ * Intelligence panel, never by the inbox or the dashboard, and shipping
+ * either one down a list query would put kilobytes per deal on the wire for
+ * a screen that renders none of it.
  */
-export type DealChatListItem = Omit<DealChat, "security_check">;
+export type DealChatListItem = Omit<DealChat, "security_check" | "company_profile">;
 
 const LIST_COLUMNS =
   "id, creator_id, company_id, sender_email, deal_status, offered_amount, recommended_price_usd, ai_evaluation, sponsorship_type, target_countries, created_at, is_likely_sponsorship";

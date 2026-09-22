@@ -236,6 +236,35 @@ const en = {
     generateDraft: "Generate AI reply",
     generatingDraft: "Generating…",
     useDraft: "Use this draft",
+    draftFromTemplate:
+      "Standard template — the AI engine wasn't available, so this was built from the deal's own figures.",
+    measuredTag: "Verified lookup",
+    aiCompanyBrief: "AI company brief",
+    aiGeneratedTag: "AI-generated",
+    aiCompanyIntro:
+      "An AI read of who is behind this offer, from the sender's domain and the message itself. It isn't a registry lookup — treat it as a second opinion, not as fact.",
+    analyzeCompany: "Analyse this company",
+    analyzingCompany: "Analysing…",
+    reanalyzeCompany: "Run again",
+    aiCompanyUnknown:
+      "No reliable public information about this domain. That's common for small or new sponsors and isn't a warning sign on its own — weigh the verified lookup above instead.",
+    aiTrustRead: "AI trust read",
+    aiBackground: "Background",
+    aiHistory: "History",
+    aiSignals: "What to watch",
+    aiConfidence: "Confidence: {level}",
+    aiGeneratedAt: "Generated {date}",
+    confidenceLow: "low",
+    confidenceMedium: "medium",
+    confidenceHigh: "high",
+    directReply: "Direct reply",
+    directReplyIntro:
+      "A ready-to-send reply to {sender}, pre-filled with this deal's figures. Edit it first if you want to.",
+    directReplySend: "Send via Green Light",
+    directReplySending: "Sending…",
+    directReplySent: "Sent — it's in the thread and on its way to them.",
+    directReplyFrom:
+      "Sent from Green Light's own address, with your inbound alias as the reply-to, so their answer comes back into this room. Your real email address is never shown to them.",
   },
   mediaKit: {
     title: "Media kit",

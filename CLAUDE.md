@@ -178,7 +178,7 @@ introduce Google OAuth, the Gmail API, or a CASA security review anywhere in
 this flow; it's intentionally OAuth-free.
 
 1. On signup, each creator is issued a unique inbound alias:
-   `{handle}.{random}@analyze.greenlight.com`
+   `{handle}.{random}@analyze.greenlightadvs.com`
 2. The creator sets up a **one-time Gmail auto-forwarding rule** from their
    real, unchanged public email to that alias (a manual, one-time Gmail
    setting — not something the app configures for them).
@@ -189,6 +189,50 @@ this flow; it's intentionally OAuth-free.
    evaluation (price recommendation + risk rating).
 5. The email is auto-converted into a new **Deal Chat Room** inside the
    creator's in-app inbox.
+
+> **Update — alias domain, suffix length, and rotation.** The inbound domain
+> is `analyze.greenlightadvs.com`, matching the Resend receiving configuration;
+> `NEXT_PUBLIC_INBOUND_DOMAIN` overrides it. `{random}` is four characters from
+> a 32-glyph alphabet with no look-alikes (~1.05M per handle) — short enough to
+> read aloud, and still unguessable, which matters because every delivery to an
+> alias opens a deal room and spends a paid evaluation.
+>
+> Because an alias also lives in the creator's Gmail forwarding rule, changing
+> one cannot be a single-column update. Migration 0020 adds
+> `profiles.previous_inbound_alias`, and the §5.3 intake accepts either column,
+> so a rule pointing at a retired alias keeps delivering until the creator
+> re-points it. `scripts/rotate-inbound-aliases.mjs` performs the move and is
+> idempotent.
+
+> **Update — the inbound screener can now refuse a delivery (migration 0021).**
+> Step 3 above gained a gate. `src/lib/ai/spam-filter.ts` no longer returns a
+> boolean; it returns `accept | flag | reject` with a 0–100 score and the rules
+> that fired, and the intake runs it *before* the evaluation, the WHOIS/Safe
+> Browsing check and the WhatsApp alert — so a newsletter reaching a creator's
+> alias now costs nothing instead of a paid evaluation each.
+>
+> `reject` is narrow on purpose, because the failure it can cause (a real offer
+> that vanishes with nothing on the creator's screen) is far worse than the one
+> it prevents. It needs all three of: a *machine-declared* bulk signal
+> (`List-Unsubscribe`/`List-ID`, `Precedence: bulk`, `Auto-Submitted`, or a
+> no-reply sender), no sponsorship wording anywhere in the message, and a score
+> under the floor. Prose alone never rejects, and SPF/DKIM/DMARC failure never
+> rejects either — plain forwarding breaks SPF by design and *every* delivery
+> here arrives via a Gmail forwarding rule, so an auth failure describes the
+> forwarding path rather than the sender. Scam-shaped offers are deliberately
+> let through to be rated red rather than silently dropped.
+>
+> A refusal writes no deal room and no message. What it does write is the
+> `inbound_emails` audit row, which 0021 extended with `subject`, `spam_score`
+> and `spam_reasons` so a false positive is reviewable — the offer body is
+> still never stored there, per 0008's own rule. `parse.ts` now also normalizes
+> `headers` (object *or* array-of-pairs shapes) into a lowercased bag, which is
+> what the machine-declared signals are read from.
+>
+> Known gap, stated rather than papered over: rejected deliveries are visible
+> to admins only. A creator cannot yet see "3 filtered this month" the way they
+> can fold away a flagged room, because `inbound_emails` is admin-read by RLS.
+> Giving creators that view is a policy + RLS-test change, not done here.
 
 ### 5.1 Manual Analyzer (fallback / quick path)
 A lightweight alternate entry point with these fields:
@@ -301,6 +345,45 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > on top of the in-app inbox. Quiet-degradation like every other optional
 > integration here: missing config or a failed send never blocks deal
 > creation.
+
+> **Update — company profile, template fallback, and the one-click reply
+> (migration 0021).** Three additions to the workspace above:
+>
+> *AI company brief.* `deal_chats.company_profile` caches
+> `src/lib/ai/company-intel.ts` — a written background and trading history for
+> the sender's domain plus a trustworthiness score, generated on demand (a paid
+> call per deal; most inbound offers are read once and dropped, so spending it
+> at intake would multiply exactly the cost the screener exists to avoid) and
+> cached so reopening the room is free. It sits **below a rule** in
+> `CompanyIntelligencePanel`, under an "AI-generated" tag, separate from the
+> "Verified lookup" half above it. That separation is the point: `security_check`
+> is *measured* (WHOIS, Safe Browsing, fixed rubric) and this is *generated*,
+> and the two scores are never averaged — same rule §7.2 applies to declared vs.
+> verified audience geography. The model is also required to answer
+> `is_known_to_model: false` for a domain it does not recognise, and the UI
+> renders that as "no public information" rather than printing prose, because a
+> fluent paragraph about a company that does not exist is the failure mode that
+> actually costs a creator money.
+>
+> *Reply templates.* `src/lib/deals/reply-template.ts` is a deterministic
+> counter/accept/ask-for-budget generator built from the deal's own columns. It
+> backs "Generate AI reply" whenever the model call cannot run — no
+> `NVIDIA_API_KEY`, rate limit spent, endpoint down — which on a zero-cost MVP
+> is most of the time, so the button always returns something usable. The draft
+> is labelled `ai` or `template` so the creator knows which they are reading.
+> The existing `CopyButton` covers the 1-click copy.
+>
+> *Direct reply.* `DirectReplyPanel` shows a ready-to-send reply, pre-filled
+> server-side with the deal's structured context (deliverable, their offer, the
+> creator's rate), editable, one click to send. It is **not** a `mailto:`, and
+> that was a deliberate deviation from the request: a `mailto:` sends from the
+> creator's own mail client, putting their real address permanently in the
+> sponsor's inbox — which §6 forbids in as many words, §1's second value
+> proposition depends on, §12 calls a security requirement rather than a UI
+> convention, and the published Privacy Policy promises. It submits through the
+> same `sendMessage` action the composer uses, so it inherits the identical
+> §6.1 server-side mask, violation log and platform relay; a second send path
+> with its own rules is how a masking guarantee grows a hole.
 
 ---
 

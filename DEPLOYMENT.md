@@ -1,7 +1,7 @@
 # Deploying Green Light
 
 The app is stateless: everything lives in Supabase (`kpuecrvdrkhemyvibyfa`,
-eu-central-1) and Vercel runs the Next.js front of it. All 19 migrations are
+eu-central-1) and Vercel runs the Next.js front of it. All 21 migrations are
 already applied to that project, so a deploy is configuration plus DNS.
 
 Nothing here needs a secret at **build** time. Every key is read per request, so
