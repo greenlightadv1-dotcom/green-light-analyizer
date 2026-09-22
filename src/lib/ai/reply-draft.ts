@@ -1,26 +1,25 @@
 import "server-only";
 
-import { extractJsonObject } from "./nvidia";
+import { chatJson } from "./chat";
 
 /**
  * "AI copyable response generator" for the Deal Room negotiation workspace.
  *
- * A second, separate NVIDIA NIM call from evaluate.ts's pricing engine — this
- * one drafts the creator's next reply rather than pricing the offer. Kept as
- * its own module rather than folded into nvidia.ts: the two calls have
- * nothing in common but the endpoint (different prompt, different response
- * shape, different failure mode — a missing draft is a "try again" moment,
- * not a fallback price), and evaluate.ts's heuristic fallback has no
- * equivalent here — there is no rule-based way to draft prose, so an
- * unconfigured or failing call surfaces as a clear error instead.
+ * A second, separate model call from evaluate.ts's pricing engine — this one
+ * drafts the creator's next reply rather than pricing the offer. Kept as its
+ * own module: the two have nothing in common but the transport (different
+ * prompt, different response shape, different failure mode).
  *
- * Same §12 handling as nvidia.ts: nothing here logs or persists the prompt,
- * and the offer/message text sent to the model is exactly what the creator
- * already sees in their own deal room, never anything beyond it.
+ * Runs down the same provider chain as everything else (NVIDIA, then Groq —
+ * provider-chain.ts), and when that chain is exhausted the caller falls back
+ * to lib/deals/reply-template.ts, which is deterministic. So the order here is
+ * NVIDIA → Groq → written template, and the creator always gets something.
+ *
+ * Same §12 handling as price-model.ts, and it applies to each provider in the
+ * chain: nothing here logs or persists the prompt, and the offer/message text
+ * sent to the model is exactly what the creator already sees in their own deal
+ * room, never anything beyond it.
  */
-
-const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
-const DEFAULT_MODEL = "moonshotai/kimi-k3";
 
 export type ReplyDraftInput = {
   creatorName: string;
@@ -62,52 +61,32 @@ function buildPrompt(input: ReplyDraftInput): string {
 }
 
 export async function generateReplyDraft(input: ReplyDraftInput): Promise<ReplyDraftResult> {
-  const key = process.env.NVIDIA_API_KEY;
-  if (!key) {
-    return { ok: false, error: "The AI engine is not configured on this environment." };
-  }
-
-  const model = process.env.NVIDIA_MODEL ?? DEFAULT_MODEL;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30_000);
-
   try {
-    const response = await fetch(NVIDIA_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: buildPrompt(input) }],
+    const { value } = await chatJson(
+      {
+        prompt: buildPrompt(input),
         temperature: 0.5,
-        max_tokens: 500,
-        response_format: { type: "json_object" },
-      }),
-      signal: controller.signal,
-    });
+        maxTokens: 500,
+      },
+      (parsed) => {
+        const draft = (parsed as { draft?: unknown })?.draft;
+        // Validated inside the chain: a provider that returns 200 with no
+        // usable draft hands over to the next one instead of ending the
+        // attempt and dropping the creator straight to the template.
+        if (typeof draft !== "string" || !draft.trim()) {
+          throw new Error("no draft in the response");
+        }
+        return draft.trim();
+      },
+    );
 
-    if (!response.ok) {
-      return { ok: false, error: `Draft request failed (${response.status}).` };
-    }
-
-    const body = await response.json();
-    const text: string | undefined = body?.choices?.[0]?.message?.content;
-    if (!text) return { ok: false, error: "The model returned no draft." };
-
-    const parsed = extractJsonObject(text) as { draft?: unknown };
-    if (typeof parsed.draft !== "string" || !parsed.draft.trim()) {
-      return { ok: false, error: "The model's response was missing a draft." };
-    }
-
-    return { ok: true, draft: parsed.draft.trim() };
+    return { ok: true, draft: value };
   } catch (error) {
+    // chatJson logged each provider's reason already. The caller turns this
+    // into the written template, so the creator sees a reply either way.
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Could not reach the AI engine.",
     };
-  } finally {
-    clearTimeout(timeout);
   }
 }

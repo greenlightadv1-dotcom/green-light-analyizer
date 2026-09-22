@@ -1,9 +1,7 @@
 import "server-only";
 
-import { extractJsonObject } from "./nvidia";
+import { chatJson } from "./chat";
 
-const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
-const DEFAULT_MODEL = "moonshotai/kimi-k3";
 const MAX_ITEMS = 10;
 const MAX_CHARS_PER_ITEM = 300;
 
@@ -35,81 +33,54 @@ function buildPrompt(items: string[]): string {
 
 /**
  * AI niche/category detection from a creator's own recent content — an
- * extension beyond §9, using the same NVIDIA-hosted Kimi K3 engine as
- * evaluateOffer().
+ * extension beyond §9, running down the same provider chain as evaluateOffer()
+ * (NVIDIA first, Groq behind it — see provider-chain.ts).
  *
  * §12 scope note: §12 restricts AI text processing to deal evaluation. This
  * is a narrower, different use — classifying a creator's OWN public video/
  * post titles for their OWN media kit, at their OWN request (they triggered
  * the sync), never offer or chat content. Nothing here is logged or
  * persisted beyond the category/tags this returns; the raw titles/
- * descriptions are sent to NVIDIA transiently for this one call only.
+ * descriptions are sent transiently to whichever provider answers, for this
+ * one call only.
  *
- * No heuristic fallback, unlike evaluate.ts: this is a supplementary
- * enhancement, not a step in the core pricing loop that has to keep working
- * with no key configured, so returning null is enough.
+ * No static fallback, unlike evaluate.ts and the reply generator: there is no
+ * rule-based way to name somebody's niche, and this is a supplementary
+ * enhancement rather than a step in the core pricing loop, so an exhausted
+ * chain returns null.
  */
 export async function detectNiche(items: string[]): Promise<NicheResult | null> {
-  const key = process.env.NVIDIA_API_KEY;
-  if (!key || items.length === 0) return null;
-
-  const model = process.env.NVIDIA_MODEL ?? DEFAULT_MODEL;
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
+  if (items.length === 0) return null;
 
   try {
-    let response: Response;
-    try {
-      response = await fetch(NVIDIA_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: buildPrompt(items) }],
-          temperature: 0.2,
-          max_tokens: 512,
-          response_format: { type: "json_object" },
-        }),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (!response.ok) return null;
-
-    const body = await response.json();
-    const text: string | undefined = body?.choices?.[0]?.message?.content;
-    if (!text) return null;
-
-    const parsed = extractJsonObject(text) as {
-      category?: unknown;
-      tags?: unknown;
-    };
-
-    if (typeof parsed.category !== "string" || !parsed.category.trim()) {
-      return null;
-    }
-
-    const tags = Array.isArray(parsed.tags)
-      ? parsed.tags
-          .filter((t): t is string => typeof t === "string" && t.trim().length > 0)
-          .map((t) => t.trim().toLowerCase())
-          .slice(0, 8)
-      : [];
-
-    return { category: parsed.category.trim(), tags };
-  } catch (error) {
-    // Null is the right answer for the caller — niche detection is a
-    // supplement, not a step anything depends on — but a rejected key looks
-    // identical to no key from outside, so say which one happened.
-    console.error(
-      `Niche detection failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    const { value } = await chatJson(
+      {
+        prompt: buildPrompt(items),
+        temperature: 0.2,
+        maxTokens: 512,
+      },
+      (parsed) => {
+        const p = (parsed ?? {}) as { category?: unknown; tags?: unknown };
+        // Checked inside the validator so an empty category sends the chain
+        // to the next provider rather than giving up on the whole feature.
+        if (typeof p.category !== "string" || !p.category.trim()) {
+          throw new Error("no category in the response");
+        }
+        const tags = Array.isArray(p.tags)
+          ? p.tags
+              .filter((t): t is string => typeof t === "string" && t.trim().length > 0)
+              .map((t) => t.trim().toLowerCase())
+              .slice(0, 8)
+          : [];
+        return { category: p.category.trim(), tags };
+      },
     );
+
+    return value;
+  } catch {
+    // chatJson has already logged each provider's own reason, so this is not
+    // a silent failure — repeating it here would only double the noise on a
+    // feature nothing depends on.
     return null;
   }
 }

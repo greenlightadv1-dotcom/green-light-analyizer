@@ -504,7 +504,7 @@ deal, not on company seats.
 |---|---|
 | Frontend / Hosting | Next.js + Vercel (Hobby free tier) |
 | Backend / DB | Supabase free tier (Postgres + Realtime websockets + RLS) |
-| AI engine | **NVIDIA NIM API** running Kimi K3 (`moonshotai/kimi-k3`) — see amendment below |
+| AI engine | **NVIDIA NIM API** running Kimi K3 (`moonshotai/kimi-k3`), with **Groq** (`llama-3.3-70b-versatile`) as a fallback — see amendment below |
 | Email | Resend free tier (3,000 emails/mo + inbound webhooks) |
 | Platform stats (basic) | YouTube Data API v3, Twitch Helix API |
 | Platform stats (verified audience geo, opt-in) | YouTube Analytics API (OAuth), Instagram Graph API insights (OAuth) |
@@ -514,9 +514,36 @@ deal, not on company seats.
 > explicitly instructed a switch to **NVIDIA-hosted Kimi K3** instead — an
 > NVIDIA-provided key was supplied directly for this purpose. Reasoning behind
 > the swap, and the §12 data-handling implications, are documented in
-> `src/lib/ai/nvidia.ts` and the README's Engine section. Build against Kimi
+> `src/lib/ai/price-model.ts` and the README's Engine section. Build against Kimi
 > K3 going forward; do not reintroduce Gemini without asking first, per this
 > file's own rule at the top.
+
+> **Update — Groq as a secondary provider.** Every model call now runs down a
+> chain (`src/lib/ai/provider-chain.ts`): NVIDIA first, Groq
+> (`llama-3.3-70b-versatile`, `GROQ_API_KEY`) second, and only then the static
+> fallbacks that already existed — rule-based pricing and, since the last
+> round, written reply templates. Kimi K3 on NVIDIA remains the primary; this
+> is a fallback, not a substitution, so §9's engine choice stands.
+>
+> The reason is the free-tier reality this spec chose: a 429 or a queue stall
+> on NVIDIA used to mean the *rule-based engine priced a real sponsorship
+> deal*, on a path an inbound webhook is waiting on synchronously. A provider
+> with no key is skipped rather than tried and failed, so setting only
+> `GROQ_API_KEY` makes Groq the primary with no further configuration.
+>
+> Groq speaks the same OpenAI-compatible chat-completions shape, so this adds
+> no dependency — `groq-sdk` would only wrap the POST already being made. The
+> four call sites (pricing, reply drafts, company intelligence, niche
+> detection) each dropped their own copy of the fetch/timeout/parse
+> boilerplate and share `src/lib/ai/chat.ts`, which is why the failover applies
+> to all four rather than to whichever were remembered.
+>
+> **§12 carries over and is not settled by this file.** Adding a provider means
+> offer text reaches it. The NVIDIA trial-terms analysis in `price-model.ts`
+> (formerly `nvidia.ts`) does not speak for Groq — Groq's data-retention terms
+> are a separate document and a separate decision, and `GROQ_API_KEY` should
+> not be set in production until somebody has read them against §12's
+> "evaluation-only, never anywhere it could train general-purpose models".
 
 ---
 

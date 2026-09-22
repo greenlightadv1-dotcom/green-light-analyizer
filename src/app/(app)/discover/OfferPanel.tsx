@@ -181,8 +181,9 @@ export function OfferPanel({
 
           {r.engine === "heuristic" ? (
             <p className="text-[11px] leading-relaxed text-fg/35">
-              Rule-based estimate — the AI engine is not configured on this
-              environment.
+              Rule-based estimate — no AI provider could be reached, so this
+              is arithmetic on reach and category rather than an AI reading of
+              the offer.
             </p>
           ) : null}
 

@@ -2,7 +2,8 @@ import "server-only";
 
 import type { AiEvaluation } from "@/lib/types/database";
 import type { EvaluationInput, EvaluationResult } from "./types";
-import { evaluateWithNvidia } from "./nvidia";
+import { AiUnavailableError } from "./chat";
+import { evaluateWithModel } from "./price-model";
 import { capRiskByVerification } from "./rules";
 import { overlapWith } from "@/lib/media-kit/countries";
 
@@ -15,8 +16,9 @@ export { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules";
  * webhook (§5.4), so the two can never drift apart on price.
  *
  * The engine is NVIDIA-hosted Kimi K3, on the client's explicit instruction —
- * §9 of the spec originally named Gemini here. See nvidia.ts for the §12 data-
- * handling analysis behind that swap.
+ * §9 of the spec originally named Gemini here — with Groq behind it as a
+ * fallback and the rule-based engine below that. See price-model.ts for the
+ * §12 data-handling analysis, and provider-chain.ts for the ordering.
  */
 
 // --- Heuristic fallback ----------------------------------------------------
@@ -48,7 +50,8 @@ const TYPE_MULTIPLIER: Record<string, number> = {
 };
 
 /**
- * Deterministic pricing used when NVIDIA_API_KEY is absent.
+ * Deterministic pricing used when every configured provider is unreachable,
+ * or when none is configured at all.
  *
  * This is NOT the AI Co-Pilot and must never be presented as it — the result
  * carries engine: "heuristic" so the UI can say so. It exists so the whole
@@ -132,12 +135,12 @@ function heuristicEvaluate(input: EvaluationInput): EvaluationResult {
 export async function evaluateOffer(
   input: EvaluationInput,
 ): Promise<EvaluationResult> {
-  if (!process.env.NVIDIA_API_KEY) {
-    return heuristicEvaluate(input);
-  }
-
   try {
-    const raw = await evaluateWithNvidia(input);
+    // No pre-flight key check: chatJson decides what is configured, tries each
+    // provider in turn, and raises AiUnavailableError if the whole chain is
+    // exhausted. Testing one env var here would have skipped Groq on a
+    // deployment that only has a Groq key.
+    const raw = await evaluateWithModel(input);
     const capped = capRiskByVerification(
       raw.risk,
       input.audience_verified,
@@ -153,24 +156,30 @@ export async function evaluateOffer(
         : input.declared_top_countries?.length
           ? "declared"
           : "none",
-      engine: "nvidia",
+      engine: raw.provider,
     };
   } catch (error) {
     // A creator waiting on an offer is better served by a rule-based number
     // than by an error. The engine field tells the UI which one they got.
     //
-    // But the fallback must not be silent. A rejected key and a typo'd
-    // NVIDIA_MODEL both land here and both look, on screen, exactly like
-    // "no key configured" — so without this line a deployment can price every
-    // single offer by the rule-based engine and give no indication anywhere
-    // that the AI it is paying for is being refused. The messages thrown by
-    // nvidia.ts are status codes and shape complaints, never the response
-    // body, so nothing here can carry offer text into a log (§12).
-    console.error(
-      `AI evaluation fell back to the rule-based engine: ${
-        error instanceof Error ? error.message : "unknown error"
-      }`,
-    );
+    // Reaching here now means the *whole chain* failed, which is a much
+    // stronger signal than it used to be and is never silent. chatJson has
+    // already logged each provider's own reason; this line records that the
+    // product actually degraded. AiUnavailableError distinguishes "nothing
+    // configured" from "everything refused" — worth separating, because the
+    // first is a deployment that was never finished and the second is an
+    // outage or a spent quota on keys somebody is paying for. Every message
+    // involved is a status code or a shape complaint, never a response body,
+    // so nothing here can carry offer text into a log (§12).
+    if (error instanceof AiUnavailableError && error.unconfigured) {
+      console.warn("Pricing used the rule-based engine: no AI provider is configured.");
+    } else {
+      console.error(
+        `Pricing fell back to the rule-based engine: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      );
+    }
     return heuristicEvaluate(input);
   }
 }

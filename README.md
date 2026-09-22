@@ -85,8 +85,9 @@ src/
     dashboard/        shell and page building blocks
   lib/
     supabase/         browser / server / service-role clients + session guards
-    ai/               deal evaluation: NVIDIA/Kimi K3 client, rule-based fallback,
-                      and the §7.4 verification cap as a pure rule
+    ai/               deal evaluation: the NVIDIA → Groq provider chain and its
+                      shared chat client, rule-based fallback, and the §7.4
+                      verification cap as a pure rule
     email/            §5 intake: payload parsing, Svix signature
                       verification, and the deal-room pipeline
     deals/            deal-chat reads, the §7.4 evaluation payload builder,
@@ -223,21 +224,44 @@ the UI says the rating was held at yellow and why.
 
 ### Engine
 
-`NVIDIA_API_KEY` selects the engine — NVIDIA's NIM API catalog, running Kimi K3
-(`moonshotai/kimi-k3`, a 2.8T-parameter MoE model), via an OpenAI-compatible
-chat-completions endpoint. This supersedes an earlier choice of Gemini in §9 of
-the spec, on the client's explicit instruction. Without a key, a deterministic
-rule-based estimate that is labelled as such in the UI and carries
-`engine: "heuristic"`, because presenting arithmetic as the AI Co-Pilot would be
-a lie about the feature the product is sold on.
+Model calls run down a chain rather than against one endpoint
+(`src/lib/ai/provider-chain.ts`):
+
+1. **NVIDIA NIM** running Kimi K3 (`moonshotai/kimi-k3`, a 2.8T-parameter MoE
+   model), `NVIDIA_API_KEY`. Supersedes an earlier choice of Gemini in §9 of the
+   spec, on the client's explicit instruction.
+2. **Groq** running `llama-3.3-70b-versatile`, `GROQ_API_KEY`. Same
+   OpenAI-compatible chat-completions shape, so it needs no extra dependency —
+   `groq-sdk` would only wrap the POST this codebase already makes, and would
+   make two interchangeable providers look different in the source.
+3. **Static fallbacks**, per caller: rule-based pricing carrying
+   `engine: "heuristic"` and labelled as such in the UI, and the written reply
+   templates in `lib/deals/reply-template.ts`. Presenting either as the AI
+   Co-Pilot would be a lie about the feature the product is sold on. Company
+   intelligence and niche detection have no static equivalent and report that
+   the engine is unavailable.
+
+A provider with no key is skipped rather than tried and failed, so a deployment
+holding only `GROQ_API_KEY` runs on Groq as its primary. The chain moves on for
+anything that ends an attempt — 401, 404 on a bad model id, a 429 rate limit,
+5xx, a timeout, or a 200 whose content will not parse into the expected shape.
+That last one matters: the per-caller shape check runs *inside* the chain, so a
+provider answering confidently with the wrong fields hands over to the next
+provider instead of dropping straight to arithmetic. Each failure is logged
+with its reason, so "NVIDIA 429, Groq answered" is visible even though nobody
+saw an error.
+
+Per-provider timeouts are short — NVIDIA 20s, Groq 12s — because a serverless
+function killed mid-attempt never reaches the fallback. The inbound webhook
+exports `maxDuration = 60` for the same reason.
 
 Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
-is an OpenAI-compatible hint, not a guarantee, and this exact model's adherence
-to it has not been verified against a live call — outbound access to NVIDIA's
-API is blocked from the sandbox this was built in. `extractJsonObject()` in
-`nvidia.ts` tries a direct parse, then a fenced-code-block extraction, then a
-balanced-brace scan, before giving up and falling back to the heuristic. Model
-is swappable via `NVIDIA_MODEL` without a code change.
+is an OpenAI-compatible hint, not a guarantee on either provider, and neither
+has been verified against a live call — outbound access to both APIs is blocked
+from the sandbox this was built in. `extractJsonObject()` in `chat.ts` tries a
+direct parse, then a fenced-code-block extraction, then a balanced-brace scan.
+Both models are swappable via `NVIDIA_MODEL` / `GROQ_MODEL` without a code
+change.
 
 > ⚠️ **§12 vs. NVIDIA's terms.** §12 says AI processing is evaluation-only and
 > must not forward content anywhere it could train general-purpose models.
@@ -469,8 +493,8 @@ connection limit.
 
 ```bash
 npm test        # masking, §7.4 cap, geo parsing, tier rules, email parsing,
-                # inbound screening, reply templates, webhook signatures,
-                # HTML escaping — 135 assertions
+                # inbound screening, reply templates, provider failover,
+                # webhook signatures, HTML escaping — 145 assertions
 npm run build   # typecheck + lint + production build
 ```
 

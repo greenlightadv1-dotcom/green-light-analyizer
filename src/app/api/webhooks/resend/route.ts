@@ -20,6 +20,16 @@ import { verifyWebhookSignature } from "@/lib/email/verify";
 // the request before this handler sees it.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+/**
+ * The AI provider chain (lib/ai/provider-chain.ts) budgets ~32s worst case
+ * before it gives up, and this route waits on it synchronously while turning
+ * an offer into a deal room. Vercel's default function timeout is well under
+ * that, so without this the platform would kill the request mid-attempt — and
+ * a function killed during the primary provider never reaches the fallback,
+ * which makes the failover decorative on exactly the path that matters most.
+ * 60s is the Hobby-plan ceiling.
+ */
+export const maxDuration = 60;
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 

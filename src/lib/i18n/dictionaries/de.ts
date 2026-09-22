@@ -151,7 +151,7 @@ const de: Dictionary = {
     heldAtYellow:
       "Auf Gelb gehalten: Dies ist ein hochwertiger Deal, und die Audience-Geografie hinter der Bewertung ist selbst gemeldet. Verbinde YouTube- oder Instagram-Analytics, damit ein solcher Deal grün bewertet werden kann.",
     ruleBasedEstimate:
-      "Regelbasierte Schätzung — die KI-Engine ist in dieser Umgebung nicht konfiguriert, daher ist dies eine Berechnung anhand deiner Reichweite und Kategorie, keine KI-Auswertung des Angebots.",
+      "Regelbasierte Schätzung — kein KI-Anbieter war erreichbar, das ist also eine Rechnung auf Basis deiner Reichweite und Kategorie, keine KI-Lesung des Angebots.",
     openDealRoom: "Deal-Raum für dieses Angebot öffnen",
     domainSecurityCheck: "Domain- & Sicherheitsprüfung",
     trustPercent: "{score}% Vertrauen",

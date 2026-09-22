@@ -10,7 +10,7 @@ const ENDPOINT = "https://api.ip2whois.com/v2";
  * The response shape here is written from IP2Whois's published API
  * reference, not verified against a live call — outbound access to
  * third-party APIs is blocked from the sandbox this was built in. Parses
- * defensively (every field optional, same approach as nvidia.ts) for exactly
+ * defensively (every field optional, same approach as chat.ts) for exactly
  * that reason. Confirm the real field names against one live lookup before
  * relying on this in production, and adjust here if they differ.
  *
