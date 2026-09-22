@@ -4,6 +4,7 @@ import { DealRoomView } from "@/components/views/DealRoomView";
 import { requireProfile } from "@/lib/auth";
 import { getOwnHistoryWithDomain } from "@/lib/deals/company-intelligence";
 import { getDealChat, listMessages } from "@/lib/deals/queries";
+import { buildDirectReply } from "@/lib/deals/reply-template";
 
 export const metadata: Metadata = { title: "Deal room" };
 
@@ -37,6 +38,22 @@ export default async function DealRoomPage({
     chat.company_id ? Promise.resolve(null) : getOwnHistoryWithDomain(chat.sender_email, chatId),
   ]);
 
+  // The one-click Direct Reply is composed here, from the deal's own columns,
+  // rather than in the browser: the figures in it are the platform's finding
+  // about this deal, and a client-built body would be whatever the page was
+  // handed. Only offered to the creator on an emailed offer — a company party
+  // is already reading the thread in-app, so there is nothing to relay.
+  const directReplyBody =
+    !chat.company_id && chat.creator_id === profile.id
+      ? buildDirectReply({
+          creatorName: profile.full_name,
+          offeredAmountUsd: chat.offered_amount,
+          recommendedPriceUsd: chat.recommended_price_usd,
+          sponsorshipType: chat.sponsorship_type,
+          dealStatus: chat.deal_status,
+        })
+      : null;
+
   return (
     <DealRoomView
       chat={chat}
@@ -44,6 +61,7 @@ export default async function DealRoomPage({
       messages={messages}
       currentUserId={profile.id}
       domainHistory={domainHistory}
+      directReplyBody={directReplyBody}
     />
   );
 }

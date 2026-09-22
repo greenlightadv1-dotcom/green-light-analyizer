@@ -30,6 +30,12 @@ export type NormalizedEmail = {
   subject: string;
   text: string;
   attachments: InboundAttachment[];
+  /**
+   * Lowercased header name → value. Empty when the provider sends none, which
+   * every consumer must tolerate: the screener treats a missing header as
+   * "not asserted", never as "asserted false".
+   */
+  headers: Record<string, string>;
 };
 
 // --- address helpers --------------------------------------------------------
@@ -72,6 +78,38 @@ export function collectAddresses(value: unknown): string[] {
   } else if (value && typeof value === "object") {
     const o = value as Record<string, unknown>;
     push(o.address ?? o.email ?? o.value);
+  }
+
+  return out;
+}
+
+/**
+ * Flattens the header bag into lowercased name → value.
+ *
+ * Providers send this either as a plain object or as an array of
+ * `{ name, value }` pairs, and some send nothing at all. Repeated headers
+ * (Received, and legitimately several List-* on a mailing) collapse to the
+ * last one seen; nothing downstream reads a header where the earlier copy
+ * carries different meaning, and the alternative — a string[] per name —
+ * would complicate every reader for a case that does not arise.
+ */
+export function normalizeHeaders(value: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  const set = (name: unknown, headerValue: unknown) => {
+    if (typeof name !== "string" || !name.trim()) return;
+    out[name.trim().toLowerCase()] =
+      typeof headerValue === "string" ? headerValue : String(headerValue ?? "");
+  };
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (!item || typeof item !== "object") continue;
+      const h = item as Record<string, unknown>;
+      set(h.name ?? h.key, h.value ?? h.val);
+    }
+  } else if (value && typeof value === "object") {
+    for (const [name, headerValue] of Object.entries(value)) set(name, headerValue);
   }
 
   return out;
@@ -303,5 +341,6 @@ export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
     subject: typeof data.subject === "string" ? data.subject.slice(0, 300) : "",
     text: plain || (html ? htmlToText(html) : ""),
     attachments: normalizeAttachments(data.attachments),
+    headers: normalizeHeaders(data.headers),
   };
 }

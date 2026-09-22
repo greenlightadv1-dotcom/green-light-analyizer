@@ -224,6 +224,35 @@ const es: Dictionary = {
     generateDraft: "Generar respuesta con IA",
     generatingDraft: "Generando…",
     useDraft: "Usar este borrador",
+    draftFromTemplate:
+      "Plantilla estándar: el motor de IA no estaba disponible, así que esto se construyó con las cifras de la propia oferta.",
+    measuredTag: "Comprobación verificada",
+    aiCompanyBrief: "Informe de empresa por IA",
+    aiGeneratedTag: "Generado por IA",
+    aiCompanyIntro:
+      "Una lectura por IA de quién hay detrás de esta oferta, a partir del dominio del remitente y del propio mensaje. No es una consulta a un registro: tómalo como una segunda opinión, no como un hecho.",
+    analyzeCompany: "Analizar esta empresa",
+    analyzingCompany: "Analizando…",
+    reanalyzeCompany: "Volver a ejecutar",
+    aiCompanyUnknown:
+      "No hay información pública fiable sobre este dominio. Es habitual en patrocinadores pequeños o nuevos y no es por sí solo una señal de alarma: guíate por la comprobación verificada de arriba.",
+    aiTrustRead: "Lectura de confianza por IA",
+    aiBackground: "Antecedentes",
+    aiHistory: "Historial",
+    aiSignals: "A qué prestar atención",
+    aiConfidence: "Confianza: {level}",
+    aiGeneratedAt: "Generado el {date}",
+    confidenceLow: "baja",
+    confidenceMedium: "media",
+    confidenceHigh: "alta",
+    directReply: "Respuesta directa",
+    directReplyIntro:
+      "Una respuesta lista para enviar a {sender}, rellenada con las cifras de esta oferta. Edítala antes si quieres.",
+    directReplySend: "Enviar vía Green Light",
+    directReplySending: "Enviando…",
+    directReplySent: "Enviado: ya está en la conversación y de camino a ellos.",
+    directReplyFrom:
+      "Se envía desde la propia dirección de Green Light, con tu alias de entrada como dirección de respuesta, para que su contestación vuelva a esta sala. Tu correo real nunca se les muestra.",
   },
   mediaKit: {
     title: "Kit de medios",

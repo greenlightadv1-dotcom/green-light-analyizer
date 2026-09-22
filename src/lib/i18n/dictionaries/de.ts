@@ -224,6 +224,35 @@ const de: Dictionary = {
     generateDraft: "KI-Antwort generieren",
     generatingDraft: "Wird generiert…",
     useDraft: "Diesen Entwurf verwenden",
+    draftFromTemplate:
+      "Standardvorlage — die KI war nicht verfügbar, daher wurde dies aus den Zahlen des Deals selbst gebaut.",
+    measuredTag: "Geprüfte Abfrage",
+    aiCompanyBrief: "KI-Kurzprofil des Unternehmens",
+    aiGeneratedTag: "KI-generiert",
+    aiCompanyIntro:
+      "Eine KI-Einschätzung, wer hinter diesem Angebot steckt — aus der Absenderdomain und der Nachricht selbst. Keine Registerabfrage: als Zweitmeinung lesen, nicht als Tatsache.",
+    analyzeCompany: "Unternehmen analysieren",
+    analyzingCompany: "Analysiere…",
+    reanalyzeCompany: "Erneut ausführen",
+    aiCompanyUnknown:
+      "Keine belastbaren öffentlichen Informationen zu dieser Domain. Das ist bei kleinen oder neuen Sponsoren normal und für sich genommen kein Warnsignal — richte dich nach der geprüften Abfrage oben.",
+    aiTrustRead: "KI-Vertrauenswert",
+    aiBackground: "Hintergrund",
+    aiHistory: "Historie",
+    aiSignals: "Worauf zu achten ist",
+    aiConfidence: "Zuversicht: {level}",
+    aiGeneratedAt: "Erstellt am {date}",
+    confidenceLow: "gering",
+    confidenceMedium: "mittel",
+    confidenceHigh: "hoch",
+    directReply: "Direkte Antwort",
+    directReplyIntro:
+      "Eine versandfertige Antwort an {sender}, vorausgefüllt mit den Zahlen dieses Deals. Vorher anpassen, wenn du magst.",
+    directReplySend: "Über Green Light senden",
+    directReplySending: "Senden…",
+    directReplySent: "Gesendet — sie steht im Verlauf und ist unterwegs.",
+    directReplyFrom:
+      "Versand über die Adresse von Green Light, mit deinem Eingangs-Alias als Antwortadresse, damit die Antwort wieder in diesem Raum landet. Deine echte E-Mail-Adresse sehen sie nie.",
   },
   mediaKit: {
     title: "Media-Kit",

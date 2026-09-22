@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CompanyIntelligencePanel } from "@/components/deals/CompanyIntelligencePanel";
+import { DirectReplyPanel } from "@/components/deals/DirectReplyPanel";
 import { RiskBadge } from "@/components/deals/RiskBadge";
 import { SourceBadge } from "@/components/deals/SourceBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
@@ -20,6 +21,7 @@ export function DealRoomView({
   messages,
   currentUserId,
   domainHistory = null,
+  directReplyBody = null,
   demo = false,
   basePath = "",
 }: {
@@ -29,6 +31,12 @@ export function DealRoomView({
   currentUserId: string;
   /** Null for in-app deals (company_id set) — not computed for those. */
   domainHistory?: OwnDomainHistory | null;
+  /**
+   * Pre-composed one-click reply, built server-side from the deal row. Null
+   * for anyone who is not the creator on an emailed offer — a company party
+   * has no relay to send through, and nobody else is a party at all.
+   */
+  directReplyBody?: string | null;
   /** Preview mode: the composer echoes locally instead of calling the server. */
   demo?: boolean;
   /** Link prefix. The UI preview passes "/preview" to stay inside itself. */
@@ -130,7 +138,16 @@ export function DealRoomView({
             demo={demo}
           />
 
-          <CompanyIntelligencePanel chat={chat} domainHistory={domainHistory} />
+          <CompanyIntelligencePanel chat={chat} domainHistory={domainHistory} demo={demo} />
+
+          {directReplyBody ? (
+            <DirectReplyPanel
+              chatId={chatId}
+              senderEmail={chat.sender_email}
+              initialBody={directReplyBody}
+              demo={demo}
+            />
+          ) : null}
 
           <GlassPanel className="p-5">
             <h2 className="text-sm font-semibold text-fg">

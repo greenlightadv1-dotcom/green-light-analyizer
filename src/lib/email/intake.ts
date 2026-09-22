@@ -2,7 +2,7 @@ import "server-only";
 
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
-import { classifySponsorship } from "@/lib/ai/spam-filter";
+import { screenInboundEmail } from "@/lib/ai/spam-filter";
 import { ACCEPTED_INBOUND_DOMAINS } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
@@ -34,6 +34,9 @@ export type IntakeOutcome = {
   detail: string;
   chatId?: string;
   creatorId?: string;
+  /** Screener score, when the delivery got far enough to be screened. */
+  spamScore?: number;
+  spamReasons?: string[];
 };
 
 /** Opening summary posted into the room, from the platform rather than a user. */
@@ -139,6 +142,10 @@ export async function processInboundEmail(
     provider_message_id: email.providerMessageId,
     to_alias: alias,
     sender_email: email.from,
+    // Subject only — never the body (see the table comment in 0008). A
+    // screener refusal leaves no deal room and no stored message, so without
+    // this the audit row cannot answer "which offer did the filter eat?".
+    subject: email.subject ? email.subject.slice(0, 300) : null,
     status: "failed",
     detail: "processing",
   });
@@ -159,6 +166,8 @@ export async function processInboundEmail(
         detail: outcome.detail,
         creator_id: outcome.creatorId ?? null,
         chat_id: outcome.chatId ?? null,
+        spam_score: outcome.spamScore ?? null,
+        spam_reasons: outcome.spamReasons ?? null,
       })
       .eq("provider_message_id", email.providerMessageId!);
     return outcome;
@@ -204,6 +213,35 @@ export async function processInboundEmail(
       status: "rejected",
       detail: "delivery had no readable body",
       creatorId: creator.id,
+    });
+  }
+
+  // The screen runs here, before anything is spent and before any of the
+  // message is written anywhere: an evaluation, a WHOIS lookup, a Safe
+  // Browsing call and a WhatsApp alert all hang off the branch below, and a
+  // newsletter should cost none of them.
+  //
+  // `offerText` rather than the raw body so the screener reads what the
+  // evaluator would — subject line and any text attachment included, which is
+  // where a rate card's sponsorship wording often is.
+  const screen = screenInboundEmail({
+    subject: email.subject,
+    bodyText: offerText,
+    from: email.from,
+    headers: email.headers,
+  });
+
+  if (screen.verdict === "reject") {
+    // Nothing is created: no deal room, no message row, no violation log.
+    // What remains is this audit row — sender, alias, subject, score and the
+    // rules that fired — which is what makes a false positive recoverable
+    // instead of a mystery. See 0021's comment for why the subject is kept.
+    return finish({
+      status: "rejected",
+      detail: `screened out: ${screen.reasons.join("; ") || "no sponsorship signal"}`,
+      creatorId: creator.id,
+      spamScore: screen.score,
+      spamReasons: screen.reasons,
     });
   }
 
@@ -270,7 +308,6 @@ export async function processInboundEmail(
       runSecurityCheck(email.from, offerText).catch(() => null),
     ]);
 
-    const isLikelySponsorship = classifySponsorship(email.subject ?? "", offerText);
 
     const { data: chat, error: chatError } = await admin
       .from("deal_chats")
@@ -285,7 +322,7 @@ export async function processInboundEmail(
         sponsorship_type: sponsorshipType,
         target_countries: null,
         security_check: security,
-        is_likely_sponsorship: isLikelySponsorship,
+        is_likely_sponsorship: screen.verdict === "accept",
       })
       .select("id")
       .single();
@@ -295,6 +332,8 @@ export async function processInboundEmail(
         status: "failed",
         detail: `could not create deal room: ${chatError?.message ?? "unknown"}`,
         creatorId: creator.id,
+        spamScore: screen.score,
+        spamReasons: screen.reasons,
       });
     }
 
@@ -339,6 +378,8 @@ export async function processInboundEmail(
       detail: `could not store the message: ${messageError.message}`,
       creatorId: creator.id,
       chatId,
+      spamScore: screen.score,
+      spamReasons: screen.reasons,
     });
   }
 
@@ -357,8 +398,12 @@ export async function processInboundEmail(
 
   return finish({
     status: "processed",
-    detail: openChat ? "appended to an open deal room" : "created a deal room",
+    detail: openChat
+      ? "appended to an open deal room"
+      : `created a deal room${screen.verdict === "flag" ? " (flagged as possible spam)" : ""}`,
     creatorId: creator.id,
     chatId,
+    spamScore: screen.score,
+    spamReasons: screen.reasons,
   });
 }

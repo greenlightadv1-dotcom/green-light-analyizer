@@ -220,6 +220,35 @@ const ar: Dictionary = {
     generateDraft: "توليد رد بالذكاء الاصطناعي",
     generatingDraft: "جارٍ التوليد…",
     useDraft: "استخدام هذه المسودة",
+    draftFromTemplate:
+      "قالب جاهز — محرك الذكاء الاصطناعي لم يكن متاحًا، لذلك بُني هذا من أرقام الصفقة نفسها.",
+    measuredTag: "بحث موثّق",
+    aiCompanyBrief: "ملخص الشركة بالذكاء الاصطناعي",
+    aiGeneratedTag: "مُولَّد بالذكاء الاصطناعي",
+    aiCompanyIntro:
+      "قراءة بالذكاء الاصطناعي لمن يقف خلف هذا العرض، انطلاقًا من نطاق المرسِل ومن نص الرسالة. ليست عملية بحث في سجل رسمي — تعاملي معها كرأي ثانٍ لا كحقيقة.",
+    analyzeCompany: "حلّل هذه الشركة",
+    analyzingCompany: "جارٍ التحليل…",
+    reanalyzeCompany: "أعد التشغيل",
+    aiCompanyUnknown:
+      "لا تتوفر معلومات عامة موثوقة عن هذا النطاق. هذا شائع مع الرعاة الصغار أو الجدد وليس مؤشر خطر بحد ذاته — اعتمدي على البحث الموثّق أعلاه.",
+    aiTrustRead: "تقدير الثقة بالذكاء الاصطناعي",
+    aiBackground: "نبذة",
+    aiHistory: "السجل",
+    aiSignals: "ما ينبغي الانتباه له",
+    aiConfidence: "درجة الثقة: {level}",
+    aiGeneratedAt: "أُنشئ في {date}",
+    confidenceLow: "منخفضة",
+    confidenceMedium: "متوسطة",
+    confidenceHigh: "عالية",
+    directReply: "رد مباشر",
+    directReplyIntro:
+      "رد جاهز للإرسال إلى {sender}، معبّأ مسبقًا بأرقام هذه الصفقة. يمكنك تعديله قبل الإرسال.",
+    directReplySend: "أرسل عبر Green Light",
+    directReplySending: "جارٍ الإرسال…",
+    directReplySent: "تم الإرسال — أصبح ضمن المحادثة وفي طريقه إليهم.",
+    directReplyFrom:
+      "يُرسَل من عنوان Green Light نفسه، مع بريدك الوارد المستعار كعنوان للرد، حتى يعود ردهم إلى هذه الغرفة. عنوان بريدك الحقيقي لا يظهر لهم أبدًا.",
   },
   mediaKit: {
     title: "الملف الإعلامي",

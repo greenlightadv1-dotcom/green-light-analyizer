@@ -468,8 +468,9 @@ connection limit.
 ## Tests
 
 ```bash
-npm test        # masking, §7.4 cap, geo parsing, tier rules, email
-                # parsing, webhook signatures, HTML escaping — 105 assertions
+npm test        # masking, §7.4 cap, geo parsing, tier rules, email parsing,
+                # inbound screening, reply templates, webhook signatures,
+                # HTML escaping — 135 assertions
 npm run build   # typecheck + lint + production build
 ```
 
