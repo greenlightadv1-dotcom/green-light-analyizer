@@ -1,6 +1,11 @@
 import "server-only";
 
-import { resolveNvidia, type NvidiaProvider } from "./nvidia-config";
+import {
+  describeKey,
+  isHeaderSafe,
+  resolveNvidia,
+  type NvidiaProvider,
+} from "./nvidia-config";
 
 /**
  * The one place in this product that talks to a model.
@@ -122,6 +127,16 @@ function readContent(body: unknown): string {
 }
 
 async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promise<string> {
+  // Caught here rather than left to fetch, which throws an opaque
+  // "Invalid header value" from deep inside undici with no mention of which
+  // header or why.
+  if (!isHeaderSafe(provider.apiKey)) {
+    throw new Error(
+      "NVIDIA_API_KEY contains characters that cannot go in an HTTP header " +
+        "(non-ASCII or control characters). Re-copy it as plain text.",
+    );
+  }
+
   const attempt = async (jsonMode: boolean): Promise<Response> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
@@ -175,6 +190,24 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
 
   if (!response.ok) {
     const detail = await errorDetail(response);
+
+    // A 401 is the one status where the useful fact is about our own request
+    // rather than NVIDIA's answer. "Authentication failed" is true of a
+    // revoked key AND of a valid key that arrived with an invisible character
+    // on the end, and those need opposite fixes. The shape — length, six-char
+    // prefix, what had to be stripped — separates them at a glance and
+    // identifies nothing: six characters of an nvapi- key is the word
+    // "nvapi-". The key itself is never logged.
+    if (response.status === 401) {
+      console.error(
+        `NVIDIA rejected the credential. Key as the app received it: ` +
+          `${describeKey(provider.apiKey, provider.keyNotes)}. ` +
+          `If that length or prefix is not what you set, the value in the ` +
+          `environment is not what you think it is — re-paste it. ` +
+          `Otherwise the key is genuinely rejected for this endpoint or model.`,
+      );
+    }
+
     // 401 a bad or missing key, 404 a model id that is not in the catalog,
     // 429 a spent quota, 5xx NVIDIA being down.
     throw new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);

@@ -96,9 +96,34 @@ Three causes it exists to separate, because all three look the same in the app:
 
 | Symptom | Cause |
 |---|---|
-| `HTTP 401` | The key is wrong, revoked, or **stored with the quotes around it**. A value pasted as `"nvapi-…"` keeps them and the Bearer header is rejected. |
+| `HTTP 401` | The credential is rejected. Almost never the header code — see below. |
 | `HTTP 404` | `NVIDIA_MODEL` is not in the catalog for this key. |
-| `200` with empty `content` | A reasoning model answering in `reasoning_content`. Handled since the failover removal, but worth confirming. |
+| `200` with empty `content` | A reasoning model answering in `reasoning_content`. Handled, but worth confirming. |
+
+#### A 401 on a key you have verified
+
+`Authentication failed` is true of a revoked key **and** of a perfectly valid
+key that arrived with one invisible character attached, and those need opposite
+fixes. The app strips the ones it can — wrapping quotes, a redundant `Bearer`
+prefix, embedded whitespace, and zero-width / bidirectional marks (U+200B,
+U+FEFF, U+200E, U+200F) — and on a 401 it logs the key's *shape*: its length,
+its six-character prefix, and whatever it had to strip. Never the key itself.
+
+**If that length is not the length of the key you copied, the value in the
+environment is not the value you think it is.** Re-paste it. Vercel's dashboard
+renders an invisible character as nothing at all, so a visual check cannot
+catch this; `node scripts/check-nvidia.mjs` dumps the code points and names
+them.
+
+U+200E/U+200F deserve a specific mention: right-to-left-aware editors,
+terminals and chat clients insert them around a Latin-script string copied out
+of an Arabic context. They survive `trim()`, they are invisible everywhere a
+human looks, and they corrupt the Bearer token.
+
+If the shape is right and it still 401s, the key is rejected at the account
+level: either it is an NGC/org key rather than a `nvapi-…` key from
+build.nvidia.com (only the latter works against `integrate.api.nvidia.com`), or
+it is genuinely revoked.
 
 **The names above are exact.** They are the strings `process.env.<NAME>` is
 read with in the code, and Vercel matches them literally — a variable named
