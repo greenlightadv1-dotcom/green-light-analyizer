@@ -43,45 +43,145 @@ export type ChatRequest = {
 
 export type ChatResult = { model: string };
 
-async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
+/**
+ * Statuses where the request shape is the suspect rather than the credentials,
+ * the model id or the quota. NIM proxies many different backends and
+ * `response_format` is not honoured by every one of them — an unsupported
+ * model rejects the whole request rather than ignoring the field. One retry
+ * without it costs a round trip and rescues an otherwise dead deployment.
+ */
+const RETRY_WITHOUT_JSON_MODE = new Set([400, 415, 422, 500]);
 
-  let response: Response;
+/**
+ * A short, bounded reason off an error response — never the body itself.
+ *
+ * §12 is why this reads named keys instead of returning the raw text: an
+ * OpenAI-compatible error body can echo the request back, and the request
+ * contains the offer text. A request echo lives under `messages`, which is
+ * never read here. What this does surface is the one sentence that actually
+ * identifies the fault ("Model not found", "unsupported response_format"),
+ * which is the difference between a diagnosable log line and "HTTP 400".
+ */
+async function errorDetail(response: Response): Promise<string> {
+  let body: unknown;
   try {
-    response = await fetch(provider.endpoint, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${provider.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [{ role: "user", content: request.prompt }],
-        temperature: request.temperature,
-        max_tokens: request.maxTokens,
-        // An OpenAI-compatible hint, not a guarantee for every model in the
-        // NIM catalog — which is why every caller parses through
-        // extractJsonObject rather than trusting JSON.parse on the content.
-        response_format: { type: "json_object" },
-        ...provider.extraBody,
-      }),
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeout);
+    body = await response.json();
+  } catch {
+    return ""; // not JSON — say nothing rather than guess
+  }
+
+  const root = (body ?? {}) as Record<string, unknown>;
+  for (const key of ["detail", "message", "title", "error"]) {
+    const value = root[key];
+    if (typeof value === "string" && value.trim()) return value.trim().slice(0, 200);
+    // OpenAI shape: { error: { message } }
+    if (value && typeof value === "object") {
+      const nested = (value as Record<string, unknown>).message;
+      if (typeof nested === "string" && nested.trim()) return nested.trim().slice(0, 200);
+    }
+  }
+  return "";
+}
+
+/**
+ * The assistant's text, across the shapes NIM actually returns.
+ *
+ * `choices[0].message.content` is the ordinary one. Two others are real and
+ * both used to surface here as the unhelpful "response carried no content":
+ *
+ *   - content as an array of parts, rather than a string.
+ *   - content empty with the answer in `reasoning_content`. Reasoning-capable
+ *     models on NIM do this, and since NVIDIA_MODEL can be pointed at one, a
+ *     deployment can get a clean 200 whose text this function has to find.
+ */
+function readContent(body: unknown): string {
+  const message = (body as { choices?: { message?: Record<string, unknown> }[] })
+    ?.choices?.[0]?.message;
+  if (!message) return "";
+
+  const content = message.content;
+  if (typeof content === "string" && content.trim()) return content;
+
+  if (Array.isArray(content)) {
+    const joined = content
+      .map((part) =>
+        typeof part === "string"
+          ? part
+          : typeof (part as { text?: unknown })?.text === "string"
+            ? ((part as { text: string }).text)
+            : "",
+      )
+      .join("");
+    if (joined.trim()) return joined;
+  }
+
+  const reasoning = message.reasoning_content;
+  if (typeof reasoning === "string" && reasoning.trim()) return reasoning;
+
+  return "";
+}
+
+async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promise<string> {
+  const attempt = async (jsonMode: boolean): Promise<Response> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
+
+    try {
+      return await fetch(provider.endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          // NVIDIA's own examples send this, and some NIM endpoints answer
+          // with a streaming body without it.
+          accept: "application/json",
+          authorization: `Bearer ${provider.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [{ role: "user", content: request.prompt }],
+          temperature: request.temperature,
+          max_tokens: request.maxTokens,
+          // An OpenAI-compatible hint, not a guarantee for every model in the
+          // NIM catalog — which is why every caller parses through
+          // extractJsonObject rather than trusting JSON.parse on the content,
+          // and why an unsupported-format rejection is retried without it.
+          ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+          ...provider.extraBody,
+        }),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      // "This operation was aborted" names nothing an operator can act on.
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`timed out after ${provider.timeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  let response = await attempt(true);
+
+  if (!response.ok && RETRY_WITHOUT_JSON_MODE.has(response.status)) {
+    const detail = await errorDetail(response);
+    console.warn(
+      `NVIDIA (${provider.model}) rejected the request with HTTP ${response.status}${
+        detail ? ` — ${detail}` : ""
+      }; retrying without response_format.`,
+    );
+    response = await attempt(false);
   }
 
   if (!response.ok) {
-    // No body, ever — see the §12 note above. The status distinguishes the
-    // cases that matter anyway: 401 a bad key, 404 a bad model id, 429 a rate
-    // limit, 5xx NVIDIA being down.
-    throw new Error(`HTTP ${response.status}`);
+    const detail = await errorDetail(response);
+    // 401 a bad or missing key, 404 a model id that is not in the catalog,
+    // 429 a spent quota, 5xx NVIDIA being down.
+    throw new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);
   }
 
-  const body = await response.json();
-  const text: string | undefined = body?.choices?.[0]?.message?.content;
-  if (!text) throw new Error("response carried no content");
+  const text = readContent(await response.json());
+  if (!text) throw new Error("200 OK but the response carried no readable content");
 
   return text;
 }

@@ -30,6 +30,22 @@ test("a whitespace-only key counts as absent", () => {
   assert.equal(resolveNvidia({ NVIDIA_API_KEY: "   " }), null);
 });
 
+test("wrapping quotes are stripped from the key and the model", () => {
+  // A value pasted into a Vercel env var as "nvapi-..." keeps its quotes, and
+  // the resulting Bearer header is rejected as an invalid key — a 401 that
+  // sends everyone hunting a revoked key that is actually fine.
+  const provider = resolveNvidia({
+    NVIDIA_API_KEY: '"nvapi-abc"',
+    NVIDIA_MODEL: "'vendor/model'",
+  });
+  assert.equal(provider?.apiKey, "nvapi-abc");
+  assert.equal(provider?.model, "vendor/model");
+});
+
+test("a key that is nothing but quotes counts as absent", () => {
+  assert.equal(resolveNvidia({ NVIDIA_API_KEY: '""' }), null);
+});
+
 test("the model is overridable without a code change", () => {
   const provider = resolveNvidia({
     NVIDIA_API_KEY: "nv-key",

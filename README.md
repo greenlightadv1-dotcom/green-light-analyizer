@@ -245,11 +245,16 @@ the expected shape. That last one matters: the per-caller shape check runs
 call rather than a value handed to the caller. A rule-based price is honest; a
 hallucinated one is not.
 
-Failures are logged with their status, so a spent quota (429) and a wrong model
-id (404) are distinguishable in the logs — from outside they look identical,
-because the product just quietly serves rule-based output. The call budgets
-30s and the inbound webhook exports `maxDuration = 60`, since it waits on that
-synchronously and a killed function returns nothing at all.
+Failures are logged with their status and the provider's own reason, so
+`HTTP 404 — Model not found` and `HTTP 429` are distinguishable — from outside
+they look identical, because the product just quietly serves rule-based output.
+Only a named `detail`/`message` field is logged, capped; never the body, which
+can echo the request and therefore the offer text (§12). `node
+scripts/check-nvidia.mjs` probes the endpoint directly and separates a bad key
+from a bad model id from a reasoning model that answers in
+`reasoning_content`. The call budgets 45s and the inbound webhook exports
+`maxDuration = 60`, since it waits on that synchronously and a killed function
+returns nothing at all.
 
 Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
 is an OpenAI-compatible hint, not a guarantee for every model in the NIM

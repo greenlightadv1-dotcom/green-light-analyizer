@@ -74,9 +74,31 @@ The call budgets 30s, and the inbound webhook exports `maxDuration = 60`
 because it waits on that synchronously — a function the platform kills
 mid-call returns nothing at all, not even the rule-based estimate.
 
-Failures are logged with their status, so a spent quota (429) and a wrong
-model id (404) are distinguishable in the logs. From outside, both look
-identical: the product just quietly serves rule-based output.
+Failures are logged with their status **and the provider's own reason**, so
+`HTTP 404 — Model not found` and `HTTP 429 — rate limit` are distinguishable in
+the logs. From outside they look identical: the product just quietly serves
+rule-based output. No response body is ever logged, only a named `detail` /
+`message` field, capped — an error body can echo the request back, and the
+request contains the offer text (§12).
+
+To diagnose it directly, with the key in `.env.local` or the environment:
+
+```bash
+node scripts/check-nvidia.mjs
+```
+
+It lists the models the key can actually reach, says whether `NVIDIA_MODEL` is
+among them, and makes one real completion — reporting the status, the latency,
+and whether the text arrived in `content` or in `reasoning_content`. It never
+prints the key.
+
+Three causes it exists to separate, because all three look the same in the app:
+
+| Symptom | Cause |
+|---|---|
+| `HTTP 401` | The key is wrong, revoked, or **stored with the quotes around it**. A value pasted as `"nvapi-…"` keeps them and the Bearer header is rejected. |
+| `HTTP 404` | `NVIDIA_MODEL` is not in the catalog for this key. |
+| `200` with empty `content` | A reasoning model answering in `reasoning_content`. Handled since the failover removal, but worth confirming. |
 
 **The names above are exact.** They are the strings `process.env.<NAME>` is
 read with in the code, and Vercel matches them literally — a variable named

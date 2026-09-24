@@ -36,9 +36,34 @@ export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/complet
 /** Overridable per deployment via NVIDIA_MODEL, without a code change. */
 export const NVIDIA_DEFAULT_MODEL = "z-ai/glm-5.3";
 
-export const NVIDIA_TIMEOUT_MS = 30_000;
+/**
+ * Under the webhook's maxDuration = 60 with room to spare. Generous because a
+ * large reasoning model on a free/trial queue can be slow to first token, and
+ * a timeout here is indistinguishable from an outage to everyone downstream.
+ */
+export const NVIDIA_TIMEOUT_MS = 45_000;
 
 type Env = Record<string, string | undefined>;
+
+/**
+ * Trims whitespace and strips one layer of wrapping quotes.
+ *
+ * The quotes matter in production specifically: a value pasted into a Vercel
+ * environment variable as `"nvapi-..."` is stored with the quotes, and the
+ * resulting `Authorization: Bearer "nvapi-..."` header is rejected as an
+ * invalid key — which reads on this end as a plain 401 and sends everybody
+ * looking for a revoked key that is in fact fine. Same for a quoted model id,
+ * which 404s.
+ */
+function clean(value: string | undefined): string {
+  const trimmed = value?.trim() ?? "";
+  const unquoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ? trimmed.slice(1, -1).trim()
+      : trimmed;
+  return unquoted;
+}
 
 /**
  * The configured provider, or null when there is no usable key.
@@ -48,18 +73,18 @@ type Env = Record<string, string | undefined>;
  * stays distinguishable from "AI was tried and refused" at the call site.
  */
 export function resolveNvidia(env: Env): NvidiaProvider | null {
-  const apiKey = env.NVIDIA_API_KEY?.trim();
+  const apiKey = clean(env.NVIDIA_API_KEY);
   if (!apiKey) return null;
 
   return {
     endpoint: NVIDIA_ENDPOINT,
-    model: env.NVIDIA_MODEL?.trim() || NVIDIA_DEFAULT_MODEL,
+    model: clean(env.NVIDIA_MODEL) || NVIDIA_DEFAULT_MODEL,
     apiKey,
     // reasoning_effort is specific to reasoning-capable models on NIM, not a
     // field every model in the catalog accepts, so it is opt-in rather than
     // hardcoded — NVIDIA_MODEL can be pointed at a model that rejects it.
-    extraBody: env.NVIDIA_REASONING_EFFORT?.trim()
-      ? { reasoning_effort: env.NVIDIA_REASONING_EFFORT.trim() }
+    extraBody: clean(env.NVIDIA_REASONING_EFFORT)
+      ? { reasoning_effort: clean(env.NVIDIA_REASONING_EFFORT) }
       : undefined,
     timeoutMs: NVIDIA_TIMEOUT_MS,
   };
