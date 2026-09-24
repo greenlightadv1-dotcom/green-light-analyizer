@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal/LegalPage";
 import {
-  ENTITY_ADDRESS,
-  ENTITY_NAME,
+  CHANGE_NOTICE_DAYS,
+  GOVERNING_FORUM,
   GOVERNING_LAW,
+  SECURITY_EMAIL,
+  operatorIdentity,
   PRIVACY_EMAIL,
   RETENTION,
   SUPPORT_EMAIL,
@@ -26,9 +28,10 @@ export default function TermsPage() {
       <h2>1. Who these terms are between</h2>
       <p>
         Green Light (&ldquo;Green Light&rdquo;, &ldquo;we&rdquo;,
-        &ldquo;us&rdquo;) is operated by <strong>{ENTITY_NAME}</strong>, of{" "}
-        <strong>{ENTITY_ADDRESS}</strong>. These terms apply to everyone who
-        uses the service, in either of the two roles it supports:
+        &ldquo;us&rdquo;) is operated by <strong>{operatorIdentity()}</strong>.
+        These terms form a binding agreement between you and us from the moment
+        you first access the service, and apply to everyone who uses it, in
+        either of the two roles it supports:
       </p>
       <ul>
         <li>
@@ -289,26 +292,144 @@ export default function TermsPage() {
         </li>
       </ul>
       <p>
-        Where liability is not excluded, it is limited to the total commission
-        and subscription fees you paid us in the twelve months before the claim
-        arose.
+        Subject only to the first paragraph of this clause, our total aggregate
+        liability to you — in contract, tort (including negligence), breach of
+        statutory duty, restitution or otherwise — arising out of or in
+        connection with the service is limited to the greater of (a) the total
+        commission and subscription fees you paid us in the twelve months
+        immediately before the event giving rise to the claim, and (b) one
+        hundred United States dollars (USD 100).
+      </p>
+      <p>
+        The exclusions and the cap in this clause are an agreed allocation of
+        risk that is reflected in the fees, and they apply even if a limited
+        remedy fails of its essential purpose. If mandatory law in your
+        jurisdiction does not permit an exclusion or limitation set out above,
+        that exclusion or limitation does not apply to you and the remainder of
+        this clause stands.
+      </p>
+      <p>
+        <strong>Indemnity.</strong> You will indemnify us against any
+        third-party claim, and against any loss, liability or reasonable legal
+        cost we incur, arising from content you submit, from a sponsorship you
+        agreed through the service, from your breach of these terms, or from
+        your breach of any advertising-disclosure, tax or consumer-protection
+        obligation. We will notify you of any such claim without undue delay,
+        give you conduct of the defence where the law permits, and not settle
+        it without your consent, which you will not unreasonably withhold.
       </p>
 
       <h2>14. Changes to these terms</h2>
       <p>
-        We may update these terms. The date at the top of this page always shows
-        the current revision. Where a change materially affects your rights, we
-        will notify account holders before it takes effect. Continuing to use
-        Green Light after that means you accept the updated terms.
+        We may update these terms — to reflect a change in the service, in the
+        law, or in how commission or verification works. The date at the top of
+        this page always shows the current revision.
       </p>
-
-      <h2>15. Governing law</h2>
       <p>
-        These terms are governed by <strong>{GOVERNING_LAW}</strong>, and
-        disputes are subject to the exclusive jurisdiction of its courts.
+        Where a change materially affects your rights or obligations, we will
+        give account holders at least{" "}
+        <strong>{CHANGE_NOTICE_DAYS} days&apos; notice</strong> by email before
+        it takes effect. If you do not accept the change, you may close your
+        account before the effective date at no cost, and we will refund the
+        unused portion of any subscription you have paid for. Continuing to use
+        Green Light after the effective date means you accept the updated terms.
+      </p>
+      <p>
+        A change never applies retroactively to a deal already agreed, or to a
+        commission already earned, under the previous version.
       </p>
 
-      <h2>16. Contact</h2>
+      <h2>15. Governing law and disputes</h2>
+      <p>
+        These terms, and any non-contractual obligation arising out of or in
+        connection with them, are governed by <strong>{GOVERNING_LAW}</strong>,
+        without regard to its conflict-of-laws rules.
+      </p>
+      <p>
+        <strong>Talk to us first.</strong> Before commencing proceedings, send a
+        written notice of the dispute to{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> setting out what
+        happened and what you want. We will respond within 30 days and attempt
+        in good faith to resolve it. This step does not bar urgent injunctive
+        relief, and it does not extend any limitation period.
+      </p>
+      <p>
+        If it is not resolved, the dispute is subject to the exclusive
+        jurisdiction of <strong>{GOVERNING_FORUM}</strong>.
+      </p>
+      <p>
+        <strong>Nothing here removes rights you cannot waive.</strong> If you
+        are a consumer, you keep the protection of the mandatory provisions of
+        the law of your habitual residence — including, in Egypt, Consumer
+        Protection Law No. 181 of 2018 — and you may bring proceedings in the
+        courts of that country where that law gives you the right to do so.
+        Nothing in this clause limits any statutory right of a data subject to
+        lodge a complaint with a supervisory authority.
+      </p>
+
+      <h2>16. Electronic contracting and notices</h2>
+      <p>
+        You agree that accepting these terms electronically, and any action
+        taken through your account, constitutes a valid electronic signature and
+        a binding expression of intent under Egyptian E-Signature Law No. 15 of
+        2004 and Law No. 175 of 2018 on Combating Information Technology Crimes.
+        Our records of those actions are admissible evidence of them.
+      </p>
+      <p>
+        We give notice to the email address on your account, or by a notice
+        inside the service. You give notice to{" "}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>. Notice is
+        effective when sent, unless it bounces.
+      </p>
+
+      <h2>17. General</h2>
+      <p>
+        <strong>Entire agreement.</strong> These terms and the{" "}
+        <Link href="/privacy">Privacy Policy</Link> are the whole agreement
+        between us about the service, and replace anything said before. Nothing
+        in this clause limits liability for fraud or fraudulent
+        misrepresentation.
+      </p>
+      <p>
+        <strong>Severability.</strong> If a provision is held invalid or
+        unenforceable, it is modified to the minimum extent needed to make it
+        enforceable, or severed if it cannot be. The rest stands.
+      </p>
+      <p>
+        <strong>No waiver.</strong> Not enforcing a provision on one occasion is
+        not a waiver of it, and does not prevent us enforcing it later.
+      </p>
+      <p>
+        <strong>Assignment.</strong> You may not assign or transfer your rights
+        under these terms without our written consent. We may assign them to a
+        successor in connection with a merger, acquisition or sale of assets, on
+        notice to you; your rights under these terms are unaffected.
+      </p>
+      <p>
+        <strong>Force majeure.</strong> Neither party is liable for a failure to
+        perform caused by an event beyond its reasonable control — including
+        outage or withdrawal of a third-party platform, network or payment rail
+        the service depends on — for as long as that event continues. This does
+        not excuse an obligation to pay money already owed.
+      </p>
+      <p>
+        <strong>No agency.</strong> We are not your agent, employer, partner or
+        manager, and we are not a party to any sponsorship agreement you reach
+        through the service. You are responsible for your own tax, social
+        insurance and regulatory obligations, including advertising-disclosure
+        rules in every market you publish to.
+      </p>
+      <p>
+        <strong>Language.</strong> These terms are issued in English. Any
+        translation is for convenience; the English text governs, except where
+        mandatory local law requires otherwise.
+      </p>
+      <p>
+        <strong>Survival.</strong> Clauses 6, 8, 10, 13, 15, 16 and 17 survive
+        termination of your account.
+      </p>
+
+      <h2>18. Contact</h2>
       <p>
         General questions:{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, or our{" "}
@@ -321,6 +442,14 @@ export default function TermsPage() {
         Anything concerning your personal data:{" "}
         <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> — see the{" "}
         <Link href="/privacy">Privacy Policy</Link>.
+      </p>
+      <p>
+        Security vulnerabilities:{" "}
+        <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>. We will not
+        pursue or support a legal claim against anyone who reports a
+        vulnerability to that address in good faith, who does not access or
+        modify data beyond what is needed to demonstrate it, and who gives us a
+        reasonable opportunity to fix it before disclosing it.
       </p>
     </LegalPage>
   );

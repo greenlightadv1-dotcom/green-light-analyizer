@@ -4,7 +4,6 @@ import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import {
   ENTITY_NAME,
-  LEGAL_ENTITY_UNRESOLVED,
   LEGAL_LAST_UPDATED,
 } from "@/lib/constants/legal";
 
@@ -42,20 +41,6 @@ export function LegalPage({
           Last updated {LEGAL_LAST_UPDATED}
         </p>
       </header>
-
-      {LEGAL_ENTITY_UNRESOLVED ? (
-        <div
-          role="note"
-          className="mb-8 rounded-xl border border-amber-300/30 bg-amber-300/10 px-4 py-3.5 text-xs leading-relaxed text-amber-800 dark:text-amber-100"
-        >
-          <strong className="font-semibold">Draft — not yet in force.</strong>{" "}
-          The operating entity, its registered address and the governing law are
-          still marked <code className="font-mono">[LIKE THIS]</code> below.
-          Until those are filled in and this document has been reviewed by a
-          qualified lawyer, treat it as a statement of intended practice rather
-          than a binding agreement.
-        </div>
-      ) : null}
 
       <GlassPanel className="p-6 sm:p-9">
         <article
