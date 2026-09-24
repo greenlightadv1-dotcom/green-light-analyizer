@@ -10,15 +10,14 @@ import { chatJson } from "./chat";
  * own module: the two have nothing in common but the transport (different
  * prompt, different response shape, different failure mode).
  *
- * Runs down the same provider chain as everything else (NVIDIA, then Groq —
- * provider-chain.ts), and when that chain is exhausted the caller falls back
- * to lib/deals/reply-template.ts, which is deterministic. So the order here is
- * NVIDIA → Groq → written template, and the creator always gets something.
+ * Calls the same NVIDIA endpoint as everything else (chat.ts), and when that
+ * call fails the caller falls back to lib/deals/reply-template.ts, which is
+ * deterministic. So the order is NVIDIA → written template, and the creator
+ * always gets something.
  *
- * Same §12 handling as price-model.ts, and it applies to each provider in the
- * chain: nothing here logs or persists the prompt, and the offer/message text
- * sent to the model is exactly what the creator already sees in their own deal
- * room, never anything beyond it.
+ * Same §12 handling as price-model.ts: nothing here logs or persists the
+ * prompt, and the offer/message text sent to the model is exactly what the
+ * creator already sees in their own deal room, never anything beyond it.
  */
 
 export type ReplyDraftInput = {
@@ -70,9 +69,9 @@ export async function generateReplyDraft(input: ReplyDraftInput): Promise<ReplyD
       },
       (parsed) => {
         const draft = (parsed as { draft?: unknown })?.draft;
-        // Validated inside the chain: a provider that returns 200 with no
-        // usable draft hands over to the next one instead of ending the
-        // attempt and dropping the creator straight to the template.
+        // Validated inside the call: a 200 carrying no usable draft is a
+        // failed call, so the caller reaches for the written template rather
+        // than showing the creator an empty box.
         if (typeof draft !== "string" || !draft.trim()) {
           throw new Error("no draft in the response");
         }
@@ -82,8 +81,8 @@ export async function generateReplyDraft(input: ReplyDraftInput): Promise<ReplyD
 
     return { ok: true, draft: value };
   } catch (error) {
-    // chatJson logged each provider's reason already. The caller turns this
-    // into the written template, so the creator sees a reply either way.
+    // chatJson logged NVIDIA's reason already. The caller turns this into the
+    // written template, so the creator sees a reply either way.
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Could not reach the AI engine.",

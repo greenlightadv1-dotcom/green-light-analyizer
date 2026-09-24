@@ -21,8 +21,7 @@ variables under **Project Settings → Environment Variables**:
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API (`service_role`) | Most of the product is inert |
 | `NEXT_PUBLIC_APP_URL` | `https://greenlightadvs.com` | Falls back to the same value, so links look right but a preview deploy advertises production |
 | `NEXT_PUBLIC_INBOUND_DOMAIN` | `analyze.greenlightadvs.com` | Falls back to the same value |
-| `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com/moonshotai/kimi-k3) | Primary AI provider skipped. Falls through to Groq if set, else rule-based pricing, labelled as such |
-| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com/keys) | No fallback provider — an NVIDIA rate limit or outage drops straight to rule-based pricing |
+| `NVIDIA_API_KEY` | [build.nvidia.com](https://build.nvidia.com) | Rule-based pricing and written reply templates, both labelled as such. There is no second provider |
 | `RESEND_API_KEY` | Resend dashboard | Replies never reach companies |
 | `RESEND_INBOUND_WEBHOOK_SECRET` | Resend → Webhooks (`whsec_…`) | Webhook returns 503 |
 | `RESEND_FROM_ADDRESS` | e.g. `Green Light <deals@greenlightadvs.com>` | Falls back to `deals@greenlightadvs.com` — must be a domain verified for **sending** in Resend |
@@ -43,9 +42,8 @@ rather than by accident:
 
 | Variable | Powers | Unset |
 |---|---|---|
-| `NVIDIA_MODEL` | Which model on NIM answers | Defaults to `moonshotai/kimi-k3`. A **typo here is not an error** — the call 404s and the chain moves to the next provider |
-| `GROQ_MODEL` | Which model Groq answers with | Defaults to `llama-3.3-70b-versatile`. Same failure mode as above |
-| `NVIDIA_REASONING_EFFORT` | Opt-in reasoning depth on the pricing call | Not sent. Only set it if the configured model honours the field. Sent to NVIDIA only — Groq rejects it |
+| `NVIDIA_MODEL` | Which model on NIM answers | Defaults to `z-ai/glm-5.3`. A **typo here is not an error** — the call 404s and the product quietly serves rule-based output |
+| `NVIDIA_REASONING_EFFORT` | Opt-in reasoning depth on the pricing call | Not sent. Only set it if the configured model honours the field |
 | `YOUTUBE_API_KEY` | Media Kit stats sync | No YouTube stats |
 | `GOOGLE_SAFE_BROWSING_API_KEY` | Sender-URL threat check | Renders "could not check", never an all-clear |
 | `IP2WHOIS_API_KEY` | Sender-domain WHOIS in the deal room | Same — "could not check" |
@@ -60,27 +58,25 @@ rather than by accident:
 reads them yet; the Twitch sync §9 describes is not built. Setting them in
 Vercel does nothing.
 
-### AI provider failover
+### The AI path
 
-Every model call runs down a chain (`src/lib/ai/provider-chain.ts`): **NVIDIA →
-Groq → static fallback**. A provider with no key is skipped rather than tried
-and failed, so setting only `GROQ_API_KEY` makes Groq the primary. Anything
-that ends an attempt — a 401 on a bad key, a 404 on a bad model id, a 429 rate
-limit, a 5xx, a timeout, or a 200 whose content will not parse into the
-expected shape — hands over to the next provider. Only when the chain is
-exhausted does the product fall back to what it can compute itself: rule-based
-pricing (labelled as such in the UI) and written reply templates. Company
-intelligence and niche detection have no static equivalent and simply report
-that the engine is unavailable.
+Every model call goes to **NVIDIA and nowhere else** (`src/lib/ai/chat.ts`,
+configured in `nvidia-config.ts`). The path is **NVIDIA → static fallback**;
+there is no second provider and nothing in the codebase reaches another AI
+host. Anything that ends the call — a 401 on a bad key, a 404 on a bad model
+id, a 429 rate limit, a 5xx, a timeout, or a 200 whose content will not parse
+into the expected shape — falls to what the product can compute itself:
+rule-based pricing (labelled as such in the UI) and the written reply
+templates. Company intelligence and niche detection have no static equivalent
+and report that the engine is unavailable.
 
-Per-provider timeouts are short (NVIDIA 20s, Groq 12s) and that is deliberate:
-a function killed by the platform mid-attempt never reaches the fallback, so
-the whole chain has to fit inside the function's own limit. The inbound webhook
-exports `maxDuration = 60` for the same reason — it waits on this chain
-synchronously.
+The call budgets 30s, and the inbound webhook exports `maxDuration = 60`
+because it waits on that synchronously — a function the platform kills
+mid-call returns nothing at all, not even the rule-based estimate.
 
-Each provider failure is logged with its reason, so "NVIDIA 429, Groq
-answered" is visible even though nobody saw an error.
+Failures are logged with their status, so a spent quota (429) and a wrong
+model id (404) are distinguishable in the logs. From outside, both look
+identical: the product just quietly serves rule-based output.
 
 **The names above are exact.** They are the strings `process.env.<NAME>` is
 read with in the code, and Vercel matches them literally — a variable named

@@ -13,7 +13,7 @@ system, data model and business logic. Read it before changing anything here.
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
 | Motion | Framer Motion |
 | Backend / DB | Supabase (Postgres + Realtime + RLS) |
-| AI engine | NVIDIA NIM (Kimi K3 — `moonshotai/kimi-k3`) |
+| AI engine | NVIDIA NIM (`z-ai/glm-5.3`) |
 | Email | Resend, inbound webhooks *(not yet wired up)* |
 
 ## Supabase project
@@ -85,9 +85,9 @@ src/
     dashboard/        shell and page building blocks
   lib/
     supabase/         browser / server / service-role clients + session guards
-    ai/               deal evaluation: the NVIDIA → Groq provider chain and its
-                      shared chat client, rule-based fallback, and the §7.4
-                      verification cap as a pure rule
+    ai/               deal evaluation: the NVIDIA client and its endpoint
+                      config, rule-based fallback, and the §7.4 verification
+                      cap as a pure rule
     email/            §5 intake: payload parsing, Svix signature
                       verification, and the deal-room pipeline
     deals/            deal-chat reads, the §7.4 evaluation payload builder,
@@ -224,44 +224,40 @@ the UI says the rating was held at yellow and why.
 
 ### Engine
 
-Model calls run down a chain rather than against one endpoint
-(`src/lib/ai/provider-chain.ts`):
+Every model call goes to **NVIDIA NIM and nowhere else** — `NVIDIA_API_KEY`,
+model `z-ai/glm-5.3`, over an OpenAI-compatible chat-completions endpoint. This
+supersedes an earlier choice of Gemini in §9 of the spec, on the client's
+explicit instruction. A brief revision added a second provider behind it; that
+was removed, also on the client's instruction, so the path is exactly:
 
-1. **NVIDIA NIM** running Kimi K3 (`moonshotai/kimi-k3`, a 2.8T-parameter MoE
-   model), `NVIDIA_API_KEY`. Supersedes an earlier choice of Gemini in §9 of the
-   spec, on the client's explicit instruction.
-2. **Groq** running `llama-3.3-70b-versatile`, `GROQ_API_KEY`. Same
-   OpenAI-compatible chat-completions shape, so it needs no extra dependency —
-   `groq-sdk` would only wrap the POST this codebase already makes, and would
-   make two interchangeable providers look different in the source.
-3. **Static fallbacks**, per caller: rule-based pricing carrying
+1. **NVIDIA** (`src/lib/ai/chat.ts`, configured in `nvidia-config.ts`).
+2. **Static fallbacks**, per caller: rule-based pricing carrying
    `engine: "heuristic"` and labelled as such in the UI, and the written reply
    templates in `lib/deals/reply-template.ts`. Presenting either as the AI
    Co-Pilot would be a lie about the feature the product is sold on. Company
    intelligence and niche detection have no static equivalent and report that
    the engine is unavailable.
 
-A provider with no key is skipped rather than tried and failed, so a deployment
-holding only `GROQ_API_KEY` runs on Groq as its primary. The chain moves on for
-anything that ends an attempt — 401, 404 on a bad model id, a 429 rate limit,
-5xx, a timeout, or a 200 whose content will not parse into the expected shape.
-That last one matters: the per-caller shape check runs *inside* the chain, so a
-provider answering confidently with the wrong fields hands over to the next
-provider instead of dropping straight to arithmetic. Each failure is logged
-with its reason, so "NVIDIA 429, Groq answered" is visible even though nobody
-saw an error.
+Anything that ends the call drops to the fallback — 401, 404 on a bad model id,
+a 429 rate limit, 5xx, a timeout, or a 200 whose content will not parse into
+the expected shape. That last one matters: the per-caller shape check runs
+*inside* `chatJson`, so a confident answer with the wrong fields is a failed
+call rather than a value handed to the caller. A rule-based price is honest; a
+hallucinated one is not.
 
-Per-provider timeouts are short — NVIDIA 20s, Groq 12s — because a serverless
-function killed mid-attempt never reaches the fallback. The inbound webhook
-exports `maxDuration = 60` for the same reason.
+Failures are logged with their status, so a spent quota (429) and a wrong model
+id (404) are distinguishable in the logs — from outside they look identical,
+because the product just quietly serves rule-based output. The call budgets
+30s and the inbound webhook exports `maxDuration = 60`, since it waits on that
+synchronously and a killed function returns nothing at all.
 
 Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
-is an OpenAI-compatible hint, not a guarantee on either provider, and neither
-has been verified against a live call — outbound access to both APIs is blocked
-from the sandbox this was built in. `extractJsonObject()` in `chat.ts` tries a
-direct parse, then a fenced-code-block extraction, then a balanced-brace scan.
-Both models are swappable via `NVIDIA_MODEL` / `GROQ_MODEL` without a code
-change.
+is an OpenAI-compatible hint, not a guarantee for every model in the NIM
+catalog, and this has not been verified against a live call — outbound access
+to NVIDIA's API is blocked from the sandbox this was built in.
+`extractJsonObject()` in `chat.ts` tries a direct parse, then a
+fenced-code-block extraction, then a balanced-brace scan. The model is
+swappable via `NVIDIA_MODEL` without a code change.
 
 > ⚠️ **§12 vs. NVIDIA's terms.** §12 says AI processing is evaluation-only and
 > must not forward content anywhere it could train general-purpose models.
@@ -493,8 +489,8 @@ connection limit.
 
 ```bash
 npm test        # masking, §7.4 cap, geo parsing, tier rules, email parsing,
-                # inbound screening, reply templates, provider failover,
-                # webhook signatures, HTML escaping — 145 assertions
+                # inbound screening, reply templates, NVIDIA config,
+                # webhook signatures, HTML escaping — 143 assertions
 npm run build   # typecheck + lint + production build
 ```
 

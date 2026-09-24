@@ -11,16 +11,15 @@ import { AiUnavailableError, chatJson } from "./chat";
  * A third model call, kept separate from evaluate.ts (which prices the offer)
  * and reply-draft.ts (which writes the creator's answer) for the same reason
  * those two are separate from each other: different prompt, different response
- * shape, different failure mode. It runs down the same provider chain (NVIDIA,
- * then Groq — provider-chain.ts), but there is no static fallback below that:
- * unlike a price or a reply, there is no rule-based way to know what a company
- * is, so an exhausted chain surfaces as an error the creator can see, never as
- * a fabricated profile.
+ * shape, different failure mode. It calls the same NVIDIA endpoint (chat.ts),
+ * but there is no static fallback below it: unlike a price or a reply, there
+ * is no rule-based way to know what a company is, so a failed call surfaces as
+ * an error the creator can see, never as a fabricated profile.
  *
  * §12: evaluation-only. Nothing here is logged or persisted on our side
  * beyond the profile itself, and the offer excerpt sent to the model is text
  * the creator is already reading in their own deal room. The trial-terms
- * caveat at the top of price-model.ts applies to every provider in the chain.
+ * caveat at the top of price-model.ts applies here too.
  *
  * WHAT THIS IS NOT: a lookup. The model has no browser and no registry
  * access; it is recalling training data, which for a small or new sponsor is
@@ -111,8 +110,8 @@ export async function generateCompanyProfile(
         const p = (raw ?? {}) as Record<string, unknown>;
         // is_known_to_model is the one field the coercion below cannot
         // sensibly default: getting it wrong means either inventing a company
-        // or hiding a real one. A provider that omits it has not answered the
-        // question, so the chain moves on rather than guessing.
+        // or hiding a real one. A response that omits it has not answered the
+        // question, so the call fails rather than guessing.
         if (typeof p.is_known_to_model !== "boolean") {
           throw new Error("response did not state whether the domain is known");
         }
@@ -149,10 +148,9 @@ export async function generateCompanyProfile(
     };
   } catch (error) {
     // This string is rendered in the deal room, so it is deliberately not the
-    // raw failure: "every AI provider failed: nvidia (HTTP 429); groq (HTTP
-    // 401)" is exactly what an operator needs and exactly what a creator
-    // cannot act on. chatJson has already logged the per-provider detail
-    // where an operator will find it.
+    // raw failure: "NVIDIA call failed: HTTP 429" is exactly what an operator
+    // needs and exactly what a creator cannot act on. chatJson has already
+    // logged the detail where an operator will find it.
     if (error instanceof AiUnavailableError) {
       return {
         ok: false,

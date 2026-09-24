@@ -62,28 +62,14 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.NVIDIA_API_KEY),
       required: false,
       impact:
-        "The primary AI provider is skipped entirely. If GROQ_API_KEY is set the Co-Pilot runs on Groq instead; if neither is set it falls back to a rule-based estimate, labelled as such in the UI.",
+        "The only AI provider. Without it the Deal Co-Pilot falls back to a rule-based estimate, labelled as such in the UI, and replies fall back to written templates. Deals are still priced, just not by AI.",
     },
     {
       name: "NVIDIA_MODEL",
       set: Boolean(process.env.NVIDIA_MODEL),
       required: false,
       impact:
-        "Defaults to moonshotai/kimi-k3. A typo here is not an error — the call 404s and the chain silently moves to the next provider.",
-    },
-    {
-      name: "GROQ_API_KEY",
-      set: Boolean(process.env.GROQ_API_KEY),
-      required: false,
-      impact:
-        "No fallback AI provider. An NVIDIA rate limit or outage then drops straight to the rule-based estimate and the written reply templates.",
-    },
-    {
-      name: "GROQ_MODEL",
-      set: Boolean(process.env.GROQ_MODEL),
-      required: false,
-      impact:
-        "Defaults to llama-3.3-70b-versatile. Same as NVIDIA_MODEL: a wrong id fails the provider rather than raising an error.",
+        "Defaults to z-ai/glm-5.3. A typo here is not an error — the call 404s and the product quietly serves rule-based output instead.",
     },
     {
       name: "RESEND_API_KEY",

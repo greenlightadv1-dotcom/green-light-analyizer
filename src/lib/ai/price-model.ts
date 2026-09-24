@@ -2,33 +2,30 @@ import "server-only";
 
 import type { AiEvaluation } from "@/lib/types/database";
 import { chatJson } from "./chat";
-import type { ProviderName } from "./provider-chain";
 import type { EvaluationInput, EvaluationResult } from "./types";
 
 /**
  * The model half of deal evaluation (§5.4, §7.4) — the prompt, and the shape
  * check on what comes back.
  *
- * Was `nvidia.ts`, and single-provider. The transport, the failover and the
- * JSON extraction now live in chat.ts; this file is only the prompt and the
- * validation, which is all that was ever specific to pricing.
+ * Was `nvidia.ts`. The transport, the timeout and the JSON extraction live in
+ * chat.ts; this file is only the prompt and the validation, which is all that
+ * was ever specific to pricing.
  *
  * §9 of the spec originally named Gemini here, superseded on the client's
- * explicit instruction by NVIDIA-hosted Kimi K3, which is still the primary.
- * Groq is a fallback behind it, not a replacement — see provider-chain.ts.
+ * explicit instruction by NVIDIA NIM, which is the only provider. A second
+ * provider was added behind it for a while and then removed at the client's
+ * request — see nvidia-config.ts. The path is NVIDIA → the rule-based engine
+ * in evaluate.ts, nothing between them.
  *
- * §12 note, which applies to every provider in the chain and deserves the same
- * scrutiny for each: "AI text processing is evaluation-only — do not
- * log/forward offer text or chat content anywhere it could be used to train
- * general-purpose models." NVIDIA's published API Trial Terms of Service state
- * prompts and responses are NOT used to train models, with up to 30 days of
- * retention for security monitoring on the free/trial tier — better than
- * Gemini's free tier, not a full clearance:
+ * §12 note: "AI text processing is evaluation-only — do not log/forward offer
+ * text or chat content anywhere it could be used to train general-purpose
+ * models." NVIDIA's published API Trial Terms of Service state prompts and
+ * responses are NOT used to train models, with up to 30 days of retention for
+ * security monitoring on the free/trial tier — better than Gemini's free tier,
+ * not a full clearance:
  * https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf
- * Groq's terms are a separate document and a separate decision. Adding it to
- * the chain means offer text reaches Groq whenever NVIDIA is unavailable, so
- * read them before setting GROQ_API_KEY in production. Nothing on our side
- * logs or persists the prompt either way.
+ * Nothing on our side logs or persists the prompt.
  */
 
 function buildPrompt(input: EvaluationInput): string {
@@ -78,10 +75,10 @@ type PricePayload = {
 /**
  * Rejects an answer that parsed but is not usable.
  *
- * Passed to chatJson as its validator, which means a provider returning a
- * well-formed 200 with nonsense in it now falls through to the *next provider*
- * rather than straight to the rule-based engine. That is the point of running
- * the check here rather than after the call returns.
+ * Passed to chatJson as its validator, so a well-formed 200 carrying nonsense
+ * is a failed call rather than a value handed back — which sends pricing to
+ * the rule-based engine. A rule-based price is honest; a hallucinated one is
+ * not, so that is the outcome to want.
  */
 function validatePrice(parsed: unknown): PricePayload {
   const p = (parsed ?? {}) as Partial<PricePayload>;
@@ -96,13 +93,10 @@ function validatePrice(parsed: unknown): PricePayload {
   return p as PricePayload;
 }
 
-export type ModelVerdict = Omit<
-  EvaluationResult,
-  "geo_basis" | "engine" | "risk_capped"
-> & { provider: ProviderName };
+export type ModelVerdict = Omit<EvaluationResult, "geo_basis" | "engine" | "risk_capped">;
 
 /**
- * The model's raw verdict, plus which provider gave it.
+ * The model's raw verdict.
  *
  * The §7.4 verification cap is applied by the caller in evaluate.ts, not here —
  * a business rule the model could talk itself out of does not belong in the
@@ -111,7 +105,7 @@ export type ModelVerdict = Omit<
 export async function evaluateWithModel(
   input: EvaluationInput,
 ): Promise<ModelVerdict> {
-  const { value, provider } = await chatJson(
+  const { value } = await chatJson(
     {
       prompt: buildPrompt(input),
       temperature: 0.2,
@@ -130,6 +124,5 @@ export async function evaluateWithModel(
     },
     risk: value.risk,
     reasoning: value.reasoning,
-    provider,
   };
 }

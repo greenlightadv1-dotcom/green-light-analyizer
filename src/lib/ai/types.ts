@@ -41,11 +41,11 @@ export type EvaluationResult = {
   /** Which geo field carried the pricing — drives the UI's verified badge. */
   geo_basis: "verified" | "declared" | "none";
   /**
-   * Which engine produced this. "heuristic" is the rule-based fallback and the
-   * one the UI must disclose; the others are real model answers and differ
-   * only in which provider in the chain was reachable (provider-chain.ts).
+   * Which engine produced this. "heuristic" is the rule-based fallback, and
+   * the UI must disclose it — presenting arithmetic as the AI Co-Pilot would
+   * be a lie about the feature the product is sold on.
    */
-  engine: "nvidia" | "groq" | "heuristic";
+  engine: "nvidia" | "heuristic";
   /**
    * True when the §7.4 verification cap downgraded the rating — i.e. the
    * engine said green, but the audience data behind it is self-reported and

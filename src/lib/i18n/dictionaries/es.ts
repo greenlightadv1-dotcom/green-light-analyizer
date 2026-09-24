@@ -151,7 +151,7 @@ const es: Dictionary = {
     heldAtYellow:
       "Mantenido en amarillo: este es un deal de alto valor y la geografía de audiencia detrás de la calificación es autodeclarada. Conecta YouTube o Instagram Analytics para que un deal así pueda calificarse en verde.",
     ruleBasedEstimate:
-      "Estimación por reglas: no se pudo contactar con ningún proveedor de IA, así que esto es un cálculo sobre tu alcance y categoría, no una lectura de la oferta por IA.",
+      "Estimación por reglas: no se pudo contactar con el motor de IA, así que esto es un cálculo sobre tu alcance y categoría, no una lectura de la oferta por IA.",
     openDealRoom: "Abrir una sala de deal para esta oferta",
     domainSecurityCheck: "Verificación de dominio y seguridad",
     trustPercent: "{score}% de confianza",

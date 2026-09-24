@@ -66,7 +66,7 @@ function summaryMessage(
   if (evaluation.engine === "heuristic") {
     lines.push(
       "",
-      "(Rule-based estimate — no AI provider could be reached, so this is arithmetic on your reach and category rather than an AI reading of the offer.)",
+      "(Rule-based estimate — the AI engine could not be reached, so this is arithmetic on your reach and category rather than an AI reading of the offer.)",
     );
   }
 

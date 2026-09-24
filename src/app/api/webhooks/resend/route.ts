@@ -21,13 +21,12 @@ import { verifyWebhookSignature } from "@/lib/email/verify";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 /**
- * The AI provider chain (lib/ai/provider-chain.ts) budgets ~32s worst case
- * before it gives up, and this route waits on it synchronously while turning
- * an offer into a deal room. Vercel's default function timeout is well under
- * that, so without this the platform would kill the request mid-attempt — and
- * a function killed during the primary provider never reaches the fallback,
- * which makes the failover decorative on exactly the path that matters most.
- * 60s is the Hobby-plan ceiling.
+ * The NVIDIA call budgets 30s before it gives up (lib/ai/nvidia-config.ts),
+ * and this route waits on it synchronously while turning an offer into a deal
+ * room. Vercel's default function timeout is under that, so without this the
+ * platform would kill the request mid-call — and a killed function returns
+ * nothing at all, not even the rule-based estimate the fallback exists to
+ * provide. 60s is the Hobby-plan ceiling.
  */
 export const maxDuration = 60;
 

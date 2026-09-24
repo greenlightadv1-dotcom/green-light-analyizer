@@ -33,21 +33,20 @@ function buildPrompt(items: string[]): string {
 
 /**
  * AI niche/category detection from a creator's own recent content — an
- * extension beyond §9, running down the same provider chain as evaluateOffer()
- * (NVIDIA first, Groq behind it — see provider-chain.ts).
+ * extension beyond §9, calling the same NVIDIA endpoint as evaluateOffer()
+ * (see chat.ts).
  *
  * §12 scope note: §12 restricts AI text processing to deal evaluation. This
  * is a narrower, different use — classifying a creator's OWN public video/
  * post titles for their OWN media kit, at their OWN request (they triggered
  * the sync), never offer or chat content. Nothing here is logged or
  * persisted beyond the category/tags this returns; the raw titles/
- * descriptions are sent transiently to whichever provider answers, for this
- * one call only.
+ * descriptions are sent transiently to NVIDIA, for this one call only.
  *
  * No static fallback, unlike evaluate.ts and the reply generator: there is no
  * rule-based way to name somebody's niche, and this is a supplementary
- * enhancement rather than a step in the core pricing loop, so an exhausted
- * chain returns null.
+ * enhancement rather than a step in the core pricing loop, so a failed call
+ * returns null.
  */
 export async function detectNiche(items: string[]): Promise<NicheResult | null> {
   if (items.length === 0) return null;
@@ -61,8 +60,8 @@ export async function detectNiche(items: string[]): Promise<NicheResult | null> 
       },
       (parsed) => {
         const p = (parsed ?? {}) as { category?: unknown; tags?: unknown };
-        // Checked inside the validator so an empty category sends the chain
-        // to the next provider rather than giving up on the whole feature.
+        // Checked inside the validator so an empty category is a failed call
+        // rather than a media kit labelled with an empty string.
         if (typeof p.category !== "string" || !p.category.trim()) {
           throw new Error("no category in the response");
         }
@@ -78,9 +77,9 @@ export async function detectNiche(items: string[]): Promise<NicheResult | null> 
 
     return value;
   } catch {
-    // chatJson has already logged each provider's own reason, so this is not
-    // a silent failure — repeating it here would only double the noise on a
-    // feature nothing depends on.
+    // chatJson has already logged NVIDIA's own reason, so this is not a silent
+    // failure — repeating it here would only double the noise on a feature
+    // nothing depends on.
     return null;
   }
 }
