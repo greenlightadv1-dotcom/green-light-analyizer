@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  NVIDIA_MIN_RETRY_MS,
   describeKey,
   isHeaderSafe,
   resolveNvidia,
@@ -21,6 +22,12 @@ import {
  * **NVIDIA → static fallback** and there is nothing here that reaches any
  * other host. When the call fails, the caller falls to what it can compute
  * itself or reports the engine unavailable — see each caller.
+ *
+ * Text only, by construction: `messages` is always a single user turn whose
+ * content is a string. Nothing here can send an image or a binary attachment,
+ * and no caller has a way to pass one — which is worth knowing when choosing
+ * NVIDIA_MODEL, since a vision model carries that capability's cost on every
+ * call whether or not it is used.
  *
  * §12: nothing here logs or persists a prompt, and no error raised by this
  * module carries a response body. That second rule is deliberate — an error
@@ -56,6 +63,17 @@ export type ChatResult = { model: string };
  * without it costs a round trip and rescues an otherwise dead deployment.
  */
 const RETRY_WITHOUT_JSON_MODE = new Set([400, 415, 422, 500]);
+
+/**
+ * Statuses where a second attempt cannot possibly help, so spending the
+ * remaining budget on one only delays the fallback. A rejected credential, an
+ * unknown model or a malformed request is deterministic: it will be rejected
+ * again, identically.
+ */
+const TERMINAL_STATUS = new Set([400, 401, 403, 404, 413, 415, 422]);
+
+/** Marks a failure the retry loop must not re-attempt. */
+class TerminalError extends Error {}
 
 /**
  * A short, bounded reason off an error response — never the body itself.
@@ -126,20 +144,14 @@ function readContent(body: unknown): string {
   return "";
 }
 
-async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promise<string> {
-  // Caught here rather than left to fetch, which throws an opaque
-  // "Invalid header value" from deep inside undici with no mention of which
-  // header or why.
-  if (!isHeaderSafe(provider.apiKey)) {
-    throw new Error(
-      "NVIDIA_API_KEY contains characters that cannot go in an HTTP header " +
-        "(non-ASCII or control characters). Re-copy it as plain text.",
-    );
-  }
-
+async function callNvidia(
+  provider: NvidiaProvider,
+  request: ChatRequest,
+  budgetMs: number,
+): Promise<string> {
   const attempt = async (jsonMode: boolean): Promise<Response> => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
+    const timeout = setTimeout(() => controller.abort(), budgetMs);
 
     try {
       return await fetch(provider.endpoint, {
@@ -168,7 +180,12 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
     } catch (error) {
       // "This operation was aborted" names nothing an operator can act on.
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`timed out after ${provider.timeoutMs}ms`);
+        // Prompt size is included because it is the one input we control and
+        // the one an operator cannot otherwise see. A prefill far larger than
+        // expected is a different problem from a slow queue.
+        throw new Error(
+          `timed out after ${budgetMs}ms (prompt ${request.prompt.length} chars)`,
+        );
       }
       throw error;
     } finally {
@@ -210,7 +227,10 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
 
     // 401 a bad or missing key, 404 a model id that is not in the catalog,
     // 429 a spent quota, 5xx NVIDIA being down.
-    throw new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);
+    const message = `HTTP ${response.status}${detail ? ` — ${detail}` : ""}`;
+    throw TERMINAL_STATUS.has(response.status)
+      ? new TerminalError(message)
+      : new Error(message);
   }
 
   const text = readContent(await response.json());
@@ -240,18 +260,73 @@ export async function chatJson<T>(
   const provider = resolveNvidia(process.env);
   if (!provider) throw new AiUnavailableError("", true);
 
-  try {
-    const text = await callNvidia(provider, request);
-    return { value: validate(extractJsonObject(text)), model: provider.model };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "unknown error";
-    // Logged here rather than only at the call site: a wrong NVIDIA_MODEL
-    // (404) and a spent quota (429) are invisible from outside — the product
-    // just quietly serves rule-based output — and the status is what tells
-    // them apart.
-    console.error(`NVIDIA (${provider.model}) failed: ${reason}`);
-    throw new AiUnavailableError(reason);
+  // Checked once, before any attempt: fetch would otherwise throw an opaque
+  // "Invalid header value" from deep inside undici, naming no header.
+  if (!isHeaderSafe(provider.apiKey)) {
+    throw new AiUnavailableError(
+      "NVIDIA_API_KEY contains characters that cannot go in an HTTP header " +
+        "(non-ASCII or control characters). Re-copy it as plain text.",
+    );
   }
+
+  // Bounded by a deadline rather than a per-attempt timeout, because the thing
+  // that must not be exceeded is the *function's* budget, not any one call's.
+  // Two attempts against a stalled NVIDIA queue are worth more than one long
+  // wait — a queue stall often clears on a second connection — but only while
+  // there is enough time left for the second attempt to finish and for the
+  // caller's own fallback to still run.
+  const deadline = Date.now() + provider.deadlineMs;
+  let lastReason = "unknown error";
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const remaining = deadline - Date.now();
+    const budget = Math.min(provider.attemptMs, remaining);
+    if (budget < NVIDIA_MIN_RETRY_MS) break;
+
+    try {
+      const text = await callNvidia(provider, request, budget);
+      if (attempt > 1) {
+        console.warn(`NVIDIA (${provider.model}) succeeded on attempt ${attempt}.`);
+      }
+      return { value: validate(extractJsonObject(text)), model: provider.model };
+    } catch (error) {
+      lastReason = error instanceof Error ? error.message : "unknown error";
+
+      // Logged per attempt: "attempt 1 timed out, attempt 2 answered" is the
+      // signal that the queue is under pressure, and it is invisible from
+      // outside because the product served a normal answer.
+      console.error(
+        `NVIDIA (${provider.model}) attempt ${attempt} failed: ${lastReason}`,
+      );
+
+      if (error instanceof TerminalError) {
+        if (/^HTTP 401/.test(lastReason)) {
+          // The one status where the useful fact is about our own request
+          // rather than NVIDIA's answer. "Authentication failed" is true of a
+          // revoked key AND of a valid key carrying an invisible character,
+          // and those need opposite fixes. Shape identifies nothing: six
+          // characters of an nvapi- key is the word "nvapi-".
+          console.error(
+            `NVIDIA rejected the credential. Key as the app received it: ` +
+              `${describeKey(provider.apiKey, provider.keyNotes)}. ` +
+              `If that length or prefix is not what you set, the value in the ` +
+              `environment is not what you think it is — re-paste it.`,
+          );
+        }
+        break; // deterministic; a retry would only delay the fallback
+      }
+
+      if (deadline - Date.now() < NVIDIA_MIN_RETRY_MS) {
+        console.error(
+          `NVIDIA (${provider.model}): no budget left to retry within the ` +
+            `${provider.deadlineMs}ms deadline; falling back.`,
+        );
+        break;
+      }
+    }
+  }
+
+  throw new AiUnavailableError(lastReason);
 }
 
 /** Whether NVIDIA is configured at all. Cheap; no network. */

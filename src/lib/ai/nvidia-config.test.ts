@@ -4,7 +4,10 @@ import assert from "node:assert/strict";
 import {
   NVIDIA_DEFAULT_MODEL,
   NVIDIA_ENDPOINT,
-  NVIDIA_TIMEOUT_MS,
+  NVIDIA_ATTEMPT_MS,
+  NVIDIA_DEADLINE_MS,
+  NVIDIA_MIN_RETRY_MS,
+  REQUIRED_MAX_DURATION,
   describeKey,
   isHeaderSafe,
   resolveNvidia,
@@ -69,11 +72,28 @@ test("reasoning_effort is opt-in and absent by default", () => {
   );
 });
 
-test("the call fits inside a 60s serverless budget", () => {
-  // Load-bearing: the inbound webhook waits on this synchronously, and a
-  // function the platform kills mid-call returns nothing at all — not even
-  // the rule-based estimate.
-  assert.ok(NVIDIA_TIMEOUT_MS < 60_000);
+test("the AI deadline leaves the function real headroom, not zero", () => {
+  // The whole point. A 60s AI budget under a 60s maxDuration means the
+  // platform kills the function at the instant the abort fires: no rule-based
+  // fallback, no error on screen, no log line. The request just vanishes.
+  // Everything downstream of the model — creating the deal room, writing the
+  // messages, the WhatsApp alert — has to still fit.
+  const headroom = REQUIRED_MAX_DURATION * 1000 - NVIDIA_DEADLINE_MS;
+  assert.ok(headroom >= 8_000, `only ${headroom}ms of headroom`);
+});
+
+test("two attempts fit inside the deadline", () => {
+  assert.ok(NVIDIA_ATTEMPT_MS + NVIDIA_MIN_RETRY_MS <= NVIDIA_DEADLINE_MS);
+});
+
+test("a single attempt cannot itself exhaust the deadline", () => {
+  assert.ok(NVIDIA_ATTEMPT_MS < NVIDIA_DEADLINE_MS);
+});
+
+test("the provider carries both budgets", () => {
+  const provider = resolveNvidia({ NVIDIA_API_KEY: "nvapi-x" });
+  assert.equal(provider?.attemptMs, NVIDIA_ATTEMPT_MS);
+  assert.equal(provider?.deadlineMs, NVIDIA_DEADLINE_MS);
 });
 
 test("a right-to-left mark on the key is stripped, and reported", () => {

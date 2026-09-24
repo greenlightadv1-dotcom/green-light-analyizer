@@ -70,9 +70,43 @@ rule-based pricing (labelled as such in the UI) and the written reply
 templates. Company intelligence and niche detection have no static equivalent
 and report that the engine is unavailable.
 
-The call budgets 30s, and the inbound webhook exports `maxDuration = 60`
-because it waits on that synchronously — a function the platform kills
-mid-call returns nothing at all, not even the rule-based estimate.
+#### Time budget
+
+Vercel's Hobby ceiling is 60s of **function** time, and the AI call is not the
+only thing inside it: the inbound webhook still has to create the deal room,
+write the messages and fire the WhatsApp alert after the model answers. So the
+AI budget deliberately ends well before the function's own limit:
+
+| | |
+|---|---|
+| `maxDuration` | **60s** — declared on `/api/webhooks/resend` and on the analyzer, discover, deal-room and media-kit segments, because server actions run inside their page's function |
+| AI deadline | **50s** across all attempts |
+| One attempt | **32s** |
+| Retry floor | **14s** — below this there is no point starting another attempt |
+
+A 60s fetch timeout under a 60s `maxDuration` would be worse than useless: the
+platform kills the function at the same instant the abort fires, so there is no
+rule-based fallback, no error on screen and no log line. The request vanishes.
+
+On a timeout, a 429 or a 5xx the call is retried **once** if the remaining
+budget allows — a stalled NVIDIA queue often clears on a second connection. A
+401, 403, 404 or 400 is never retried: it is deterministic, and spending the
+rest of the budget on it only delays the fallback.
+
+#### What is actually sent
+
+Text only. No image, no binary attachment and no file content ever reaches the
+model: `messages` is a single `{role:"user", content:<string>}`, binary email
+attachments are catalogued by filename and never decoded (`parse.ts`), and only
+`text/*`, JSON and XML parts are read, capped at 5,000 characters each. Inputs
+are bounded at 20,000 characters for the pricing prompt, 2,500 for the company
+brief and 10 items × 300 characters for niche detection.
+
+That matters for model choice. A vision model carries the cost of that
+capability on every call whether or not an image is present, and this workload
+never sends one — so a vision model is paying for capacity it cannot use, on a
+path an inbound webhook waits on synchronously. If the timeouts persist, the
+model is the thing to change, not the budget.
 
 Failures are logged with their status **and the provider's own reason**, so
 `HTTP 404 — Model not found` and `HTTP 429 — rate limit` are distinguishable in

@@ -27,13 +27,10 @@ export type NvidiaProvider = {
   keyNotes: string[];
   /** Optional request-body extras, e.g. reasoning_effort. */
   extraBody?: Record<string, unknown>;
-  /**
-   * Per-call budget. It has to fit inside the serverless function's own limit
-   * — the inbound webhook waits on this synchronously while turning an offer
-   * into a deal room, and a function killed by the platform mid-call returns
-   * nothing at all rather than the rule-based estimate.
-   */
-  timeoutMs: number;
+  /** Cap on any single attempt. */
+  attemptMs: number;
+  /** Cap on all attempts together, including the gap between them. */
+  deadlineMs: number;
 };
 
 export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -42,11 +39,34 @@ export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/complet
 export const NVIDIA_DEFAULT_MODEL = "z-ai/glm-5.3";
 
 /**
- * Under the webhook's maxDuration = 60 with room to spare. Generous because a
- * large reasoning model on a free/trial queue can be slow to first token, and
- * a timeout here is indistinguishable from an outage to everyone downstream.
+ * The time budget, and why it is not simply 60 seconds.
+ *
+ * Vercel's Hobby ceiling is 60s of *function* time, and the AI call is not the
+ * only thing inside it. The inbound webhook still has to create the deal room,
+ * write the messages, log a violation and fire the WhatsApp alert after the
+ * model answers; the analyzer still has to write its deal and revalidate.
+ *
+ * So a 60s fetch timeout under a 60s maxDuration is worse than useless: the
+ * platform kills the function at the same instant the abort fires, which means
+ * no rule-based fallback, no error surfaced to the creator, and no log line
+ * explaining any of it. The request simply vanishes. The AI budget has to end
+ * far enough before the function's own limit that everything downstream of it
+ * still gets to run.
+ *
+ *   DEADLINE  50s  all attempts plus the gap between them
+ *   ATTEMPT   32s  any one attempt
+ *   MIN_RETRY 14s  below this there is no point starting another attempt
+ *
+ * 50 + ~10s of headroom = 60. Two attempts fit (32 + 18), and a single slow
+ * one still gets 32s — shorter than the old 45s, deliberately, because the
+ * retry is worth more against a queue stall than the extra 13 seconds were.
  */
-export const NVIDIA_TIMEOUT_MS = 45_000;
+export const NVIDIA_DEADLINE_MS = 50_000;
+export const NVIDIA_ATTEMPT_MS = 32_000;
+export const NVIDIA_MIN_RETRY_MS = 14_000;
+
+/** The route-segment maxDuration every AI path must declare. */
+export const REQUIRED_MAX_DURATION = 60;
 
 type Env = Record<string, string | undefined>;
 
@@ -146,6 +166,7 @@ export function resolveNvidia(env: Env): NvidiaProvider | null {
     extraBody: cleanToken(env.NVIDIA_REASONING_EFFORT).value
       ? { reasoning_effort: cleanToken(env.NVIDIA_REASONING_EFFORT).value }
       : undefined,
-    timeoutMs: NVIDIA_TIMEOUT_MS,
+    attemptMs: NVIDIA_ATTEMPT_MS,
+    deadlineMs: NVIDIA_DEADLINE_MS,
   };
 }
