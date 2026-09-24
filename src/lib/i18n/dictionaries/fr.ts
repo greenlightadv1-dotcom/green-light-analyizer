@@ -151,7 +151,7 @@ const fr: Dictionary = {
     heldAtYellow:
       "Maintenu au jaune : il s'agit d'un deal à forte valeur et la géographie d'audience derrière cette note est auto-déclarée. Connectez YouTube ou Instagram Analytics pour qu'un deal comme celui-ci puisse être noté vert.",
     ruleBasedEstimate:
-      "Estimation basée sur des règles — le moteur IA n'est pas configuré sur cet environnement, il s'agit donc d'un calcul sur votre audience et votre catégorie, pas d'une lecture IA de l'offre.",
+      "Estimation par règles — le moteur d'IA n'a pas pu être joint : ceci est un calcul basé sur votre audience et votre catégorie, pas une lecture de l'offre par l'IA.",
     openDealRoom: "Ouvrir un salon de deal pour cette offre",
     domainSecurityCheck: "Vérification du domaine et de la sécurité",
     trustPercent: "{score} % de confiance",

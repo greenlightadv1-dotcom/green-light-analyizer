@@ -163,7 +163,7 @@ const en = {
     heldAtYellow:
       "Held at yellow: this is a high-value deal and the audience geography behind the rating is self-reported. Connect YouTube or Instagram analytics to let a deal like this rate green.",
     ruleBasedEstimate:
-      "Rule-based estimate — the AI engine is not configured on this environment, so this is arithmetic on your reach and category, not an AI reading of the offer.",
+      "Rule-based estimate — the AI engine could not be reached, so this is arithmetic on your reach and category, not an AI reading of the offer.",
     openDealRoom: "Open a deal room for this offer",
     domainSecurityCheck: "Domain & security check",
     trustPercent: "{score}% trust",

@@ -13,7 +13,7 @@ system, data model and business logic. Read it before changing anything here.
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
 | Motion | Framer Motion |
 | Backend / DB | Supabase (Postgres + Realtime + RLS) |
-| AI engine | NVIDIA NIM (Kimi K3 — `moonshotai/kimi-k3`) |
+| AI engine | NVIDIA NIM (`z-ai/glm-5.3`) |
 | Email | Resend, inbound webhooks *(not yet wired up)* |
 
 ## Supabase project
@@ -85,8 +85,9 @@ src/
     dashboard/        shell and page building blocks
   lib/
     supabase/         browser / server / service-role clients + session guards
-    ai/               deal evaluation: NVIDIA/Kimi K3 client, rule-based fallback,
-                      and the §7.4 verification cap as a pure rule
+    ai/               deal evaluation: the NVIDIA client and its endpoint
+                      config, rule-based fallback, and the §7.4 verification
+                      cap as a pure rule
     email/            §5 intake: payload parsing, Svix signature
                       verification, and the deal-room pipeline
     deals/            deal-chat reads, the §7.4 evaluation payload builder,
@@ -223,21 +224,45 @@ the UI says the rating was held at yellow and why.
 
 ### Engine
 
-`NVIDIA_API_KEY` selects the engine — NVIDIA's NIM API catalog, running Kimi K3
-(`moonshotai/kimi-k3`, a 2.8T-parameter MoE model), via an OpenAI-compatible
-chat-completions endpoint. This supersedes an earlier choice of Gemini in §9 of
-the spec, on the client's explicit instruction. Without a key, a deterministic
-rule-based estimate that is labelled as such in the UI and carries
-`engine: "heuristic"`, because presenting arithmetic as the AI Co-Pilot would be
-a lie about the feature the product is sold on.
+Every model call goes to **NVIDIA NIM and nowhere else** — `NVIDIA_API_KEY`,
+model `z-ai/glm-5.3`, over an OpenAI-compatible chat-completions endpoint. This
+supersedes an earlier choice of Gemini in §9 of the spec, on the client's
+explicit instruction. A brief revision added a second provider behind it; that
+was removed, also on the client's instruction, so the path is exactly:
+
+1. **NVIDIA** (`src/lib/ai/chat.ts`, configured in `nvidia-config.ts`).
+2. **Static fallbacks**, per caller: rule-based pricing carrying
+   `engine: "heuristic"` and labelled as such in the UI, and the written reply
+   templates in `lib/deals/reply-template.ts`. Presenting either as the AI
+   Co-Pilot would be a lie about the feature the product is sold on. Company
+   intelligence and niche detection have no static equivalent and report that
+   the engine is unavailable.
+
+Anything that ends the call drops to the fallback — 401, 404 on a bad model id,
+a 429 rate limit, 5xx, a timeout, or a 200 whose content will not parse into
+the expected shape. That last one matters: the per-caller shape check runs
+*inside* `chatJson`, so a confident answer with the wrong fields is a failed
+call rather than a value handed to the caller. A rule-based price is honest; a
+hallucinated one is not.
+
+Failures are logged with their status and the provider's own reason, so
+`HTTP 404 — Model not found` and `HTTP 429` are distinguishable — from outside
+they look identical, because the product just quietly serves rule-based output.
+Only a named `detail`/`message` field is logged, capped; never the body, which
+can echo the request and therefore the offer text (§12). `node
+scripts/check-nvidia.mjs` probes the endpoint directly and separates a bad key
+from a bad model id from a reasoning model that answers in
+`reasoning_content`. The call budgets 45s and the inbound webhook exports
+`maxDuration = 60`, since it waits on that synchronously and a killed function
+returns nothing at all.
 
 Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
-is an OpenAI-compatible hint, not a guarantee, and this exact model's adherence
-to it has not been verified against a live call — outbound access to NVIDIA's
-API is blocked from the sandbox this was built in. `extractJsonObject()` in
-`nvidia.ts` tries a direct parse, then a fenced-code-block extraction, then a
-balanced-brace scan, before giving up and falling back to the heuristic. Model
-is swappable via `NVIDIA_MODEL` without a code change.
+is an OpenAI-compatible hint, not a guarantee for every model in the NIM
+catalog, and this has not been verified against a live call — outbound access
+to NVIDIA's API is blocked from the sandbox this was built in.
+`extractJsonObject()` in `chat.ts` tries a direct parse, then a
+fenced-code-block extraction, then a balanced-brace scan. The model is
+swappable via `NVIDIA_MODEL` without a code change.
 
 > ⚠️ **§12 vs. NVIDIA's terms.** §12 says AI processing is evaluation-only and
 > must not forward content anywhere it could train general-purpose models.
@@ -469,8 +494,8 @@ connection limit.
 
 ```bash
 npm test        # masking, §7.4 cap, geo parsing, tier rules, email parsing,
-                # inbound screening, reply templates, webhook signatures,
-                # HTML escaping — 135 assertions
+                # inbound screening, reply templates, NVIDIA config,
+                # webhook signatures, HTML escaping — 143 assertions
 npm run build   # typecheck + lint + production build
 ```
 

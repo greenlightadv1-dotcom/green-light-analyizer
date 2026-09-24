@@ -20,6 +20,15 @@ import { verifyWebhookSignature } from "@/lib/email/verify";
 // the request before this handler sees it.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+/**
+ * The NVIDIA call budgets 30s before it gives up (lib/ai/nvidia-config.ts),
+ * and this route waits on it synchronously while turning an offer into a deal
+ * room. Vercel's default function timeout is under that, so without this the
+ * platform would kill the request mid-call — and a killed function returns
+ * nothing at all, not even the rule-based estimate the fallback exists to
+ * provide. 60s is the Hobby-plan ceiling.
+ */
+export const maxDuration = 60;
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 

@@ -10,7 +10,7 @@ const ENDPOINT = "https://api.ip2whois.com/v2";
  * The response shape here is written from IP2Whois's published API
  * reference, not verified against a live call — outbound access to
  * third-party APIs is blocked from the sandbox this was built in. Parses
- * defensively (every field optional, same approach as nvidia.ts) for exactly
+ * defensively (every field optional, same approach as chat.ts) for exactly
  * that reason. Confirm the real field names against one live lookup before
  * relying on this in production, and adjust here if they differ.
  *
@@ -45,7 +45,14 @@ export async function lookupWhois(domain: string): Promise<WhoisResult | null> {
       registrantCountry: body.registrant?.country ?? null,
       whoisServer: body.whois_server ?? null,
     };
-  } catch {
+  } catch (error) {
+    // Null means "could not check", never "checked and clean" (see types.ts).
+    // That distinction only survives if an operator can find out *why* — a
+    // wrong IP2WHOIS_API_KEY otherwise reads on screen as "WHOIS unavailable"
+    // forever, indistinguishable from never having configured one.
+    console.error(
+      `WHOIS lookup failed: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
     return null;
   }
 }

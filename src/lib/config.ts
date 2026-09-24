@@ -62,7 +62,14 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.NVIDIA_API_KEY),
       required: false,
       impact:
-        "The Deal Co-Pilot falls back to a rule-based estimate, labelled as such in the UI. Deals are still priced, just not by AI.",
+        "The only AI provider. Without it the Deal Co-Pilot falls back to a rule-based estimate, labelled as such in the UI, and replies fall back to written templates. Deals are still priced, just not by AI.",
+    },
+    {
+      name: "NVIDIA_MODEL",
+      set: Boolean(process.env.NVIDIA_MODEL),
+      required: false,
+      impact:
+        "Defaults to z-ai/glm-5.3. A typo here is not an error — the call 404s and the product quietly serves rule-based output instead.",
     },
     {
       name: "RESEND_API_KEY",

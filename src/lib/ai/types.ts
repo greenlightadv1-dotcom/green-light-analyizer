@@ -40,7 +40,11 @@ export type EvaluationResult = {
   reasoning: string;
   /** Which geo field carried the pricing — drives the UI's verified badge. */
   geo_basis: "verified" | "declared" | "none";
-  /** Which engine produced this. See evaluateOffer() for why this matters. */
+  /**
+   * Which engine produced this. "heuristic" is the rule-based fallback, and
+   * the UI must disclose it — presenting arithmetic as the AI Co-Pilot would
+   * be a lie about the feature the product is sold on.
+   */
   engine: "nvidia" | "heuristic";
   /**
    * True when the §7.4 verification cap downgraded the rating — i.e. the
