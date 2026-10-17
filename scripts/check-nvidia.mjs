@@ -12,7 +12,7 @@
  *
  * Usage:
  *   node scripts/check-nvidia.mjs
- *   NVIDIA_API_KEY=nvapi-... NVIDIA_MODEL=z-ai/glm-5.3 node scripts/check-nvidia.mjs
+ *   NVIDIA_API_KEY=nvapi-... NVIDIA_MODEL=meta/llama-3.3-70b-instruct node scripts/check-nvidia.mjs
  *
  * Reads .env.local / .env like the other scripts here. It never prints the
  * key — only whether one was found and how it is shaped.
@@ -48,7 +48,7 @@ function cleanToken(value) {
     out = out.slice(1, -1).trim();
     notes.push("wrapping quotes");
   }
-  const prefixed = out.match(/^(bearer|token)\s+(.*)$/i);
+  const prefixed = out.match(/^(bearer|token)\s+([\s\S]*)$/i);
   if (prefixed) {
     out = prefixed[2].trim();
     notes.push(`a redundant "${prefixed[1]}" prefix`);
@@ -60,16 +60,22 @@ function cleanToken(value) {
 
 const rawKey = process.env.NVIDIA_API_KEY ?? "";
 const { value: key, notes: keyNotes } = cleanToken(rawKey);
-const model = cleanToken(process.env.NVIDIA_MODEL).value || "z-ai/glm-5.3";
+const model = cleanToken(process.env.NVIDIA_MODEL).value || "meta/llama-3.3-70b-instruct";
 
 if (!key) {
   console.error("NVIDIA_API_KEY is not set (checked the environment, .env.local and .env).");
   process.exit(1);
 }
 
-// Shape only — never the value. Six characters of an nvapi- key is the word
-// "nvapi-", which identifies nothing.
-console.log(`key:    ${key.length} chars, starts "${key.slice(0, 6)}"`);
+// Shape only — never the value. The prefix is echoed only when it is the
+// literal "nvapi-", which reveals a constant; any other shape gets its length
+// alone, because six characters of an NGC or org key are six real characters
+// of a live credential.
+console.log(
+  key.startsWith("nvapi-")
+    ? `key:    ${key.length} chars, starts "nvapi-"`
+    : `key:    ${key.length} chars, does NOT start "nvapi-" — integrate.api.nvidia.com\n        accepts build.nvidia.com keys only, so this is very likely the 401`,
+);
 
 // The decisive view. An invisible character is invisible in every editor and
 // in the Vercel dashboard; it is not invisible in a code-point dump.

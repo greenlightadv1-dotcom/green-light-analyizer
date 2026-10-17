@@ -79,7 +79,7 @@ AI budget deliberately ends well before the function's own limit:
 
 | | |
 |---|---|
-| `maxDuration` | **60s** — declared on `/api/webhooks/resend` and on the analyzer, discover, deal-room and media-kit segments, because server actions run inside their page's function |
+| `maxDuration` | **60s** — declared on `/api/webhooks/resend` and on every segment hosting an AI server action: analyzer, discover, deal room, media kit, and `/preview/media-kit` (which, unlike the other preview routes, wires the live niche detector). Server actions run inside their page's function |
 | AI deadline | **50s** across all attempts |
 | One attempt | **32s** |
 | Retry floor | **14s** — below this there is no point starting another attempt |
@@ -88,10 +88,18 @@ A 60s fetch timeout under a 60s `maxDuration` would be worse than useless: the
 platform kills the function at the same instant the abort fires, so there is no
 rule-based fallback, no error on screen and no log line. The request vanishes.
 
-On a timeout, a 429 or a 5xx the call is retried **once** if the remaining
-budget allows — a stalled NVIDIA queue often clears on a second connection. A
-401, 403, 404 or 400 is never retried: it is deterministic, and spending the
-rest of the budget on it only delays the fallback.
+Retried **once**, if the remaining budget allows: a timeout, a 429, a 5xx, and
+a 200 whose content will not parse into the expected shape. A stalled queue
+often clears on a second connection, and one malformed answer is often not
+repeated. On a 429 the `Retry-After` header is honoured when the wait plus a
+usable attempt still fit inside the deadline — re-requesting immediately
+commonly extends the penalty window on NIM rather than clearing it.
+
+Never retried: 400, 401, 403, 404, 413, 415, 422. Those are deterministic and
+will be rejected identically, so spending the rest of the budget on them only
+delays the fallback. A separate, cheaper retry drops `response_format` when the
+model rejects it (400/415/422/500) — both fetches share the one deadline, so
+that path cannot overrun the budget either.
 
 #### What is actually sent
 

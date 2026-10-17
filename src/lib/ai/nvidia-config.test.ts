@@ -10,6 +10,7 @@ import {
   REQUIRED_MAX_DURATION,
   describeKey,
   isHeaderSafe,
+  parseRetryAfterMs,
   resolveNvidia,
 } from "./nvidia-config.ts";
 
@@ -21,8 +22,12 @@ test("a key produces a usable provider on the documented endpoint", () => {
   assert.equal(provider.model, NVIDIA_DEFAULT_MODEL);
 });
 
-test("the default model is the one the docs name", () => {
-  assert.equal(NVIDIA_DEFAULT_MODEL, "z-ai/glm-5.3");
+test("the default model is text-only, which is all this workload needs", () => {
+  // A vision model pays for a capability chat.ts can never give it — nothing
+  // in the product can put an image in `messages` — and answers more slowly
+  // for it. That is what produced the 45s timeouts.
+  assert.equal(NVIDIA_DEFAULT_MODEL, "meta/llama-3.3-70b-instruct");
+  assert.doesNotMatch(NVIDIA_DEFAULT_MODEL, /vision/i);
 });
 
 test("no key means null — a supported state, since every caller has a fallback", () => {
@@ -137,9 +142,59 @@ test("describeKey gives shape without giving the key", () => {
   assert.doesNotMatch(described, /supersecret/);
 });
 
+test("describeKey echoes no prefix for a credential that is not an nvapi- key", () => {
+  // The 401 advice tells the operator to suspect an NGC or org key — exactly
+  // the shape where six characters would be six real characters of a live
+  // credential. The length still distinguishes corrupted from revoked.
+  const described = describeKey("ngc_abcdefghijklmnop", []);
+  assert.match(described, /20 chars/);
+  assert.doesNotMatch(described, /ngc_ab/);
+  assert.match(described, /does not start/);
+});
+
+test("describeKey never echoes a short typo'd value", () => {
+  assert.doesNotMatch(describeKey("abcd", []), /abcd/);
+});
+
+test("a Bearer prefix is stripped even when the paste wrapped after it", () => {
+  // `.` does not match a newline, so the old regex missed this and the
+  // whitespace strip then glued the prefix on as "Bearernvapi-abcdef".
+  const provider = resolveNvidia({ NVIDIA_API_KEY: "Bearer nvapi-abc\ndef" });
+  assert.equal(provider?.apiKey, "nvapi-abcdef");
+  assert.ok(provider?.keyNotes.some((n) => n.toLowerCase().includes("bearer")));
+});
+
 test("isHeaderSafe rejects what fetch would throw on", () => {
   assert.ok(isHeaderSafe("nvapi-abcDEF123-_"));
   assert.ok(!isHeaderSafe("nvapi-\u00e9"));   // non-ASCII
   assert.ok(!isHeaderSafe("nvapi-abc def"));  // space
   assert.ok(!isHeaderSafe(""));
+});
+
+test("Retry-After in seconds is honoured", () => {
+  assert.equal(parseRetryAfterMs("5"), 5_000);
+  assert.equal(parseRetryAfterMs(" 2 "), 2_000);
+});
+
+test("Retry-After as an HTTP date is honoured", () => {
+  const ms = parseRetryAfterMs(new Date(Date.now() + 8_000).toUTCString());
+  assert.ok(ms > 5_000 && ms <= 9_000, `got ${ms}`);
+});
+
+test("an absent, empty or unparseable Retry-After means no wait", () => {
+  for (const header of [null, "", "   ", "soon", "NaN"]) {
+    assert.equal(parseRetryAfterMs(header), 0, `header: ${JSON.stringify(header)}`);
+  }
+});
+
+test("a negative or past Retry-After means no wait, never a negative one", () => {
+  assert.equal(parseRetryAfterMs("-10"), 0);
+  assert.equal(parseRetryAfterMs(new Date(Date.now() - 60_000).toUTCString()), 0);
+});
+
+test("an absurd Retry-After is capped, so it cannot swallow the whole deadline", () => {
+  // Uncapped, a server naming an hour would make the loop sit on the budget
+  // and the caller would lose its fallback as well as the call.
+  assert.ok(parseRetryAfterMs("3600") <= NVIDIA_DEADLINE_MS);
+  assert.ok(parseRetryAfterMs("99999") <= NVIDIA_DEADLINE_MS);
 });

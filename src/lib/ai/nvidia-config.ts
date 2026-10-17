@@ -35,8 +35,24 @@ export type NvidiaProvider = {
 
 export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
 
-/** Overridable per deployment via NVIDIA_MODEL, without a code change. */
-export const NVIDIA_DEFAULT_MODEL = "z-ai/glm-5.3";
+/**
+ * Overridable per deployment via NVIDIA_MODEL, without a code change — and
+ * NVIDIA_MODEL WINS, so this default only applies where that variable is unset.
+ *
+ * A text-only instruction-tuned model, deliberately. This workload sends one
+ * string and wants a small JSON object back (see chat.ts: nothing here can
+ * send an image), so a vision model pays for a capability it is never given
+ * and answers more slowly for it — which is what produced the 45s timeouts on
+ * meta/llama-3.2-90b-vision-instruct. Same family as that model, so the
+ * prompts carry over unchanged.
+ *
+ * Not verified against the live catalog from the environment this was written
+ * in: integrate.api.nvidia.com is unreachable from it. `node
+ * scripts/check-nvidia.mjs` lists what a given key can actually reach and
+ * says whether this id is among them — a wrong id is not an error, it 404s
+ * and the product quietly serves rule-based output.
+ */
+export const NVIDIA_DEFAULT_MODEL = "meta/llama-3.3-70b-instruct";
 
 /**
  * The time budget, and why it is not simply 60 seconds.
@@ -110,7 +126,13 @@ function cleanToken(value: string | undefined): { value: string; notes: string[]
 
   // The header prefix pasted into the value as well, which yields
   // `Authorization: Bearer Bearer nvapi-...`.
-  const prefixed = out.match(/^(bearer|token)\s+(.*)$/i);
+  //
+  // `[\s\S]*` rather than `.*`: `.` does not match a newline and `$` is not
+  // multiline, so a value that wrapped right after the prefix
+  // ("Bearer nvapi-abc\ndef") did not match at all — and the whitespace strip
+  // below then glued the prefix on as "Bearernvapi-abcdef", a 401 whose notes
+  // blamed whitespace and pointed away from the real fault.
+  const prefixed = out.match(/^(bearer|token)\s+([\s\S]*)$/i);
   if (prefixed) {
     out = prefixed[2].trim();
     notes.push(`a redundant "${prefixed[1]}" prefix`);
@@ -126,17 +148,63 @@ function cleanToken(value: string | undefined): { value: string; notes: string[]
   return { value: out, notes };
 }
 
+/** The prefix of a build.nvidia.com key — the only shape safe to echo. */
+const NVAPI_PREFIX = "nvapi-";
+
 /**
  * A non-secret description of the key's shape, for a 401 log line.
  *
- * Length and a six-character prefix are enough to tell "the value in Vercel is
- * not what I think it is" from "the key is genuinely rejected", and neither
- * identifies the key. Six characters of an `nvapi-` key is the literal word
- * "nvapi-".
+ * The length is what actually settles the question — "the value in the
+ * environment is not what I think it is" versus "the key is genuinely
+ * rejected" — and a length identifies nothing.
+ *
+ * The prefix is echoed ONLY when it is the literal `nvapi-`, where printing it
+ * reveals a constant. For anything else the shape is reported without it: the
+ * 401 advice in chat.ts and check-nvidia.mjs explicitly tells the operator to
+ * suspect an NGC or org key, which is exactly the case where six characters
+ * would be six real characters of a live credential — and for a short typo'd
+ * value it would be the whole thing.
  */
 export function describeKey(apiKey: string, notes: string[]): string {
-  const shape = `${apiKey.length} chars, starts "${apiKey.slice(0, 6)}"`;
+  const shape = apiKey.startsWith(NVAPI_PREFIX)
+    ? `${apiKey.length} chars, starts "${NVAPI_PREFIX}"`
+    : `${apiKey.length} chars, does not start "${NVAPI_PREFIX}" (an NGC or org key will not work here)`;
   return notes.length ? `${shape}; stripped ${notes.join(", ")}` : shape;
+}
+
+/**
+ * A Retry-After is capped at the whole deadline, because a wait longer than
+ * that can never leave room for an attempt — the caller's budget check then
+ * rejects it and falls back, which is the right outcome. Capping here keeps a
+ * server naming an hour from producing a nonsense number downstream.
+ */
+const MAX_RETRY_AFTER_MS = NVIDIA_DEADLINE_MS;
+
+/**
+ * `Retry-After`, in milliseconds, or 0 when absent or unusable.
+ *
+ * Honoured rather than ignored because re-requesting a 429 immediately is
+ * worse than waiting: on NIM it commonly extends the penalty window instead of
+ * clearing it. Accepts both forms RFC 9110 allows — delay-seconds and an HTTP
+ * date — and caps the result so a server naming an hour cannot make the retry
+ * loop sit on the whole budget. The caller still checks the value against the
+ * time it actually has left.
+ */
+export function parseRetryAfterMs(header: string | null): number {
+  if (!header?.trim()) return 0;
+
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) {
+    if (seconds < 0) return 0;
+    return Math.min(seconds * 1000, MAX_RETRY_AFTER_MS);
+  }
+
+  const at = Date.parse(header);
+  if (!Number.isNaN(at)) {
+    return Math.min(Math.max(at - Date.now(), 0), MAX_RETRY_AFTER_MS);
+  }
+
+  return 0;
 }
 
 /** Header values must be visible ASCII. Anything else throws inside fetch. */
@@ -155,6 +223,8 @@ export function resolveNvidia(env: Env): NvidiaProvider | null {
   const { value: apiKey, notes: keyNotes } = cleanToken(env.NVIDIA_API_KEY);
   if (!apiKey) return null;
 
+  const reasoningEffort = cleanToken(env.NVIDIA_REASONING_EFFORT).value;
+
   return {
     endpoint: NVIDIA_ENDPOINT,
     model: cleanToken(env.NVIDIA_MODEL).value || NVIDIA_DEFAULT_MODEL,
@@ -163,9 +233,7 @@ export function resolveNvidia(env: Env): NvidiaProvider | null {
     // reasoning_effort is specific to reasoning-capable models on NIM, not a
     // field every model in the catalog accepts, so it is opt-in rather than
     // hardcoded — NVIDIA_MODEL can be pointed at a model that rejects it.
-    extraBody: cleanToken(env.NVIDIA_REASONING_EFFORT).value
-      ? { reasoning_effort: cleanToken(env.NVIDIA_REASONING_EFFORT).value }
-      : undefined,
+    extraBody: reasoningEffort ? { reasoning_effort: reasoningEffort } : undefined,
     attemptMs: NVIDIA_ATTEMPT_MS,
     deadlineMs: NVIDIA_DEADLINE_MS,
   };

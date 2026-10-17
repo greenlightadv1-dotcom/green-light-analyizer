@@ -251,10 +251,18 @@ they look identical, because the product just quietly serves rule-based output.
 Only a named `detail`/`message` field is logged, capped; never the body, which
 can echo the request and therefore the offer text (§12). `node
 scripts/check-nvidia.mjs` probes the endpoint directly and separates a bad key
-from a bad model id from a reasoning model that answers in
-`reasoning_content`. The call budgets 45s and the inbound webhook exports
-`maxDuration = 60`, since it waits on that synchronously and a killed function
-returns nothing at all.
+from a bad model id from a reasoning model that answers in `reasoning_content`.
+
+The call is bounded by a **deadline, not a single timeout**: 50s across all
+attempts, 32s for any one attempt, and a 14s floor below which a retry cannot
+finish. A timeout, 429 or 5xx is retried once within that deadline; a 400, 401,
+403, 404, 413, 415 or 422 is not, being deterministic. A 200 whose content will
+not parse into the expected shape is also retried once, since a single
+malformed answer is often not repeated. `maxDuration = 60` is declared on the
+inbound webhook and on every page segment that hosts an AI server action —
+server actions run inside their page's function, and a function the platform
+kills returns nothing at all, not even the rule-based estimate. See
+DEPLOYMENT.md for the table.
 
 Response parsing is defensive on purpose: `response_format: {type:"json_object"}`
 is an OpenAI-compatible hint, not a guarantee for every model in the NIM
