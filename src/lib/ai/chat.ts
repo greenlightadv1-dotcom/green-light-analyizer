@@ -1,6 +1,13 @@
 import "server-only";
 
-import { resolveNvidia, type NvidiaProvider } from "./nvidia-config";
+import {
+  NVIDIA_MIN_RETRY_MS,
+  describeKey,
+  isHeaderSafe,
+  parseRetryAfterMs,
+  resolveNvidia,
+  type NvidiaProvider,
+} from "./nvidia-config";
 
 /**
  * The one place in this product that talks to a model.
@@ -16,6 +23,12 @@ import { resolveNvidia, type NvidiaProvider } from "./nvidia-config";
  * **NVIDIA → static fallback** and there is nothing here that reaches any
  * other host. When the call fails, the caller falls to what it can compute
  * itself or reports the engine unavailable — see each caller.
+ *
+ * Text only, by construction: `messages` is always a single user turn whose
+ * content is a string. Nothing here can send an image or a binary attachment,
+ * and no caller has a way to pass one — which is worth knowing when choosing
+ * NVIDIA_MODEL, since a vision model carries that capability's cost on every
+ * call whether or not it is used.
  *
  * §12: nothing here logs or persists a prompt, and no error raised by this
  * module carries a response body. That second rule is deliberate — an error
@@ -51,6 +64,40 @@ export type ChatResult = { model: string };
  * without it costs a round trip and rescues an otherwise dead deployment.
  */
 const RETRY_WITHOUT_JSON_MODE = new Set([400, 415, 422, 500]);
+
+/**
+ * Statuses where a second attempt cannot possibly help, so spending the
+ * remaining budget on one only delays the fallback. A rejected credential, an
+ * unknown model or a malformed request is deterministic: it will be rejected
+ * again, identically.
+ */
+const TERMINAL_STATUS = new Set([400, 401, 403, 404, 413, 415, 422]);
+
+/** One retry. More would spend the fallback's budget chasing a bad queue. */
+const MAX_ATTEMPTS = 2;
+
+/**
+ * A failure of one NVIDIA call, carrying what the retry loop needs to decide.
+ *
+ * `status` is kept as a field rather than recovered by regex from the message:
+ * the throw site knows it, and parsing it back out of human-readable prose
+ * meant any later rewording of that prose silently disabled the 401
+ * diagnostic.
+ */
+class NvidiaError extends Error {
+  constructor(
+    message: string,
+    readonly terminal: boolean,
+    readonly status: number | null = null,
+    /** From a Retry-After header. 0 when the server named no delay. */
+    readonly retryAfterMs = 0,
+  ) {
+    super(message);
+    this.name = "NvidiaError";
+  }
+}
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * A short, bounded reason off an error response — never the body itself.
@@ -121,10 +168,25 @@ function readContent(body: unknown): string {
   return "";
 }
 
-async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promise<string> {
+async function callNvidia(
+  provider: NvidiaProvider,
+  request: ChatRequest,
+  /** Absolute wall-clock instant this call may not run past. */
+  deadline: number,
+): Promise<string> {
+  // Each fetch's timeout is derived from the SHARED deadline, not from a fixed
+  // per-fetch budget. That matters because this function can issue two fetches
+  // (the response_format retry below): arming a fresh full-length timer for
+  // the second one let a single outer attempt run to twice attemptMs, past the
+  // 50s deadline and past maxDuration — the platform then kills the function
+  // and nothing downstream runs, which is the exact vanishing request the
+  // whole budget exists to prevent.
   const attempt = async (jsonMode: boolean): Promise<Response> => {
+    const budgetMs = Math.min(provider.attemptMs, deadline - Date.now());
+    if (budgetMs <= 0) throw new Error("budget exhausted before the request was sent");
+
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
+    const timeout = setTimeout(() => controller.abort(), budgetMs);
 
     try {
       return await fetch(provider.endpoint, {
@@ -153,7 +215,12 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
     } catch (error) {
       // "This operation was aborted" names nothing an operator can act on.
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`timed out after ${provider.timeoutMs}ms`);
+        // Prompt size is included because it is the one input we control and
+        // the one an operator cannot otherwise see. A prefill far larger than
+        // expected is a different problem from a slow queue.
+        throw new Error(
+          `timed out after ${budgetMs}ms (prompt ${request.prompt.length} chars)`,
+        );
       }
       throw error;
     } finally {
@@ -163,7 +230,11 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
 
   let response = await attempt(true);
 
-  if (!response.ok && RETRY_WITHOUT_JSON_MODE.has(response.status)) {
+  if (
+    !response.ok &&
+    RETRY_WITHOUT_JSON_MODE.has(response.status) &&
+    deadline - Date.now() > 0
+  ) {
     const detail = await errorDetail(response);
     console.warn(
       `NVIDIA (${provider.model}) rejected the request with HTTP ${response.status}${
@@ -176,8 +247,17 @@ async function callNvidia(provider: NvidiaProvider, request: ChatRequest): Promi
   if (!response.ok) {
     const detail = await errorDetail(response);
     // 401 a bad or missing key, 404 a model id that is not in the catalog,
-    // 429 a spent quota, 5xx NVIDIA being down.
-    throw new Error(`HTTP ${response.status}${detail ? ` — ${detail}` : ""}`);
+    // 429 a spent quota, 5xx NVIDIA being down. The 401 diagnostic lives in
+    // chatJson, which has the status off the error — logging it here as well
+    // wrote the same paragraph to the drain twice per failure.
+    throw new NvidiaError(
+      `HTTP ${response.status}${detail ? ` — ${detail}` : ""}`,
+      TERMINAL_STATUS.has(response.status),
+      response.status,
+      response.status === 429
+        ? parseRetryAfterMs(response.headers.get("retry-after"))
+        : 0,
+    );
   }
 
   const text = readContent(await response.json());
@@ -207,23 +287,89 @@ export async function chatJson<T>(
   const provider = resolveNvidia(process.env);
   if (!provider) throw new AiUnavailableError("", true);
 
-  try {
-    const text = await callNvidia(provider, request);
-    return { value: validate(extractJsonObject(text)), model: provider.model };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "unknown error";
-    // Logged here rather than only at the call site: a wrong NVIDIA_MODEL
-    // (404) and a spent quota (429) are invisible from outside — the product
-    // just quietly serves rule-based output — and the status is what tells
-    // them apart.
-    console.error(`NVIDIA (${provider.model}) failed: ${reason}`);
-    throw new AiUnavailableError(reason);
+  // Checked once, before any attempt: fetch would otherwise throw an opaque
+  // "Invalid header value" from deep inside undici, naming no header.
+  if (!isHeaderSafe(provider.apiKey)) {
+    throw new AiUnavailableError(
+      "NVIDIA_API_KEY contains characters that cannot go in an HTTP header " +
+        "(non-ASCII or control characters). Re-copy it as plain text.",
+    );
   }
-}
 
-/** Whether NVIDIA is configured at all. Cheap; no network. */
-export function aiConfigured(): boolean {
-  return resolveNvidia(process.env) !== null;
+  // Bounded by a deadline rather than a per-attempt timeout, because the thing
+  // that must not be exceeded is the *function's* budget, not any one call's.
+  // Two attempts against a stalled NVIDIA queue are worth more than one long
+  // wait — a queue stall often clears on a second connection — but only while
+  // there is enough time left for the second attempt to finish and for the
+  // caller's own fallback to still run.
+  const deadline = Date.now() + provider.deadlineMs;
+  let lastReason = "unknown error";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const text = await callNvidia(provider, request, deadline);
+      if (attempt > 1) {
+        console.warn(`NVIDIA (${provider.model}) succeeded on attempt ${attempt}.`);
+      }
+      // Validated inside the loop on purpose: a 200 whose content will not
+      // parse into the expected shape is a failed call, not a value to hand
+      // back. One malformed answer is often not repeated, so it is worth the
+      // one retry — and if the model is simply wrong for the job, the second
+      // failure sends the caller to its deterministic fallback, which is the
+      // honest outcome.
+      return { value: validate(extractJsonObject(text)), model: provider.model };
+    } catch (error) {
+      lastReason = error instanceof Error ? error.message : "unknown error";
+
+      // Logged per attempt: "attempt 1 timed out, attempt 2 answered" is the
+      // signal that the queue is under pressure, and it is invisible from
+      // outside because the product served a normal answer.
+      console.error(
+        `NVIDIA (${provider.model}) attempt ${attempt} failed: ${lastReason}`,
+      );
+
+      if (error instanceof NvidiaError && error.status === 401) {
+        // The one status where the useful fact is about our own request rather
+        // than NVIDIA's answer. "Authentication failed" is true of a revoked
+        // key AND of a valid key carrying an invisible character, and those
+        // need opposite fixes.
+        console.error(
+          `NVIDIA rejected the credential. Key as the app received it: ` +
+            `${describeKey(provider.apiKey, provider.keyNotes)}. ` +
+            `If that length or prefix is not what you set, the value in the ` +
+            `environment is not what you think it is — re-paste it.`,
+        );
+      }
+
+      // Deterministic failures: a retry would only delay the fallback.
+      if (error instanceof NvidiaError && error.terminal) break;
+
+      // Nothing more to try, so say nothing about budget — the loop was
+      // ending regardless and a "no budget left to retry" line here implies a
+      // third attempt was wanted.
+      if (attempt === MAX_ATTEMPTS) break;
+
+      // A 429 names its own delay. Waiting it out beats re-requesting
+      // immediately, which on NIM commonly extends the penalty window rather
+      // than clearing it — but only if the wait plus a usable attempt still
+      // fit inside the deadline.
+      const wait = error instanceof NvidiaError ? error.retryAfterMs : 0;
+      if (deadline - Date.now() - wait < NVIDIA_MIN_RETRY_MS) {
+        console.error(
+          `NVIDIA (${provider.model}): ${
+            wait ? `Retry-After of ${wait}ms does not fit` : "no budget left to retry"
+          } within the ${provider.deadlineMs}ms deadline; falling back.`,
+        );
+        break;
+      }
+      if (wait) {
+        console.warn(`NVIDIA (${provider.model}): honouring Retry-After, waiting ${wait}ms.`);
+        await sleep(wait);
+      }
+    }
+  }
+
+  throw new AiUnavailableError(lastReason);
 }
 
 /**

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal/LegalPage";
 import {
-  ENTITY_ADDRESS,
-  ENTITY_NAME,
+  DSR_RESPONSE_DAYS,
+  SECURITY_EMAIL,
+  operatorIdentity,
   PRIVACY_EMAIL,
   RETENTION,
 } from "@/lib/constants/legal";
@@ -23,14 +24,50 @@ export default function PrivacyPage() {
     >
       <h2>1. Who is responsible for your data</h2>
       <p>
-        <strong>{ENTITY_NAME}</strong>, of <strong>{ENTITY_ADDRESS}</strong>, is
-        the controller of the personal data described here.
+        <strong>{operatorIdentity()}</strong> operates Green Light and is the
+        controller of the personal data described in this policy. Controller
+        means we decide what personal data is collected, why, and how long it
+        is kept, and we are accountable for those decisions.
+      </p>
+      <p>
+        This policy is issued under, and is to be read consistently with:
+      </p>
+      <ul>
+        <li>
+          Egyptian Law No. 151 of 2020 on the Protection of Personal Data and
+          its Executive Regulations (the <strong>PDPL</strong>), which governs
+          our processing as an operator established in the Arab Republic of
+          Egypt;
+        </li>
+        <li>
+          Regulation (EU) 2016/679 (the <strong>GDPR</strong>) and the UK GDPR,
+          to the extent we offer the service to data subjects in the European
+          Economic Area or the United Kingdom;
+        </li>
+        <li>
+          the California Consumer Privacy Act as amended by the California
+          Privacy Rights Act (the <strong>CCPA</strong>), to the extent it
+          applies to California residents.
+        </li>
+      </ul>
+      <p>
+        Where these instruments differ, we apply the standard most protective of
+        you for the processing in question.
       </p>
       <p>
         For anything concerning your personal data — a copy of it, a correction,
-        deletion, or a complaint — write to{" "}
+        deletion, restriction, objection, portability, or a complaint — write to{" "}
         <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>. That address
-        reaches a person, not a queue, and we answer within 30 days.
+        reaches a person, not a queue. We acknowledge without undue delay and
+        respond substantively within {DSR_RESPONSE_DAYS} days. Where a request
+        is complex we may extend that period once, by no more than a further{" "}
+        {DSR_RESPONSE_DAYS} days, and we will tell you why within the original
+        period.
+      </p>
+      <p>
+        We do not charge for exercising these rights. We will not refuse,
+        degrade, delay or price the service differently because you exercised
+        them.
       </p>
 
       <h2>2. What we collect</h2>
@@ -300,13 +337,36 @@ export default function PrivacyPage() {
         ours.
       </p>
 
-      <h2>8. Where your data goes</h2>
+      <h2>8. Where your data goes, and on what basis</h2>
       <p>
         Your account and deal data is stored in Frankfurt, Germany. Several of
-        the providers above are based in the United States, so some data is
-        transferred outside the European Economic Area. Those transfers rely on
-        the European Commission&apos;s Standard Contractual Clauses or an
-        equivalent approved mechanism.
+        the providers listed above are established in the United States, so some
+        personal data is transferred outside the European Economic Area and
+        outside the Arab Republic of Egypt.
+      </p>
+      <p>
+        <strong>Under the GDPR.</strong> Transfers to a country without an
+        adequacy decision are made under the European Commission&apos;s Standard
+        Contractual Clauses (Implementing Decision (EU) 2021/914) or, where the
+        importer is certified, the EU–US Data Privacy Framework. We carry out a
+        transfer impact assessment before relying on the Clauses and apply
+        supplementary measures — encryption in transit and at rest, and
+        minimisation of the fields sent — where the assessment calls for them.
+      </p>
+      <p>
+        <strong>Under the PDPL.</strong> Article 14 of Law 151/2020 prohibits
+        the cross-border transfer of personal data without a licence or permit
+        from the Personal Data Protection Centre, except where the data subject
+        has given explicit consent and the receiving jurisdiction affords a
+        level of protection not less than that of the PDPL. We rely on that
+        framework, hold contractual commitments from every processor listed
+        above, and will hold the Centre&apos;s licence for the transfers that
+        require one.
+      </p>
+      <p>
+        A copy of the safeguards applying to any specific transfer is available
+        on request to{" "}
+        <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
       </p>
 
       <h2>9. How long we keep it</h2>
@@ -334,7 +394,21 @@ export default function PrivacyPage() {
           <strong>Rate-limit counters</strong> — overwritten continuously; they
           hold only a count and a timestamp, never message content.
         </li>
+        <li>
+          <strong>Invoices and commission records</strong> — kept for{" "}
+          {RETENTION.financialRecordsYears} years, because Article 24 of the
+          Egyptian Commercial Code (Law 17/1999) and the Income Tax Law require
+          commercial books to be retained for that period. This is a legal
+          obligation, so it survives a deletion request; the records hold the
+          amount, the date and the parties, not message content.
+        </li>
       </ul>
+      <p>
+        When a retention period ends, data is deleted or irreversibly
+        anonymised. Backups are rotated on a rolling cycle and a deletion
+        propagates to them within 35 days; a restored backup is re-processed for
+        deletions before it is returned to service.
+      </p>
 
       <h2>10. Your rights</h2>
       <p>
@@ -353,11 +427,62 @@ export default function PrivacyPage() {
         anything we must retain by law. You can delete connected platform data
         yourself at any time by disconnecting the account in your media kit.
       </p>
+      <h3>If the GDPR or UK GDPR applies to you</h3>
       <p>
-        If you are in the European Economic Area or the United Kingdom and you
-        think we have handled your data badly, you can complain to your national
-        data protection authority. We would rather you told us first so we can
-        put it right.
+        You have the rights of access (Art. 15), rectification (Art. 16),
+        erasure (Art. 17), restriction of processing (Art. 18), notification of
+        rectification or erasure to recipients (Art. 19), data portability
+        (Art. 20), objection including to processing based on our legitimate
+        interests (Art. 21), and not to be subject to a decision based solely on
+        automated processing that produces legal or similarly significant
+        effects (Art. 22). Section 4 explains why the analysis we run does not
+        fall under Article 22: it produces advice a person is free to ignore,
+        and no account is opened, closed, priced or refused by a model.
+      </p>
+      <p>
+        You may lodge a complaint with the supervisory authority of your
+        habitual residence, place of work or the place of the alleged
+        infringement (Art. 77), and you have a right to an effective judicial
+        remedy (Art. 79). We would rather you told us first so we can put it
+        right, but you are not required to.
+      </p>
+
+      <h3>If the PDPL applies to you</h3>
+      <p>
+        Article 2 of Law 151/2020 gives you the right to know what personal data
+        we hold and to access it, to withdraw a consent you previously gave, to
+        correct, erase or amend it, to restrict its processing to a stated
+        purpose, to be informed of any breach or infringement affecting it, and
+        to object to processing or to a resulting outcome where it conflicts
+        with your fundamental rights and freedoms. You may complain to the
+        Personal Data Protection Centre established under Article 19.
+      </p>
+
+      <h3>If you are a California resident</h3>
+      <p>
+        In the twelve months before the date at the top of this page we
+        collected the categories of personal information described in section 2:
+        identifiers, commercial information, internet activity, professional
+        information and inferences drawn from offer text. Section 3 states the
+        business purpose for each, and section 7 lists every service provider we
+        disclose it to.
+      </p>
+      <p>
+        <strong>
+          We do not sell personal information, and we do not share it for
+          cross-context behavioural advertising.
+        </strong>{" "}
+        We have never done so, including for anyone under 16. There is therefore
+        no &ldquo;Do Not Sell or Share My Personal Information&rdquo; mechanism
+        to offer, because there is nothing for it to stop.
+      </p>
+      <p>
+        You have the right to know, to delete, to correct, to limit the use of
+        sensitive personal information, and not to be discriminated against for
+        exercising any of them. We do not use or disclose sensitive personal
+        information beyond the purposes permitted by CCPA § 7027(m). An
+        authorised agent may act for you on written proof of authority; we may
+        ask you to verify the request directly.
       </p>
 
       <h2>11. Keeping it safe</h2>
@@ -370,16 +495,52 @@ export default function PrivacyPage() {
         administrators who need it.
       </p>
       <p>
-        No system is perfectly secure. If a breach affects your personal data
-        and is likely to put you at risk, we will tell you and the relevant
-        authority without undue delay.
+        We review access, dependencies and the row-level rules that separate one
+        account from another as part of every release, and we keep an audit
+        trail of administrative actions on accounts.
+      </p>
+      <h3>If something goes wrong</h3>
+      <p>
+        No system is perfectly secure. If a personal data breach occurs we will:
+      </p>
+      <ul>
+        <li>
+          notify the competent supervisory authority without undue delay and, in
+          any event, within <strong>72 hours</strong> of becoming aware of it,
+          as required by GDPR Art. 33 — and, where the PDPL applies, notify the
+          Personal Data Protection Centre within the 72-hour period set by
+          Article 7 of Law 151/2020 and its Executive Regulations;
+        </li>
+        <li>
+          notify you directly, without undue delay, where the breach is likely
+          to result in a high risk to your rights and freedoms (GDPR Art. 34),
+          describing in plain language what happened, what data was involved,
+          what we have done, and what you should do;
+        </li>
+        <li>
+          document the facts, effects and remedial action taken for every
+          breach, whether or not it was notifiable.
+        </li>
+      </ul>
+      <p>
+        To report a vulnerability, write to{" "}
+        <a href={`mailto:${SECURITY_EMAIL}`}>{SECURITY_EMAIL}</a>. We will not
+        pursue a claim against anyone who reports one in good faith and gives us
+        a reasonable chance to fix it before disclosing it.
       </p>
 
       <h2>12. Children</h2>
       <p>
-        Green Light is not for anyone under 18. We do not knowingly collect data
-        from children. If you believe a child has an account, tell us and we
-        will remove it.
+        Green Light is not offered to anyone under 18, and accounts are created
+        only by an administrator after verifying the applicant, so there is no
+        route by which a child can register. We do not knowingly collect
+        personal data from children, and we do not process the data of a child
+        under Article 12 of the PDPL, which requires the consent of a guardian.
+      </p>
+      <p>
+        If you believe a person under 18 holds an account, write to{" "}
+        <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>. We will close
+        it and erase the associated personal data without undue delay.
       </p>
 
       <h2>13. Changes</h2>

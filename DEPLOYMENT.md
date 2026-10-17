@@ -70,9 +70,51 @@ rule-based pricing (labelled as such in the UI) and the written reply
 templates. Company intelligence and niche detection have no static equivalent
 and report that the engine is unavailable.
 
-The call budgets 30s, and the inbound webhook exports `maxDuration = 60`
-because it waits on that synchronously — a function the platform kills
-mid-call returns nothing at all, not even the rule-based estimate.
+#### Time budget
+
+Vercel's Hobby ceiling is 60s of **function** time, and the AI call is not the
+only thing inside it: the inbound webhook still has to create the deal room,
+write the messages and fire the WhatsApp alert after the model answers. So the
+AI budget deliberately ends well before the function's own limit:
+
+| | |
+|---|---|
+| `maxDuration` | **60s** — declared on `/api/webhooks/resend` and on every segment hosting an AI server action: analyzer, discover, deal room, media kit, and `/preview/media-kit` (which, unlike the other preview routes, wires the live niche detector). Server actions run inside their page's function |
+| AI deadline | **50s** across all attempts |
+| One attempt | **32s** |
+| Retry floor | **14s** — below this there is no point starting another attempt |
+
+A 60s fetch timeout under a 60s `maxDuration` would be worse than useless: the
+platform kills the function at the same instant the abort fires, so there is no
+rule-based fallback, no error on screen and no log line. The request vanishes.
+
+Retried **once**, if the remaining budget allows: a timeout, a 429, a 5xx, and
+a 200 whose content will not parse into the expected shape. A stalled queue
+often clears on a second connection, and one malformed answer is often not
+repeated. On a 429 the `Retry-After` header is honoured when the wait plus a
+usable attempt still fit inside the deadline — re-requesting immediately
+commonly extends the penalty window on NIM rather than clearing it.
+
+Never retried: 400, 401, 403, 404, 413, 415, 422. Those are deterministic and
+will be rejected identically, so spending the rest of the budget on them only
+delays the fallback. A separate, cheaper retry drops `response_format` when the
+model rejects it (400/415/422/500) — both fetches share the one deadline, so
+that path cannot overrun the budget either.
+
+#### What is actually sent
+
+Text only. No image, no binary attachment and no file content ever reaches the
+model: `messages` is a single `{role:"user", content:<string>}`, binary email
+attachments are catalogued by filename and never decoded (`parse.ts`), and only
+`text/*`, JSON and XML parts are read, capped at 5,000 characters each. Inputs
+are bounded at 20,000 characters for the pricing prompt, 2,500 for the company
+brief and 10 items × 300 characters for niche detection.
+
+That matters for model choice. A vision model carries the cost of that
+capability on every call whether or not an image is present, and this workload
+never sends one — so a vision model is paying for capacity it cannot use, on a
+path an inbound webhook waits on synchronously. If the timeouts persist, the
+model is the thing to change, not the budget.
 
 Failures are logged with their status **and the provider's own reason**, so
 `HTTP 404 — Model not found` and `HTTP 429 — rate limit` are distinguishable in
@@ -96,9 +138,34 @@ Three causes it exists to separate, because all three look the same in the app:
 
 | Symptom | Cause |
 |---|---|
-| `HTTP 401` | The key is wrong, revoked, or **stored with the quotes around it**. A value pasted as `"nvapi-…"` keeps them and the Bearer header is rejected. |
+| `HTTP 401` | The credential is rejected. Almost never the header code — see below. |
 | `HTTP 404` | `NVIDIA_MODEL` is not in the catalog for this key. |
-| `200` with empty `content` | A reasoning model answering in `reasoning_content`. Handled since the failover removal, but worth confirming. |
+| `200` with empty `content` | A reasoning model answering in `reasoning_content`. Handled, but worth confirming. |
+
+#### A 401 on a key you have verified
+
+`Authentication failed` is true of a revoked key **and** of a perfectly valid
+key that arrived with one invisible character attached, and those need opposite
+fixes. The app strips the ones it can — wrapping quotes, a redundant `Bearer`
+prefix, embedded whitespace, and zero-width / bidirectional marks (U+200B,
+U+FEFF, U+200E, U+200F) — and on a 401 it logs the key's *shape*: its length,
+its six-character prefix, and whatever it had to strip. Never the key itself.
+
+**If that length is not the length of the key you copied, the value in the
+environment is not the value you think it is.** Re-paste it. Vercel's dashboard
+renders an invisible character as nothing at all, so a visual check cannot
+catch this; `node scripts/check-nvidia.mjs` dumps the code points and names
+them.
+
+U+200E/U+200F deserve a specific mention: right-to-left-aware editors,
+terminals and chat clients insert them around a Latin-script string copied out
+of an Arabic context. They survive `trim()`, they are invisible everywhere a
+human looks, and they corrupt the Bearer token.
+
+If the shape is right and it still 401s, the key is rejected at the account
+level: either it is an NGC/org key rather than a `nvapi-…` key from
+build.nvidia.com (only the latter works against `integrate.api.nvidia.com`), or
+it is genuinely revoked.
 
 **The names above are exact.** They are the strings `process.env.<NAME>` is
 read with in the code, and Vercel matches them literally — a variable named

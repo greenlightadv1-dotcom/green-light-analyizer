@@ -12,7 +12,7 @@
  *
  * Usage:
  *   node scripts/check-nvidia.mjs
- *   NVIDIA_API_KEY=nvapi-... NVIDIA_MODEL=z-ai/glm-5.3 node scripts/check-nvidia.mjs
+ *   NVIDIA_API_KEY=nvapi-... NVIDIA_MODEL=meta/llama-3.3-70b-instruct node scripts/check-nvidia.mjs
  *
  * Reads .env.local / .env like the other scripts here. It never prints the
  * key — only whether one was found and how it is shaped.
@@ -33,23 +33,66 @@ for (const file of [".env.local", ".env"]) {
 }
 
 const BASE = "https://integrate.api.nvidia.com/v1";
+
+// Mirrors cleanToken() in src/lib/ai/nvidia-config.ts. Kept in sync by hand:
+// this script has to run as plain node, with no TypeScript build step.
+const INVISIBLE = /[\u200B-\u200F\u202A-\u202E\u2060\uFEFF\u00AD]/g;
+
+function cleanToken(value) {
+  const notes = [];
+  let out = value ?? "";
+  const noInvisible = out.replace(INVISIBLE, "");
+  if (noInvisible !== out) notes.push("zero-width or bidi marks");
+  out = noInvisible.trim();
+  if ((out.startsWith('"') && out.endsWith('"')) || (out.startsWith("'") && out.endsWith("'"))) {
+    out = out.slice(1, -1).trim();
+    notes.push("wrapping quotes");
+  }
+  const prefixed = out.match(/^(bearer|token)\s+([\s\S]*)$/i);
+  if (prefixed) {
+    out = prefixed[2].trim();
+    notes.push(`a redundant "${prefixed[1]}" prefix`);
+  }
+  const noInner = out.replace(/\s+/g, "");
+  if (noInner !== out) notes.push("embedded whitespace");
+  return { value: noInner, notes };
+}
+
 const rawKey = process.env.NVIDIA_API_KEY ?? "";
-const key = rawKey.trim().replace(/^["']|["']$/g, "").trim();
-const model = (process.env.NVIDIA_MODEL ?? "").trim().replace(/^["']|["']$/g, "").trim()
-  || "z-ai/glm-5.3";
+const { value: key, notes: keyNotes } = cleanToken(rawKey);
+const model = cleanToken(process.env.NVIDIA_MODEL).value || "meta/llama-3.3-70b-instruct";
 
 if (!key) {
   console.error("NVIDIA_API_KEY is not set (checked the environment, .env.local and .env).");
   process.exit(1);
 }
 
-// Shape only — never the value. A key that arrived wrapped in quotes or with a
-// trailing newline is a real and very confusing cause of a 401.
-console.log(`key:    found, ${key.length} chars, starts "${key.slice(0, 6)}…"`);
-if (rawKey !== key) {
-  console.log("        ⚠ the raw value had surrounding whitespace or quotes — stripped here,");
-  console.log("          and stripped in the app too, but fix it at the source.");
+// Shape only — never the value. The prefix is echoed only when it is the
+// literal "nvapi-", which reveals a constant; any other shape gets its length
+// alone, because six characters of an NGC or org key are six real characters
+// of a live credential.
+console.log(
+  key.startsWith("nvapi-")
+    ? `key:    ${key.length} chars, starts "nvapi-"`
+    : `key:    ${key.length} chars, does NOT start "nvapi-" — integrate.api.nvidia.com\n        accepts build.nvidia.com keys only, so this is very likely the 401`,
+);
+
+// The decisive view. An invisible character is invisible in every editor and
+// in the Vercel dashboard; it is not invisible in a code-point dump.
+const suspicious = [...rawKey].filter((c) => c.codePointAt(0) > 126 || c.codePointAt(0) < 33);
+if (suspicious.length) {
+  const points = suspicious
+    .map((c) => `U+${c.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`)
+    .join(" ");
+  console.log(`        ⚠ the RAW value contains ${suspicious.length} non-printable character(s): ${points}`);
+  console.log("          These survive a visual check and corrupt the Bearer token.");
+  console.log("          U+200E/U+200F are the bidi marks an RTL editor adds when copying");
+  console.log("          a Latin-script string — the classic cause of a 401 on a valid key.");
 }
+if (keyNotes.length) {
+  console.log(`        stripped: ${keyNotes.join(", ")} (the app strips these too, but fix the source)`);
+}
+console.log(`        raw length ${rawKey.length} vs cleaned ${key.length}`);
 console.log(`model:  ${model}`);
 console.log("");
 
@@ -82,7 +125,14 @@ try {
   const response = await fetch(`${BASE}/models`, { headers });
   console.log(`   HTTP ${response.status}`);
   if (response.status === 401) {
-    console.log("   → the key is rejected. Rotate it at build.nvidia.com and update the env var.");
+    console.log(`   → ${await detail(response)}`);
+    console.log("   The credential is rejected at the account level, not the model level.");
+    console.log("   In order of likelihood:");
+    console.log("     a) the value stored in Vercel is not the value you think — check the");
+    console.log("        length above against the key you copied;");
+    console.log("     b) it is an NGC / org key rather than a build.nvidia.com key");
+    console.log("        (integrate.api.nvidia.com only accepts the latter, nvapi-...);");
+    console.log("     c) it is genuinely revoked or expired.");
     process.exit(1);
   }
   if (!response.ok) {

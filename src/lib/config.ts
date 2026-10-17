@@ -69,7 +69,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.NVIDIA_MODEL),
       required: false,
       impact:
-        "Defaults to z-ai/glm-5.3. A typo here is not an error — the call 404s and the product quietly serves rule-based output instead.",
+        "Defaults to meta/llama-3.3-70b-instruct. NVIDIA_MODEL WINS over the code default, so this is what production actually runs. A typo is not an error — the call 404s and the product quietly serves rule-based output. A vision model works but is slower for no benefit: nothing here sends an image.",
     },
     {
       name: "RESEND_API_KEY",
