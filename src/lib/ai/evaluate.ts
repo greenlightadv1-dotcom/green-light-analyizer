@@ -3,6 +3,7 @@ import "server-only";
 import type { AiEvaluation } from "@/lib/types/database";
 import type { EvaluationInput, EvaluationResult } from "./types";
 import { AiUnavailableError } from "./chat";
+import { log } from "@/lib/log";
 import { evaluateWithModel } from "./price-model";
 import { capRiskByVerification } from "./rules";
 import { overlapWith } from "@/lib/media-kit/countries";
@@ -161,22 +162,15 @@ export async function evaluateOffer(
     // A creator waiting on an offer is better served by a rule-based number
     // than by an error. The engine field tells the UI which one they got.
     //
-    // Never silent. chatJson has already logged NVIDIA's own reason; this
-    // line records that the product actually degraded. AiUnavailableError
-    // separates "no key configured" from "configured and refused" — worth
-    // separating, because the first is a deployment that was never finished
-    // and the second is an outage, a spent quota or a wrong model id on a key
-    // somebody is paying for. Every message involved is a status code or a
-    // shape complaint, never a response body, so nothing here can carry offer
-    // text into a log (§12).
-    if (error instanceof AiUnavailableError && error.unconfigured) {
-      console.warn("Pricing used the rule-based engine: NVIDIA_API_KEY is not configured.");
-    } else {
-      console.error(
-        `Pricing fell back to the rule-based engine: ${
-          error instanceof Error ? error.message : "unknown error"
-        }`,
-      );
+    // Never silent. chatJson has already logged NVIDIA's own reason (or, with
+    // no key, said so once per instance); this line records that a real deal
+    // was actually priced by rules. Skipped for the unconfigured case, where
+    // that is simply how the deployment runs and the line would repeat on
+    // every offer. Every message involved is a status code or a shape
+    // complaint, never a response body, so nothing here can carry offer text
+    // into a log (§12).
+    if (!(error instanceof AiUnavailableError && error.unconfigured)) {
+      log.warn("pricing.heuristic_fallback", { error });
     }
     return heuristicEvaluate(input);
   }

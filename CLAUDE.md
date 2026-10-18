@@ -701,6 +701,35 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
   and revocable by the creator at any time (disconnecting must immediately
   set `audience_verified = false` and clear `verified_top_countries`).
 
+> **Update — server logs go through one logger.** `src/lib/log.ts` is now
+> the only way server code writes logs. There are no bare `console.*`
+> calls left in `src/` apart from the client error boundary
+> (`app/error.tsx`), which writes to the visitor's own browser console. Each
+> event is one JSON line, `{"level","event",…fields}`, so Vercel's log
+> search can filter on `event` (`nvidia.unavailable`, `relay.failed`,
+> `resend_webhook.signature_rejected`, …). The logger also enforces the "do
+> not log" rules above, rather than leaving them to each call site:
+>
+> - Every string runs through the §6.1 masker, except UUIDs, so they stay
+>   traceable.
+> - Error objects are reduced to name/message/code/status. Supabase's
+>   `details` (which quotes row values) and fetch's `cause` never appear.
+> - Strings are capped.
+>
+> Levels mean something:
+> - **`error`**: an operation failed and someone should look.
+> - **`warn`**: degraded but handled.
+> - **`info`**: e.g. NVIDIA recovering on its second attempt.
+>
+> "Optional integration not configured" (NVIDIA, WhatsApp, Discord) is a
+> `warnOnce` per server instance. Before this change it repeated on every
+> deal. A failed NVIDIA call now produces exactly one `nvidia.unavailable`
+> error naming why it stopped (`terminal_status`, `deadline`,
+> `retry_after_exceeds_deadline`, `attempts_exhausted`), plus one
+> `nvidia.attempt_failed` warning per attempt. There is still no error
+> service such as Sentry. The JSON shape is what one would ingest from a
+> Vercel log drain.
+
 ---
 
 ## 13. Open questions to confirm before building further

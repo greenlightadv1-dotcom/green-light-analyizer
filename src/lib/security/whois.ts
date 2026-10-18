@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { WhoisResult } from "./types";
+import { log } from "@/lib/log";
 
 const ENDPOINT = "https://api.ip2whois.com/v2";
 
@@ -50,9 +51,7 @@ export async function lookupWhois(domain: string): Promise<WhoisResult | null> {
     // That distinction only survives if an operator can find out *why* — a
     // wrong IP2WHOIS_API_KEY otherwise reads on screen as "WHOIS unavailable"
     // forever, indistinguishable from never having configured one.
-    console.error(
-      `WHOIS lookup failed: ${error instanceof Error ? error.message : "unknown error"}`,
-    );
+    log.warn("whois.lookup_failed", { error });
     return null;
   }
 }

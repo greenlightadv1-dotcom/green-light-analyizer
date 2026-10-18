@@ -248,6 +248,11 @@ hallucinated one is not.
 Failures are logged with their status and the provider's own reason, so
 `HTTP 404 — Model not found` and `HTTP 429` are distinguishable — from outside
 they look identical, because the product just quietly serves rule-based output.
+Search the Vercel logs for `"event":"nvidia.unavailable"`: one line per failed
+call, with `stopped` saying why (`terminal_status`, `deadline`,
+`attempts_exhausted`, …), after one `nvidia.attempt_failed` per attempt.
+Server logs are JSON lines written through `src/lib/log.ts`, which masks
+contact details and never serializes a whole error object (see CLAUDE.md §12).
 Only a named `detail`/`message` field is logged, capped; never the body, which
 can echo the request and therefore the offer text (§12). `node
 scripts/check-nvidia.mjs` probes the endpoint directly and separates a bad key

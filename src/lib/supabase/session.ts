@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { log } from "@/lib/log";
 
 /**
  * Routes reachable without a session. "/" is the public marketing landing
@@ -85,7 +86,7 @@ export async function updateSession(request: NextRequest) {
     // the page's own requireProfile() call hits the same failure and decides
     // what to show, rather than every route in the product going dark because
     // Supabase had one bad moment.
-    console.error("proxy: Supabase session check failed", error);
+    log.error("proxy.session_check_failed", { error });
     return response;
   }
 

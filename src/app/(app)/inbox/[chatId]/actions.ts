@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
+import { log } from "@/lib/log";
 import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { generateCompanyProfile } from "@/lib/ai/company-intel";
@@ -104,7 +105,7 @@ export async function sendMessage(
     });
 
     if (logError) {
-      console.error("violation_logs insert failed", logError.message);
+      log.error("violation_log.insert_failed", { chat_id: chatId, message_id: inserted.id, error: logError });
     }
   }
 
@@ -141,7 +142,7 @@ export async function sendMessage(
       .eq("id", inserted.id);
 
     if (!relay.ok) {
-      console.error(`relay failed for message ${inserted.id}: ${relay.error}`);
+      log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });
       relayFailed = true;
     }
   }
@@ -313,7 +314,7 @@ export async function analyzeCompany(
 
   // A cache that could not be written is not a failure worth showing: the
   // creator has the profile either way, it just costs another call next time.
-  if (error) console.error(`company_profile cache write failed for ${chatId}: ${error.message}`);
+  if (error) log.warn("company_profile.cache_write_failed", { chat_id: chatId, error });
 
   revalidatePath(`/inbox/${chatId}`);
   return { error: null, profile: result.profile };

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { sendCreatorOutreach, sendSystemNotification } from "@/lib/resend";
+import { log } from "@/lib/log";
 import type { NotificationTone } from "@/components/emails/SystemNotification";
 
 /**
@@ -178,7 +179,7 @@ export async function POST(request: Request) {
     // this caller's fault, but it still must not read as "authenticated" —
     // fail closed rather than let an exception here fall through to the
     // handler below with no session established.
-    console.error("emails/send: auth check failed", error);
+    log.error("emails_send.auth_check_failed", { error });
     return NextResponse.json({ error: "auth check failed" }, { status: 503 });
   }
 
@@ -211,7 +212,7 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     const status = result.error === "RESEND_API_KEY is not configured" ? 503 : 502;
-    console.error(`emails/send: ${result.error}`);
+    log.error("emails_send.failed", { type: body.type, reason: result.error });
     return NextResponse.json({ error: result.error }, { status });
   }
 
