@@ -253,6 +253,19 @@ const es: Dictionary = {
     directReplySent: "Enviado: ya está en la conversación y de camino a ellos.",
     directReplyFrom:
       "Se envía desde la propia dirección de Green Light, con tu alias de entrada como dirección de respuesta, para que su contestación vuelva a esta sala. Tu correo real nunca se les muestra.",
+    heldSummary: "Correos retenidos por el filtro en los últimos 30 días: {count}",
+    heldShow: "Mostrar",
+    heldHide: "Ocultar",
+    heldIntro:
+      "Llegaron a tu alias de entrada pero no parecían ofertas de patrocinio, así que no se abrió ninguna sala. Los datos de contacto que contienen están ocultos. Si alguno era una oferta real, pégalo en el analizador manual y se abrirá una sala.",
+    heldNoSubject: "(sin asunto)",
+    heldRedacted: "Se eliminaron datos de contacto de este asunto.",
+    heldReasonBulk: "Boletín o envío masivo",
+    heldReasonNoReply: "Remitente sin respuesta",
+    heldReasonEmpty: "Sin contenido legible",
+    heldReasonScreened: "No es una oferta de patrocinio",
+    heldTruncated: "Mostrando los {count} más recientes.",
+    heldOpenAnalyzer: "Abrir el analizador manual",
   },
   mediaKit: {
     title: "Kit de medios",

@@ -3,6 +3,7 @@ import "server-only";
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
 import { screenInboundEmail } from "@/lib/ai/spam-filter";
+import { EMPTY_BODY_DETAIL } from "./held";
 import { ACCEPTED_INBOUND_DOMAINS } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
 import { runSecurityCheck } from "@/lib/security/check";
@@ -211,7 +212,8 @@ export async function processInboundEmail(
   if (!offerText) {
     return finish({
       status: "rejected",
-      detail: "delivery had no readable body",
+      // Shared with held.ts, which allowlists on it to show this to the creator.
+      detail: EMPTY_BODY_DETAIL,
       creatorId: creator.id,
     });
   }

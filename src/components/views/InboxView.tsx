@@ -5,11 +5,13 @@ import Link from "next/link";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
+import { HeldDeliveriesPanel } from "@/components/deals/HeldDeliveriesPanel";
 import { SourceBadge } from "@/components/deals/SourceBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { DealChatListItem } from "@/lib/deals/queries";
+import type { HeldDeliveries } from "@/lib/email/held";
 
 type SourceFilter = "all" | "in_app" | "forwarded";
 
@@ -21,9 +23,15 @@ function formatMoney(amount: number | null) {
 /** Deal-room list, presentation only. Shared with /preview. */
 export function InboxView({
   chats,
+  held = null,
   basePath = "",
 }: {
   chats: DealChatListItem[];
+  /**
+   * Deliveries the screener held back. Null for anyone but a creator — only
+   * creators hold an inbound alias.
+   */
+  held?: HeldDeliveries | null;
   /** Link prefix. The UI preview passes "/preview" to stay inside itself. */
   basePath?: string;
 }) {
@@ -50,6 +58,12 @@ export function InboxView({
         title={t("inbox.title")}
         description={t("inbox.description")}
       />
+
+      {/*
+        Above the empty-state branch on purpose: a creator with no deal rooms
+        but held mail is exactly the one wondering where their offer went.
+      */}
+      <HeldDeliveriesPanel held={held} />
 
       {chats.length === 0 ? (
         <EmptyState

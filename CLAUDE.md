@@ -229,10 +229,28 @@ this flow; it's intentionally OAuth-free.
 > `headers` (object *or* array-of-pairs shapes) into a lowercased bag, which is
 > what the machine-declared signals are read from.
 >
-> Known gap, stated rather than papered over: rejected deliveries are visible
-> to admins only. A creator cannot yet see "3 filtered this month" the way they
-> can fold away a flagged room, because `inbound_emails` is admin-read by RLS.
-> Giving creators that view is a policy + RLS-test change, not done here.
+> **Closed since — creators now see what was held.** The Deal Inbox opens with
+> a collapsed one-line panel ("Emails held back by the filter in the last 30
+> days: N") that expands to each held delivery's date, sender, masked subject
+> and a plain-language reason (newsletter/bulk, no-reply sender, no readable
+> content, not a sponsorship offer), plus a link to the Manual Analyzer —
+> the on-platform way to turn a held offer into a room, since a held delivery
+> has no stored body to restore. It renders nothing when nothing is held, and
+> appears above the empty state too, because a creator with no rooms but held
+> mail is exactly the one wondering where their offer went.
+>
+> This was deliberately **not** done with a creator RLS policy, and the reason
+> is load-bearing: RLS gates rows, not columns, so a `creator_id = auth.uid()`
+> policy would let any creator `select *` from the browser and read the raw,
+> unmasked subject plus `detail`, `spam_score`, `spam_reasons` and the
+> provider's message id. `inbound_emails` stays admin-only. The page reads it
+> with the service role — scoped by the session's own profile id, which is
+> therefore the entire access boundary and is never taken from input — and
+> `src/lib/email/held.ts` projects a fixed set of fields, masks the subject
+> with the §6.1 utility, and allowlists which rejections a creator sees at
+> all (screener refusals, identified by their score rather than by prose, and
+> empty deliveries; a suspended account's rejection, and any reason added
+> later, stay admin-only by default). Bounded to 30 days and 20 rows.
 
 ### 5.1 Manual Analyzer (fallback / quick path)
 A lightweight alternate entry point with these fields:
