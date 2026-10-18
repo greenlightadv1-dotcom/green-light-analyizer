@@ -265,6 +265,19 @@ const en = {
     directReplySent: "Sent — it's in the thread and on its way to them.",
     directReplyFrom:
       "Sent from Green Light's own address, with your inbound alias as the reply-to, so their answer comes back into this room. Your real email address is never shown to them.",
+    heldSummary: "Emails held back by the filter in the last 30 days: {count}",
+    heldShow: "Show",
+    heldHide: "Hide",
+    heldIntro:
+      "These reached your inbound alias but didn't look like sponsorship offers, so no deal room was opened. Contact details in them are hidden. If one of them was a real offer, paste it into the Manual Analyzer and it will open a room.",
+    heldNoSubject: "(no subject)",
+    heldRedacted: "Contact details removed from this subject.",
+    heldReasonBulk: "Newsletter or bulk mail",
+    heldReasonNoReply: "No-reply sender",
+    heldReasonEmpty: "No readable content",
+    heldReasonScreened: "Not a sponsorship offer",
+    heldTruncated: "Showing the most recent {count}.",
+    heldOpenAnalyzer: "Open the Manual Analyzer",
   },
   mediaKit: {
     title: "Media kit",

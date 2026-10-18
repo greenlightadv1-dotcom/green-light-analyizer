@@ -253,6 +253,19 @@ const de: Dictionary = {
     directReplySent: "Gesendet — sie steht im Verlauf und ist unterwegs.",
     directReplyFrom:
       "Versand über die Adresse von Green Light, mit deinem Eingangs-Alias als Antwortadresse, damit die Antwort wieder in diesem Raum landet. Deine echte E-Mail-Adresse sehen sie nie.",
+    heldSummary: "Vom Filter zurückgehaltene E-Mails der letzten 30 Tage: {count}",
+    heldShow: "Anzeigen",
+    heldHide: "Ausblenden",
+    heldIntro:
+      "Sie haben deinen Eingangs-Alias erreicht, wirkten aber nicht wie Sponsoring-Angebote, deshalb wurde kein Deal-Raum geöffnet. Kontaktdaten darin sind ausgeblendet. War eines davon ein echtes Angebot, füge es im manuellen Analysator ein — dann öffnet sich ein Raum.",
+    heldNoSubject: "(kein Betreff)",
+    heldRedacted: "Kontaktdaten wurden aus diesem Betreff entfernt.",
+    heldReasonBulk: "Newsletter oder Massenmail",
+    heldReasonNoReply: "No-Reply-Absender",
+    heldReasonEmpty: "Kein lesbarer Inhalt",
+    heldReasonScreened: "Kein Sponsoring-Angebot",
+    heldTruncated: "Die neuesten {count} werden angezeigt.",
+    heldOpenAnalyzer: "Manuellen Analysator öffnen",
   },
   mediaKit: {
     title: "Media-Kit",

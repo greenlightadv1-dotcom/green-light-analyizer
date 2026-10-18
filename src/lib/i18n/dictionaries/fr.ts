@@ -253,6 +253,19 @@ const fr: Dictionary = {
     directReplySent: "Envoyé — c'est dans le fil et en route vers eux.",
     directReplyFrom:
       "Envoyé depuis l'adresse de Green Light, avec votre alias de réception en adresse de réponse, pour que leur réponse revienne dans cette conversation. Votre véritable adresse e-mail ne leur est jamais montrée.",
+    heldSummary: "E-mails retenus par le filtre ces 30 derniers jours : {count}",
+    heldShow: "Afficher",
+    heldHide: "Masquer",
+    heldIntro:
+      "Ils sont arrivés sur votre alias de réception mais ne ressemblaient pas à des offres de sponsoring, donc aucune conversation n'a été ouverte. Les coordonnées qu'ils contiennent sont masquées. Si l'un d'eux était une vraie offre, collez-le dans l'analyseur manuel pour ouvrir une conversation.",
+    heldNoSubject: "(sans objet)",
+    heldRedacted: "Des coordonnées ont été retirées de cet objet.",
+    heldReasonBulk: "Newsletter ou envoi groupé",
+    heldReasonNoReply: "Expéditeur sans réponse possible",
+    heldReasonEmpty: "Aucun contenu lisible",
+    heldReasonScreened: "Pas une offre de sponsoring",
+    heldTruncated: "Affichage des {count} plus récents.",
+    heldOpenAnalyzer: "Ouvrir l'analyseur manuel",
   },
   mediaKit: {
     title: "Kit média",
