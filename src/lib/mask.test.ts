@@ -87,3 +87,98 @@ test("known limitation: the phone rule matches long digit runs in prose", () => 
   assert.equal(r.isMasked, true);
   assert.ok(r.matched.includes("phone"));
 });
+
+// ── Overlapping matches ────────────────────────────────────────────────────
+// The spec's reference version applied the rules as a .replace() chain
+// (email → phone → social), so whichever rule ran first could cut a later
+// rule's match short and leave part of it in clear.
+
+const LINK = "[locked: external link hidden]";
+const EMAIL = "[locked: email hidden by platform policy]";
+const PHONE = "[locked: phone hidden by platform policy]";
+
+test("a WhatsApp link is masked as a link, with no wa.me/ fragment left", () => {
+  const r = maskSensitiveData("ping me: wa.me/201012345678 tonight");
+  assert.equal(r.maskedText, `ping me: ${LINK} tonight`);
+  // Both rules still reach the audit log — it was a link AND a number.
+  assert.deepEqual(r.matched, ["phone", "social"]);
+});
+
+test("links are not masked by simply running the link rule first", () => {
+  // The obvious fix — move social to the front of the chain — leaks here:
+  // the link rule takes `whatsapp/0101`, and the `234 5678` left behind is
+  // too short to read as a phone number, so it stays in clear.
+  const r = maskSensitiveData("whatsapp/0101 234 5678");
+  assert.equal(r.maskedText, LINK);
+});
+
+test("no fragment of an overlapping contact survives", () => {
+  for (const [text, leaked] of [
+    ["info@discord.gg/abc123", "abc123"], // old chain left `/abc123`
+    ["t.me/user@example.com", "example.com"],
+    ["555 123 4567890@x.com", "555 123"], // old chain left `555 123`
+    ["t.me/discord.gg/abc123", "abc123"], // a link hiding inside a link
+    ["whatsapp/0101 234 5678", "5678"],
+  ] as const) {
+    const r = maskSensitiveData(text);
+    assert.ok(!r.maskedText.includes(leaked), `${text} leaked ${leaked}: ${r.maskedText}`);
+    assert.ok(!r.maskedText.includes("/"), `${text} left a link fragment: ${r.maskedText}`);
+  }
+});
+
+test("an email that happens to contain a phone number still reads as an email", () => {
+  assert.equal(maskSensitiveData("ahmed01012345678@gmail.com").maskedText, EMAIL);
+});
+
+test("separate contacts keep separate labels", () => {
+  assert.equal(
+    maskSensitiveData("a@b.com, 01012345678, t.me/brand").maskedText,
+    `${EMAIL}, ${PHONE}, ${LINK}`,
+  );
+});
+
+// The old behaviour, kept only as a test oracle. Any order of the chain is
+// "a way the reference implementation could have been written".
+function chained(text: string, order: readonly ("email" | "phone" | "social")[]): string {
+  const re = {
+    email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    phone: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b01[0125]\d{8}\b/g,
+    social: /(telegram|wa\.me|whatsapp|discord\.gg|t\.me)\/[a-zA-Z0-9_]+/gi,
+  };
+  const label = { email: EMAIL, phone: PHONE, social: LINK };
+  return order.reduce((s, kind) => s.replace(re[kind], label[kind]), text);
+}
+
+const unmasked = (s: string) => s.replaceAll(EMAIL, "").replaceAll(PHONE, "").replaceAll(LINK, "");
+
+test("masks at least as much as any order of the old chain, and is idempotent", () => {
+  const orders = [
+    ["email", "phone", "social"],
+    ["email", "social", "phone"],
+    ["phone", "email", "social"],
+    ["phone", "social", "email"],
+    ["social", "email", "phone"],
+    ["social", "phone", "email"],
+  ] as const;
+  const pieces = [
+    "wa.me/", "WA.ME/", "t.me/", "whatsapp/", "telegram/", "discord.gg/", "@", ".", " ", "-",
+    "(", ")", "+", "_", "/", "0101", "010", "20", "234", "5678", "1", "user", "x", ".com", "abc",
+  ];
+  let seed = 7; // fixed, so a failure reproduces
+  const next = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  for (let i = 0; i < 4000; i++) {
+    let text = "";
+    for (let n = 1 + Math.floor(next() * 12); n > 0; n--) {
+      text += pieces[Math.floor(next() * pieces.length)];
+    }
+    const out = maskSensitiveData(text).maskedText;
+    assert.equal(maskSensitiveData(out).isMasked, false, `not idempotent: ${JSON.stringify(text)}`);
+    for (const order of orders) {
+      assert.ok(
+        unmasked(out).length <= unmasked(chained(text, order)).length,
+        `${JSON.stringify(text)} masks less than ${order.join(">")}: ${JSON.stringify(out)}`,
+      );
+    }
+  }
+});

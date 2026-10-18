@@ -307,6 +307,29 @@ Notes for implementation:
   client-side), so the raw contact info never touches the database or the
   company's client.
 
+> **Update — the rules are ported faithfully; the `.replace()` chain is not.**
+> On the client's instruction, links now win over phone numbers:
+> `wa.me/201012345678` masks to `[locked: external link hidden]`, not to
+> `wa.me/[locked: phone hidden by platform policy]`. That leftover `wa.me/`
+> was the visible symptom, but simply moving the social rule to the front
+> would have caused a regression. In `whatsapp/0101 234 5678` the link rule
+> takes `whatsapp/0101`, and the `234 5678` left behind is too short to read
+> as a phone number, so it would stay in clear. The underlying problem is
+> the chain itself. Whichever rule runs first can cut a later rule's match
+> short, so every order leaks something (the reference order already left
+> the `/abc123` of `info@discord.gg/abc123` in clear).
+>
+> `src/lib/mask.ts` now runs all three regexes against the original text and
+> tries each rule at every start position, not just leftmost, because a link
+> can hide a second link (`t.me/discord.gg/abc123`). It then merges the
+> overlapping matches and replaces each merged span once. When a span mixes
+> rules, the label precedence is link, then email, then phone. The regexes,
+> the labels, the Egyptian mobile pattern and `matched` (every rule that
+> fired, for the violation log) are unchanged. `mask.test.ts` keeps the old
+> chain, in all six orders, as a test oracle. A seeded property test asserts
+> that the new version masks at least as much as every order and is
+> idempotent. Half a million generated cases found no counterexample.
+
 ### 6.2 Deal Chat Room fields
 ```
 deal_status:      'new' | 'negotiating' | 'agreed' | 'paid' | 'disputed'
