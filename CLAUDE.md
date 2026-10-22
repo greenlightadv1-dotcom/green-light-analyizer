@@ -329,6 +329,18 @@ Notes for implementation:
 > chain, in all six orders, as a test oracle. A seeded property test asserts
 > that the new version masks at least as much as every order and is
 > idempotent. Half a million generated cases found no counterexample.
+>
+> The email regex has also gained one thing: a leading lookbehind,
+> `(?<![a-zA-Z0-9._%+-])`, so a match can only start where a run of address
+> characters starts. This changes performance, not what gets masked. A match
+> that starts inside a run ends at the same `@` and the same domain as the
+> match starting at the run's head, so it was always contained in that
+> match. On a million generated inputs, the output, `isMasked` and `matched`
+> were all identical to the version without it. Without the lookbehind, the
+> engine retried a long run from every position: 20k address characters
+> took about 0.5s (inputs are capped at 20k), and with it they take under a
+> millisecond. `mask.test.ts` guards this with a deliberately loose timing
+> bound.
 
 ### 6.2 Deal Chat Room fields
 ```

@@ -182,3 +182,22 @@ test("masks at least as much as any order of the old chain, and is idempotent", 
     }
   }
 });
+
+test("stays linear on long unbroken runs (inputs are capped at 20k characters)", () => {
+  // Before the email rule's lookbehind, 20k address characters with no `@`
+  // took ~0.5s: the engine retried the whole run from every position. The
+  // bound is loose on purpose — it catches a quadratic regression, which is
+  // two orders of magnitude, not a slow machine.
+  for (const text of ["a".repeat(20_000), "t.me/" + "a".repeat(20_000), "a".repeat(19_994) + "@x.com"]) {
+    const started = performance.now();
+    maskSensitiveData(text);
+    const ms = performance.now() - started;
+    assert.ok(ms < 150, `${ms.toFixed(0)}ms for a ${text.length}-character run`);
+  }
+});
+
+test("an address right after punctuation still masks", () => {
+  for (const text of ["mail:me@x.com", "(me@x.com)", "<me@x.com>", "«me@x.com»", "رسالة me@x.com"]) {
+    assert.ok(!maskSensitiveData(text).maskedText.includes("me@x.com"), text);
+  }
+});

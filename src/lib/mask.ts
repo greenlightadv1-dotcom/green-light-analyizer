@@ -14,7 +14,13 @@
 // by declaring them inside the function; this keeps that property explicit.)
 function patterns() {
   return {
-    email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    // The spec's email regex, plus a lookbehind so a match may only start
+    // where a run of address characters starts. Without it the engine retries
+    // from every position inside a long run (20k `a`s with no `@` took ~0.7s)
+    // — and it changes nothing about what is masked: a match starting mid-run
+    // ends at the same `@` and domain as the one starting at the run's head,
+    // so it was always inside that one.
+    email: /(?<![a-zA-Z0-9._%+-])[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
     // Includes the Egyptian mobile pattern (01[0125]XXXXXXXX) — MENA is a
     // primary market, so keep this even when generalizing (§6.1).
     phone:
