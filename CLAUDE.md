@@ -936,8 +936,14 @@ else as a blocker.
 4. The production environment has every required variable (`.env.example`),
    and `/admin/system` shows no unconfigured *required* integration.
    `NEXT_PUBLIC_ENABLE_UI_PREVIEW` must be unset in production.
-5. Supabase Auth: leaked-password protection is on, and the Site URL and
-   redirect URLs are set to the production domain.
+5. Supabase Auth's Site URL and redirect URLs are set to the production
+   domain, and the password rules are tightened: at least 10 characters,
+   with digits, upper/lower-case letters and symbols. Leaked-password
+   protection (HaveIBeenPwned) is Pro-plan only. Free-plan projects also
+   pause after about 7 days of low activity, and while paused every inbound
+   offer fails. So the owner decides between Pro ($25/mo, which removes
+   both problems) and Free with those two risks accepted. §9's zero-cost
+   rule is the owner's to bend, not ours.
 6. The legal pages name the operator. `ENTITY_REGISTERED_NAME`,
    `ENTITY_ADDRESS` and `ENTITY_REGISTRATION` in
    `src/lib/constants/legal.ts` are filled with the owner's real details, and
