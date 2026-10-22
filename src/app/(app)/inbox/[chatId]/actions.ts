@@ -160,24 +160,37 @@ export async function sendMessage(
 const NEGOTIABLE: DealStatus[] = ["new", "negotiating", "agreed", "disputed"];
 
 /**
- * Move a deal along. 'paid' is deliberately absent from NEGOTIABLE: §12 puts
- * settlement behind manual escrow reconciliation, and the RLS UPDATE policy
- * enforces the same rule at the database, so this list is the friendly half of
- * a guarantee that does not depend on it.
+ * Move a deal along — the escrow state machine of §12, enforced here and only
+ * here. Since migration 0022 no signed-in client can write deal_chats at all,
+ * so this action (service role) is the single gate:
+ *
+ *  - a party (creator or company) moves between the NEGOTIABLE states;
+ *  - only an admin marks a deal 'paid', once escrow has cleared;
+ *  - a paid deal is the settlement record, so no party can move it again —
+ *    a problem after payment goes to support, like every payment matter (§4).
  */
 export async function updateDealStatus(formData: FormData): Promise<void> {
-  await requireProfile();
+  const profile = await requireProfile();
+  const isAdmin = profile.role === "admin";
 
   const chatId = String(formData.get("chat_id") ?? "");
   const status = String(formData.get("deal_status") ?? "") as DealStatus;
 
-  if (!chatId || !NEGOTIABLE.includes(status)) return;
+  const allowed = isAdmin ? [...NEGOTIABLE, "paid"] : NEGOTIABLE;
+  if (!chatId || !allowed.includes(status)) return;
 
+  // RLS scopes this read to the parties and admins.
   const chat = await getDealChat(chatId);
   if (!chat) return;
+  if (chat.deal_status === "paid" && !isAdmin) return;
 
   const admin = createAdminClient();
-  await admin.from("deal_chats").update({ deal_status: status }).eq("id", chatId);
+  let update = admin.from("deal_chats").update({ deal_status: status }).eq("id", chatId);
+  // Repeated in the write itself, so an admin marking the deal paid between
+  // the read above and this line cannot be overwritten by a party.
+  if (!isAdmin) update = update.neq("deal_status", "paid");
+  const { error } = await update;
+  if (error) log.error("deal_status.update_failed", { chat_id: chatId, status, error });
 
   revalidatePath(`/inbox/${chatId}`);
   revalidatePath("/inbox");

@@ -20,6 +20,7 @@ export function DealRoomView({
   chatId,
   messages,
   currentUserId,
+  isAdmin = false,
   domainHistory = null,
   directReplyBody = null,
   demo = false,
@@ -29,6 +30,8 @@ export function DealRoomView({
   chatId: string;
   messages: Message[];
   currentUserId: string;
+  /** The viewer is an admin: offers the 'paid' step of escrow reconciliation. */
+  isAdmin?: boolean;
   /** Null for in-app deals (company_id set) — not computed for those. */
   domainHistory?: OwnDomainHistory | null;
   /**
@@ -135,6 +138,7 @@ export function DealRoomView({
           <StatusControl
             chatId={chatId}
             current={chat.deal_status ?? "new"}
+            isAdmin={isAdmin}
             demo={demo}
           />
 

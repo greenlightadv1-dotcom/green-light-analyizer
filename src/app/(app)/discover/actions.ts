@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
 import { requireRole } from "@/lib/auth";
+import { quoteSecret, signQuote, verifyQuote, type OfferQuote } from "@/lib/deals/offer-quote";
 import { buildEvaluationInput } from "@/lib/deals/queries";
+import { log } from "@/lib/log";
 import { maskSensitiveData } from "@/lib/mask";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,9 +42,13 @@ export type OfferPreviewState = {
         sponsorship_type: SponsorshipType;
         target_countries: string[];
         offer_text: string;
+        /** Signs everything above that the deal will store; see offer-quote.ts. */
+        quote_token: string | null;
       })
     | null;
 };
+
+export type SendOfferState = { error: string | null };
 
 /**
  * A company previews what the Co-Pilot makes of an offer before sending it —
@@ -95,6 +101,18 @@ export async function previewOfferToCreator(
 
   const result = await evaluateOffer(input);
 
+  const secret = quoteSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const quote: OfferQuote = {
+    companyId: profile.id,
+    creatorId,
+    offerText,
+    sponsorshipType,
+    targetCountries,
+    risk: result.risk,
+    recommendedPriceUsd: result.recommended_price_usd,
+    offeredAmount,
+  };
+
   return {
     error: null,
     result: {
@@ -105,6 +123,7 @@ export async function previewOfferToCreator(
       sponsorship_type: sponsorshipType,
       target_countries: targetCountries,
       offer_text: offerText,
+      quote_token: secret ? signQuote(secret, quote) : null,
     },
   };
 }
@@ -122,8 +141,15 @@ export async function previewOfferToCreator(
  * already checked, so it is re-validated against `profiles` here with the
  * service client before it drives an insert — the directory only listed
  * active creators, but nothing stops a tampered request naming any id.
+ *
+ * The same goes for the rating and price: they come back from the preview
+ * through the browser, so they are stored only under a valid quote signature
+ * (offer-quote.ts) — otherwise a company could rate its own offer green.
  */
-export async function sendOfferToCreator(formData: FormData): Promise<void> {
+export async function sendOfferToCreator(
+  _prev: SendOfferState,
+  formData: FormData,
+): Promise<SendOfferState> {
   const profile = await requireRole("company", "admin");
 
   const creatorId = String(formData.get("creator_id") ?? "").trim();
@@ -137,10 +163,36 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
   const risk = String(formData.get("risk") ?? "");
   const price = Number(formData.get("recommended_price_usd") ?? 0);
   const offeredAmountRaw = Number(formData.get("offered_amount") ?? 0);
+  const offeredAmount =
+    Number.isFinite(offeredAmountRaw) && offeredAmountRaw > 0 ? offeredAmountRaw : null;
 
   if (!creatorId || !offerText || !SPONSORSHIP_TYPES.includes(sponsorshipType)) {
-    return;
+    return { error: "This offer is incomplete. Preview it again." };
   }
+
+  const secret = quoteSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const check = secret
+    ? verifyQuote(secret, String(formData.get("quote_token") ?? ""), {
+        companyId: profile.id,
+        creatorId,
+        offerText,
+        sponsorshipType,
+        targetCountries,
+        risk,
+        recommendedPriceUsd: price,
+        offeredAmount,
+      })
+    : "invalid";
+  if (check === "expired") {
+    return { error: "This preview has expired. Preview the offer again before sending." };
+  }
+  if (check !== "ok") {
+    log.warn("offer_send.quote_rejected", { company_id: profile.id, creator_id: creatorId });
+    return { error: "This offer changed after it was previewed. Preview it again before sending." };
+  }
+
+  const limit = await consumeRateLimit("offer_send", profile.id);
+  if (!limit.allowed) return { error: limit.message };
 
   const admin = createAdminClient();
 
@@ -151,7 +203,7 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
     .maybeSingle();
 
   if (!creator || creator.role !== "creator" || creator.banned_at) {
-    return;
+    return { error: "This creator is not available for offers." };
   }
 
   const { maskedText, isMasked, matched } = maskSensitiveData(offerText);
@@ -166,11 +218,7 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
       sender_email: profile.primary_email,
       deal_status: "new",
       offered_amount:
-        Number.isFinite(offeredAmountRaw) && offeredAmountRaw > 0
-          ? offeredAmountRaw
-          : Number.isFinite(price) && price > 0
-            ? price
-            : null,
+        offeredAmount ?? (Number.isFinite(price) && price > 0 ? price : null),
       // Kept distinct from offered_amount above: here they can legitimately be
       // equal (a company sending the recommendation as its offer), but they
       // mean different things and the deal room shows both.
@@ -184,27 +232,38 @@ export async function sendOfferToCreator(formData: FormData): Promise<void> {
     .select("id")
     .single();
 
-  if (error || !chat) return;
+  if (error || !chat) {
+    log.error("offer_send.deal_insert_failed", { company_id: profile.id, creator_id: creatorId, error });
+    return { error: "The offer could not be sent. Try again in a moment." };
+  }
 
-  notifyNewDeal(creator, `New in-app offer from ${profile.full_name}.`);
-
-  await admin.from("messages").insert({
+  // The opening message is the offer itself, so a room without it is a
+  // broken room: take the room back out rather than leave an empty one.
+  const { error: messageError } = await admin.from("messages").insert({
     chat_id: chat.id,
     sender_id: profile.id,
     message_text: maskedText,
     is_masked: isMasked,
   });
+  if (messageError) {
+    log.error("offer_send.message_insert_failed", { chat_id: chat.id, error: messageError });
+    await admin.from("deal_chats").delete().eq("id", chat.id);
+    return { error: "The offer could not be sent. Try again in a moment." };
+  }
+
+  notifyNewDeal(creator, `New in-app offer from ${profile.full_name}.`);
 
   // The company wrote this themselves, so — unlike the Manual Analyzer's
   // "pasted someone else's message" case — this IS their own violation to
   // log if the filter fired.
   if (isMasked) {
-    await admin.from("violation_logs").insert({
+    const { error: logError } = await admin.from("violation_logs").insert({
       profile_id: profile.id,
       chat_id: chat.id,
       matched_rules: matched,
       redacted_excerpt: `[sent via Discover] ${maskedText.slice(0, 400)}`,
     });
+    if (logError) log.error("violation_log.insert_failed", { chat_id: chat.id, error: logError });
   }
 
   revalidatePath("/inbox");

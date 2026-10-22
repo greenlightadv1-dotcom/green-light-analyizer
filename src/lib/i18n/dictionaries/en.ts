@@ -216,6 +216,8 @@ const en = {
     ruleSocial: "an external messaging link",
     updateStatus: "Update status",
     markPaidNote: "Marking a deal paid is done by Green Light once escrow clears, not from here.",
+    markPaidAdminNote: "Admin: mark a deal paid only once its escrow payment has cleared.",
+    paidLockedNote: "This deal is marked paid. Any change after payment goes through Green Light support.",
     sourceInApp: "In-app",
     sourceForwarded: "Forwarded",
     filterAll: "All",

@@ -26,6 +26,7 @@ import { log } from "@/lib/log";
 export type RateLimitAction =
   | "ai_analyze_offer"
   | "ai_offer_preview"
+  | "offer_send"
   | "ai_reply_draft"
   | "ai_detect_niche"
   | "ai_company_intel";
@@ -50,6 +51,13 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   ai_offer_preview: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },
     { limit: 100, windowSeconds: DAY, label: "day" },
+  ],
+  // Not an AI cost: every send opens a room in a creator's inbox and can
+  // fire a WhatsApp alert to their phone, so this caps what one company can
+  // push at creators, not what it can spend.
+  offer_send: [
+    { limit: 10, windowSeconds: HOUR, label: "hour" },
+    { limit: 40, windowSeconds: DAY, label: "day" },
   ],
   ai_reply_draft: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },

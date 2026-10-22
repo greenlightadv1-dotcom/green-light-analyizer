@@ -204,6 +204,8 @@ const es: Dictionary = {
     ruleSocial: "un enlace de mensajería externo",
     updateStatus: "Actualizar estado",
     markPaidNote: "Marcar un deal como pagado lo hace Green Light una vez liberado el depósito en garantía, no desde aquí.",
+    markPaidAdminNote: "Admin: marca un acuerdo como pagado solo cuando el pago en custodia se haya confirmado.",
+    paidLockedNote: "Este acuerdo está marcado como pagado. Cualquier cambio tras el pago se gestiona con el soporte de Green Light.",
     sourceInApp: "En la plataforma",
     sourceForwarded: "Reenviado",
     filterAll: "Todos",

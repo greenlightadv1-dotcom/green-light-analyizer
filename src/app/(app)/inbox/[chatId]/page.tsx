@@ -70,6 +70,7 @@ export default async function DealRoomPage({
       chatId={chatId}
       messages={messages}
       currentUserId={profile.id}
+      isAdmin={profile.role === "admin"}
       domainHistory={domainHistory}
       directReplyBody={directReplyBody}
     />

@@ -204,6 +204,8 @@ const de: Dictionary = {
     ruleSocial: "einen externen Messaging-Link",
     updateStatus: "Status aktualisieren",
     markPaidNote: "Einen Deal als bezahlt zu markieren, erledigt Green Light, sobald das Treuhandkonto freigegeben ist, nicht von hier aus.",
+    markPaidAdminNote: "Admin: Einen Deal erst als bezahlt markieren, wenn die Treuhandzahlung eingegangen ist.",
+    paidLockedNote: "Dieser Deal ist als bezahlt markiert. Änderungen nach der Zahlung laufen über den Green Light Support.",
     sourceInApp: "In der App",
     sourceForwarded: "Weitergeleitet",
     filterAll: "Alle",

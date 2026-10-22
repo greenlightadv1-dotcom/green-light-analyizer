@@ -6,11 +6,9 @@ import type { DealStatus } from "@/lib/types/database";
 import { updateDealStatus } from "./actions";
 
 /**
- * Deal status transitions available to a creator.
- *
- * 'paid' is absent by design: §12 routes settlement through manual escrow
- * reconciliation, and the RLS UPDATE policy on deal_chats rejects a creator
- * writing it. Rendering the option would only produce a database error.
+ * Deal status transitions. Mirrors updateDealStatus, which is the actual rule:
+ * parties move between the four negotiating states, only an admin marks a deal
+ * paid once escrow clears (§12), and a paid deal is closed to the parties.
  */
 const OPTIONS: { value: DealStatus; labelKey: string }[] = [
   { value: "new", labelKey: "badges.statusNew" },
@@ -18,25 +16,40 @@ const OPTIONS: { value: DealStatus; labelKey: string }[] = [
   { value: "agreed", labelKey: "badges.statusAgreed" },
   { value: "disputed", labelKey: "badges.statusDisputed" },
 ];
+const PAID = { value: "paid" as DealStatus, labelKey: "badges.statusPaid" };
 
 export function StatusControl({
   chatId,
   current,
+  isAdmin = false,
   demo = false,
 }: {
   chatId: string;
   current: DealStatus;
+  /** Admins get the 'paid' option — the escrow reconciliation step. */
+  isAdmin?: boolean;
   /** UI preview: render the control without wiring it to a server action. */
   demo?: boolean;
 }) {
   const { t } = useTranslation();
+
+  if (current === "paid" && !isAdmin) {
+    return (
+      <GlassPanel className="p-5">
+        <h2 className="text-sm font-semibold text-fg">{t("inbox.updateStatus")}</h2>
+        <p className="mt-3 text-xs leading-relaxed text-fg/50">{t("inbox.paidLockedNote")}</p>
+      </GlassPanel>
+    );
+  }
+
+  const options = isAdmin ? [...OPTIONS, PAID] : OPTIONS;
 
   return (
     <GlassPanel className="p-5">
       <h2 className="text-sm font-semibold text-fg">{t("inbox.updateStatus")}</h2>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {OPTIONS.map((option) => (
+        {options.map((option) => (
           <form
             key={option.value}
             action={demo ? undefined : updateDealStatus}
@@ -59,7 +72,7 @@ export function StatusControl({
       </div>
 
       <p className="mt-3 text-[11px] leading-relaxed text-fg/30">
-        {t("inbox.markPaidNote")}
+        {t(isAdmin ? "inbox.markPaidAdminNote" : "inbox.markPaidNote")}
       </p>
     </GlassPanel>
   );

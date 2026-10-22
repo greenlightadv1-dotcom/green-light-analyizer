@@ -204,6 +204,8 @@ const fr: Dictionary = {
     ruleSocial: "un lien de messagerie externe",
     updateStatus: "Mettre à jour le statut",
     markPaidNote: "Marquer un deal comme payé est fait par Green Light une fois l'entiercement libéré, pas depuis ici.",
+    markPaidAdminNote: "Admin : ne marquez un deal payé qu'une fois le paiement sous séquestre validé.",
+    paidLockedNote: "Ce deal est marqué payé. Toute modification après paiement passe par le support Green Light.",
     sourceInApp: "Sur la plateforme",
     sourceForwarded: "Transféré",
     filterAll: "Tous",

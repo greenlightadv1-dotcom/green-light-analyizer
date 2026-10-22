@@ -200,6 +200,8 @@ const ar: Dictionary = {
     ruleSocial: "رابط مراسلة خارجي",
     updateStatus: "تحديث الحالة",
     markPaidNote: "تحديد الصفقة كمدفوعة تقوم به Green Light بعد تسوية الضمان، وليس من هنا.",
+    markPaidAdminNote: "للمشرف: لا تعلّم الصفقة كمدفوعة إلا بعد اكتمال دفعة الضمان.",
+    paidLockedNote: "هذه الصفقة مُعلَّمة كمدفوعة. أي تغيير بعد الدفع يتم عبر دعم Green Light.",
     sourceInApp: "داخل المنصة",
     sourceForwarded: "مُعاد توجيهه",
     filterAll: "الكل",

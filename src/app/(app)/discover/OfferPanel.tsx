@@ -10,6 +10,7 @@ import {
   previewOfferToCreator,
   sendOfferToCreator,
   type OfferPreviewState,
+  type SendOfferState,
 } from "./actions";
 
 const selectClass =
@@ -39,6 +40,30 @@ function SendButton() {
     <Button type="submit" disabled={pending} variant="ghost" fullWidth={false}>
       {pending ? "Sending…" : "Send this offer"}
     </Button>
+  );
+}
+
+/**
+ * The second step. Its own action state, so a refusal (an expired preview, a
+ * rate limit, a failed write) is shown here instead of the click doing nothing.
+ */
+function SendOfferForm({ result }: { result: NonNullable<OfferPreviewState["result"]> }) {
+  const [state, sendAction] = useActionState<SendOfferState, FormData>(sendOfferToCreator, {
+    error: null,
+  });
+  return (
+    <form action={sendAction} className="space-y-3">
+      <input type="hidden" name="creator_id" value={result.creator_id} />
+      <input type="hidden" name="offer_text" value={result.offer_text} />
+      <input type="hidden" name="sponsorship_type" value={result.sponsorship_type} />
+      <input type="hidden" name="target_countries" value={result.target_countries.join(",")} />
+      <input type="hidden" name="risk" value={result.risk} />
+      <input type="hidden" name="recommended_price_usd" value={result.recommended_price_usd} />
+      <input type="hidden" name="offered_amount" value={result.offered_amount ?? ""} />
+      <input type="hidden" name="quote_token" value={result.quote_token ?? ""} />
+      {state.error ? <Alert>{state.error}</Alert> : null}
+      <SendButton />
+    </form>
   );
 }
 
@@ -187,32 +212,7 @@ export function OfferPanel({
             </p>
           ) : null}
 
-          <form action={sendOfferToCreator}>
-            <input type="hidden" name="creator_id" value={r.creator_id} />
-            <input type="hidden" name="offer_text" value={r.offer_text} />
-            <input
-              type="hidden"
-              name="sponsorship_type"
-              value={r.sponsorship_type}
-            />
-            <input
-              type="hidden"
-              name="target_countries"
-              value={r.target_countries.join(",")}
-            />
-            <input type="hidden" name="risk" value={r.risk} />
-            <input
-              type="hidden"
-              name="recommended_price_usd"
-              value={r.recommended_price_usd}
-            />
-            <input
-              type="hidden"
-              name="offered_amount"
-              value={r.offered_amount ?? ""}
-            />
-            <SendButton />
-          </form>
+          <SendOfferForm result={r} />
         </div>
       ) : null}
     </div>
