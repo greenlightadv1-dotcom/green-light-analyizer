@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SafeBrowsingResult } from "./types";
+import { log } from "@/lib/log";
 
 const ENDPOINT = "https://safebrowsing.googleapis.com/v4/threatMatches:find";
 
@@ -51,9 +52,7 @@ export async function checkSafeBrowsing(
   } catch (error) {
     // Same as whois.ts: null is "could not check", and a rejected key must be
     // distinguishable from an absent one somewhere an operator can look.
-    console.error(
-      `Safe Browsing check failed: ${error instanceof Error ? error.message : "unknown error"}`,
-    );
+    log.warn("safe_browsing.check_failed", { error });
     return null;
   }
 }

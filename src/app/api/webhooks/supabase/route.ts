@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { sendDiscordLog, type DiscordLogStatus } from "@/lib/discord/logger";
+import { log } from "@/lib/log";
 
 /**
  * Supabase Database Webhook receiver (Database → Webhooks in the Supabase
@@ -72,12 +73,12 @@ export async function POST(request: Request) {
 
   if (!secret) {
     // Refuse rather than fall open — see resend/route.ts for the same call.
-    console.error("supabase webhook: SUPABASE_WEBHOOK_SECRET is not set");
+    log.error("supabase_webhook.unconfigured", { missing: "SUPABASE_WEBHOOK_SECRET" });
     return NextResponse.json({ error: "not configured" }, { status: 503 });
   }
 
   if (!isAuthorized(request, secret)) {
-    console.warn("supabase webhook: rejected — missing or invalid Authorization header");
+    log.warn("supabase_webhook.unauthorized");
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { log } from "@/lib/log";
+
 /**
  * Discord webhook notifications for ops events — Supabase database changes,
  * GitHub activity, and deploys. Each source posts to its own Discord channel
@@ -80,7 +82,7 @@ export async function sendDiscordLog(options: DiscordLogOptions): Promise<Discor
   const webhookUrl = process.env[envVar];
 
   if (!webhookUrl) {
-    console.warn(`discord logger: ${envVar} is not set — skipping "${options.title}"`);
+    log.warnOnce("discord.unconfigured", { channel: options.channel, missing: envVar });
     return { ok: false, reason: "not configured" };
   }
 
@@ -110,13 +112,13 @@ export async function sendDiscordLog(options: DiscordLogOptions): Promise<Discor
 
     if (!response.ok) {
       const reason = `Discord returned ${response.status}`;
-      console.error(`discord logger: ${reason} for "${options.title}"`);
+      log.error("discord.send_failed", { channel: options.channel, status: response.status });
       return { ok: false, reason };
     }
 
     return { ok: true };
   } catch (error) {
-    console.error(`discord logger: failed to reach Discord for "${options.title}"`, error);
+    log.error("discord.unreachable", { channel: options.channel, error });
     return { ok: false, reason: "network error" };
   }
 }

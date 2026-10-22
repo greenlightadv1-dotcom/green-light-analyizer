@@ -1,5 +1,7 @@
 import "server-only";
 
+import { log } from "@/lib/log";
+
 /**
  * WhatsApp notification delivery for Settings' "Receive Instant WhatsApp
  * Notifications for New Deals" toggle (migration 0017:
@@ -41,7 +43,7 @@ export async function sendWhatsAppNotification(
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   if (!accessToken || !phoneNumberId) {
-    console.warn("whatsapp: WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID not set — skipping notification");
+    log.warnOnce("whatsapp.unconfigured", { missing: "WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID" });
     return { ok: false, reason: "not configured" };
   }
 
@@ -72,13 +74,13 @@ export async function sendWhatsAppNotification(
     );
 
     if (!response.ok) {
-      console.error(`whatsapp: send failed with ${response.status}`);
+      log.error("whatsapp.send_failed", { status: response.status });
       return { ok: false, reason: `WhatsApp API returned ${response.status}` };
     }
 
     return { ok: true };
   } catch (error) {
-    console.error("whatsapp: send failed", error);
+    log.error("whatsapp.unreachable", { error });
     return { ok: false, reason: error instanceof Error ? error.message : "network error" };
   } finally {
     clearTimeout(timeout);

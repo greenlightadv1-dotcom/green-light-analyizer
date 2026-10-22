@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { log } from "@/lib/log";
 import type { CreatorDirectoryEntry } from "@/lib/types/database";
 
 /**
@@ -17,7 +18,7 @@ export async function listCreatorDirectory(): Promise<CreatorDirectoryEntry[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("creator_directory");
   if (error) {
-    console.error("creator_directory RPC failed", error.message);
+    log.error("creator_directory.rpc_failed", { error });
     return [];
   }
   return data ?? [];

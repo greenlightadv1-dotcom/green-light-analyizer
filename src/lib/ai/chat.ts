@@ -1,5 +1,6 @@
 import "server-only";
 
+import { log } from "@/lib/log";
 import {
   NVIDIA_MIN_RETRY_MS,
   describeKey,
@@ -235,12 +236,11 @@ async function callNvidia(
     RETRY_WITHOUT_JSON_MODE.has(response.status) &&
     deadline - Date.now() > 0
   ) {
-    const detail = await errorDetail(response);
-    console.warn(
-      `NVIDIA (${provider.model}) rejected the request with HTTP ${response.status}${
-        detail ? ` — ${detail}` : ""
-      }; retrying without response_format.`,
-    );
+    log.warn("nvidia.json_mode_rejected", {
+      model: provider.model,
+      status: response.status,
+      detail: (await errorDetail(response)) || undefined,
+    });
     response = await attempt(false);
   }
 
@@ -285,11 +285,16 @@ export async function chatJson<T>(
   validate: (parsed: unknown) => T,
 ): Promise<{ value: T } & ChatResult> {
   const provider = resolveNvidia(process.env);
-  if (!provider) throw new AiUnavailableError("", true);
+  if (!provider) {
+    // True of every call on a deployment without a key, so once per instance.
+    log.warnOnce("nvidia.unconfigured", { missing: "NVIDIA_API_KEY" });
+    throw new AiUnavailableError("", true);
+  }
 
   // Checked once, before any attempt: fetch would otherwise throw an opaque
   // "Invalid header value" from deep inside undici, naming no header.
   if (!isHeaderSafe(provider.apiKey)) {
+    log.error("nvidia.unavailable", { model: provider.model, attempts: 0, stopped: "key_not_header_safe" });
     throw new AiUnavailableError(
       "NVIDIA_API_KEY contains characters that cannot go in an HTTP header " +
         "(non-ASCII or control characters). Re-copy it as plain text.",
@@ -304,13 +309,14 @@ export async function chatJson<T>(
   // caller's own fallback to still run.
   const deadline = Date.now() + provider.deadlineMs;
   let lastReason = "unknown error";
+  let attempts = 0;
+  let stopped = "attempts_exhausted";
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    attempts = attempt;
     try {
       const text = await callNvidia(provider, request, deadline);
-      if (attempt > 1) {
-        console.warn(`NVIDIA (${provider.model}) succeeded on attempt ${attempt}.`);
-      }
+      if (attempt > 1) log.info("nvidia.recovered", { model: provider.model, attempt });
       // Validated inside the loop on purpose: a 200 whose content will not
       // parse into the expected shape is a failed call, not a value to hand
       // back. One malformed answer is often not repeated, so it is worth the
@@ -321,54 +327,63 @@ export async function chatJson<T>(
     } catch (error) {
       lastReason = error instanceof Error ? error.message : "unknown error";
 
+      const nvidia = error instanceof NvidiaError ? error : null;
+
       // Logged per attempt: "attempt 1 timed out, attempt 2 answered" is the
       // signal that the queue is under pressure, and it is invisible from
-      // outside because the product served a normal answer.
-      console.error(
-        `NVIDIA (${provider.model}) attempt ${attempt} failed: ${lastReason}`,
-      );
+      // outside because the product served a normal answer. A warning, not an
+      // error — whether the call failed is the nvidia.unavailable line below.
+      log.warn("nvidia.attempt_failed", {
+        model: provider.model,
+        attempt,
+        status: nvidia?.status ?? null,
+        retry_after_ms: nvidia?.retryAfterMs || undefined,
+        reason: lastReason,
+      });
 
-      if (error instanceof NvidiaError && error.status === 401) {
+      if (nvidia?.status === 401) {
         // The one status where the useful fact is about our own request rather
         // than NVIDIA's answer. "Authentication failed" is true of a revoked
         // key AND of a valid key carrying an invisible character, and those
-        // need opposite fixes.
-        console.error(
-          `NVIDIA rejected the credential. Key as the app received it: ` +
-            `${describeKey(provider.apiKey, provider.keyNotes)}. ` +
-            `If that length or prefix is not what you set, the value in the ` +
-            `environment is not what you think it is — re-paste it.`,
-        );
+        // need opposite fixes. If the length or prefix is not what was set,
+        // the value in the environment is not what someone thinks it is.
+        log.error("nvidia.credential_rejected", {
+          model: provider.model,
+          key_as_received: describeKey(provider.apiKey, provider.keyNotes),
+          hint: "if that length or prefix is not what you set, re-paste NVIDIA_API_KEY",
+        });
       }
 
       // Deterministic failures: a retry would only delay the fallback.
-      if (error instanceof NvidiaError && error.terminal) break;
+      if (nvidia?.terminal) {
+        stopped = "terminal_status";
+        break;
+      }
 
-      // Nothing more to try, so say nothing about budget — the loop was
-      // ending regardless and a "no budget left to retry" line here implies a
-      // third attempt was wanted.
       if (attempt === MAX_ATTEMPTS) break;
 
       // A 429 names its own delay. Waiting it out beats re-requesting
       // immediately, which on NIM commonly extends the penalty window rather
       // than clearing it — but only if the wait plus a usable attempt still
       // fit inside the deadline.
-      const wait = error instanceof NvidiaError ? error.retryAfterMs : 0;
+      const wait = nvidia?.retryAfterMs ?? 0;
       if (deadline - Date.now() - wait < NVIDIA_MIN_RETRY_MS) {
-        console.error(
-          `NVIDIA (${provider.model}): ${
-            wait ? `Retry-After of ${wait}ms does not fit` : "no budget left to retry"
-          } within the ${provider.deadlineMs}ms deadline; falling back.`,
-        );
+        stopped = wait ? "retry_after_exceeds_deadline" : "deadline";
         break;
       }
-      if (wait) {
-        console.warn(`NVIDIA (${provider.model}): honouring Retry-After, waiting ${wait}ms.`);
-        await sleep(wait);
-      }
+      if (wait) await sleep(wait);
     }
   }
 
+  // The one error line per failed call, whichever caller made it: pricing
+  // falls back to rules, replies to a template, niche detection to nothing.
+  log.error("nvidia.unavailable", {
+    model: provider.model,
+    attempts,
+    stopped,
+    deadline_ms: provider.deadlineMs,
+    reason: lastReason,
+  });
   throw new AiUnavailableError(lastReason);
 }
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/log";
 import { toHeldDeliveries, type HeldDeliveries, type HeldRow } from "./held";
 
 /**
@@ -42,7 +43,7 @@ export async function listHeldDeliveries(creatorId: string): Promise<HeldDeliver
   if (error) {
     // Degrades to "nothing to show" rather than breaking the inbox: this panel
     // is reassurance, and the deal list beneath it is what the page is for.
-    console.error(`held deliveries read failed: ${error.message}`);
+    log.error("held_deliveries.read_failed", { creator_id: creatorId, error });
     return { items: [], truncated: false };
   }
 

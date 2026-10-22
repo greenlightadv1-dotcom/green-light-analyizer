@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { processInboundEmail } from "@/lib/email/intake";
 import { normalizeInboundEmail } from "@/lib/email/parse";
 import { verifyWebhookSignature } from "@/lib/email/verify";
+import { log } from "@/lib/log";
 
 /**
  * Resend inbound-email webhook — CLAUDE.md §5.3.
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
   if (!secret) {
     // Refuse rather than fall open. An endpoint that accepts unsigned mail
     // because a variable is unset is worse than one that is simply off.
-    console.error("resend webhook: RESEND_INBOUND_WEBHOOK_SECRET is not set");
+    log.error("resend_webhook.unconfigured", { missing: "RESEND_INBOUND_WEBHOOK_SECRET" });
     return NextResponse.json({ error: "not configured" }, { status: 503 });
   }
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
   if (!verification.ok) {
     // The reason goes to our logs, never to the caller: telling an attacker
     // whether they got the timestamp or the digest wrong is free help.
-    console.warn(`resend webhook: rejected — ${verification.reason}`);
+    log.warn("resend_webhook.signature_rejected", { reason: verification.reason });
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
 
     if (outcome.status === "failed") {
       // Genuinely our fault and possibly transient — let the provider retry.
-      console.error(`resend webhook: ${outcome.detail}`);
+      log.error("resend_webhook.intake_failed", { detail: outcome.detail });
       return NextResponse.json({ status: outcome.status }, { status: 500 });
     }
 
@@ -92,12 +93,12 @@ export async function POST(request: Request) {
     // from a healthy endpoint, and the first symptom is a creator asking where
     // their offers went.
     if (outcome.status === "rejected" || outcome.status === "unknown_alias") {
-      console.warn(`resend webhook: ${outcome.status} — ${outcome.detail}`);
+      log.warn("resend_webhook.not_delivered", { status: outcome.status, detail: outcome.detail });
     }
 
     return NextResponse.json({ status: outcome.status, chat_id: outcome.chatId ?? null });
   } catch (error) {
-    console.error("resend webhook: unhandled failure", error);
+    log.error("resend_webhook.unhandled", { error });
     return NextResponse.json({ error: "processing failed" }, { status: 500 });
   }
 }

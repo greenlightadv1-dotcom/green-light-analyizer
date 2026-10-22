@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { log } from "@/lib/log";
 import type { Database, Role } from "@/lib/types/database";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -55,7 +56,7 @@ export async function requireProfile(): Promise<Profile> {
     // fallback as an unconfigured deployment rather than a raw 500 — it is
     // clearly labelled as a preview and holds no real data, so there is
     // nothing to leak.
-    console.error("requireProfile: Supabase call failed", error);
+    log.error("auth.profile_lookup_failed", { error });
     redirect("/preview/dashboard");
   }
 
@@ -100,7 +101,7 @@ export async function requireProfile(): Promise<Profile> {
       // request regardless of whether the write lands, so a failure here
       // (including a missing SUPABASE_SERVICE_ROLE_KEY) just means the next
       // request tries the write again rather than breaking this one.
-      console.error("requireProfile: expiry downgrade failed to persist", error);
+      log.warn("auth.plan_downgrade_not_persisted", { profile_id: profile.id, error });
     }
   }
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/log";
 
 /**
  * Rate limiting for the actions that cost money per click.
@@ -112,10 +113,11 @@ export async function consumeRateLimit(
     const row = data?.[0];
 
     if (error || !row) {
-      console.error(
-        `rate-limit: could not consume ${action} for ${subjectId}`,
-        error?.message ?? "no row returned",
-      );
+      log.error("rate_limit.consume_failed", {
+        action,
+        subject_id: subjectId,
+        error: error ?? { message: "no row returned" },
+      });
       return {
         allowed: false,
         retryAfterSeconds: 60,
