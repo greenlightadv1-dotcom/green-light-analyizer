@@ -372,7 +372,7 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > silently drop a delivery.
 >
 > The negotiation workspace also gained an **AI copyable response
-> generator** (`generateReplyDraft`, NVIDIA Kimi K3 per §9) that drafts a
+> generator** (`generateReplyDraft`, on the NVIDIA model per §9) that drafts a
 > reply from the latest offer, price and risk rating — a starting point the
 > creator edits and sends themselves, not an auto-send.
 >
@@ -437,6 +437,20 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > same `sendMessage` action the composer uses, so it inherits the identical
 > §6.1 server-side mask, violation log and platform relay; a second send path
 > with its own rules is how a masking guarantee grows a hole.
+
+> **Update — Discover's rating is signed (company-flow audit).** A Discover
+> offer is two steps, preview then send, and the send step used to store
+> `ai_evaluation` and `recommended_price_usd` straight from hidden form
+> fields. That let a company rate its own offer **green** at any "recommended"
+> price, which is exactly what the column grant on those two fields exists to
+> prevent. The preview now signs everything the rating depends on: company,
+> creator, offer text, type, countries, risk, price and amount
+> (`src/lib/deals/offer-quote.ts`). The signature is an HMAC keyed off the
+> service-role key, so there is no new env var and no second AI call. The
+> send step stores those values only under a valid signature less than 30
+> minutes old. Sending also has its own rate limit (`offer_send`), because
+> each send can ping a creator on WhatsApp, and every failure now shows an
+> error instead of a silent no-op.
 
 ---
 
@@ -557,7 +571,7 @@ deal, not on company seats.
 |---|---|
 | Frontend / Hosting | Next.js + Vercel (Hobby free tier) |
 | Backend / DB | Supabase free tier (Postgres + Realtime websockets + RLS) |
-| AI engine | **NVIDIA NIM API** running `z-ai/glm-5.3` — the only AI provider; see amendments below |
+| AI engine | **NVIDIA NIM API** running `meta/llama-3.3-70b-instruct` (default; `NVIDIA_MODEL` overrides) — the only AI provider; see amendments below |
 | Email | Resend free tier (3,000 emails/mo + inbound webhooks) |
 | Platform stats (basic) | YouTube Data API v3, Twitch Helix API |
 | Platform stats (verified audience geo, opt-in) | YouTube Analytics API (OAuth), Instagram Graph API insights (OAuth) |
@@ -571,7 +585,7 @@ deal, not on company seats.
 > NVIDIA going forward; do not reintroduce Gemini without asking first, per
 > this file's own rule at the top.
 
-> **Update — NVIDIA is the only provider, and the model is `z-ai/glm-5.3`.**
+> **Update — NVIDIA is the only provider (model: see *Model* below).**
 > Two changes, both on the client's explicit instruction.
 >
 > *One provider.* A brief earlier revision ran every model call down a chain
@@ -594,8 +608,12 @@ deal, not on company seats.
 > so it is visible rather than silent — but it is the accepted trade for a
 > single-vendor setup.
 >
-> *Model.* `z-ai/glm-5.3` replaces `moonshotai/kimi-k3` as the default, still
-> overridable per deployment via `NVIDIA_MODEL` with no code change. A wrong id
+> *Model.* The code default is `meta/llama-3.3-70b-instruct`
+> (`NVIDIA_DEFAULT_MODEL` in `nvidia-config.ts`), picked on the client's
+> instruction to use the fastest reliable text-only model. It replaced
+> `z-ai/glm-5.3`, which had itself replaced `moonshotai/kimi-k3`. It is still
+> overridable per deployment via `NVIDIA_MODEL` with no code change, and a
+> value set there wins over the default. A wrong id
 > is not an error: the call 404s and the product quietly serves rule-based
 > output, so `/admin/system` and the server logs are where to check when AI
 > output stops appearing. The key itself is only ever read from
@@ -742,6 +760,29 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 > service such as Sentry. The JSON shape is what one would ingest from a
 > Vercel log drain.
 
+> **Update — the escrow state machine, and server-only deal writes
+> (migration 0022).** `updateDealStatus` is now the only place a deal's status
+> changes, and it enforces this bullet's `agreed → paid` rule. Parties
+> (creator or company) move between `new`/`negotiating`/`agreed`/`disputed`.
+> Only an admin marks a deal `paid`; admins see every deal in `/inbox`, and
+> the status control offers them the extra option. A paid deal is the
+> settlement record, so no party can move it again. Before this change, no
+> one could set `paid` in the app, and either party could undo it.
+>
+> Migration 0022 revokes the `INSERT`/`UPDATE` grants (and their policies)
+> that `authenticated` held on `deal_chats` and `messages`. The app never used
+> them, because every write goes through the service role after the §6.1
+> mask. But they let any signed-in user call PostgREST directly. Both of these
+> were reproduced on the live schema in a rolled-back transaction:
+> - a company stored `wa.me/2010… or call 0101…` unmasked, with no violation
+>   logged;
+> - a company opened a room in another creator's inbox as
+>   `security@greenlightadvs.com`.
+>
+> **Status: the file is in the repo, but it is not yet applied to the live
+> database.** The Supabase tools wait on the owner's confirmation for
+> `REVOKE`/`DROP`.
+
 ---
 
 ## 13. Open questions to confirm before building further
@@ -868,6 +909,49 @@ its own native-script name and `dir`.
   `rtl:hover:-translate-x-0.5`. Decorative-only elements (the landing
   hero's ambient glow blobs) were left physically positioned; they're not
   reading content, so an unmirrored accent isn't a correctness bug.
+
+---
+
+## 16. Feature freeze & launch readiness (from 2026-10-22)
+
+**Feature freeze.** No new features or ad-hoc improvements until launch. A
+change goes in only if it fixes a launch blocker: something that leaks a
+creator's contact details, lets a party bypass the platform or the commission,
+loses or corrupts deal data, breaks a core flow (§4 onboarding, §5 intake,
+§6 chat, Discover → deal room → paid), or makes the legal pages untrue.
+Everything else goes on the post-launch list. Ask before treating anything
+else as a blocker.
+
+**Definition of Done ("Launch Ready")** — all of these must be true:
+1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,
+   `lint`, `build`), and the production deployment of that commit is READY.
+2. Every migration in `supabase/migrations/` is applied to the live project
+   (0022 is the one outstanding as of this section's date).
+3. The production smoke test passes end to end, with real test accounts:
+   - admin creates a creator and a company, and the forced reset works;
+   - mail to a creator's alias opens a deal room;
+   - the company previews and sends a Discover offer;
+   - both sides chat, with masking verified;
+   - the deal goes agreed, then admin marks it paid.
+4. The production environment has every required variable (`.env.example`),
+   and `/admin/system` shows no unconfigured *required* integration.
+   `NEXT_PUBLIC_ENABLE_UI_PREVIEW` must be unset in production.
+5. Supabase Auth: leaked-password protection is on, and the Site URL and
+   redirect URLs are set to the production domain.
+6. The legal pages name the operator. `ENTITY_REGISTERED_NAME`,
+   `ENTITY_ADDRESS` and `ENTITY_REGISTRATION` in
+   `src/lib/constants/legal.ts` are filled with the owner's real details, and
+   never invented.
+7. The owner has decided whether in-app (Discover) deals keep showing the
+   company's real email (`deal_chats.sender_email`) to the creator. Today
+   they do. It is not a §6 violation (that rule protects the creator), but it
+   does give both sides a way around the platform.
+
+**Not launch-gating** (fast-follow): verified audience geo via YouTube /
+Instagram OAuth (§7.3). Google and Meta review times are outside our control.
+Declared-only geo is already fully labelled, and §7.4 already caps the
+risk rating when the data is unverified. Also post-launch: error-tracking
+service, company-side new-message notifications, and the §11 roadmap.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

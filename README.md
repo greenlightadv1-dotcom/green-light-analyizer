@@ -13,7 +13,7 @@ system, data model and business logic. Read it before changing anything here.
 | Frontend | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
 | Motion | Framer Motion |
 | Backend / DB | Supabase (Postgres + Realtime + RLS) |
-| AI engine | NVIDIA NIM (`z-ai/glm-5.3`) |
+| AI engine | NVIDIA NIM (`meta/llama-3.3-70b-instruct` by default) |
 | Email | Resend, inbound webhooks *(not yet wired up)* |
 
 ## Supabase project
@@ -225,7 +225,7 @@ the UI says the rating was held at yellow and why.
 ### Engine
 
 Every model call goes to **NVIDIA NIM and nowhere else** — `NVIDIA_API_KEY`,
-model `z-ai/glm-5.3`, over an OpenAI-compatible chat-completions endpoint. This
+default model `meta/llama-3.3-70b-instruct` (`NVIDIA_MODEL` overrides), over an OpenAI-compatible chat-completions endpoint. This
 supersedes an earlier choice of Gemini in §9 of the spec, on the client's
 explicit instruction. A brief revision added a second provider behind it; that
 was removed, also on the client's instruction, so the path is exactly:
