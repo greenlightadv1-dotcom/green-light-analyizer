@@ -46,7 +46,7 @@ INSERT INTO public.messages (id, chat_id, sender_id, message_text)
 VALUES ('aaaaaaaa-0000-0000-0000-0000000000e1','aaaaaaaa-0000-0000-0000-0000000000d1','aaaaaaaa-0000-0000-0000-000000000001','Hello from the creator');
 
 CREATE TEMP TABLE r(id int, test text, expected text, got text) ON COMMIT DROP;
-GRANT ALL ON TABLE r TO authenticated, anon;
+GRANT ALL ON TABLE r TO authenticated, anon, service_role;
 
 DO $test$
 DECLARE
@@ -96,11 +96,14 @@ BEGIN
   RESET ROLE; SET LOCAL ROLE authenticated;
   PERFORM set_config('request.jwt.claims', json_build_object('sub',company,'role','authenticated')::text, true);
 
+  -- Since 0022 a party never writes deal_chats directly: status changes go
+  -- through updateDealStatus, which checks the caller and writes with the
+  -- service role (assertion 12 below).
   BEGIN
     UPDATE public.deal_chats SET deal_status = 'negotiating' WHERE id = 'aaaaaaaa-0000-0000-0000-0000000000d1';
-    INSERT INTO r VALUES (9,'company moves deal to negotiating','allowed','allowed');
+    INSERT INTO r VALUES (9,'company moves deal to negotiating directly','blocked','ALLOWED');
   EXCEPTION WHEN others THEN
-    INSERT INTO r VALUES (9,'company moves deal to negotiating','allowed','BLOCKED: '||split_part(SQLERRM,E'\n',1));
+    INSERT INTO r VALUES (9,'company moves deal to negotiating directly','blocked','blocked: '||split_part(SQLERRM,E'\n',1));
   END;
 
   BEGIN
@@ -108,6 +111,16 @@ BEGIN
     INSERT INTO r VALUES (10,'company marks deal paid (escrow)','blocked','ALLOWED');
   EXCEPTION WHEN others THEN
     INSERT INTO r VALUES (10,'company marks deal paid (escrow)','blocked','blocked: '||split_part(SQLERRM,E'\n',1));
+  END;
+
+  -- ===== server: the path updateDealStatus actually uses =====
+  RESET ROLE; SET LOCAL ROLE service_role;
+  PERFORM set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  BEGIN
+    UPDATE public.deal_chats SET deal_status = 'negotiating' WHERE id = 'aaaaaaaa-0000-0000-0000-0000000000d1';
+    INSERT INTO r VALUES (12,'server moves deal to negotiating','allowed','allowed');
+  EXCEPTION WHEN others THEN
+    INSERT INTO r VALUES (12,'server moves deal to negotiating','allowed','BLOCKED: '||split_part(SQLERRM,E'\n',1));
   END;
 
   -- ===== anon: the RPC itself refuses, not just an empty result =====

@@ -59,7 +59,7 @@ INSERT INTO public.messages (id, chat_id, sender_id, message_text)
 VALUES ('66666666-6666-6666-6666-666666666666','44444444-4444-4444-4444-444444444444','11111111-1111-1111-1111-111111111111','Hello from A');
 
 CREATE TEMP TABLE r(id int, test text, expected text, got text) ON COMMIT DROP;
-GRANT ALL ON TABLE r TO authenticated, anon;
+GRANT ALL ON TABLE r TO authenticated, anon, service_role;
 
 DO $test$
 DECLARE
@@ -140,11 +140,14 @@ BEGIN
     INSERT INTO r VALUES (13,'A marks own deal paid (escrow)','blocked','blocked: '||split_part(SQLERRM,E'\n',1));
   END;
 
+  -- Since 0022 a party never writes deal_chats directly: status changes go
+  -- through updateDealStatus, which checks the caller and writes with the
+  -- service role (assertion 24 below).
   BEGIN
     UPDATE public.deal_chats SET deal_status = 'negotiating' WHERE creator_id = a;
-    INSERT INTO r VALUES (14,'A moves own deal to negotiating','allowed','allowed');
+    INSERT INTO r VALUES (14,'A moves own deal to negotiating directly','blocked','ALLOWED');
   EXCEPTION WHEN others THEN
-    INSERT INTO r VALUES (14,'A moves own deal to negotiating','allowed','BLOCKED: '||split_part(SQLERRM,E'\n',1));
+    INSERT INTO r VALUES (14,'A moves own deal to negotiating directly','blocked','blocked: '||split_part(SQLERRM,E'\n',1));
   END;
 
   BEGIN
@@ -152,6 +155,16 @@ BEGIN
     INSERT INTO r VALUES (15,'A edits own display name','allowed','allowed');
   EXCEPTION WHEN others THEN
     INSERT INTO r VALUES (15,'A edits own display name','allowed','BLOCKED: '||split_part(SQLERRM,E'\n',1));
+  END;
+
+  -- ===== server: the path updateDealStatus actually uses =====
+  RESET ROLE; SET LOCAL ROLE service_role;
+  PERFORM set_config('request.jwt.claims', '{"role":"service_role"}', true);
+  BEGIN
+    UPDATE public.deal_chats SET deal_status = 'negotiating' WHERE creator_id = a;
+    INSERT INTO r VALUES (24,'server moves A deal to negotiating','allowed','allowed');
+  EXCEPTION WHEN others THEN
+    INSERT INTO r VALUES (24,'server moves A deal to negotiating','allowed','BLOCKED: '||split_part(SQLERRM,E'\n',1));
   END;
 
   -- ===== admin: full read =====
