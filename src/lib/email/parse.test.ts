@@ -11,10 +11,12 @@ import {
   inferSponsorshipType,
   normalizeAddress,
   normalizeHeaders,
+  mergeReceivedEmail,
   normalizeInboundEmail,
   stripQuotedReply,
   summarizeAttachments,
 } from "./parse.ts";
+import { ALIAS, EMAIL_ID, RFC_MESSAGE_ID, receivedEmail, webhookPayload } from "./fixtures/resend.ts";
 
 /** §5 inbound email parsing. */
 
@@ -149,7 +151,8 @@ test("normalizes a wrapped provider payload", () => {
   const email = normalizeInboundEmail({
     type: "email.received",
     data: {
-      message_id: "msg_123",
+      email_id: "msg_123",
+      message_id: "<rfc-123@brand.com>",
       from: "Brand Team <deals@brand.com>",
       to: ["amir.k3f9x2@analyze.greenlight.com"],
       subject: "Sponsorship opportunity",
@@ -289,4 +292,97 @@ test("normalizeInboundEmail carries the headers through to the screener", () => 
     headers: { "List-Id": "<news.example.com>" },
   });
   assert.equal(email.headers["list-id"], "<news.example.com>");
+});
+
+// --- documented Resend shapes (F1) -------------------------------------------
+
+test("the documented email.received webhook carries no body and no headers", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+
+  assert.equal(meta.providerMessageId, EMAIL_ID, "keyed on email_id");
+  assert.notEqual(meta.providerMessageId, RFC_MESSAGE_ID, "never on the RFC Message-ID");
+  assert.equal(meta.from, "deals@brand.example");
+  assert.equal(meta.subject, "Sponsorship: dedicated video");
+  assert.equal(meta.text, "", "nothing to read until the content is fetched");
+  assert.deepEqual(meta.headers, {});
+  // The alias is only in received_for — what a Gmail forward looks like.
+  assert.equal(findInboundAlias(meta.to, "analyze.greenlightadvs.com"), ALIAS);
+});
+
+test("a payload with only message_id has no key at all", () => {
+  const meta = normalizeInboundEmail({ type: "email.received", data: { message_id: RFC_MESSAGE_ID } });
+  assert.equal(meta.providerMessageId, null);
+});
+
+test("merging the retrieved content supplies the body and headers", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  const email = mergeReceivedEmail(meta, receivedEmail());
+
+  assert.equal(email.providerMessageId, EMAIL_ID);
+  assert.match(email.text, /We can pay \$1,500 for a dedicated video/, "HTML-only body converted");
+  assert.ok(!email.text.includes("<strong>"));
+  assert.equal(email.headers["return-path"], "bounce@brand.example");
+  assert.deepEqual(email.to, meta.to, "recipients stay the webhook's");
+  assert.equal(email.subject, meta.subject);
+  assert.deepEqual(email.attachments.map((a) => a.filename), ["rate-card.pdf"]);
+
+  const offer = buildOfferText(email);
+  assert.match(offer, /^Subject: Sponsorship: dedicated video/);
+  assert.match(offer, /dedicated video/);
+  assert.equal(extractOfferedAmount(offer), 1500, "the amount in the body is now visible");
+});
+
+test("text is preferred over html, and blank text falls back to html", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  assert.equal(
+    mergeReceivedEmail(meta, receivedEmail({ text: "Plain offer: $700", html: "<p>HTML offer</p>" })).text,
+    "Plain offer: $700",
+  );
+  assert.equal(
+    mergeReceivedEmail(meta, receivedEmail({ text: "  \n ", html: "<p>HTML offer</p>" })).text,
+    "HTML offer",
+  );
+});
+
+test("an Arabic body survives retrieval intact", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  const email = mergeReceivedEmail(meta, receivedEmail({ html: null, text: "مرحبا، نود رعاية فيديو كامل" }));
+  assert.equal(email.text, "مرحبا، نود رعاية فيديو كامل");
+});
+
+test("missing content leaves an empty body, never a crash", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  const email = mergeReceivedEmail(meta, receivedEmail({ text: null, html: null, headers: undefined, attachments: undefined }));
+  assert.equal(email.text, "");
+  assert.deepEqual(email.headers, {});
+  // The webhook's attachment list is kept when the content has none.
+  assert.deepEqual(email.attachments.map((a) => a.filename), ["avatar.png"]);
+  assert.equal(buildOfferText(email), "Subject: Sponsorship: dedicated video");
+
+  const bare = mergeReceivedEmail(normalizeInboundEmail(webhookPayload({ subject: undefined })), {});
+  assert.equal(buildOfferText(bare), "", "no subject and no body is the intake's empty-body case");
+});
+
+test("malformed content fields degrade to absent", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  const email = mergeReceivedEmail(meta, {
+    text: undefined,
+    html: "<p>ok</p>",
+    headers: [{ name: "List-Unsubscribe", value: "<mailto:u@brand.example>" }, null, 5, { value: "no name" }],
+    attachments: "not an array",
+    from: 12345,
+    subject: ["array"],
+  });
+  assert.equal(email.text, "ok");
+  assert.deepEqual(email.headers, { "list-unsubscribe": "<mailto:u@brand.example>" });
+  assert.equal(email.from, "deals@brand.example", "the webhook sender is kept");
+  assert.deepEqual(email.attachments.map((a) => a.filename), ["avatar.png"]);
+});
+
+test("a huge HTML body is bounded", () => {
+  const meta = normalizeInboundEmail(webhookPayload());
+  const started = Date.now();
+  const email = mergeReceivedEmail(meta, receivedEmail({ html: "<p>".repeat(1_500_000) }));
+  assert.ok(Date.now() - started < 3000);
+  assert.ok(buildOfferText(email).length <= 20_000);
 });

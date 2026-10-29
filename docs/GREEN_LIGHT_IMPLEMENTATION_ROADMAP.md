@@ -268,6 +268,8 @@ Each migration PR must contain the following, before anyone asks to apply it:
 
 **F1 + F2: fetch the inbound email body from Resend's Received Emails API.**
 
+> **Status (2026-10-29):** implemented and tested on `claude/eager-gauss-dox9tq`. **Not deployed.** It must not ship before migration 0022 is reviewed, tested and approved for production.
+
 - **Scope:**
   - `src/lib/email/parse.ts`;
   - `src/lib/email/intake.ts`;

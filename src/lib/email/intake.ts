@@ -10,15 +10,23 @@ import { runSecurityCheck } from "@/lib/security/check";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { escapeLikePattern } from "@/lib/supabase/like";
 import { notifyNewDeal } from "@/lib/whatsapp";
+import { log } from "@/lib/log";
 import type { CountryShare, SponsorshipType } from "@/lib/types/database";
 import {
   buildOfferText,
   extractOfferedAmount,
   findInboundAlias,
   inferSponsorshipType,
+  mergeReceivedEmail,
   summarizeAttachments,
   type NormalizedEmail,
 } from "./parse";
+import { fetchReceivedEmail } from "./received";
+import {
+  CONTENT_FETCH_PERMANENT_PREFIX,
+  CONTENT_FETCH_RETRYABLE_PREFIX,
+  claimDelivery,
+} from "./claim";
 
 /**
  * The §5 intake pipeline, steps 3–5.
@@ -78,14 +86,6 @@ function summaryMessage(
   return lines.join("\n");
 }
 
-/**
- * Process one inbound delivery.
- *
- * Idempotency is claimed *first*, by inserting into inbound_emails on the
- * provider's message id. A unique-violation there means a retry of something
- * already handled, and the whole delivery is a no-op — which is what stops a
- * provider retry minting a second room and a second paid AI call.
- */
 const CREATOR_COLUMNS =
   "id, role, banned_at, subscription_plan, whatsapp_number, whatsapp_notifications_enabled";
 
@@ -127,36 +127,74 @@ async function findCreatorByAlias(
   return (previous as AliasMatch | null) ?? null;
 }
 
+export type IntakeDeps = {
+  /** Injected so the content fetch can be stubbed; defaults to Resend. */
+  fetchContent?: typeof fetchReceivedEmail;
+};
+
+/**
+ * Process one inbound delivery.
+ *
+ * `meta` is the webhook's metadata (normalizeInboundEmail). The body and
+ * headers are not in it — Resend's webhook never carries them — and are
+ * fetched from the Received Emails API below, once the delivery is claimed and
+ * the alias resolves to a creator.
+ *
+ * Idempotency is claimed *first*, by inserting into inbound_emails on
+ * Resend's email_id (claim.ts). A unique-violation there means a retry of
+ * something already handled, and the whole delivery is a no-op — which is
+ * what stops a provider retry minting a second room and a second paid AI call.
+ * The one exception is a delivery that stopped at a retryable content-fetch
+ * failure: the retry takes it over and finishes it.
+ */
 export async function processInboundEmail(
-  email: NormalizedEmail,
+  meta: NormalizedEmail,
+  deps: IntakeDeps = {},
 ): Promise<IntakeOutcome> {
   const admin = createAdminClient();
+  let email = meta;
 
   if (!email.providerMessageId) {
-    return { status: "rejected", detail: "delivery carried no message id" };
+    return { status: "rejected", detail: "delivery carried no email id" };
   }
 
   const alias = findInboundAlias(email.to, ACCEPTED_INBOUND_DOMAINS);
+  const key = email.providerMessageId;
 
   // Claim the delivery before doing any work.
-  const { error: claimError } = await admin.from("inbound_emails").insert({
-    provider_message_id: email.providerMessageId,
-    to_alias: alias,
-    sender_email: email.from,
-    // Subject only — never the body (see the table comment in 0008). A
-    // screener refusal leaves no deal room and no stored message, so without
-    // this the audit row cannot answer "which offer did the filter eat?".
-    subject: email.subject ? email.subject.slice(0, 300) : null,
-    status: "failed",
-    detail: "processing",
+  const claim = await claimDelivery({
+    async insertClaim() {
+      const { error } = await admin.from("inbound_emails").insert({
+        provider_message_id: key,
+        to_alias: alias,
+        sender_email: email.from,
+        // Subject only — never the body (see the table comment in 0008). A
+        // screener refusal leaves no deal room and no stored message, so
+        // without this the audit row cannot answer "which offer did the
+        // filter eat?".
+        subject: email.subject ? email.subject.slice(0, 300) : null,
+        status: "failed",
+        detail: "processing",
+      });
+      return { errorCode: error?.code ?? null, errorMessage: error?.message ?? null };
+    },
+    async reclaimAfterFetchFailure() {
+      const { data, error } = await admin
+        .from("inbound_emails")
+        .update({ detail: "processing" })
+        .eq("provider_message_id", key)
+        .eq("status", "failed")
+        .like("detail", `${CONTENT_FETCH_RETRYABLE_PREFIX}%`)
+        .select("id");
+      return !error && (data?.length ?? 0) === 1;
+    },
   });
 
-  if (claimError) {
-    // 23505 = unique_violation: we have seen this delivery already.
-    if (claimError.code === "23505") {
-      return { status: "processed", detail: "duplicate delivery ignored" };
-    }
-    return { status: "failed", detail: `could not record delivery: ${claimError.message}` };
+  if (claim.kind === "duplicate") {
+    return { status: "processed", detail: "duplicate delivery ignored" };
+  }
+  if (claim.kind === "error") {
+    return { status: "failed", detail: `could not record delivery: ${claim.message}` };
   }
 
   const finish = async (outcome: IntakeOutcome): Promise<IntakeOutcome> => {
@@ -170,13 +208,16 @@ export async function processInboundEmail(
         spam_score: outcome.spamScore ?? null,
         spam_reasons: outcome.spamReasons ?? null,
       })
-      .eq("provider_message_id", email.providerMessageId!);
+      .eq("provider_message_id", key);
     return outcome;
   };
 
   if (!email.from) {
     return finish({ status: "rejected", detail: "no usable sender address" });
   }
+  // Pinned to the webhook's sender, which claimed the row and is what every
+  // later step (threading, WHOIS, the room's sender) keys on.
+  const sender: string = email.from;
   if (!alias) {
     return finish({
       status: "rejected",
@@ -208,6 +249,36 @@ export async function processInboundEmail(
     });
   }
 
+  // §5.3: the webhook carries metadata only. Fetched here — after the alias
+  // resolved to an active creator, so mail for nobody costs no API call, and
+  // before the screener, which needs the real headers and body.
+  const fetched = await (deps.fetchContent ?? fetchReceivedEmail)(key);
+  if (!fetched.ok) {
+    // Status code and reason only: never the provider's response body.
+    log.warn("inbound.content_fetch_failed", {
+      retryable: fetched.retryable,
+      reason: fetched.reason,
+      status: fetched.status,
+      attempts: fetched.attempts,
+    });
+    return finish(
+      fetched.retryable
+        ? {
+            // "failed" makes the route answer 5xx so the provider redelivers,
+            // and the prefix is what lets that redelivery reclaim this row.
+            status: "failed",
+            detail: `${CONTENT_FETCH_RETRYABLE_PREFIX} ${fetched.reason}`,
+            creatorId: creator.id,
+          }
+        : {
+            status: "rejected",
+            detail: `${CONTENT_FETCH_PERMANENT_PREFIX} ${fetched.reason}`,
+            creatorId: creator.id,
+          },
+    );
+  }
+  email = mergeReceivedEmail(meta, fetched.email);
+
   const offerText = buildOfferText(email);
   if (!offerText) {
     return finish({
@@ -229,7 +300,7 @@ export async function processInboundEmail(
   const screen = screenInboundEmail({
     subject: email.subject,
     bodyText: offerText,
-    from: email.from,
+    from: sender,
     headers: email.headers,
   });
 
@@ -257,7 +328,7 @@ export async function processInboundEmail(
     .from("deal_chats")
     .select("id, deal_status")
     .eq("creator_id", creator.id)
-    .ilike("sender_email", escapeLikePattern(email.from))
+    .ilike("sender_email", escapeLikePattern(sender))
     .neq("deal_status", "paid")
     .order("created_at", { ascending: false })
     .limit(1);
@@ -307,7 +378,7 @@ export async function processInboundEmail(
         target_countries: null, // an emailed offer rarely states them
         offer_text: offerText,
       }),
-      runSecurityCheck(email.from, offerText).catch(() => null),
+      runSecurityCheck(sender, offerText).catch(() => null),
     ]);
 
 
@@ -316,7 +387,7 @@ export async function processInboundEmail(
       .insert({
         creator_id: creator.id,
         company_id: null, // the sender has no platform account
-        sender_email: email.from,
+        sender_email: sender,
         deal_status: "new",
         offered_amount: offered,
         recommended_price_usd: evaluation.recommended_price_usd,
@@ -344,8 +415,8 @@ export async function processInboundEmail(
     notifyNewDeal(
       creator,
       offered !== null
-        ? `New offer from ${email.from} — $${offered.toLocaleString("en-US")}.`
-        : `New offer from ${email.from}.`,
+        ? `New offer from ${sender} — $${offered.toLocaleString("en-US")}.`
+        : `New offer from ${sender}.`,
     );
 
     // The opening summary, posted by the platform. sender_id is null because
@@ -394,7 +465,7 @@ export async function processInboundEmail(
       chat_id: chatId,
       message_id: inserted.id,
       matched_rules: masked.matched,
-      redacted_excerpt: `[inbound email from ${email.from}] ${masked.maskedText.slice(0, 400)}`,
+      redacted_excerpt: `[inbound email from ${sender}] ${masked.maskedText.slice(0, 400)}`,
     });
   }
 

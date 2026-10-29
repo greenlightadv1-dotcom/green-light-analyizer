@@ -22,12 +22,12 @@ import { log } from "@/lib/log";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 /**
- * The NVIDIA call budgets 30s before it gives up (lib/ai/nvidia-config.ts),
- * and this route waits on it synchronously while turning an offer into a deal
- * room. Vercel's default function timeout is under that, so without this the
- * platform would kill the request mid-call — and a killed function returns
- * nothing at all, not even the rule-based estimate the fallback exists to
- * provide. 60s is the Hobby-plan ceiling.
+ * The content fetch (lib/email/received.ts, ≤ ~8.5s) and then the NVIDIA call
+ * (lib/ai/chat.ts, up to 50s) run synchronously while this route turns an
+ * offer into a deal room. Vercel's default function timeout is under that,
+ * so without this the platform would kill the request mid-call — and a
+ * killed function returns nothing at all, not even the rule-based estimate
+ * the fallback exists to provide. 60s is the Hobby-plan ceiling.
  */
 export const maxDuration = 60;
 
@@ -75,10 +75,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
+  // Only received mail is intake. Any other event this endpoint is subscribed
+  // to (now or by a later dashboard change) is acknowledged and left alone —
+  // its email_id is a *sent* email, and fetching it as received would only 404.
+  const eventType =
+    payload && typeof payload === "object" ? (payload as Record<string, unknown>).type : undefined;
+  if (typeof eventType === "string" && eventType !== "email.received") {
+    return NextResponse.json({ status: "ignored" });
+  }
+
   try {
-    // Inside the guard: normalizeInboundEmail is written to tolerate any shape,
-    // but "written to" is not "proven to" against a provider payload this code
-    // has never been pinned against.
+    // Inside the guard: normalizeInboundEmail tolerates any shape, and the
+    // intake fetches the body from Resend's Received Emails API, which can
+    // fail in ways that must not escape as an unhandled error.
     const outcome = await processInboundEmail(normalizeInboundEmail(payload));
 
     if (outcome.status === "failed") {

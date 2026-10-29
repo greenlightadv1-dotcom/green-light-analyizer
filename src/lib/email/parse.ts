@@ -6,12 +6,19 @@ import type { SponsorshipType } from "@/lib/types/database";
  * Pure functions only, no I/O, so the whole shape of a delivery can be tested
  * without a webhook or a provider (see parse.test.ts).
  *
- * ⚠️ SCHEMA ASSUMPTION. Resend's inbound payload shape is not pinned here, so
- * every accessor below is deliberately tolerant: `to` may be a string, an array
- * of strings, or an array of objects with `address`/`email`; the event may be
- * wrapped in `data` or not. This is a guess at the envelope, verified against
- * nothing. Before going live, send one real delivery to a request bin, compare
- * it against `normalizeInboundEmail`, and delete this warning.
+ * Two documented Resend shapes feed this file (pinned in parse.test.ts from
+ * Resend's own examples):
+ *
+ *   - the `email.received` webhook — `{ type, created_at, data: { email_id,
+ *     from, to, cc, bcc, received_for, message_id, subject, attachments } }`.
+ *     **Metadata only: no body, no headers.** Read by normalizeInboundEmail.
+ *   - the Received Emails API (`GET /emails/receiving/:email_id`, see
+ *     received.ts) — the same message with `text`, `html` and `headers`.
+ *     Folded in by mergeReceivedEmail.
+ *
+ * The accessors stay tolerant (string or array recipients, wrapped or bare
+ * event) because a field the provider adds or drops must degrade to "absent",
+ * never throw on an unauthenticated path.
  */
 
 export type InboundAttachment = {
@@ -23,6 +30,11 @@ export type InboundAttachment = {
 };
 
 export type NormalizedEmail = {
+  /**
+   * Resend's `email_id` — the idempotency key and the id the content is
+   * fetched by. Never the RFC `Message-ID` header, which every copy of one
+   * email shares (see claim.ts).
+   */
   providerMessageId: string | null;
   from: string | null;
   fromName: string | null;
@@ -316,20 +328,35 @@ export function inferSponsorshipType(text: string): SponsorshipType {
 
 // --- envelope ---------------------------------------------------------------
 
-/** Reads a provider payload into the shape the rest of the pipeline expects. */
+/**
+ * HTML above this is truncated before conversion. buildOfferText keeps 20k
+ * characters of text anyway; this bounds the regex work on a hostile body.
+ */
+const MAX_HTML_CHARS = 1_000_000;
+
+function bodyText(data: Record<string, unknown>): string {
+  const plain = typeof data.text === "string" ? data.text : "";
+  if (plain.trim()) return plain;
+  const html = typeof data.html === "string" ? data.html.slice(0, MAX_HTML_CHARS) : "";
+  return html ? htmlToText(html) : "";
+}
+
+/**
+ * Reads the `email.received` webhook into the shape the rest of the pipeline
+ * expects. From a real Resend delivery this yields an empty `text` and empty
+ * `headers` — the webhook does not carry them — and the intake fills both in
+ * with mergeReceivedEmail once the content has been fetched.
+ */
 export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
   const root = (payload ?? {}) as Record<string, unknown>;
   const data = ((root.data ?? root) ?? {}) as Record<string, unknown>;
 
-  const html = typeof data.html === "string" ? data.html : "";
-  const plain = typeof data.text === "string" ? data.text : "";
-
   return {
+    // `message_id` is deliberately absent from this chain: it is the RFC
+    // Message-ID header, shared by every copy of the email (claim.ts).
     providerMessageId:
-      (typeof data.message_id === "string" && data.message_id) ||
       (typeof data.email_id === "string" && data.email_id) ||
       (typeof data.id === "string" && data.id) ||
-      (typeof root.id === "string" && root.id) ||
       null,
     from: normalizeAddress(data.from),
     fromName: displayName(data.from),
@@ -337,10 +364,39 @@ export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
       ...collectAddresses(data.to),
       ...collectAddresses(data.cc),
       ...collectAddresses(data.bcc),
+      // The envelope recipient. A Gmail forward keeps the creator's own
+      // address in To, so this is where the alias reliably appears.
+      ...collectAddresses(data.received_for),
     ],
     subject: typeof data.subject === "string" ? data.subject.slice(0, 300) : "",
-    text: plain || (html ? htmlToText(html) : ""),
+    text: bodyText(data),
     attachments: normalizeAttachments(data.attachments),
     headers: normalizeHeaders(data.headers),
+  };
+}
+
+/**
+ * Folds the Received Emails API response into the webhook's metadata.
+ *
+ * Body, headers and attachment list come from the fetched content, which is
+ * the only place they exist. The key, sender, recipients and subject stay the
+ * webhook's: they were already used to claim the delivery and resolve the
+ * alias, and switching source halfway would let the two disagree. A field the
+ * webhook lacked is filled from the content.
+ */
+export function mergeReceivedEmail(
+  meta: NormalizedEmail,
+  content: Record<string, unknown>,
+): NormalizedEmail {
+  const fetched = normalizeInboundEmail(content);
+  return {
+    providerMessageId: meta.providerMessageId,
+    from: meta.from ?? fetched.from,
+    fromName: meta.fromName ?? fetched.fromName,
+    to: meta.to.length ? meta.to : fetched.to,
+    subject: meta.subject || fetched.subject,
+    text: fetched.text,
+    attachments: fetched.attachments.length ? fetched.attachments : meta.attachments,
+    headers: fetched.headers,
   };
 }

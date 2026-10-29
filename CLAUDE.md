@@ -252,6 +252,19 @@ this flow; it's intentionally OAuth-free.
 > empty deliveries; a suspended account's rejection, and any reason added
 > later, stay admin-only by default). Bounded to 30 days and 20 rows.
 
+> **Update — the body is fetched, not assumed (F1).** Resend's
+> `email.received` webhook carries metadata only (no body, no headers), and
+> the intake used to read `text`/`html` off it, so every inbound offer was
+> evaluated on its subject alone. `src/lib/email/received.ts` now fetches the
+> content from `GET /emails/receiving/:email_id` (two attempts, 4s each) once
+> the alias resolves to an active creator, and `mergeReceivedEmail` folds it in
+> before the screener and the evaluation. Idempotency is keyed on Resend's
+> `email_id`, not the RFC `Message-ID` that every copy of an email shares — the
+> same `provider_message_id` column, so no migration. A retryable fetch failure
+> answers 5xx and the provider's redelivery reclaims the row (`claim.ts`); a
+> permanent one is a 200 rejection. Text attachments are listed, not read: the
+> API returns attachment metadata only.
+
 ### 5.1 Manual Analyzer (fallback / quick path)
 A lightweight alternate entry point with these fields:
 `sender_email`, `message_text`, `sponsorship_type` (see §7.4),

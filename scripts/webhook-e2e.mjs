@@ -36,14 +36,23 @@ function sign(id, timestamp, body, secret = SECRET) {
     .digest("base64");
 }
 
+// The documented email.received shape: metadata only. The body is fetched
+// from Resend's Received Emails API by the intake (src/lib/email/received.ts),
+// which this script never reaches without real credentials.
 const payload = {
   type: "email.received",
+  created_at: "2026-02-22T23:41:12.126Z",
   data: {
-    message_id: "msg_e2e_1",
-    from: "Brand Team <deals@brand.com>",
-    to: ["creator@gmail.com", "amir.k3f9x2@analyze.greenlight.com"],
+    email_id: "56761188-7520-42d8-8898-ff6fc54ce618",
+    created_at: "2026-02-22T23:41:11.894Z",
+    from: "Brand Team <deals@brand.example>",
+    to: ["creator@mail.example"],
+    cc: [],
+    bcc: [],
+    received_for: ["amir.k3f9@analyze.greenlightadvs.com"],
+    message_id: "<111-222-333@mail.brand.example>",
     subject: "Sponsorship: dedicated video",
-    text: "Hi! We can pay $500 for a dedicated video. Reach me on 01012345678 or wa.me/201012345678.",
+    attachments: [],
   },
 };
 const body = JSON.stringify(payload);
@@ -105,6 +114,15 @@ const badTs = Math.floor(Date.now() / 1000).toString();
 check("signed but malformed JSON is a 400", 400, await post(
   { "svix-id": "msg_bad", "svix-timestamp": badTs, "svix-signature": `v1,${sign("msg_bad", badTs, badJson)}` },
   badJson,
+));
+
+// Any other event type is acknowledged without touching the intake, so it
+// needs no database: a 200 here proves the route short-circuits it.
+const sentBody = JSON.stringify({ type: "email.sent", data: { email_id: "56761188-7520-42d8-8898-ff6fc54ce618" } });
+const sentTs = Math.floor(Date.now() / 1000).toString();
+check("signed non-received event is ignored (200)", 200, await post(
+  { "svix-id": "msg_sent", "svix-timestamp": sentTs, "svix-signature": `v1,${sign("msg_sent", sentTs, sentBody)}` },
+  sentBody,
 ));
 
 console.log("\n  #  verdict        expected  got   test");
