@@ -53,6 +53,12 @@ export type ChatRequest = {
   prompt: string;
   temperature: number;
   maxTokens: number;
+  /**
+   * Absolute wall-clock instant (ms) the call must stop by, when the caller
+   * has its own budget — the inbound webhook, which has spent part of its
+   * 60s before the model is reached. It can only shorten the 50s deadline.
+   */
+  deadlineAt?: number;
 };
 
 export type ChatResult = { model: string };
@@ -307,7 +313,10 @@ export async function chatJson<T>(
   // wait — a queue stall often clears on a second connection — but only while
   // there is enough time left for the second attempt to finish and for the
   // caller's own fallback to still run.
-  const deadline = Date.now() + provider.deadlineMs;
+  const deadline = Math.min(
+    Date.now() + provider.deadlineMs,
+    request.deadlineAt ?? Number.POSITIVE_INFINITY,
+  );
   let lastReason = "unknown error";
   let attempts = 0;
   let stopped = "attempts_exhausted";

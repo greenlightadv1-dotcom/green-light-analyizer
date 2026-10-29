@@ -264,6 +264,26 @@ this flow; it's intentionally OAuth-free.
 > answers 5xx and the provider's redelivery reclaims the row (`claim.ts`); a
 > permanent one is a 200 rejection. Text attachments are listed, not read: the
 > API returns attachment metadata only.
+>
+> **Pre-merge review fixes.** *Parsing:* the body is capped before any regex
+> runs (100k chars of text, 300k of HTML, `parse.ts`), a cut message carries a
+> visible `TRUNCATION_NOTICE`, and `htmlToText` / `stripQuotedReply` are
+> linear — they were quadratic on sender-controlled input (80k newlines took
+> ~16s). *Stale claims:* a claim is `status='failed'` with `detail='processing
+> since <ISO time>'`; a redelivery reclaims it by compare-and-swap on that exact
+> string once it is older than `STALE_CLAIM_MS` (120s, twice `maxDuration`),
+> and a live claim answers 503 instead of a 200 that ended Resend's retries.
+> The room id is checkpointed onto the claim row before any message is
+> written, so recovery appends to that room and skips a message it already
+> stored. Residual: a kill between creating the room and checkpointing it
+> falls back to the open-thread lookup, which misses a room already marked
+> paid; closing that needs a transaction or a link column (a schema change).
+> *Budget:* `lib/email/budget.ts` measures from the request's arrival — fetch
+> ≤ 6s, model stops at 52s, 8s reserved for writes — and the model's 50s
+> deadline can only be shortened by it. Database calls still have no
+> client-side timeout. `scripts/claim-concurrency-pg.sh` checks the claim's
+> SQL against a real local Postgres; the intake tests in
+> `src/lib/email/intake-tests/` run the real `intake.ts` against in-memory fakes.
 
 ### 5.1 Manual Analyzer (fallback / quick path)
 A lightweight alternate entry point with these fields:

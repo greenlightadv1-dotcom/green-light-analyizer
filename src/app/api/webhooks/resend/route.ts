@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { processInboundEmail } from "@/lib/email/intake";
 import { normalizeInboundEmail } from "@/lib/email/parse";
 import { verifyWebhookSignature } from "@/lib/email/verify";
+import { intakeDeadline } from "@/lib/email/budget";
+import { webhookResponseFor } from "@/lib/email/webhook-response";
 import { log } from "@/lib/log";
 
 /**
@@ -22,18 +24,20 @@ import { log } from "@/lib/log";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 /**
- * The content fetch (lib/email/received.ts, ≤ ~8.5s) and then the NVIDIA call
- * (lib/ai/chat.ts, up to 50s) run synchronously while this route turns an
- * offer into a deal room. Vercel's default function timeout is under that,
- * so without this the platform would kill the request mid-call — and a
- * killed function returns nothing at all, not even the rule-based estimate
- * the fallback exists to provide. 60s is the Hobby-plan ceiling.
+ * The content fetch and then the NVIDIA call run synchronously while this
+ * route turns an offer into a deal room. Vercel's default function timeout is
+ * under that, so without this the platform would kill the request mid-call —
+ * and a killed function returns nothing at all, not even the rule-based
+ * estimate the fallback exists to provide. 60s is the Hobby-plan ceiling; the
+ * intake plans its own work inside it from the request's arrival
+ * (lib/email/budget.ts), which is why the deadline is taken first thing.
  */
 export const maxDuration = 60;
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  const deadlineAt = intakeDeadline(Date.now());
   const secret = process.env.RESEND_INBOUND_WEBHOOK_SECRET;
 
   if (!secret) {
@@ -88,12 +92,16 @@ export async function POST(request: Request) {
     // Inside the guard: normalizeInboundEmail tolerates any shape, and the
     // intake fetches the body from Resend's Received Emails API, which can
     // fail in ways that must not escape as an unhandled error.
-    const outcome = await processInboundEmail(normalizeInboundEmail(payload));
+    const outcome = await processInboundEmail(normalizeInboundEmail(payload), { deadlineAt });
+    const { httpStatus, headers } = webhookResponseFor(outcome.status);
 
     if (outcome.status === "failed") {
       // Genuinely our fault and possibly transient — let the provider retry.
       log.error("resend_webhook.intake_failed", { detail: outcome.detail });
-      return NextResponse.json({ status: outcome.status }, { status: 500 });
+    }
+    if (httpStatus !== 200) {
+      // in_progress was already logged by the intake, with the claim's age.
+      return NextResponse.json({ status: outcome.status }, { status: httpStatus, headers });
     }
 
     // A delivery we decided about but did not act on still has to be visible.

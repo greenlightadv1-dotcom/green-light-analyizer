@@ -104,12 +104,14 @@ export type ModelVerdict = Omit<EvaluationResult, "geo_basis" | "engine" | "risk
  */
 export async function evaluateWithModel(
   input: EvaluationInput,
+  options: { deadlineAt?: number } = {},
 ): Promise<ModelVerdict> {
   const { value } = await chatJson(
     {
       prompt: buildPrompt(input),
       temperature: 0.2,
       maxTokens: 2048,
+      deadlineAt: options.deadlineAt,
     },
     validatePrice,
   );

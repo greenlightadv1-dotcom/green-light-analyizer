@@ -11,6 +11,10 @@ import {
   inferSponsorshipType,
   normalizeAddress,
   normalizeHeaders,
+  MAX_HTML_INPUT_CHARS,
+  MAX_OFFER_TEXT,
+  MAX_TEXT_INPUT_CHARS,
+  TRUNCATION_NOTICE,
   mergeReceivedEmail,
   normalizeInboundEmail,
   stripQuotedReply,
@@ -379,10 +383,149 @@ test("malformed content fields degrade to absent", () => {
   assert.deepEqual(email.attachments.map((a) => a.filename), ["avatar.png"]);
 });
 
-test("a huge HTML body is bounded", () => {
+
+// --- adversarial content (review Finding 1) ---------------------------------
+//
+// Every input below is sender-controlled: anyone can mail a creator, and the
+// creator's Gmail rule forwards it here. The pre-fix code took seconds to
+// minutes on these (80k newlines ≈ 16s, 320k ≈ 246s; 160k of "<a" ≈ 5.7s).
+// The ceilings are deliberately loose — 30–100× what the fixed code needs on
+// a laptop — so they catch a quadratic regression, not a slow CI machine.
+// scripts/parse-perf-check.mjs prints the actual timings.
+
+const LOOSE_CEILING_MS = 2_000;
+function timed<T>(f: () => T): { value: T; ms: number } {
+  const started = performance.now();
+  const value = f();
+  return { value, ms: performance.now() - started };
+}
+const repeat = (unit: string, chars: number) => unit.repeat(Math.ceil(chars / unit.length));
+
+test("stripQuotedReply is linear on long runs of newlines and whitespace", () => {
+  for (const unit of ["\n", " \n", "\t\r\n", "\n\n\n "]) {
+    // Called directly and uncapped: the function itself must not be quadratic.
+    const { ms } = timed(() => stripQuotedReply(repeat(unit, 1_000_000)));
+    assert.ok(ms < LOOSE_CEILING_MS, `${JSON.stringify(unit)} x1M took ${ms.toFixed(0)}ms`);
+  }
+});
+
+test("stripQuotedReply is linear on many near-miss marker lines", () => {
+  for (const unit of ["On x\n", "On  wrote\n", "-- Original\n", "_____ x\n", "From:\n", "From: \n"]) {
+    const { ms } = timed(() => stripQuotedReply(repeat(unit, 1_000_000)));
+    assert.ok(ms < LOOSE_CEILING_MS, `${JSON.stringify(unit)} took ${ms.toFixed(0)}ms`);
+  }
+});
+
+test("stripQuotedReply still finds markers with indentation and CRLF", () => {
+  const crlf = "Can we do 900 instead of the full rate?\r\n\r\n  On Mon, 5 May, Creator wrote:\r\n> my rate is 1200\r\n";
+  const stripped = stripQuotedReply(crlf);
+  assert.match(stripped, /900 instead/);
+  assert.ok(!stripped.includes("1200"));
+
+  const outlook = "Happy to proceed at $700 for the integration.\n\n-----Original Message-----\nFrom: me\nold text";
+  assert.equal(stripQuotedReply(outlook), "Happy to proceed at $700 for the integration.");
+
+  const underscore = "Counter-offer: $650 for one short.\n\n________________________________\nFrom: x";
+  assert.equal(stripQuotedReply(underscore), "Counter-offer: $650 for one short.");
+});
+
+test("htmlToText is linear on repeated incomplete tags", () => {
+  for (const unit of ["<a", "<", "<br  ", "</p", "<a href='", "<<>"]) {
+    const { ms } = timed(() => htmlToText(repeat(unit, 1_000_000)));
+    assert.ok(ms < LOOSE_CEILING_MS, `${JSON.stringify(unit)} x1M took ${ms.toFixed(0)}ms`);
+  }
+});
+
+test("htmlToText is linear on unclosed or malformed script/style", () => {
+  for (const unit of ["<style ", "<script>", "<SCRIPT ", "<script></script", "<style></style <", "<script>x</scrip"]) {
+    const { ms } = timed(() => htmlToText(repeat(unit, 1_000_000)));
+    assert.ok(ms < LOOSE_CEILING_MS, `${JSON.stringify(unit)} x1M took ${ms.toFixed(0)}ms`);
+  }
+});
+
+test("script and style blocks are removed, case-insensitively, and an unclosed one runs to the end", () => {
+  assert.equal(htmlToText("<p>Offer</p><SCRIPT type=x>steal()</Script ><p>$500</p>"), "Offer\n $500");
+  assert.equal(htmlToText("<style>a{}</style>Hi<style>b{}</style>there"), "Hi there");
+  assert.equal(htmlToText("Visible <script>never closed <p>hidden</p>"), "Visible");
+  // A tag that merely starts with the word is not a script block.
+  assert.match(htmlToText("<scripted>kept</scripted>"), /kept/);
+  // Lowercasing can change string length ("İ" -> 2 code units); indexes are
+  // taken from the original, so text after it is not shifted or lost.
+  assert.equal(htmlToText("İİİ<script>x</script>after"), "İİİ after");
+});
+
+test("ordinary HTML still converts as before", () => {
+  const html = "<div>Hi team,<br>We can pay <b>$1,200</b> for a <i>dedicated video</i>.</div><p>Thanks &amp; regards</p>";
+  const text = htmlToText(html);
+  assert.equal(text, "Hi team,\nWe can pay $1,200 for a dedicated video .\n Thanks & regards");
+  assert.equal(extractOfferedAmount(text), 1200);
+});
+
+test("plain text over the input cap is cut before parsing, and the offer says so", () => {
+  const offer = "We offer $900 for a dedicated video. ";
+  const body = offer + "x".repeat(MAX_TEXT_INPUT_CHARS * 3);
+  const email = normalizeInboundEmail({ email_id: "e", subject: "Deal", text: body });
+
+  assert.equal(email.bodyTruncated, true);
+  assert.equal(email.text.length, MAX_TEXT_INPUT_CHARS, "cut at the input cap, not after parsing");
+
+  const built = buildOfferText(email);
+  assert.ok(built.length <= MAX_OFFER_TEXT);
+  assert.ok(built.endsWith(TRUNCATION_NOTICE), "truncation is stated, never silent");
+  assert.equal(extractOfferedAmount(built), 900, "the start of the offer survives");
+});
+
+test("HTML over the input cap is cut before conversion, and the offer says so", () => {
+  const html = "<p>We offer $400 for a story.</p>" + "<p>filler</p>".repeat(MAX_HTML_INPUT_CHARS);
+  const email = normalizeInboundEmail({ email_id: "e", subject: "Deal", html });
+  assert.equal(email.bodyTruncated, true);
+  assert.ok(email.text.length <= MAX_TEXT_INPUT_CHARS);
+  assert.ok(buildOfferText(email).endsWith(TRUNCATION_NOTICE));
+});
+
+test("input caps: exactly at the limit is whole, one over is truncated", () => {
+  const atText = normalizeInboundEmail({ email_id: "e", text: "a".repeat(MAX_TEXT_INPUT_CHARS) });
+  assert.equal(atText.bodyTruncated, false);
+  const overText = normalizeInboundEmail({ email_id: "e", text: "a".repeat(MAX_TEXT_INPUT_CHARS + 1) });
+  assert.equal(overText.bodyTruncated, true);
+
+  // Markup that converts to (almost) nothing, so only the HTML cap is in play.
+  const markup = "<b>".repeat(MAX_HTML_INPUT_CHARS / 3);
+  assert.equal(markup.length, MAX_HTML_INPUT_CHARS);
+  const atHtml = normalizeInboundEmail({ email_id: "e", html: markup });
+  assert.equal(atHtml.bodyTruncated, false);
+  const overHtml = normalizeInboundEmail({ email_id: "e", html: markup + "x" });
+  assert.equal(overHtml.bodyTruncated, true);
+
+  // HTML under its cap whose *text* exceeds the text cap is truncated too.
+  const wordy = normalizeInboundEmail({ email_id: "e", html: "b".repeat(MAX_HTML_INPUT_CHARS) });
+  assert.equal(wordy.bodyTruncated, true);
+  assert.equal(wordy.text.length, MAX_TEXT_INPUT_CHARS);
+});
+
+test("a short message is not marked truncated", () => {
+  const email = normalizeInboundEmail({ email_id: "e", subject: "Hi", text: "We offer $300 for a post." });
+  assert.equal(email.bodyTruncated, false);
+  assert.equal(buildOfferText(email), "Subject: Hi\n\nWe offer $300 for a post.");
+});
+
+test("an offer cut by the 20k offer limit is marked too", () => {
+  const email = normalizeInboundEmail({ email_id: "e", subject: "s", text: "word ".repeat(10_000) });
+  assert.equal(email.bodyTruncated, false);
+  const built = buildOfferText(email);
+  assert.ok(built.length <= MAX_OFFER_TEXT);
+  assert.ok(built.endsWith(TRUNCATION_NOTICE));
+});
+
+test("the whole adversarial path, capped, stays fast end to end", () => {
   const meta = normalizeInboundEmail(webhookPayload());
-  const started = Date.now();
-  const email = mergeReceivedEmail(meta, receivedEmail({ html: "<p>".repeat(1_500_000) }));
-  assert.ok(Date.now() - started < 3000);
-  assert.ok(buildOfferText(email).length <= 20_000);
+  for (const content of [
+    { text: repeat("\n", 5_000_000), html: null },
+    { text: null, html: repeat("<a", 5_000_000) },
+    { text: null, html: repeat("<style ", 5_000_000) },
+  ]) {
+    const { value, ms } = timed(() => buildOfferText(mergeReceivedEmail(meta, receivedEmail(content))));
+    assert.ok(ms < LOOSE_CEILING_MS, `took ${ms.toFixed(0)}ms`);
+    assert.ok(value.length <= MAX_OFFER_TEXT);
+  }
 });

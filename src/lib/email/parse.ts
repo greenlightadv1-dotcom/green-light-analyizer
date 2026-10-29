@@ -48,6 +48,12 @@ export type NormalizedEmail = {
    * "not asserted", never as "asserted false".
    */
   headers: Record<string, string>;
+  /**
+   * True when the body was longer than the parser accepts and was cut before
+   * parsing (see MAX_TEXT_INPUT_CHARS / MAX_HTML_INPUT_CHARS). buildOfferText
+   * says so in the offer itself, so nobody reads a cut-off message as whole.
+   */
+  bodyTruncated: boolean;
 };
 
 // --- address helpers --------------------------------------------------------
@@ -150,13 +156,55 @@ export function findInboundAlias(
 
 // --- content ---------------------------------------------------------------
 
-/** Crude HTML-to-text, for deliveries that carry no text/plain part. */
+/**
+ * Removes <script>…</script> and <style>…</style> blocks in one forward pass.
+ *
+ * Replaces `/<(script|style)[\s\S]*?<\/\1>/gi`, which rescanned to the end
+ * of the document for every opening tag that had no closing one: 160k
+ * characters of unclosed `<style` took seconds, and the input is whatever a
+ * stranger mails to a creator. Here every search starts where the last one
+ * stopped, so the work is linear. An unclosed block runs to the end of the
+ * document, which is also how a browser treats it.
+ */
+// Searched case-insensitively on the original string, never on a lowercased
+// copy: toLowerCase() can change a string's length (e.g. "İ"), which would
+// misalign every index taken from the copy.
+const OPENING_BLOCK = /<(script|style)\b/gi;
+const CLOSING_BLOCK = { script: /<\/script\b[^<>]*>/gi, style: /<\/style\b[^<>]*>/gi };
+
+function stripScriptAndStyle(html: string): string {
+  let out = "";
+  let from = 0;
+
+  for (;;) {
+    OPENING_BLOCK.lastIndex = from;
+    const open = OPENING_BLOCK.exec(html);
+    if (!open) break;
+    out += html.slice(from, open.index) + " ";
+
+    const closing = CLOSING_BLOCK[open[1].toLowerCase() as "script" | "style"];
+    closing.lastIndex = open.index + open[0].length;
+    const close = closing.exec(html);
+    if (!close) return out;
+    from = close.index + close[0].length;
+  }
+
+  return out + html.slice(from);
+}
+
+/**
+ * Crude HTML-to-text, for deliveries that carry no text/plain part.
+ *
+ * Every pattern here is linear in the input. The tag pattern is `<[^<>]*>`,
+ * not `<[^>]+>`: the latter retried from each `<` all the way to the end when
+ * no `>` followed, which made a body of repeated `<a` quadratic. Callers cap
+ * the input first (MAX_HTML_INPUT_CHARS); this function does not rely on it.
+ */
 export function htmlToText(html: string): string {
-  return html
-    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<br\s*\/?>/gi, "\n")
+  return stripScriptAndStyle(html)
+    .replace(/<br[ \t\r\n]*\/?>/gi, "\n")
     .replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
+    .replace(/<[^<>]*>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
@@ -222,13 +270,21 @@ export function normalizeAttachments(value: unknown): InboundAttachment[] {
   });
 }
 
-/** Strips the quoted history so the evaluator prices the new message. */
+/**
+ * Strips the quoted history so the evaluator prices the new message.
+ *
+ * The markers use `[ \t]` where they once used `\s`. In multiline mode `\s`
+ * also matches newlines, so `^\s*` tried every line start against all the
+ * blank lines after it: 80k newlines took about 16 seconds, 320k about four
+ * minutes, on an unauthenticated path. A marker still matches with leading
+ * indentation and a trailing `\r` (CRLF mail), just not across lines.
+ */
 export function stripQuotedReply(text: string): string {
   const markers = [
-    /^\s*On .+ wrote:\s*$/m,
-    /^\s*-{2,}\s*Original Message\s*-{2,}\s*$/im,
-    /^\s*_{5,}\s*$/m,
-    /^\s*From:\s.+$/m,
+    /^[ \t]*On .+ wrote:[ \t\r]*$/m,
+    /^[ \t]*-{2,}[ \t]*Original Message[ \t]*-{2,}[ \t\r]*$/im,
+    /^[ \t]*_{5,}[ \t\r]*$/m,
+    /^[ \t]*From:[ \t].+$/m,
   ];
 
   let cut = text.length;
@@ -242,7 +298,15 @@ export function stripQuotedReply(text: string): string {
   return trimmed.length >= 20 ? trimmed : text.trim();
 }
 
-const MAX_OFFER_TEXT = 20000;
+export const MAX_OFFER_TEXT = 20000;
+
+/**
+ * Appended wherever content is cut, so the evaluator, the screener and the
+ * creator all see that the message did not end there. A silently cut offer can
+ * read as complete and lose the clause that changes its price.
+ */
+export const TRUNCATION_NOTICE =
+  "[Green Light: this message was longer than the analyser reads, so it was cut here. Open the original email for the rest.]";
 
 /**
  * The text handed to evaluateOffer(): the message body plus any readable text
@@ -259,7 +323,11 @@ export function buildOfferText(email: NormalizedEmail): string {
     }
   }
 
-  return parts.join("\n\n").slice(0, MAX_OFFER_TEXT).trim();
+  const joined = parts.join("\n\n").trim();
+  if (joined.length <= MAX_OFFER_TEXT && !email.bodyTruncated) return joined;
+
+  const room = MAX_OFFER_TEXT - TRUNCATION_NOTICE.length - 2;
+  return `${joined.slice(0, room).trimEnd()}\n\n${TRUNCATION_NOTICE}`;
 }
 
 /** One line per attachment, for the opening message. Names only. */
@@ -329,16 +397,36 @@ export function inferSponsorshipType(text: string): SponsorshipType {
 // --- envelope ---------------------------------------------------------------
 
 /**
- * HTML above this is truncated before conversion. buildOfferText keeps 20k
- * characters of text anyway; this bounds the regex work on a hostile body.
+ * Input caps, applied before any parsing or regex runs — not to the output.
+ *
+ * The offer handed to the evaluator is at most MAX_OFFER_TEXT (20k) characters,
+ * so reading more than a few times that buys nothing; quoted history is the
+ * only reason to read past it at all, because stripQuotedReply has to see where
+ * the new message ends. HTML gets more room than text because markup and
+ * inline styles routinely outweigh the words several times over.
+ *
+ * Hitting a cap is never silent: bodyTruncated is set, and buildOfferText
+ * appends TRUNCATION_NOTICE.
  */
-const MAX_HTML_CHARS = 1_000_000;
+export const MAX_TEXT_INPUT_CHARS = 100_000;
+export const MAX_HTML_INPUT_CHARS = 300_000;
 
-function bodyText(data: Record<string, unknown>): string {
+function bodyText(data: Record<string, unknown>): { text: string; truncated: boolean } {
   const plain = typeof data.text === "string" ? data.text : "";
-  if (plain.trim()) return plain;
-  const html = typeof data.html === "string" ? data.html.slice(0, MAX_HTML_CHARS) : "";
-  return html ? htmlToText(html) : "";
+  if (plain.trim()) {
+    return {
+      text: plain.slice(0, MAX_TEXT_INPUT_CHARS),
+      truncated: plain.length > MAX_TEXT_INPUT_CHARS,
+    };
+  }
+
+  const html = typeof data.html === "string" ? data.html : "";
+  if (!html) return { text: "", truncated: false };
+  const converted = htmlToText(html.slice(0, MAX_HTML_INPUT_CHARS));
+  return {
+    text: converted.slice(0, MAX_TEXT_INPUT_CHARS),
+    truncated: html.length > MAX_HTML_INPUT_CHARS || converted.length > MAX_TEXT_INPUT_CHARS,
+  };
 }
 
 /**
@@ -350,6 +438,7 @@ function bodyText(data: Record<string, unknown>): string {
 export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
   const root = (payload ?? {}) as Record<string, unknown>;
   const data = ((root.data ?? root) ?? {}) as Record<string, unknown>;
+  const body = bodyText(data);
 
   return {
     // `message_id` is deliberately absent from this chain: it is the RFC
@@ -369,9 +458,10 @@ export function normalizeInboundEmail(payload: unknown): NormalizedEmail {
       ...collectAddresses(data.received_for),
     ],
     subject: typeof data.subject === "string" ? data.subject.slice(0, 300) : "",
-    text: bodyText(data),
+    text: body.text,
     attachments: normalizeAttachments(data.attachments),
     headers: normalizeHeaders(data.headers),
+    bodyTruncated: body.truncated,
   };
 }
 
@@ -398,5 +488,6 @@ export function mergeReceivedEmail(
     text: fetched.text,
     attachments: fetched.attachments.length ? fetched.attachments : meta.attachments,
     headers: fetched.headers,
+    bodyTruncated: fetched.bodyTruncated,
   };
 }

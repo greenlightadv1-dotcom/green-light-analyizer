@@ -27,6 +27,7 @@ import {
   CONTENT_FETCH_RETRYABLE_PREFIX,
   claimDelivery,
 } from "./claim";
+import { fetchDeadline, intakeDeadline } from "./budget";
 
 /**
  * The §5 intake pipeline, steps 3–5.
@@ -39,7 +40,12 @@ import {
  */
 
 export type IntakeOutcome = {
-  status: "processed" | "unknown_alias" | "rejected" | "failed";
+  /**
+   * The first four are stored in inbound_emails.status. "in_progress" never
+   * is: it means another execution holds a live claim on this email, nothing
+   * was written, and the provider should try again later.
+   */
+  status: "processed" | "unknown_alias" | "rejected" | "failed" | "in_progress";
   detail: string;
   chatId?: string;
   creatorId?: string;
@@ -130,6 +136,11 @@ async function findCreatorByAlias(
 export type IntakeDeps = {
   /** Injected so the content fetch can be stubbed; defaults to Resend. */
   fetchContent?: typeof fetchReceivedEmail;
+  /**
+   * When the model must have stopped, measured from the request's arrival
+   * (budget.ts). Defaults to a full budget from now.
+   */
+  deadlineAt?: number;
 };
 
 /**
@@ -144,14 +155,18 @@ export type IntakeDeps = {
  * Resend's email_id (claim.ts). A unique-violation there means a retry of
  * something already handled, and the whole delivery is a no-op — which is
  * what stops a provider retry minting a second room and a second paid AI call.
- * The one exception is a delivery that stopped at a retryable content-fetch
- * failure: the retry takes it over and finishes it.
+ * Two exceptions, both taken over atomically (claim.ts): a delivery that
+ * stopped at a retryable content-fetch failure, and a claim old enough that
+ * its function must have been killed. A claim that is still live answers
+ * "in_progress" so the provider retries later instead of being told the
+ * email was handled.
  */
 export async function processInboundEmail(
   meta: NormalizedEmail,
   deps: IntakeDeps = {},
 ): Promise<IntakeOutcome> {
   const admin = createAdminClient();
+  const deadlineAt = deps.deadlineAt ?? intakeDeadline(Date.now());
   let email = meta;
 
   if (!email.providerMessageId) {
@@ -163,7 +178,7 @@ export async function processInboundEmail(
 
   // Claim the delivery before doing any work.
   const claim = await claimDelivery({
-    async insertClaim() {
+    async insertClaim(marker) {
       const { error } = await admin.from("inbound_emails").insert({
         provider_message_id: key,
         to_alias: alias,
@@ -174,30 +189,69 @@ export async function processInboundEmail(
         // filter eat?".
         subject: email.subject ? email.subject.slice(0, 300) : null,
         status: "failed",
-        detail: "processing",
+        detail: marker,
       });
       return { errorCode: error?.code ?? null, errorMessage: error?.message ?? null };
     },
-    async reclaimAfterFetchFailure() {
+    async readClaim() {
+      const { data } = await admin
+        .from("inbound_emails")
+        .select("status, detail, created_at, chat_id")
+        .eq("provider_message_id", key)
+        .maybeSingle();
+      return data ?? null;
+    },
+    async swapDetail(expectedDetail, next) {
+      // Compare-and-swap: matches only while the row still holds exactly the
+      // status and detail just read, so of two racing redeliveries one wins.
       const { data, error } = await admin
         .from("inbound_emails")
-        .update({ detail: "processing" })
+        .update({ detail: next })
         .eq("provider_message_id", key)
         .eq("status", "failed")
-        .like("detail", `${CONTENT_FETCH_RETRYABLE_PREFIX}%`)
+        .eq("detail", expectedDetail)
         .select("id");
       return !error && (data?.length ?? 0) === 1;
     },
   });
 
+  // Ids and timings only — never the sender, subject or body.
   if (claim.kind === "duplicate") {
+    log.info("inbound.duplicate_ignored", { email_id: key });
     return { status: "processed", detail: "duplicate delivery ignored" };
+  }
+  if (claim.kind === "in_progress") {
+    log.warn("inbound.claim_in_progress", { email_id: key, age_ms: claim.ageMs });
+    return { status: "in_progress", detail: "another delivery of this email is being processed" };
   }
   if (claim.kind === "error") {
     return { status: "failed", detail: `could not record delivery: ${claim.message}` };
   }
+  if (claim.kind === "reclaimed") {
+    log.warn("inbound.claim_reclaimed", {
+      email_id: key,
+      reason: claim.reason,
+      age_ms: claim.ageMs,
+      had_room: claim.priorChatId !== null,
+    });
+  }
+  // A run that was killed may already have written part of this delivery.
+  const recovering = claim.kind === "reclaimed" && claim.reason === "stale_claim";
+  const priorChatId = claim.kind === "reclaimed" ? claim.priorChatId : null;
 
-  const finish = async (outcome: IntakeOutcome): Promise<IntakeOutcome> => {
+  /**
+   * Records the room on the claim row as soon as it is known, before any
+   * message is written. If this run is killed after this point, the run that
+   * reclaims the row appends to this room instead of opening a second one.
+   */
+  const checkpoint = async (chatId: string) => {
+    await admin.from("inbound_emails").update({ chat_id: chatId }).eq("provider_message_id", key);
+  };
+
+  // Only a decided outcome is ever stored; "in_progress" returns before here.
+  const finish = async (
+    outcome: IntakeOutcome & { status: Exclude<IntakeOutcome["status"], "in_progress"> },
+  ): Promise<IntakeOutcome> => {
     await admin
       .from("inbound_emails")
       .update({
@@ -252,10 +306,15 @@ export async function processInboundEmail(
   // §5.3: the webhook carries metadata only. Fetched here — after the alias
   // resolved to an active creator, so mail for nobody costs no API call, and
   // before the screener, which needs the real headers and body.
-  const fetched = await (deps.fetchContent ?? fetchReceivedEmail)(key);
+  const fetched = await (deps.fetchContent ?? fetchReceivedEmail)(key, {
+    deadlineAt: fetchDeadline(Date.now(), deadlineAt),
+  });
   if (!fetched.ok) {
-    // Status code and reason only: never the provider's response body.
-    log.warn("inbound.content_fetch_failed", {
+    // Status code and reason only: never the provider's response body. A
+    // permanent failure is an error: nothing will retry it, and no creator
+    // screen shows it, so the log line is the only place it surfaces.
+    (fetched.retryable ? log.warn : log.error)("inbound.content_fetch_failed", {
+      email_id: key,
       retryable: fetched.retryable,
       reason: fetched.reason,
       status: fetched.status,
@@ -342,9 +401,13 @@ export async function processInboundEmail(
   );
 
   let chatId: string;
+  // The earlier run's room, when it recorded one, wins over the thread lookup:
+  // it is this email's room even if the thread has since been marked paid.
+  const reusedChatId = priorChatId ?? openChat?.id ?? null;
 
-  if (openChat) {
-    chatId = openChat.id;
+  if (reusedChatId) {
+    chatId = reusedChatId;
+    await checkpoint(chatId);
   } else {
     // Build the §7.4 payload from the creator's strongest media kit.
     const { data: kits } = await admin
@@ -377,7 +440,7 @@ export async function processInboundEmail(
         sponsorship_type: sponsorshipType,
         target_countries: null, // an emailed offer rarely states them
         offer_text: offerText,
-      }),
+      }, { deadlineAt }),
       runSecurityCheck(sender, offerText).catch(() => null),
     ]);
 
@@ -411,6 +474,7 @@ export async function processInboundEmail(
     }
 
     chatId = chat.id;
+    await checkpoint(chatId);
 
     notifyNewDeal(
       creator,
@@ -433,22 +497,42 @@ export async function processInboundEmail(
     });
   }
 
-  // The offer itself, masked, attributed to the sender rather than a user.
-  const { data: inserted, error: messageError } = await admin
-    .from("messages")
-    .insert({
-      chat_id: chatId,
-      sender_id: null,
-      message_text: masked.maskedText,
-      is_masked: masked.isMasked,
-    })
-    .select("id")
-    .single();
+  // Recovering a killed run: it may already have stored this offer. The
+  // content is fetched again from Resend, so the masked text is identical, and
+  // a platform-authored message with exactly that text in this room is that
+  // earlier write. Only on recovery: a sponsor who sends the same words twice
+  // in two separate emails gets both.
+  let alreadyStoredId: string | null = null;
+  if (recovering) {
+    const { data: recent } = await admin
+      .from("messages")
+      .select("id, message_text")
+      .eq("chat_id", chatId)
+      .is("sender_id", null)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    alreadyStoredId =
+      (recent ?? []).find((m) => m.message_text === masked.maskedText)?.id ?? null;
+  }
 
-  if (messageError) {
+  // The offer itself, masked, attributed to the sender rather than a user.
+  const { data: inserted, error: messageError } = alreadyStoredId
+    ? { data: { id: alreadyStoredId }, error: null }
+    : await admin
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender_id: null,
+          message_text: masked.maskedText,
+          is_masked: masked.isMasked,
+        })
+        .select("id")
+        .single();
+
+  if (messageError || !inserted) {
     return finish({
       status: "failed",
-      detail: `could not store the message: ${messageError.message}`,
+      detail: `could not store the message: ${messageError?.message ?? "unknown"}`,
       creatorId: creator.id,
       chatId,
       spamScore: screen.score,
@@ -459,7 +543,13 @@ export async function processInboundEmail(
   // §6 wants the record even when the contact details were the sender's, not
   // the creator's — the log is attributed to the creator whose room it entered,
   // and the excerpt is the already-masked text.
-  if (masked.isMasked) {
+  // On recovery the earlier run may have logged this message already.
+  const { data: loggedBefore } =
+    masked.isMasked && alreadyStoredId
+      ? await admin.from("violation_logs").select("id").eq("message_id", alreadyStoredId).limit(1)
+      : { data: [] as { id: string }[] };
+
+  if (masked.isMasked && !loggedBefore?.length) {
     await admin.from("violation_logs").insert({
       profile_id: creator.id,
       chat_id: chatId,
@@ -471,8 +561,10 @@ export async function processInboundEmail(
 
   return finish({
     status: "processed",
-    detail: openChat
-      ? "appended to an open deal room"
+    detail: reusedChatId
+      ? recovering
+        ? "recovered an interrupted delivery into its deal room"
+        : "appended to an open deal room"
       : `created a deal room${screen.verdict === "flag" ? " (flagged as possible spam)" : ""}`,
     creatorId: creator.id,
     chatId,

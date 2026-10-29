@@ -19,15 +19,16 @@
 export const RECEIVED_EMAIL_ENDPOINT = "https://api.resend.com/emails/receiving";
 
 /**
- * Small on purpose. The webhook route has a 60s ceiling (Vercel Hobby) and the
- * NVIDIA call that follows budgets up to 50s of it, so this step gets what is
- * left: two attempts of 4s plus a short pause. Resend answers this in well
- * under a second when healthy; anything slower is better handed back to the
- * provider's own retry schedule than allowed to starve the evaluation.
+ * Per-attempt limits. The total is bounded separately by the caller's
+ * `deadlineAt` (FETCH_BUDGET_MS in budget.ts for the webhook): an attempt never
+ * runs past it, and no attempt starts with less than MIN_ATTEMPT_MS left.
+ * Running out of budget is a *retryable* failure — Resend redelivers — never a
+ * rejection, so a slow minute at Resend cannot turn into a lost offer.
  */
-const DEFAULT_TIMEOUT_MS = 4_000;
-const DEFAULT_ATTEMPTS = 2;
+export const DEFAULT_TIMEOUT_MS = 4_000;
+export const DEFAULT_ATTEMPTS = 2;
 const DEFAULT_BACKOFF_MS = 300;
+export const MIN_ATTEMPT_MS = 750;
 
 /** A delivery larger than this is not an offer; refuse rather than parse it. */
 export const MAX_RECEIVED_BYTES = 5 * 1024 * 1024;
@@ -61,6 +62,9 @@ export type FetchReceivedOptions = {
   attempts?: number;
   backoffMs?: number;
   sleep?: (ms: number) => Promise<void>;
+  /** Absolute instant (ms) by which every attempt must have finished. */
+  deadlineAt?: number;
+  now?: () => number;
 };
 
 const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -96,6 +100,8 @@ export async function fetchReceivedEmail(
   const maxAttempts = Math.max(1, options.attempts ?? DEFAULT_ATTEMPTS);
   const backoffMs = options.backoffMs ?? DEFAULT_BACKOFF_MS;
   const sleep = options.sleep ?? defaultSleep;
+  const now = options.now ?? Date.now;
+  const deadlineAt = options.deadlineAt ?? Number.POSITIVE_INFINITY;
   const url = `${RECEIVED_EMAIL_ENDPOINT}/${encodeURIComponent(emailId)}`;
 
   let last: ReceivedFetchFailure = {
@@ -107,10 +113,29 @@ export async function fetchReceivedEmail(
   };
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    if (attempt > 1) await sleep(backoffMs * (attempt - 1));
+    if (attempt > 1) {
+      const pause = backoffMs * (attempt - 1);
+      if (deadlineAt - now() - pause < MIN_ATTEMPT_MS) break;
+      await sleep(pause);
+    }
 
+    const remaining = deadlineAt - now();
+    if (remaining < MIN_ATTEMPT_MS) {
+      if (attempt === 1) {
+        return {
+          ok: false,
+          retryable: true,
+          reason: "time budget exhausted before the request",
+          status: null,
+          attempts: 0,
+        };
+      }
+      break;
+    }
+
+    const attemptMs = Math.min(timeoutMs, remaining);
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = setTimeout(() => controller.abort(), attemptMs);
 
     try {
       const response = await doFetch(url, {
@@ -166,7 +191,7 @@ export async function fetchReceivedEmail(
       last = {
         ok: false,
         retryable: true,
-        reason: aborted ? `timed out after ${timeoutMs}ms` : "network error",
+        reason: aborted ? `timed out after ${attemptMs}ms` : "network error",
         status: null,
         attempts: attempt,
       };

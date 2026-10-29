@@ -2,7 +2,9 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import {
+  DEFAULT_TIMEOUT_MS,
   MAX_RECEIVED_BYTES,
+  MIN_ATTEMPT_MS,
   RECEIVED_EMAIL_ENDPOINT,
   fetchReceivedEmail,
   validateReceivedEmail,
@@ -199,4 +201,80 @@ test("validateReceivedEmail accepts the fixture and tolerates absent fields", ()
   assert.ok(validateReceivedEmail(receivedEmail(), EMAIL_ID));
   assert.ok(validateReceivedEmail({ text: "only text" }, EMAIL_ID));
   assert.ok(validateReceivedEmail(receivedEmail({ html: null, text: null }), EMAIL_ID));
+});
+
+// --- request time budget (review Finding 3) ---------------------------------
+
+/** A clock that only moves when the stub fetch or sleep says so. */
+function fakeClock(start = 1_000_000) {
+  let t = start;
+  return { now: () => t, advance: (ms: number) => (t += ms) };
+}
+
+test("no attempt starts when the budget is already spent — and that is retryable", async () => {
+  const clock = fakeClock();
+  const { impl, calls } = scripted(json(receivedEmail()));
+  const result = await fetchReceivedEmail(EMAIL_ID, {
+    ...opts(impl),
+    now: clock.now,
+    deadlineAt: clock.now() + MIN_ATTEMPT_MS - 1,
+  });
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.retryable, true, "running out of time must never become a rejection");
+  assert.equal(result.reason, "time budget exhausted before the request");
+  assert.equal(calls.length, 0);
+});
+
+test("the per-attempt timeout shrinks to what the budget has left", async () => {
+  const clock = fakeClock();
+  const timeouts: number[] = [];
+  const realSetTimeout = globalThis.setTimeout;
+  // Observe the timer each attempt arms, without waiting on it.
+  globalThis.setTimeout = ((fn: () => void, ms?: number) => {
+    timeouts.push(ms ?? 0);
+    return realSetTimeout(fn, 0x7fffffff);
+  }) as typeof setTimeout;
+  try {
+    const { impl } = scripted(json(receivedEmail()));
+    await fetchReceivedEmail(EMAIL_ID, { ...opts(impl), now: clock.now, deadlineAt: clock.now() + 2_500 });
+  } finally {
+    globalThis.setTimeout = realSetTimeout;
+  }
+  assert.deepEqual(timeouts, [2_500], "min(4000ms default, 2500ms left)");
+});
+
+test("a retry is skipped when the budget cannot fit it, and the failure stays retryable", async () => {
+  const clock = fakeClock();
+  const calls: string[] = [];
+  const impl = (async () => {
+    calls.push("call");
+    clock.advance(DEFAULT_TIMEOUT_MS); // the first attempt used up its time
+    return json({}, 503);
+  }) as unknown as typeof fetch;
+  const result = await fetchReceivedEmail(EMAIL_ID, {
+    apiKey: KEY,
+    fetchImpl: impl,
+    sleep: async (ms) => void clock.advance(ms),
+    now: clock.now,
+    deadlineAt: clock.now() + DEFAULT_TIMEOUT_MS + 500,
+  });
+  assert.equal(calls.length, 1, "only 500ms left: no second attempt");
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.retryable, true);
+    assert.equal(result.reason, "HTTP 503");
+  }
+});
+
+test("with a full budget both attempts run", async () => {
+  const clock = fakeClock();
+  const { impl, calls } = scripted(json({}, 503), json(receivedEmail()));
+  const result = await fetchReceivedEmail(EMAIL_ID, {
+    ...opts(impl),
+    now: clock.now,
+    deadlineAt: clock.now() + 6_000,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(calls.length, 2);
 });

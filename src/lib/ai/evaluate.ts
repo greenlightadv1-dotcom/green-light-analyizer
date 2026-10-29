@@ -135,12 +135,14 @@ function heuristicEvaluate(input: EvaluationInput): EvaluationResult {
  */
 export async function evaluateOffer(
   input: EvaluationInput,
+  /** An absolute deadline for the model call; see ChatRequest.deadlineAt. */
+  options: { deadlineAt?: number } = {},
 ): Promise<EvaluationResult> {
   try {
     // No pre-flight key check: chatJson resolves the configuration and raises
     // AiUnavailableError when there is no key, so "unconfigured" and "failed"
     // arrive on the same path and are told apart by the error itself.
-    const raw = await evaluateWithModel(input);
+    const raw = await evaluateWithModel(input, options);
     const capped = capRiskByVerification(
       raw.risk,
       input.audience_verified,
