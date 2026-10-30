@@ -1,7 +1,7 @@
 import type { AiEvaluation } from "@/lib/types/database";
 import { overlapWith } from "../media-kit/countries.ts";
 import type { EvaluationInput, EvaluationResult } from "./types";
-import { capRiskByVerification } from "./rules.ts";
+import { capRiskByVerification, highValueBasisUsd } from "./rules.ts";
 
 /**
  * The rule-based engine (§5.4 fallback), moved out of evaluate.ts so it is
@@ -92,7 +92,11 @@ export function heuristicEvaluate(input: EvaluationInput): EvaluationResult {
     reasons.push("no reach figures are on file for this creator yet, so the price is a floor estimate");
   }
 
-  const capped = capRiskByVerification(risk, input.audience_verified, mid);
+  const capped = capRiskByVerification(
+    risk,
+    input.audience_verified,
+    highValueBasisUsd(mid, input.offered_amount_usd),
+  );
 
   return {
     recommended_price_usd: mid,

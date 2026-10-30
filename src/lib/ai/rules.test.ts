@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules.ts";
+import { capRiskByVerification, HIGH_VALUE_DEAL_USD, highValueBasisUsd } from "./rules.ts";
 
 /**
  * §7.4: "unverified audience data should never by itself produce a green
@@ -40,4 +40,31 @@ test("the threshold is inclusive", () => {
     capRiskByVerification("green", false, HIGH_VALUE_DEAL_USD).risk,
     "yellow",
   );
+});
+
+// --- high-value basis: the greater of offer and recommendation -----------------
+
+test("the high-value basis is the greater of the offer and the recommendation", () => {
+  assert.equal(highValueBasisUsd(200, 5000), 5000);
+  assert.equal(highValueBasisUsd(2100, 500), 2100);
+  assert.equal(highValueBasisUsd(800, 800), 800);
+});
+
+test("a missing or invalid value is ignored, never treated as high or as zero-and-max", () => {
+  assert.equal(highValueBasisUsd(800, null), 800);
+  assert.equal(highValueBasisUsd(800, undefined), 800);
+  for (const bad of [Number.NaN, Infinity, -5000, 0]) assert.equal(highValueBasisUsd(800, bad), 800, String(bad));
+  assert.equal(highValueBasisUsd(null, 1500), 1500);
+  assert.equal(highValueBasisUsd(null, null), 0);
+});
+
+test("a high offer caps an unverified green even when the recommendation is low", () => {
+  const basis = highValueBasisUsd(200, HIGH_VALUE_DEAL_USD * 5);
+  assert.deepEqual(capRiskByVerification("green", false, basis), { risk: "yellow", risk_capped: true });
+  // Before: judged on the $200 recommendation alone, so it stayed green.
+  assert.equal(capRiskByVerification("green", false, 200).risk, "green");
+});
+
+test("verified geography still keeps green whatever the basis", () => {
+  assert.equal(capRiskByVerification("green", true, highValueBasisUsd(200, 50_000)).risk, "green");
 });

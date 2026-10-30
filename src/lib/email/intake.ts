@@ -459,6 +459,7 @@ export async function processInboundEmail(
           : null,
         audience_verified: audienceVerified,
         sponsorship_type: sponsorshipType,
+        offered_amount_usd: offered, // §7.4 high-value test
         target_countries: null, // an emailed offer rarely states them
         offer_text: offerText,
       }, { deadlineAt }),

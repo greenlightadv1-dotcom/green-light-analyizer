@@ -4,7 +4,7 @@ import type { EvaluationInput, EvaluationResult } from "./types";
 import { AiUnavailableError } from "./chat";
 import { log } from "@/lib/log";
 import { evaluateWithModel } from "./price-model";
-import { capRiskByVerification } from "./rules";
+import { capRiskByVerification, highValueBasisUsd } from "./rules";
 import { heuristicEvaluate } from "./heuristic";
 
 export { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules";
@@ -41,7 +41,7 @@ export async function evaluateOffer(
     const capped = capRiskByVerification(
       raw.risk,
       input.audience_verified,
-      raw.recommended_price_usd,
+      highValueBasisUsd(raw.recommended_price_usd, input.offered_amount_usd),
     );
 
     return {

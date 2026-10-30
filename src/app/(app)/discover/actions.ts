@@ -99,7 +99,9 @@ export async function previewOfferToCreator(
     offer_text: offerText,
   });
 
-  const result = await evaluateOffer(input);
+  // The company's stated amount joins the §7.4 high-value test. It can only
+  // make the cap stricter, so a company inflating it only rates itself down.
+  const result = await evaluateOffer({ ...input, offered_amount_usd: offeredAmount });
 
   const secret = quoteSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
   const quote: OfferQuote = {

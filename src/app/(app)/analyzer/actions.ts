@@ -100,7 +100,8 @@ export async function analyzeOffer(
   // .catch(() => null) here is one more layer so even an unexpected bug in
   // the security path can never take the price/risk result down with it.
   const [result, security] = await Promise.all([
-    evaluateOffer(input),
+    // The stated offer joins the §7.4 high-value test (rules.highValueBasisUsd).
+    evaluateOffer({ ...input, offered_amount_usd: extractOfferedAmount(offerText) }),
     runSecurityCheck(senderEmail, offerText).catch(() => null),
   ]);
 

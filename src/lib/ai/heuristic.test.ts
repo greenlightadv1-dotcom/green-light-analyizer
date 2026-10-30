@@ -59,3 +59,21 @@ test("with reach on file the existing rules are unchanged", () => {
   assert.equal(heuristicEvaluate({ ...base, engagement_rate: 0.5 }).risk, "red");
   assert.equal(heuristicEvaluate(base).engine, "heuristic");
 });
+
+test("§7.4: a high stated offer caps an unverified green on the rule-based path too", () => {
+  // Small creator, so the recommendation is under the threshold; the sponsor
+  // offers far more. Declared (unverified) geography fully overlaps the target.
+  const small = { ...base, avg_views: 2_000, declared_top_countries: [{ country: "EG", pct: 100 }] };
+  const noOffer = heuristicEvaluate(small);
+  assert.equal(noOffer.risk, "green", "low-value without an offer stays green");
+  const bigOffer = heuristicEvaluate({ ...small, offered_amount_usd: 5_000 });
+  assert.equal(bigOffer.risk, "yellow");
+  assert.equal(bigOffer.risk_capped, true);
+  const verified = heuristicEvaluate({
+    ...small,
+    offered_amount_usd: 5_000,
+    audience_verified: true,
+    verified_top_countries: [{ country: "EG", pct: 100 }],
+  });
+  assert.equal(verified.risk, "green", "verified geography is not capped");
+});

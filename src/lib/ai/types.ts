@@ -29,6 +29,13 @@ export type EvaluationInput = {
   sponsorship_type: SponsorshipType;
   target_countries: string[] | null;
   offer_text: string;
+  /**
+   * What the sponsor offered, USD, when known (deal_chats.offered_amount's
+   * source: extracted from the offer text, or entered by the company on
+   * Discover). Only feeds the §7.4 high-value test (rules.highValueBasisUsd);
+   * it is not added to the model prompt, which already reads the offer text.
+   */
+  offered_amount_usd?: number | null;
 };
 
 export type EvaluationResult = {
