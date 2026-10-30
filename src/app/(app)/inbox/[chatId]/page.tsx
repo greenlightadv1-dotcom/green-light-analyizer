@@ -4,7 +4,8 @@ import { DealRoomView } from "@/components/views/DealRoomView";
 import { requireProfile } from "@/lib/auth";
 import { getOwnHistoryWithDomain } from "@/lib/deals/company-intelligence";
 import { getDealChat, listMessages } from "@/lib/deals/queries";
-import { buildDirectReply } from "@/lib/deals/reply-template";
+import { buildOfferContextBlock } from "@/lib/deals/reply-template";
+import { planNegotiation } from "@/lib/deals/negotiation-context";
 
 export const metadata: Metadata = { title: "Deal room" };
 /**
@@ -53,16 +54,22 @@ export default async function DealRoomPage({
   // about this deal, and a client-built body would be whatever the page was
   // handed. Only offered to the creator on an emailed offer — a company party
   // is already reading the thread in-app, so there is nothing to relay.
-  const directReplyBody =
-    !chat.company_id && chat.creator_id === profile.id
-      ? buildDirectReply({
-          creatorName: profile.full_name,
-          offeredAmountUsd: chat.offered_amount,
-          recommendedPriceUsd: chat.recommended_price_usd,
-          sponsorshipType: chat.sponsorship_type,
-          dealStatus: chat.deal_status,
-        })
-      : null;
+  //
+  // The body follows the negotiation stage (lib/deals/negotiation.ts): a first
+  // reply explores scope and budget instead of naming a rate, and the figure
+  // in the summary line is the one the reply itself states, if any.
+  let directReplyBody: string | null = null;
+  if (!chat.company_id && chat.creator_id === profile.id) {
+    const plan = await planNegotiation({ chat, profile, messages, privateMinimumUsd: null });
+    const statesFigure = plan.analysis.stage === "counter" || plan.analysis.stage === "hold";
+    directReplyBody = `${buildOfferContextBlock({
+      creatorName: profile.full_name,
+      offeredAmountUsd: plan.analysis.sponsorOfferUsd,
+      recommendedPriceUsd: statesFigure ? plan.analysis.targetUsd : null,
+      sponsorshipType: chat.sponsorship_type,
+      dealStatus: chat.deal_status,
+    })}\n\n${plan.template}`;
+  }
 
   return (
     <DealRoomView

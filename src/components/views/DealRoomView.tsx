@@ -74,6 +74,7 @@ export function DealRoomView({
             chatId={chatId}
             initialMessages={messages}
             currentUserId={currentUserId}
+            isCreator={chat.creator_id === currentUserId}
             demo={demo}
           />
         </div>

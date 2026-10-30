@@ -7,6 +7,8 @@ import {
   holdFigure,
   quotedRange,
   determineStage,
+  draftIsAcceptable,
+  statedUsdFigures,
   extractCampaignScope,
   readPrivateMinimum,
   revealsPrivateMinimum,
@@ -291,4 +293,27 @@ test("quoted ranges and held rates never sit at or under the private minimum", (
     }
   }
   assert.deepEqual(quotedRange(reply({ stage: "proposal" })), { low: 1280, high: 1880 }, "unchanged without a minimum");
+});
+
+// --- model drafts ---------------------------------------------------------------------
+
+test("a model draft may only state the figures the plan allows", () => {
+  const plan = { allowedFigures: [900, 1500], privateMinimumUsd: 1200 };
+  assert.ok(draftIsAcceptable("I'd be looking at $1,500 rather than $900.", plan));
+  assert.equal(draftIsAcceptable("How about $1,350?", plan), false, "an invented counter");
+  assert.equal(draftIsAcceptable("I can't go below $1,200.", plan), false, "the private minimum");
+  assert.equal(draftIsAcceptable("My minimum is 1200 dollars", plan), false);
+  assert.ok(draftIsAcceptable("Could you share the budget and scope?", plan));
+});
+
+test("before scope and budget are known, a model draft may state no figure at all", () => {
+  const discovery = { allowedFigures: [], privateMinimumUsd: null };
+  assert.ok(draftIsAcceptable("Could you share the deliverables, usage rights and your budget range?", discovery));
+  assert.equal(draftIsAcceptable("My rate is usually $2,000.", discovery), false);
+  assert.equal(draftIsAcceptable("Typically 2k USD for this.", discovery), false);
+});
+
+test("stated figures are read in every common form", () => {
+  assert.deepEqual(statedUsdFigures("$1,500 or 1.200 USD, maybe 2k dollars"), [1500, 1200, 2000]);
+  assert.deepEqual(statedUsdFigures("2 videos, 30 days, 6 months"), []);
 });

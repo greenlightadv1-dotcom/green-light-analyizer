@@ -28,11 +28,14 @@ export function DealRoom({
   chatId,
   initialMessages,
   currentUserId,
+  isCreator = false,
   demo = false,
 }: {
   chatId: string;
   initialMessages: Message[];
   currentUserId: string;
+  /** The creator of this room gets the negotiation co-pilot in the composer. */
+  isCreator?: boolean;
   /**
    * UI preview mode. Skips the Realtime subscription, which needs Supabase
    * credentials the preview deployment deliberately does not carry, and lets
@@ -146,6 +149,7 @@ export function DealRoom({
       <div className="border-t border-fg/8 p-4">
         <Composer
           chatId={chatId}
+          isCreator={isCreator}
           demo={demo}
           onDemoSend={(text) =>
             setMessages((prev) => [

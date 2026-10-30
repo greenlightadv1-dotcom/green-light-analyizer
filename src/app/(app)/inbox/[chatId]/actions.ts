@@ -13,7 +13,9 @@ import { extractDomain } from "@/lib/security/check";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
-import { getDealChat, latestIncomingMessage } from "@/lib/deals/queries";
+import { getDealChat, latestIncomingMessage, listMessages } from "@/lib/deals/queries";
+import { draftIsAcceptable, readPrivateMinimum } from "@/lib/deals/negotiation";
+import { planNegotiation, type NegotiationAnalysis } from "@/lib/deals/negotiation-context";
 import type { DealStatus } from "@/lib/types/database";
 
 export type SendMessageState = {
@@ -206,6 +208,11 @@ export type ReplyDraftState = {
    * of quiet overclaim §7.2 exists to prevent.
    */
   source: "ai" | "template" | null;
+  /**
+   * The creator-side pricing and stage behind the draft (creator only). Never
+   * carries the private minimum itself, only whether one was applied.
+   */
+  analysis?: NegotiationAnalysis | null;
 };
 
 /**
@@ -226,6 +233,12 @@ export async function generateReply(
   const chat = await getDealChat(chatId);
   if (!chat) {
     return { error: "That conversation is not available.", draft: null, source: null };
+  }
+
+  // The creator of this room gets the staged negotiation co-pilot: rate from
+  // their own analytics, stage from the thread, figures fixed server-side.
+  if (profile.role === "creator" && chat.creator_id === profile.id) {
+    return negotiationDraft(profile, chat, formData);
   }
 
   // Every path below this point can still answer, so the deterministic
@@ -262,6 +275,49 @@ export async function generateReply(
 
   if (!result.ok) return { error: null, draft: template, source: "template" };
   return { error: null, draft: result.draft, source: "ai" };
+}
+
+async function negotiationDraft(
+  profile: Awaited<ReturnType<typeof requireProfile>>,
+  chat: NonNullable<Awaited<ReturnType<typeof getDealChat>>>,
+  formData: FormData,
+): Promise<ReplyDraftState> {
+  // The creator's own floor, for steering only. Validated, never stored,
+  // never logged, never sent to the model, never returned.
+  const privateMinimumUsd = readPrivateMinimum(formData.get("private_minimum_usd"));
+
+  const plan = await planNegotiation({
+    chat,
+    profile,
+    messages: await listMessages(chat.id),
+    privateMinimumUsd,
+  });
+  const fallback = { error: null, draft: plan.template, source: "template" as const, analysis: plan.analysis };
+
+  const limit = await consumeRateLimit("ai_reply_draft", profile.id);
+  if (!limit.allowed) return fallback;
+
+  const result = await generateReplyDraft({
+    creatorName: profile.full_name,
+    latestMessage: plan.latestSponsorText,
+    recommendedPriceUsd: null,
+    offeredAmountUsd: plan.analysis.sponsorOfferUsd,
+    risk: chat.ai_evaluation,
+    dealStatus: chat.deal_status ?? "new",
+    negotiation: {
+      stage: plan.analysis.stage,
+      allowedFigures: plan.allowedFigures,
+      deterministicDraft: plan.template,
+    },
+  });
+
+  // A model draft that states a figure it was not given, or the private
+  // minimum, is discarded for the deterministic one.
+  if (!result.ok || !draftIsAcceptable(result.draft, { allowedFigures: plan.allowedFigures, privateMinimumUsd })) {
+    if (result.ok) log.warn("reply_draft.rejected_by_guard", { chat_id: chat.id, stage: plan.analysis.stage });
+    return fallback;
+  }
+  return { error: null, draft: result.draft, source: "ai", analysis: plan.analysis };
 }
 
 export type CompanyIntelState = {

@@ -41,12 +41,36 @@ function GenerateDraftButton() {
   );
 }
 
+const STAGE_KEYS: Record<string, string> = {
+  discovery: "inbox.stageDiscovery",
+  proposal: "inbox.stageProposal",
+  counter: "inbox.stageCounter",
+  hold: "inbox.stageHold",
+  accept_ready: "inbox.stageAcceptReady",
+  agreed: "inbox.stageAgreed",
+};
+
+const PROVENANCE_KEYS: Record<string, string> = {
+  verified: "inbox.provVerified",
+  synced: "inbox.provSynced",
+  self_reported: "inbox.provSelfReported",
+  sponsor_stated: "inbox.provSponsorStated",
+  estimated: "inbox.provEstimated",
+  assumption: "inbox.provAssumption",
+  missing: "inbox.provMissing",
+};
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+
 export function Composer({
   chatId,
+  isCreator = false,
   demo = false,
   onDemoSend,
 }: {
   chatId: string;
+  /** Shows the private-minimum field and the rate breakdown (creator only). */
+  isCreator?: boolean;
   /**
    * UI preview mode: masks and echoes locally instead of calling the server
    * action, which needs a database the preview deployment has no keys for.
@@ -122,7 +146,28 @@ export function Composer({
           }
         >
           <input type="hidden" name="chat_id" value={chatId} />
-          <GenerateDraftButton />
+          <div className="flex flex-wrap items-end gap-2">
+            <GenerateDraftButton />
+            {isCreator && !demo ? (
+              <label className="flex items-center gap-1.5 text-[11px] text-fg/50">
+                {t("inbox.privateMinimum")}
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name="private_minimum_usd"
+                  autoComplete="off"
+                  placeholder="$"
+                  aria-describedby={`${chatId}-minimum-note`}
+                  className="h-7 w-24 rounded-lg border border-fg/10 bg-fg/5 px-2 text-xs text-fg focus:border-brand-green/50 focus:outline-none"
+                />
+              </label>
+            ) : null}
+          </div>
+          {isCreator && !demo ? (
+            <p id={`${chatId}-minimum-note`} className="mt-1 text-[11px] text-fg/35">
+              {t("inbox.privateMinimumNote")}
+            </p>
+          ) : null}
         </form>
 
         {!demo && draftState.error ? (
@@ -141,6 +186,55 @@ export function Composer({
             */}
             {!demo && draftState.source === "template" ? (
               <p className="mt-1.5 text-[11px] text-fg/35">{t("inbox.draftFromTemplate")}</p>
+            ) : null}
+            {!demo && draftState.analysis ? (
+              <div className="mt-2 space-y-1.5 border-t border-brand-green/15 pt-2 text-[11px] text-fg/55">
+                <p>
+                  <span className="font-medium text-fg/75">{t("inbox.negotiationStage")}:</span>{" "}
+                  {t(STAGE_KEYS[draftState.analysis.stage])}
+                  {" · "}
+                  {t("inbox.theirOffer")}:{" "}
+                  {draftState.analysis.sponsorOfferUsd !== null
+                    ? usd(draftState.analysis.sponsorOfferUsd)
+                    : t("inbox.notStated")}
+                  {draftState.analysis.targetUsd !== null ? (
+                    <>
+                      {" · "}
+                      {t("inbox.suggestedRate")}: {usd(draftState.analysis.targetUsd)}
+                      {draftState.analysis.rangeUsd
+                        ? ` (${usd(draftState.analysis.rangeUsd.low)}–${usd(draftState.analysis.rangeUsd.high)})`
+                        : ""}
+                    </>
+                  ) : (
+                    <>
+                      {" · "}
+                      {t("inbox.noRateYet")}
+                    </>
+                  )}
+                </p>
+                <ul className="flex flex-wrap gap-1.5">
+                  {draftState.analysis.factors.map((f) => (
+                    <li key={f.label} className="rounded-full border border-fg/10 px-2 py-0.5">
+                      {f.label}: {f.value}{" "}
+                      <span className="text-fg/35">({t(PROVENANCE_KEYS[f.provenance])})</span>
+                    </li>
+                  ))}
+                </ul>
+                {draftState.analysis.missing.length ? (
+                  <p>
+                    {t("inbox.missingData")}: {draftState.analysis.missing.join(", ")}
+                  </p>
+                ) : null}
+                {draftState.analysis.assumptions.length ? (
+                  <ul className="list-disc ps-4">
+                    {draftState.analysis.assumptions.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {draftState.analysis.minimumApplied ? <p>{t("inbox.minimumApplied")}</p> : null}
+                <p className="text-fg/40">{t("inbox.draftOnly")}</p>
+              </div>
             ) : null}
             <div className="mt-2 flex items-center gap-2">
               <button

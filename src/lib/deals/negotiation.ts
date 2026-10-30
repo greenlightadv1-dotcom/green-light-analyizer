@@ -539,3 +539,34 @@ export function revealsPrivateMinimum(
   }
   return false;
 }
+
+/** Every USD figure a draft states ($1,500 / 1500 USD / 1.5k dollars). */
+export function statedUsdFigures(text: string): number[] {
+  const normalized = text.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+  const NUM = String.raw`(?<![\d.,])(\d(?:[\d.,]*\d)?)`;
+  const figures: number[] = [];
+  for (const pattern of [
+    new RegExp(String.raw`(?:us\$|\$|usd\s*)\s*${NUM}\s*(k\b)?`, "gi"),
+    new RegExp(String.raw`${NUM}\s*(k\b)?\s*(?:\$|usd\b|dollars?\b|دولار)`, "gi"),
+  ]) {
+    for (const m of normalized.matchAll(pattern)) {
+      const n = parseAmountToken(m[1]);
+      if (n !== null) figures.push(m[2] ? n * 1000 : n);
+    }
+  }
+  return figures;
+}
+
+/**
+ * Whether a model-written draft may be shown for this stage: it must not
+ * contain the private minimum, and every dollar figure it states must be one
+ * the plan allows (none at all before scope and budget are known). A draft
+ * that invents a number is replaced by the deterministic reply.
+ */
+export function draftIsAcceptable(
+  draft: string,
+  plan: { allowedFigures: number[]; privateMinimumUsd: number | null },
+): boolean {
+  if (revealsPrivateMinimum(draft, plan.privateMinimumUsd, plan.allowedFigures)) return false;
+  return statedUsdFigures(draft).every((f) => plan.allowedFigures.some((a) => Math.abs(a - f) < 1));
+}
