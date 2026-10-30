@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
 import { daysFromNow } from "@/lib/subscription";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export type RedeemCodeState = {
   error: string | null;
@@ -31,6 +32,11 @@ export async function redeemCode(
     .trim()
     .toUpperCase();
   if (!code) return { error: "Enter a code.", success: false };
+
+  // Codes are ~40 bits, so guessing is not practical — but every attempt is a
+  // service-role write, and nothing should be guessable for free.
+  const limit = await consumeRateLimit("promo_redeem", profile.id);
+  if (!limit.allowed) return { error: limit.message, success: false };
 
   const service = createAdminClient();
 

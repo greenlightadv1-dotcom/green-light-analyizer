@@ -28,6 +28,8 @@ export type RateLimitAction =
   | "ai_offer_preview"
   | "offer_send"
   | "analyzer_create_deal"
+  | "message_send"
+  | "promo_redeem"
   | "ai_reply_draft"
   | "ai_detect_niche"
   | "ai_company_intel";
@@ -65,6 +67,17 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   analyzer_create_deal: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 40, windowSeconds: DAY, label: "day" },
+  ],
+  // Not an AI cost: each message can be relayed as a platform email (Resend
+  // free tier: 3,000/month) and lands in the other party's thread.
+  message_send: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // Codes are unguessable, but redemption should still not be free to spray.
+  promo_redeem: [
+    { limit: 10, windowSeconds: HOUR, label: "hour" },
+    { limit: 30, windowSeconds: DAY, label: "day" },
   ],
   ai_reply_draft: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },

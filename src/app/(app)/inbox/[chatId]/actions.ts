@@ -77,6 +77,12 @@ export async function sendMessage(
   const chat = await getDealChat(chatId);
   if (!chat) return fail("That conversation is not available.");
 
+  // Each message can become a relayed platform email (Resend's free tier is
+  // 3,000/month) and lands in the other party's thread, so sending has a
+  // ceiling well above a real conversation's pace.
+  const limit = await consumeRateLimit("message_send", profile.id);
+  if (!limit.allowed) return fail(limit.message);
+
   const { maskedText, isMasked, matched } = maskSensitiveData(raw);
 
   const admin = createAdminClient();
