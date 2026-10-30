@@ -134,6 +134,16 @@ export function readConfigReport(): ConfigReport {
       impact: "Same as GOOGLE_OAUTH_CLIENT_ID — both are needed together.",
     },
     {
+      name: "CRON_SECRET",
+      set: Boolean(process.env.CRON_SECRET),
+      // Required once YouTube OAuth is configured: without it the daily job
+      // that deletes stale or revoked YouTube data refuses to run, and the
+      // privacy policy's 30-day statement stops being true.
+      required: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
+      impact:
+        "The daily YouTube data cleanup (/api/cron/youtube-data-freshness) refuses every call, so verified geography and public stats older than 30 days and data for revoked tokens are not deleted. Must be 16+ characters.",
+    },
+    {
       name: "META_APP_ID",
       set: Boolean(process.env.META_APP_ID),
       required: false,
