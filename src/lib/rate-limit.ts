@@ -27,6 +27,7 @@ export type RateLimitAction =
   | "ai_analyze_offer"
   | "ai_offer_preview"
   | "offer_send"
+  | "analyzer_create_deal"
   | "ai_reply_draft"
   | "ai_detect_niche"
   | "ai_company_intel";
@@ -56,6 +57,12 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   // fire a WhatsApp alert to their phone, so this caps what one company can
   // push at creators, not what it can spend.
   offer_send: [
+    { limit: 10, windowSeconds: HOUR, label: "hour" },
+    { limit: 40, windowSeconds: DAY, label: "day" },
+  ],
+  // Same reasoning as offer_send: each room runs a WHOIS + Safe Browsing check
+  // and can fire a WhatsApp alert (D3).
+  analyzer_create_deal: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 40, windowSeconds: DAY, label: "day" },
   ],

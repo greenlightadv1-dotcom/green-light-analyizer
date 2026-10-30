@@ -12,6 +12,7 @@ import {
   analyzeOffer,
   createDealFromAnalysis,
   type AnalyzerState,
+  type CreateDealState,
 } from "./actions";
 
 const selectClass =
@@ -58,6 +59,7 @@ const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
   sponsorship_type: "integration",
   target_countries: ["SA"],
   offer_text: "",
+  quote_token: null,
   security: {
     domain: "lumenapp.example",
     safeBrowsing: { flagged: false, threatTypes: [] },
@@ -92,6 +94,10 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
     { error: null, result: null },
   );
   const [demoResult, setDemoResult] = useState<AnalyzerState["result"]>(null);
+  const [createState, createAction] = useActionState<CreateDealState, FormData>(
+    createDealFromAnalysis,
+    { error: null },
+  );
 
   const r = demo ? demoResult : state.result;
 
@@ -216,10 +222,17 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             </p>
           ) : null}
 
+          {createState.error ? (
+            <div className="mt-5">
+              <Alert>{createState.error}</Alert>
+            </div>
+          ) : null}
           <form
-            action={demo ? undefined : createDealFromAnalysis}
+            action={demo ? undefined : createAction}
             className="mt-5"
           >
+            {/* Signed by analyzeOffer; the server ignores risk/price without it (D3). */}
+            <input type="hidden" name="quote_token" value={r.quote_token ?? ""} />
             <input type="hidden" name="sender_email" value={r.sender_email} />
             <input type="hidden" name="offer_text" value={r.offer_text} />
             <input

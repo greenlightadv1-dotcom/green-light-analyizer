@@ -4,7 +4,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, requireRole } from "@/lib/auth";
+import {
+  SPONSORSHIP_TYPES,
+  analysisQuoteSecret,
+  parseCountries,
+  readCreateDealSubmission,
+  signAnalysisQuote,
+  verifyAnalysisQuote,
+} from "@/lib/deals/analysis-quote";
+import { log } from "@/lib/log";
 import { buildEvaluationInput } from "@/lib/deals/queries";
 import { extractOfferedAmount } from "@/lib/email/parse";
 import { maskSensitiveData } from "@/lib/mask";
@@ -14,15 +23,6 @@ import type { SecurityCheckResult } from "@/lib/security/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewDeal } from "@/lib/whatsapp";
 import type { SponsorshipType } from "@/lib/types/database";
-
-const SPONSORSHIP_TYPES: SponsorshipType[] = [
-  "video_dedicated",
-  "integration",
-  "story_share",
-  "live_mention",
-  "post",
-  "other",
-];
 
 export type AnalyzerState = {
   error: string | null;
@@ -34,18 +34,15 @@ export type AnalyzerState = {
         offer_text: string;
         /** Independent of price/risk — see runSecurityCheck(). */
         security: SecurityCheckResult | null;
+        /**
+         * Signs this analysis for createDealFromAnalysis (D3). null when the
+         * signing key is unconfigured or the caller is not a creator, in which
+         * case no deal room can be opened from it.
+         */
+        quote_token: string | null;
       })
     | null;
 };
-
-/** Parses the free-text country field: "EG, SA, AE" -> ["EG","SA","AE"]. */
-function parseCountries(input: string): string[] {
-  return input
-    .split(/[,\n]/)
-    .map((c) => c.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 20);
-}
 
 /**
  * Manual Analyzer — CLAUDE.md §5.1.
@@ -77,7 +74,7 @@ export async function analyzeOffer(
   if (!senderEmail || !offerText) {
     return { error: "Paste the offer and who sent it.", result: null };
   }
-  if (!SPONSORSHIP_TYPES.includes(sponsorshipType)) {
+  if (!(SPONSORSHIP_TYPES as readonly string[]).includes(sponsorshipType)) {
     return { error: "Pick what the sponsor is asking for.", result: null };
   }
   if (offerText.length > 20000) {
@@ -107,6 +104,20 @@ export async function analyzeOffer(
     runSecurityCheck(senderEmail, offerText).catch(() => null),
   ]);
 
+  const secret = analysisQuoteSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const quoteToken =
+    secret && profile.role === "creator"
+      ? signAnalysisQuote(secret, {
+          creatorId: profile.id,
+          senderEmail,
+          offerText,
+          sponsorshipType,
+          targetCountries,
+          risk: result.risk,
+          recommendedPriceUsd: result.recommended_price_usd,
+        })
+      : null;
+
   return {
     error: null,
     result: {
@@ -116,6 +127,7 @@ export async function analyzeOffer(
       target_countries: targetCountries,
       offer_text: offerText,
       security,
+      quote_token: quoteToken,
     },
   };
 }
@@ -132,25 +144,47 @@ export async function analyzeOffer(
  * pasted in from elsewhere routinely contains the sender's direct phone or
  * WhatsApp, and §6 does not exempt it just because it arrived by hand.
  */
-export async function createDealFromAnalysis(formData: FormData): Promise<void> {
-  const profile = await requireProfile();
+export type CreateDealState = { error: string | null };
 
-  const senderEmail = String(formData.get("sender_email") ?? "").trim();
-  const offerText = String(formData.get("offer_text") ?? "").trim();
-  const sponsorshipType = String(
-    formData.get("sponsorship_type") ?? "",
-  ) as SponsorshipType;
-  const targetCountries = parseCountries(
-    String(formData.get("target_countries") ?? ""),
-  );
-  const risk = String(formData.get("risk") ?? "");
-  const rawPrice = Number(formData.get("recommended_price_usd") ?? 0);
-  const recommendedPrice =
-    Number.isFinite(rawPrice) && rawPrice > 0 ? rawPrice : null;
+export async function createDealFromAnalysis(
+  _prev: CreateDealState,
+  formData: FormData,
+): Promise<CreateDealState> {
+  // A pasted offer opens a room in the caller's own creator inbox, so only a
+  // creator can do it (D3); a company or admin is sent to the dashboard.
+  const profile = await requireRole("creator");
 
-  if (!senderEmail || !offerText || !SPONSORSHIP_TYPES.includes(sponsorshipType)) {
-    return;
+  const submission = readCreateDealSubmission(profile.id, (name) => formData.get(name));
+  if (!submission.ok) return { error: submission.error };
+  const { quote } = submission;
+
+  // The risk rating and recommended price are the platform's verdict, so they
+  // are stored only if this server signed them for this creator and this exact
+  // offer (analysis-quote.ts). Checked before the rate limit, so a stale tab
+  // does not spend quota.
+  const secret = analysisQuoteSecret(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const check = secret
+    ? verifyAnalysisQuote(secret, String(formData.get("quote_token") ?? ""), quote)
+    : "invalid";
+  if (check === "expired") {
+    return { error: "This analysis has expired. Analyse the offer again before opening a deal room." };
   }
+  if (check !== "ok") {
+    log.warn("analyzer_create.quote_rejected", { creator_id: profile.id });
+    return { error: "This analysis changed after it was produced. Analyse the offer again." };
+  }
+
+  // Every room runs a WHOIS + Safe Browsing check and can fire a WhatsApp
+  // alert, so creation has its own ceiling.
+  const limit = await consumeRateLimit("analyzer_create_deal", profile.id);
+  if (!limit.allowed) return { error: limit.message };
+
+  const senderEmail = quote.senderEmail;
+  const offerText = quote.offerText;
+  const sponsorshipType = quote.sponsorshipType as SponsorshipType;
+  const targetCountries = quote.targetCountries;
+  const risk = quote.risk as "green" | "yellow" | "red";
+  const recommendedPrice = quote.recommendedPriceUsd;
 
   // What the sponsor actually put on the table, read out of their own words —
   // the same helper the inbound-email path uses, so "Offer" means the same
@@ -179,9 +213,7 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
       deal_status: "new",
       offered_amount: offeredAmount,
       recommended_price_usd: recommendedPrice,
-      ai_evaluation: ["green", "yellow", "red"].includes(risk)
-        ? (risk as "green" | "yellow" | "red")
-        : null,
+      ai_evaluation: risk,
       sponsorship_type: sponsorshipType,
       target_countries: targetCountries.length ? targetCountries : null,
       security_check: security,
@@ -189,7 +221,10 @@ export async function createDealFromAnalysis(formData: FormData): Promise<void> 
     .select("id")
     .single();
 
-  if (error || !chat) return;
+  if (error || !chat) {
+    log.error("analyzer_create.deal_insert_failed", { creator_id: profile.id, error });
+    return { error: "The deal room could not be opened. Try again in a moment." };
+  }
 
   notifyNewDeal(
     profile,
