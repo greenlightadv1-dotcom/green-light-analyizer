@@ -28,6 +28,7 @@ test("the projection carries exactly the public fields — no internal column le
   // would expose every column. This pins the set that may leave the server.
   const projected = toHeldDelivery(row());
   assert.deepEqual(Object.keys(projected).sort(), [
+    "confirmationCode",
     "id",
     "reason",
     "receivedAt",
@@ -152,4 +153,32 @@ test("an empty delivery reads as empty", () => {
 test("anything else the screener refused reads as a generic screen", () => {
   assert.equal(classifyHeldReason(row({ spam_reasons: ["almost no readable body"] })), "screened");
   assert.equal(classifyHeldReason(row({ spam_reasons: null })), "screened");
+});
+
+// --- D4: Gmail forwarding confirmation -----------------------------------------
+
+test("a Gmail forwarding confirmation is shown to the creator with its code only", () => {
+  const confirmation = row({
+    sender_email: "forwarding-noreply@google.com",
+    subject: "(#123456789) Gmail Forwarding Confirmation - Receive Mail from creator@mail.example",
+    detail: "gmail forwarding confirmation",
+    spam_score: null,
+    spam_reasons: null,
+  });
+  assert.equal(isShownToCreator(confirmation), true);
+  const held = toHeldDelivery(confirmation);
+  assert.equal(held.reason, "forwardingConfirmation");
+  assert.equal(held.confirmationCode, "123456789");
+  assert.ok(!held.subject.includes("creator@mail.example"), "the subject is still masked");
+});
+
+test("no confirmation code is surfaced for any other held delivery", () => {
+  assert.equal(toHeldDelivery(row({ subject: "(#123456789) looks like a code" })).confirmationCode, null);
+  const wrongSender = row({
+    sender_email: "attacker@evil.example",
+    subject: "(#123456789) Gmail Forwarding Confirmation",
+    detail: "gmail forwarding confirmation",
+    spam_score: null,
+  });
+  assert.equal(toHeldDelivery(wrongSender).confirmationCode, null);
 });

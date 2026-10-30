@@ -1,4 +1,9 @@
 import { maskSensitiveData } from "../mask.ts";
+import {
+  GMAIL_CONFIRMATION_DETAIL,
+  GMAIL_FORWARDING_SENDER,
+  confirmationCodeFromSubject,
+} from "./gmail-confirmation.ts";
 
 /**
  * What a creator may see about a delivery the screener refused (§5).
@@ -25,7 +30,7 @@ import { maskSensitiveData } from "../mask.ts";
  */
 
 /** Why a delivery was held, in a form the UI can translate. */
-export type HeldReason = "bulk" | "noReply" | "empty" | "screened";
+export type HeldReason = "bulk" | "noReply" | "empty" | "screened" | "forwardingConfirmation";
 
 export type HeldDelivery = {
   id: string;
@@ -44,6 +49,8 @@ export type HeldDelivery = {
   /** True when masking removed something from the subject. */
   subjectRedacted: boolean;
   reason: HeldReason;
+  /** Digits only, and only for a Gmail forwarding confirmation (D4). */
+  confirmationCode: string | null;
 };
 
 /** What the inbox receives: the held items and whether the list was capped. */
@@ -88,7 +95,11 @@ export const EMPTY_BODY_DETAIL = "delivery had no readable body";
  * account in the first place.
  */
 export function isShownToCreator(row: HeldRow): boolean {
-  return row.spam_score !== null || row.detail === EMPTY_BODY_DETAIL;
+  return (
+    row.spam_score !== null ||
+    row.detail === EMPTY_BODY_DETAIL ||
+    row.detail === GMAIL_CONFIRMATION_DETAIL
+  );
 }
 
 const BULK = /mailing-list|precedence|auto-submitted|auto-responder/i;
@@ -102,6 +113,7 @@ const NO_REPLY = /cannot receive replies/i;
  */
 export function classifyHeldReason(row: HeldRow): HeldReason {
   if (row.detail === EMPTY_BODY_DETAIL) return "empty";
+  if (row.detail === GMAIL_CONFIRMATION_DETAIL) return "forwardingConfirmation";
 
   const reasons = (row.spam_reasons ?? []).join("\n");
   if (NO_REPLY.test(reasons)) return "noReply";
@@ -111,6 +123,7 @@ export function classifyHeldReason(row: HeldRow): HeldReason {
 
 export function toHeldDelivery(row: HeldRow): HeldDelivery {
   const { maskedText, isMasked } = maskSensitiveData((row.subject ?? "").trim());
+  const reason = classifyHeldReason(row);
 
   return {
     id: row.id,
@@ -118,7 +131,12 @@ export function toHeldDelivery(row: HeldRow): HeldDelivery {
     sender: row.sender_email ?? "",
     subject: maskedText,
     subjectRedacted: isMasked,
-    reason: classifyHeldReason(row),
+    reason,
+    confirmationCode:
+      reason === "forwardingConfirmation" &&
+      (row.sender_email ?? "").toLowerCase() === GMAIL_FORWARDING_SENDER
+        ? confirmationCodeFromSubject(row.subject)
+        : null,
   };
 }
 

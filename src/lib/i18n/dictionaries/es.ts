@@ -266,6 +266,8 @@ const es: Dictionary = {
     heldReasonNoReply: "Remitente sin respuesta",
     heldReasonEmpty: "Sin contenido legible",
     heldReasonScreened: "No es una oferta de patrocinio",
+    heldReasonForwarding: "Confirmación de reenvío de Gmail",
+    heldConfirmationCode: "Código de confirmación de reenvío de Gmail: {code}. Introdúcelo en Gmail → Configuración → Reenvío y correo POP/IMAP y haz clic en Verificar.",
     heldTruncated: "Mostrando los {count} más recientes.",
     heldOpenAnalyzer: "Abrir el analizador manual",
   },
@@ -379,7 +381,7 @@ const es: Dictionary = {
     showSetupGuide: "Cómo configurar el reenvío",
     step1: "Abre Gmail en un ordenador y ve a Configuración → Ver toda la configuración → Reenvío y POP/IMAP.",
     step2: "Haz clic en «Añadir una dirección de reenvío», pega la dirección de arriba y confirma.",
-    step3: "Gmail envía un código de confirmación a Green Light. Lo aceptamos automáticamente — no se requiere ninguna acción de tu parte.",
+    step3: "Gmail envía un código de confirmación a tu dirección de Green Light. Abre aquí tu bandeja de acuerdos: el código aparece arriba, en «Correos retenidos por el filtro». Escríbelo en la configuración de reenvío de Gmail y haz clic en Verificar. Green Light nunca confirma el reenvío por ti.",
     step4: "De vuelta en Gmail, elige «Reenviar una copia del correo entrante a» y selecciona esa dirección.",
     step5: "Opcional pero recomendado: usa Filtros en su lugar, para que solo se reenvíen las consultas comerciales en vez de toda tu bandeja de entrada.",
     privacyFooter:

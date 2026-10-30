@@ -266,6 +266,8 @@ const fr: Dictionary = {
     heldReasonNoReply: "Expéditeur sans réponse possible",
     heldReasonEmpty: "Aucun contenu lisible",
     heldReasonScreened: "Pas une offre de sponsoring",
+    heldReasonForwarding: "Confirmation de transfert Gmail",
+    heldConfirmationCode: "Code de confirmation du transfert Gmail : {code}. Saisissez-le dans Gmail → Paramètres → Transfert et POP/IMAP, puis cliquez sur Valider.",
     heldTruncated: "Affichage des {count} plus récents.",
     heldOpenAnalyzer: "Ouvrir l'analyseur manuel",
   },
@@ -379,7 +381,7 @@ const fr: Dictionary = {
     showSetupGuide: "Comment configurer le transfert",
     step1: "Ouvrez Gmail sur un ordinateur et allez dans Paramètres → Tous les paramètres → Transfert et POP/IMAP.",
     step2: "Cliquez sur « Ajouter une adresse de transfert », collez l'adresse ci-dessus et confirmez.",
-    step3: "Gmail envoie un code de confirmation à Green Light. Nous l'acceptons automatiquement — aucune action requise de votre part.",
+    step3: "Gmail envoie un code de confirmation à votre adresse Green Light. Ouvrez ici votre boîte de deals : le code apparaît en haut, sous « E-mails retenus par le filtre ». Saisissez-le dans les paramètres de transfert de Gmail, puis cliquez sur Valider. Green Light ne confirme jamais le transfert à votre place.",
     step4: "De retour dans Gmail, choisissez « Transférer une copie des messages reçus à » et sélectionnez cette adresse.",
     step5: "Facultatif mais recommandé : utilisez plutôt des filtres, afin que seules les demandes professionnelles soient transférées plutôt que toute votre boîte de réception.",
     privacyFooter:

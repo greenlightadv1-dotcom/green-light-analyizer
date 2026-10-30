@@ -278,6 +278,8 @@ const en = {
     heldReasonNoReply: "No-reply sender",
     heldReasonEmpty: "No readable content",
     heldReasonScreened: "Not a sponsorship offer",
+    heldReasonForwarding: "Gmail forwarding confirmation",
+    heldConfirmationCode: "Gmail forwarding confirmation code: {code}. Enter it in Gmail → Settings → Forwarding and POP/IMAP, then click Verify.",
     heldTruncated: "Showing the most recent {count}.",
     heldOpenAnalyzer: "Open the Manual Analyzer",
   },
@@ -391,7 +393,7 @@ const en = {
     showSetupGuide: "How to set up forwarding",
     step1: "Open Gmail on a computer and go to Settings → See all settings → Forwarding and POP/IMAP.",
     step2: "Click “Add a forwarding address”, paste the address above, and confirm.",
-    step3: "Gmail sends a confirmation code to Green Light. We accept it automatically — no action needed from you.",
+    step3: "Gmail sends a confirmation code to your Green Light address. Open your Deal Inbox here: the code appears at the top under “Emails held back by the filter”. Type it into Gmail’s Forwarding settings and click Verify. Green Light never confirms forwarding for you.",
     step4: "Back in Gmail, choose “Forward a copy of incoming mail to” and pick that address.",
     step5: "Optional but recommended: use Filters instead, so only business enquiries are forwarded rather than your whole inbox.",
     privacyFooter:

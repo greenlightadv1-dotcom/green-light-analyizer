@@ -11,6 +11,7 @@ const REASON_KEYS: Record<HeldReason, string> = {
   noReply: "inbox.heldReasonNoReply",
   empty: "inbox.heldReasonEmpty",
   screened: "inbox.heldReasonScreened",
+  forwardingConfirmation: "inbox.heldReasonForwarding",
 };
 
 function formatDate(iso: string) {
@@ -62,6 +63,22 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
           {open ? t("inbox.heldHide") : t("inbox.heldShow")}
         </button>
       </div>
+
+      {/*
+        Always visible, not behind "Show": finishing Gmail forwarding setup
+        is the one held item the creator has to act on (D4). Digits only —
+        the server never shows or follows the confirmation link.
+      */}
+      {held.items
+        .filter((item) => item.confirmationCode)
+        .map((item) => (
+          <p
+            key={`code-${item.id}`}
+            className="mt-3 rounded-xl border border-brand-green/25 bg-brand-green/10 px-3.5 py-2.5 text-sm text-fg/85"
+          >
+            {t("inbox.heldConfirmationCode", { code: item.confirmationCode ?? "" })}
+          </p>
+        ))}
 
       {open ? (
         <div id={listId} className="mt-4 border-t border-fg/8 pt-4">

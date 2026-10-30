@@ -260,3 +260,55 @@ test("the recorded room wins even when the thread lookup can no longer find it",
   assert.equal(db.deal_chats.length, 1, "no second room");
   assert.equal(offerMessages()[0].chat_id, db.deal_chats[0].id);
 });
+
+// --- D4: Gmail forwarding confirmation ----------------------------------------
+
+const GMAIL_SUBJECT = "(#123456789) Gmail Forwarding Confirmation - Receive Mail from creator@mail.example";
+const GMAIL_BODY =
+  "creator@mail.example has requested to automatically forward mail to your email address.\n" +
+  "Confirmation code: 123456789\n" +
+  "To allow creator@mail.example to automatically forward mail to your address, please click the link below to confirm the request:\n" +
+  "https://mail-settings.google.com/mail/vf-%5Bexample%5D";
+
+test("a Gmail forwarding confirmation opens no room, runs no evaluation and sends no alert", async () => {
+  const realFetch = globalThis.fetch;
+  let outboundFetches = 0;
+  globalThis.fetch = (async () => {
+    outboundFetches++;
+    throw new Error("no outbound request may be made — the link is never visited");
+  }) as typeof fetch;
+  try {
+    const gmail = { from: "Gmail Team <forwarding-noreply@google.com>", subject: GMAIL_SUBJECT };
+    const outcome = await processInboundEmail(meta(gmail), {
+      fetchContent: content({ ...gmail, text: GMAIL_BODY, headers: {} }),
+    });
+    assert.equal(outcome.status, "rejected");
+    assert.equal(webhookResponseFor(outcome.status).httpStatus, 200, "acknowledged, not retried");
+    assert.equal(db.deal_chats.length, 0);
+    assert.equal(db.messages.length, 0);
+    assert.equal(state.evaluations.length, 0);
+    assert.equal(state.notifications, 0);
+    assert.equal(outboundFetches, 0);
+    assert.equal(inbound().status, "rejected");
+    assert.equal(inbound().detail, "gmail forwarding confirmation");
+    assert.equal(inbound().creator_id, "creator-1");
+    assert.equal(inbound().subject, GMAIL_SUBJECT, "kept so the held panel can show the code");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("a 'confirmation' that failed DKIM is not trusted and goes through the normal screen", async () => {
+  const forged = { from: "forwarding-noreply@google.com", subject: GMAIL_SUBJECT };
+  await processInboundEmail(meta(forged), {
+    fetchContent: content({ ...forged, text: GMAIL_BODY, authentication: { spf: "pass", dkim: "fail", dmarc: "fail" } }),
+  });
+  assert.notEqual(inbound().detail, "gmail forwarding confirmation");
+});
+
+test("a real offer from another sender with a look-alike subject is still a deal", async () => {
+  const lookalike = { subject: "(#123456789) Gmail Forwarding Confirmation" };
+  const outcome = await processInboundEmail(meta(lookalike), { fetchContent: content(lookalike) });
+  assert.equal(outcome.status, "processed");
+  assert.equal(db.deal_chats.length, 1);
+});

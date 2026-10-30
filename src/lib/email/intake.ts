@@ -3,6 +3,7 @@ import "server-only";
 import { evaluateOffer } from "@/lib/ai/evaluate";
 import type { EvaluationResult } from "@/lib/ai/types";
 import { screenInboundEmail } from "@/lib/ai/spam-filter";
+import { GMAIL_CONFIRMATION_DETAIL, isGmailForwardingConfirmation } from "./gmail-confirmation";
 import { EMPTY_BODY_DETAIL } from "./held";
 import { ACCEPTED_INBOUND_DOMAINS } from "@/lib/alias";
 import { maskSensitiveData } from "@/lib/mask";
@@ -337,6 +338,24 @@ export async function processInboundEmail(
     );
   }
   email = mergeReceivedEmail(meta, fetched.email);
+
+  // Gmail's forwarding confirmation is setup mail, not an offer (D4): no room,
+  // no evaluation, no alert, and its link is never visited. The held panel
+  // shows the creator the code from the subject (gmail-confirmation.ts).
+  if (
+    isGmailForwardingConfirmation({
+      from: sender,
+      subject: email.subject,
+      headers: email.headers,
+      authentication: fetched.email.authentication,
+    })
+  ) {
+    return finish({
+      status: "rejected",
+      detail: GMAIL_CONFIRMATION_DETAIL,
+      creatorId: creator.id,
+    });
+  }
 
   const offerText = buildOfferText(email);
   if (!offerText) {

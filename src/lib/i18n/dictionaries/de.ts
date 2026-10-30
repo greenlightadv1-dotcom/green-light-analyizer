@@ -266,6 +266,8 @@ const de: Dictionary = {
     heldReasonNoReply: "No-Reply-Absender",
     heldReasonEmpty: "Kein lesbarer Inhalt",
     heldReasonScreened: "Kein Sponsoring-Angebot",
+    heldReasonForwarding: "Gmail-Weiterleitungsbestätigung",
+    heldConfirmationCode: "Gmail-Bestätigungscode für die Weiterleitung: {code}. Gib ihn unter Gmail → Einstellungen → Weiterleitung und POP/IMAP ein und klicke auf Bestätigen.",
     heldTruncated: "Die neuesten {count} werden angezeigt.",
     heldOpenAnalyzer: "Manuellen Analysator öffnen",
   },
@@ -379,7 +381,7 @@ const de: Dictionary = {
     showSetupGuide: "So richtest du die Weiterleitung ein",
     step1: "Öffne Gmail auf einem Computer und gehe zu Einstellungen → Alle Einstellungen anzeigen → Weiterleitung und POP/IMAP.",
     step2: "Klicke auf „Weiterleitungsadresse hinzufügen“, füge die obige Adresse ein und bestätige.",
-    step3: "Gmail sendet einen Bestätigungscode an Green Light. Wir akzeptieren ihn automatisch — keine Aktion von dir erforderlich.",
+    step3: "Gmail sendet einen Bestätigungscode an deine Green-Light-Adresse. Öffne hier deinen Deal-Posteingang: Der Code erscheint oben unter „Vom Filter zurückgehaltene E-Mails“. Gib ihn in den Weiterleitungseinstellungen von Gmail ein und klicke auf Bestätigen. Green Light bestätigt die Weiterleitung nie für dich.",
     step4: "Wähle zurück in Gmail „Kopie eingehender Nachrichten weiterleiten an“ und wähle diese Adresse aus.",
     step5: "Optional, aber empfohlen: Verwende stattdessen Filter, sodass nur geschäftliche Anfragen weitergeleitet werden statt deines gesamten Posteingangs.",
     privacyFooter:
