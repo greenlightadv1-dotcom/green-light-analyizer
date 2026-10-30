@@ -1,6 +1,9 @@
 import "server-only";
 
-import { getOAuthConnection, saveOAuthTokens } from "./tokens";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { log } from "@/lib/log";
+import { deleteOAuthConnection, getOAuthConnection, saveOAuthTokens } from "./tokens";
+import { clearedVerifiedGeo, isRevokedGrant } from "./youtube-freshness";
 import {
   REPORTS_ENDPOINT,
   audienceGeoFromReport,
@@ -76,12 +79,14 @@ export async function exchangeCodeForTokens(
   }
 }
 
-async function refreshAccessToken(
-  refreshToken: string,
-): Promise<GoogleTokenResponse | null> {
+type RefreshResult =
+  | { ok: true; tokens: GoogleTokenResponse }
+  | { ok: false; revoked: boolean };
+
+async function refreshAccessToken(refreshToken: string): Promise<RefreshResult> {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return null;
+  if (!clientId || !clientSecret) return { ok: false, revoked: false };
 
   try {
     const response = await fetch(TOKEN_URL, {
@@ -95,11 +100,33 @@ async function refreshAccessToken(
       }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (!response.ok) return null;
-    return await response.json();
+    if (!response.ok) {
+      const body: unknown = await response.json().catch(() => null);
+      return { ok: false, revoked: isRevokedGrant(response.status, body) };
+    }
+    return { ok: true, tokens: await response.json() };
   } catch {
-    return null;
+    return { ok: false, revoked: false };
   }
+}
+
+/**
+ * The creator revoked access (or Google otherwise refuses the grant): delete
+ * the token and every piece of YouTube API data derived from it — the
+ * verified geography on their YouTube media kit — as the YouTube API
+ * policies require (youtube-freshness.ts). Public stats and anything the
+ * creator typed in are left alone.
+ */
+export async function clearRevokedYouTubeConnection(creatorId: string): Promise<void> {
+  const service = createAdminClient();
+  const { error } = await service
+    .from("media_kits")
+    .update(clearedVerifiedGeo({ disconnect: true }))
+    .eq("creator_id", creatorId)
+    .eq("platform", "youtube");
+  if (error) log.error("youtube_oauth.revoked_cleanup_failed", { creator_id: creatorId, error });
+  await deleteOAuthConnection(creatorId, "youtube");
+  log.info("youtube_oauth.revoked_grant_cleared", { creator_id: creatorId });
 }
 
 export async function resolveChannelId(accessToken: string): Promise<string | null> {
@@ -133,8 +160,12 @@ export async function getValidAccessToken(creatorId: string): Promise<string | n
   }
   if (!connection.refresh_token) return null;
 
-  const refreshed = await refreshAccessToken(connection.refresh_token);
-  if (!refreshed) return null;
+  const result = await refreshAccessToken(connection.refresh_token);
+  if (!result.ok) {
+    if (result.revoked) await clearRevokedYouTubeConnection(creatorId);
+    return null;
+  }
+  const refreshed = result.tokens;
 
   await saveOAuthTokens(creatorId, "youtube", {
     accessToken: refreshed.access_token,

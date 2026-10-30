@@ -23,6 +23,7 @@ import {
 } from "@/lib/media-kit/platforms";
 import type { Profile } from "@/lib/auth";
 import type { CountryShare, Platform, SubscriptionPlan } from "@/lib/types/database";
+import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 
 /** Media kit (§7), presentation only. Shared with /preview. */
 export function MediaKitView({
@@ -42,7 +43,7 @@ export function MediaKitView({
   const { t } = useTranslation();
   const byPlatform = kitByPlatform(kits);
   const limit = maxConnections(plan);
-  const verifiedCount = kits.filter((k) => k.audience_verified).length;
+  const verifiedCount = kits.filter((k) => isVerifiedGeoFresh(k)).length;
 
   return (
     <>
@@ -137,8 +138,7 @@ export function MediaKitView({
                   platform: PLATFORM_LABELS[platform],
                 })}
                 verifiedGeoConnected={
-                  isRealOAuthPlatform(platform) &&
-                  kit?.audience_verified === true
+                  isRealOAuthPlatform(platform) && isVerifiedGeoFresh(kit)
                 }
               />
 
@@ -152,12 +152,13 @@ export function MediaKitView({
                   */}
                   <CountryShareList
                     shares={
-                      (kit.audience_verified
+                      (isVerifiedGeoFresh(kit)
                         ? (kit.verified_top_countries as CountryShare[] | null)
                         : (kit.declared_top_countries as CountryShare[] | null)) ??
                       null
                     }
-                    verified={kit.audience_verified === true}
+                    // Older than 30 days is not shown as verified (G1).
+                    verified={isVerifiedGeoFresh(kit)}
                     emptyHint={t("mediaKit.noAudienceGeoYet")}
                   />
 

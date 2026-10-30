@@ -25,9 +25,13 @@ export const config = {
      * under it 404 outright when NODE_ENV is production, so nothing is
      * reachable there in a deployment.
      *
+     * api/cron/ is the same case: Vercel Cron carries no session. Each cron
+     * route authenticates itself with CRON_SECRET and refuses every request
+     * when it is unset (lib/cron-auth.ts).
+     *
      * Auth route handlers are intentionally NOT excluded: the guard treats
      * /auth/* as public itself, so the session still refreshes on those.
      */
-    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|api/dev/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|api/cron/|api/dev/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

@@ -12,6 +12,7 @@ import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
 import { verifiedGeoUpdate } from "@/lib/oauth/youtube-geo";
 import { youtubeSyncScopeError } from "@/lib/oauth/youtube-scopes";
+import { clearedVerifiedGeo } from "@/lib/oauth/youtube-freshness";
 import { log } from "@/lib/log";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -140,9 +141,7 @@ export async function disconnectAnalytics(formData: FormData): Promise<void> {
   await service
     .from("media_kits")
     .update({
-      audience_verified: false,
-      verified_top_countries: null,
-      analytics_oauth_connected: false,
+      ...clearedVerifiedGeo({ disconnect: true }),
       last_synced_at: new Date().toISOString(),
     })
     .eq("creator_id", profile.id)
@@ -251,6 +250,8 @@ export async function syncVerifiedGeo(
     .update({
       ...verified,
       last_synced_at: new Date().toISOString(),
+      // The freshness clock for verified geography (0023, G1).
+      verified_geo_synced_at: new Date().toISOString(),
     })
     .eq("creator_id", profile.id)
     .eq("platform", platform);

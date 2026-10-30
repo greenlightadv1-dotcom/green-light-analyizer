@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { EvaluationInput } from "@/lib/ai/types";
+import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 import type {
   CountryShare,
   Database,
@@ -128,7 +129,8 @@ export async function buildEvaluationInput(
     .limit(1);
 
   const kit = kits?.[0];
-  const audienceVerified = kit?.audience_verified === true;
+  // Verified only while fresh: older than 30 days counts as unverified (G1).
+  const audienceVerified = isVerifiedGeoFresh(kit);
 
   return {
     avg_views: kit?.avg_views ?? null,

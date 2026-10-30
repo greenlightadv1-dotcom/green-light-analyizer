@@ -13,6 +13,7 @@ import { escapeLikePattern } from "@/lib/supabase/like";
 import { notifyNewDeal } from "@/lib/whatsapp";
 import { log } from "@/lib/log";
 import type { CountryShare, SponsorshipType } from "@/lib/types/database";
+import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 import {
   buildOfferText,
   extractOfferedAmount,
@@ -437,7 +438,8 @@ export async function processInboundEmail(
       .limit(1);
 
     const kit = kits?.[0];
-    const audienceVerified = kit?.audience_verified === true;
+    // Verified only while fresh: older than 30 days counts as unverified (G1).
+    const audienceVerified = isVerifiedGeoFresh(kit);
 
     // Priced, security-checked and spam-classified independently — none of
     // the three should delay or block another, and a failure in the security
