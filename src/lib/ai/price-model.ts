@@ -58,6 +58,7 @@ function buildPrompt(input: EvaluationInput): string {
     "- Engagement well under ~1% suggests inflated follower counts; reflect that in the risk rating.",
     "- risk: green = fair or generous and low-risk, yellow = underpriced or some doubt, red = likely a scam, lowball, or unworkable.",
     "- If the audience geography above is marked SELF-REPORTED, do not treat it as established fact.",
+    "- Unknown creator statistics are missing data, not evidence about the offer: never rate red only because reach, engagement or geography is unknown.",
     "",
     "Respond with ONLY a single JSON object, no markdown fences and no prose outside it, matching exactly this shape:",
     '{"recommended_price_usd": number, "price_low_usd": number, "price_high_usd": number, "risk": "green" | "yellow" | "red", "reasoning": string}',
