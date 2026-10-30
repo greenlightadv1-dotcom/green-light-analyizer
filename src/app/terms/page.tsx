@@ -128,6 +128,19 @@ export default function TermsPage() {
         it is shown.
       </p>
       <p>
+        Verified YouTube figures are retrieved through YouTube API Services. If
+        you connect a YouTube account, you agree to be bound by the{" "}
+        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">
+          YouTube Terms of Service
+        </a>
+        , and Google&apos;s use of your data is governed by the{" "}
+        <a href="http://www.google.com/policies/privacy" target="_blank" rel="noopener noreferrer">
+          Google Privacy Policy
+        </a>
+        . How Green Light handles that data is set out in section 5 of our{" "}
+        <Link href="/privacy">Privacy Policy</Link>.
+      </p>
+      <p>
         Creators must not enter figures they know to be false. Deliberately
         misstating reach, engagement or audience composition to obtain a better
         price is a breach of these terms and may result in account closure.

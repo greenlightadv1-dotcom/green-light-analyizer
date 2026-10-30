@@ -217,12 +217,45 @@ export default function PrivacyPage() {
         decides.
       </p>
 
-      <h2>5. Google user data</h2>
+      <h2>5. Google user data and YouTube API Services</h2>
       <p>
-        If you connect a YouTube account, we request read-only access to your
-        YouTube analytics in order to retrieve the geographic breakdown of your
-        audience, and we read public channel statistics to populate your media
-        kit.
+        Green Light uses <strong>YouTube API Services</strong>. If you connect
+        a YouTube account, we ask Google for two read-only permissions:
+      </p>
+      <ul>
+        <li>
+          <strong>View your YouTube account</strong> (
+          <code>youtube.readonly</code>) — used to identify which channel you
+          connected and to request its analytics;
+        </li>
+        <li>
+          <strong>View YouTube Analytics reports for your channel</strong> (
+          <code>yt-analytics.readonly</code>) — used to retrieve the share of
+          your channel&apos;s views by country over the last 90 days.
+        </li>
+      </ul>
+      <p>
+        From these we store your channel ID, the access and refresh tokens
+        Google issues, the permissions you granted, and the resulting country
+        percentages, shown in your media kit as verified audience geography
+        and used to calculate price and risk recommendations for offers sent to
+        you. Separately, we read your channel&apos;s public statistics
+        (subscribers, views, recent videos) to populate your media kit. We
+        never post, upload, comment or change anything on your channel, and we
+        do not request access to your Gmail or any other Google data.
+      </p>
+      <p>
+        Your verified country percentages are shown to companies browsing
+        creators as a &quot;verified&quot; badge and audience breakdown, and are
+        processed by our AI price-evaluation provider only to calculate a
+        recommendation (see section 7). They are not shared with anyone else.
+      </p>
+      <p>
+        Verified audience data is kept only while it is current: if it has not
+        been refreshed from YouTube for 30 days, it stops being treated as
+        verified and is deleted. If Google tells us your authorization has been
+        revoked or can no longer be refreshed, we delete the stored tokens and
+        the verified data derived from them.
       </p>
       <p>
         Green Light&apos;s use of information received from Google APIs adheres
@@ -251,21 +284,34 @@ export default function PrivacyPage() {
           for a specific support request, where it is necessary for security, or
           where the law requires it;
         </li>
-        <li>we do not sell it.</li>
+        <li>we do not sell it, and we do not use it to train general-purpose AI models.</li>
       </ul>
+      <p>
+        By connecting YouTube you also agree to be bound by the{" "}
+        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">
+          YouTube Terms of Service
+        </a>
+        . Google&apos;s handling of your data is described in the{" "}
+        <a href="http://www.google.com/policies/privacy" target="_blank" rel="noopener noreferrer">
+          Google Privacy Policy
+        </a>
+        .
+      </p>
       <p>
         Disconnecting the account in your media kit settings immediately deletes
         the stored access tokens, clears the verified figures, and returns your
-        audience geography to self-reported. You can also revoke access from
-        your{" "}
+        audience geography to self-reported. In addition to that, you can revoke
+        Green Light&apos;s access to your data at any time from the{" "}
         <a
-          href="https://myaccount.google.com/permissions"
+          href="https://security.google.com/settings/security/permissions"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Google account permissions
-        </a>{" "}
-        page.
+          Google security settings page
+        </a>
+        ; when you do, we delete the data described above. Questions or
+        complaints about how we handle Google user data can be sent to{" "}
+        <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
       </p>
 
       <h2>6. Meta and Instagram data</h2>
@@ -388,7 +434,13 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Platform access tokens</strong> — deleted immediately when you
-          disconnect the account, and when your account closes.
+          disconnect the account, when the platform reports that your
+          authorization was revoked, and when your account closes.
+        </li>
+        <li>
+          <strong>Verified audience data from YouTube</strong> — deleted once it
+          has not been refreshed for 30 days, or when your YouTube authorization
+          is revoked (section 5).
         </li>
         <li>
           <strong>Rate-limit counters</strong> — overwritten continuously; they
