@@ -350,17 +350,21 @@ export function summarizeAttachments(attachments: InboundAttachment[]): string {
  */
 export function extractOfferedAmount(text: string): number | null {
   const candidates: number[] = [];
+  const normalized = normalizeDigits(text);
 
-  // $1,200 / USD 1200 / 1200 USD / 1200$ — with optional k suffix.
+  // $1,200 / USD 1.200 / 1200 USD / 1200$ / ٥٠٠ دولار — with optional k
+  // suffix. US dollars only: other currencies (EGP, SAR, AED…) stay null
+  // rather than being converted at a rate nobody agreed (D5).
+  const NUM = String.raw`(?<![\d.,])(\d(?:[\d.,]*\d)?)`;
   const patterns = [
-    /(?:\$|usd\s*)\s*([\d,]+(?:\.\d{1,2})?)\s*(k\b)?/gi,
-    /([\d,]+(?:\.\d{1,2})?)\s*(k\b)?\s*(?:\$|usd\b|dollars?\b)/gi,
+    new RegExp(String.raw`(?:us\$|\$|usd\s*)\s*${NUM}\s*(k\b)?`, "gi"),
+    new RegExp(String.raw`${NUM}\s*(k\b)?\s*(?:\$|usd\b|dollars?\b|دولار)`, "gi"),
   ];
 
   for (const pattern of patterns) {
-    for (const match of text.matchAll(pattern)) {
-      const n = Number(match[1].replace(/,/g, ""));
-      if (!Number.isFinite(n) || n <= 0) continue;
+    for (const match of normalized.matchAll(pattern)) {
+      const n = parseAmountToken(match[1]);
+      if (n === null || n <= 0) continue;
       const value = match[2] ? n * 1000 : n;
       // Above this it is far more likely a view count or a follower number
       // that happened to sit next to a currency word.
@@ -370,6 +374,35 @@ export function extractOfferedAmount(text: string): number | null {
 
   if (!candidates.length) return null;
   return Math.max(...candidates);
+}
+
+/** Arabic-Indic and Persian digits, and the Arabic separators, as ASCII. */
+function normalizeDigits(text: string): string {
+  return text
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\u066C/g, ",")
+    .replace(/\u066B/g, ".");
+}
+
+/**
+ * One written amount as a number, or null when its separators are ambiguous.
+ *
+ * Thousands may be grouped with commas (1,500 / 1,500.50) or with dots
+ * (1.500 / 1.500,50 — common in MENA and European mail); a single separator
+ * followed by one or two digits is a decimal point (1.5 / 1,50). Before
+ * this, "1.500 USD" read as 500: the pattern skipped "1." and matched the
+ * rest. Anything else (1.500.5, Indian 1,50,000 grouping) is null — no figure
+ * is safer than a plausible wrong one.
+ */
+export function parseAmountToken(token: string): number | null {
+  let plain: string;
+  if (/^\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/.test(token)) plain = token.replace(/,/g, "");
+  else if (/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(token)) plain = token.replace(/\./g, "").replace(",", ".");
+  else if (/^\d+(?:[.,]\d{1,2})?$/.test(token)) plain = token.replace(",", ".");
+  else return null;
+  const n = Number(plain);
+  return Number.isFinite(n) ? n : null;
 }
 
 const TYPE_PATTERNS: [SponsorshipType, RegExp][] = [

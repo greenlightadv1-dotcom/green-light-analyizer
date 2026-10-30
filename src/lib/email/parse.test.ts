@@ -6,6 +6,7 @@ import {
   collectAddresses,
   displayName,
   extractOfferedAmount,
+  parseAmountToken,
   findInboundAlias,
   htmlToText,
   inferSponsorshipType,
@@ -528,4 +529,45 @@ test("the whole adversarial path, capped, stays fast end to end", () => {
     assert.ok(ms < LOOSE_CEILING_MS, `took ${ms.toFixed(0)}ms`);
     assert.ok(value.length <= MAX_OFFER_TEXT);
   }
+});
+
+// --- D5: thousands separators and MENA input -----------------------------------
+
+test("dot-grouped thousands are read as thousands, not a fragment (D5)", () => {
+  assert.equal(extractOfferedAmount("We offer 1.500 USD"), 1500);
+  assert.equal(extractOfferedAmount("budget 1.500$"), 1500);
+  assert.equal(extractOfferedAmount("USD 12.000 for the campaign"), 12000);
+  assert.equal(extractOfferedAmount("1.500,50 USD"), 1500.5);
+  assert.equal(extractOfferedAmount("$1,500.50"), 1500.5);
+  assert.equal(extractOfferedAmount("$500. Let us know"), 500);
+});
+
+test("Arabic-Indic digits and the Arabic word for dollars are read", () => {
+  assert.equal(extractOfferedAmount("ميزانيتنا ٥٠٠٠ دولار"), 5000);
+  assert.equal(extractOfferedAmount("نعرض ١٬٥٠٠ دولار"), 1500);
+});
+
+test("other currencies are never converted — they stay null", () => {
+  for (const text of ["Budget 5000 EGP", "SAR 3,000", "We pay 3,500 AED", "5,000 جنيه", "٥٠٠٠ ريال"]) {
+    assert.equal(extractOfferedAmount(text), null, text);
+  }
+  // A USD figure stated alongside a local one is still the USD figure.
+  assert.equal(extractOfferedAmount("EGP 25,000 (~$500)"), 500);
+});
+
+test("ambiguous separators are refused rather than guessed", () => {
+  assert.equal(parseAmountToken("1..5"), null);
+  assert.equal(parseAmountToken("1,50,000"), null);
+  assert.equal(parseAmountToken("1.500.5"), null);
+  assert.equal(parseAmountToken("1.5"), 1.5);
+  assert.equal(parseAmountToken("1,50"), 1.5);
+  assert.equal(parseAmountToken("1,500"), 1500);
+  assert.equal(parseAmountToken("1.500"), 1500);
+});
+
+test("amount extraction stays linear on long digit runs", () => {
+  const started = performance.now();
+  extractOfferedAmount("$" + "1.".repeat(50_000));
+  extractOfferedAmount("1,".repeat(50_000) + " USD");
+  assert.ok(performance.now() - started < 1000);
 });
