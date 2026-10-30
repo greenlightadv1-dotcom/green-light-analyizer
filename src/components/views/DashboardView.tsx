@@ -13,6 +13,7 @@ import { isProfileIncomplete } from "@/lib/media-kit/profile-completeness";
 import type { DealChatListItem } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
 import type { Profile } from "@/lib/auth";
+import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 
 /**
  * Creator dashboard, presentation only.
@@ -35,7 +36,7 @@ export function DashboardView({
   const openDeals = chats.filter(
     (c) => c.deal_status !== "paid" && c.deal_status !== "disputed",
   ).length;
-  const verifiedKits = kits.filter((k) => k.audience_verified).length;
+  const verifiedKits = kits.filter((k) => isVerifiedGeoFresh(k)).length;
   const plan = profile.subscription_plan ?? "Starter";
   const incompleteProfile = isProfileIncomplete(profile, kits);
 

@@ -6,6 +6,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { AnalyzerForm } from "@/app/(app)/analyzer/AnalyzerForm";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { MediaKit } from "@/lib/media-kit/queries";
+import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 
 /** Manual Analyzer (§5.1), presentation only. Shared with /preview. */
 export function AnalyzerView({
@@ -14,12 +15,18 @@ export function AnalyzerView({
 }: {
   kit: Pick<
     MediaKit,
-    "platform" | "avg_views" | "engagement_rate" | "content_category" | "audience_verified"
+    | "platform"
+    | "avg_views"
+    | "engagement_rate"
+    | "content_category"
+    | "audience_verified"
+    | "verified_geo_synced_at"
   > | null;
   demo?: boolean;
 }) {
   const { t } = useTranslation();
-  const audienceVerified = kit?.audience_verified === true;
+  // Older than 30 days is not verified for pricing, so not here either (G1).
+  const audienceVerified = isVerifiedGeoFresh(kit);
 
   return (
     <>

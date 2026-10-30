@@ -25,7 +25,7 @@ export default async function AnalyzerPage() {
   const supabase = await createClient();
   const { data: kits } = await supabase
     .from("media_kits")
-    .select("platform, avg_views, engagement_rate, content_category, audience_verified")
+    .select("platform, avg_views, engagement_rate, content_category, audience_verified, verified_geo_synced_at")
     .eq("creator_id", profile.id)
     .order("avg_views", { ascending: false })
     .limit(1);
