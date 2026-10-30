@@ -9,6 +9,8 @@ import { verifyOAuthState } from "@/lib/oauth/state";
 import { saveOAuthTokens } from "@/lib/oauth/tokens";
 import * as youtube from "@/lib/oauth/youtube";
 import * as instagram from "@/lib/oauth/instagram";
+import { missingYouTubeScopes } from "@/lib/oauth/youtube-scopes";
+import { log } from "@/lib/log";
 
 /**
  * OAuth callback — completes what start/route.ts began.
@@ -54,6 +56,19 @@ export async function GET(
   if (!tokens) {
     failureUrl.searchParams.set("oauth_error", platform);
     return NextResponse.redirect(failureUrl);
+  }
+
+  // Google's consent is granular: a creator can untick a scope and still land
+  // here. Check what was actually granted before anything is stored, so a
+  // token that cannot sync is never saved and the kit never marked connected
+  // (youtube-scopes.ts).
+  if (platform === "youtube") {
+    const missing = missingYouTubeScopes((tokens as { scope?: unknown }).scope);
+    if (missing.length > 0) {
+      log.warn("youtube_oauth.scopes_missing", { missing });
+      failureUrl.searchParams.set("oauth_error", platform);
+      return NextResponse.redirect(failureUrl);
+    }
   }
 
   const externalAccountId =

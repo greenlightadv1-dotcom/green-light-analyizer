@@ -11,6 +11,7 @@ import { deleteOAuthConnection } from "@/lib/oauth/tokens";
 import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
 import { verifiedGeoUpdate } from "@/lib/oauth/youtube-geo";
+import { youtubeSyncScopeError } from "@/lib/oauth/youtube-scopes";
 import { log } from "@/lib/log";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -182,6 +183,22 @@ export async function syncVerifiedGeo(
     return { error: "Unsupported platform.", synced: false };
   }
 
+  const service = createAdminClient();
+  const { data: connection } = await service
+    .from("oauth_connections")
+    .select("external_account_id, scope")
+    .eq("creator_id", profile.id)
+    .eq("platform", platform)
+    .maybeSingle();
+
+  // A stored YouTube connection without both required scopes cannot sync;
+  // say so before refreshing or calling Google (youtube-scopes.ts). A missing
+  // connection falls through to the existing messages below.
+  if (platform === "youtube" && connection) {
+    const scopeError = youtubeSyncScopeError(connection.scope);
+    if (scopeError) return { error: scopeError, synced: false };
+  }
+
   const accessToken =
     platform === "youtube"
       ? await youtubeOAuth.getValidAccessToken(profile.id)
@@ -193,14 +210,6 @@ export async function syncVerifiedGeo(
       synced: false,
     };
   }
-
-  const service = createAdminClient();
-  const { data: connection } = await service
-    .from("oauth_connections")
-    .select("external_account_id")
-    .eq("creator_id", profile.id)
-    .eq("platform", platform)
-    .maybeSingle();
 
   if (!connection?.external_account_id) {
     return { error: "Reconnect above to sync.", synced: false };

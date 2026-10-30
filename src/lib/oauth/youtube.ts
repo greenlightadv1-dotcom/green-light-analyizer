@@ -7,10 +7,12 @@ import {
   buildCountryViewsQuery,
   type AudienceGeoResult,
 } from "./youtube-geo";
+import { buildYouTubeAuthorizationParams } from "./youtube-scopes";
 
 /**
- * YouTube Analytics OAuth (§7.3) — `yt-analytics.readonly`, a sensitive
- * scope needing a verified Google OAuth consent screen (review, not a full
+ * YouTube Analytics OAuth (§7.3) — `youtube.readonly` + `yt-analytics.readonly`
+ * (youtube-scopes.ts says why both, and how the callback checks them), sensitive
+ * scopes needing a verified Google OAuth consent screen (review, not a full
  * CASA audit). Nothing here has been verified against a live call: outbound
  * access to Google's API is blocked from the sandbox this was built in, and
  * the app itself isn't registered yet. Written from Google's published API
@@ -20,7 +22,6 @@ import {
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
-const SCOPE = "https://www.googleapis.com/auth/yt-analytics.readonly";
 
 function redirectUri(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL;
@@ -33,13 +34,9 @@ export function buildAuthorizationUrl(state: string): string | null {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   if (!clientId || !process.env.NEXT_PUBLIC_APP_URL) return null;
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri(),
-    response_type: "code",
-    scope: SCOPE,
-    access_type: "offline",
-    prompt: "consent",
+  const params = buildYouTubeAuthorizationParams({
+    clientId,
+    redirectUri: redirectUri(),
     state,
   });
   return `${AUTH_URL}?${params.toString()}`;
