@@ -1,8 +1,10 @@
 # Deploying Green Light
 
 The app is stateless: everything lives in Supabase (`kpuecrvdrkhemyvibyfa`,
-eu-central-1) and Vercel runs the Next.js front of it. All 21 migrations are
-already applied to that project, so a deploy is configuration plus DNS.
+eu-central-1) and Vercel runs the Next.js front of it. All 23 migrations
+(0001–0023) are applied to that project. 0023 was applied on 2026-10-30, history
+version `20261030171145`. A future migration must be applied **before** the code
+that reads it is deployed.
 
 Nothing here needs a secret at **build** time. Every key is read per request, so
 a build succeeds with placeholders and a leaked build log never contains one.
@@ -42,12 +44,13 @@ rather than by accident:
 
 | Variable | Powers | Unset |
 |---|---|---|
-| `NVIDIA_MODEL` | Which model on NIM answers | Defaults to `z-ai/glm-5.3`. A **typo here is not an error** — the call 404s and the product quietly serves rule-based output |
+| `NVIDIA_MODEL` | Which model on NIM answers | Defaults to `meta/llama-3.3-70b-instruct` (`NVIDIA_DEFAULT_MODEL`). A **typo here is not an error** — the call 404s and the product quietly serves rule-based output |
 | `NVIDIA_REASONING_EFFORT` | Opt-in reasoning depth on the pricing call | Not sent. Only set it if the configured model honours the field |
 | `YOUTUBE_API_KEY` | Media Kit stats sync | No YouTube stats |
 | `GOOGLE_SAFE_BROWSING_API_KEY` | Sender-URL threat check | Renders "could not check", never an all-clear |
 | `IP2WHOIS_API_KEY` | Sender-domain WHOIS in the deal room | Same — "could not check" |
 | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | Verified audience geography, YouTube (§7.3) | Connect button returns a clear "not configured" state |
+| `CRON_SECRET` | The daily YouTube data cleanup, `/api/cron/youtube-data-freshness` (`vercel.json`, 03:17 UTC). It deletes verified geography and synced public stats older than 30 days, and data for revoked tokens (YouTube API Services policy, privacy policy §5) | **Required once `GOOGLE_OAUTH_CLIENT_ID` is set.** The route answers 401 to every call, so nothing is cleaned up. 16+ characters; redeploy after setting it. **Not set in production as of 2026-10-30.** |
 | `META_APP_ID` / `META_APP_SECRET` | Verified audience geography, Instagram (§7.3) | Same |
 | `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_PHONE_NUMBER_ID` | New-deal WhatsApp alerts | Toggle still saves; no message is ever sent |
 | `SUPABASE_WEBHOOK_SECRET` | `POST /api/webhooks/supabase` | Endpoint returns 503 rather than accepting unauthenticated calls |
@@ -257,7 +260,7 @@ Until a real delivery has been through, treat §5 as untested in production.
 
 ```bash
 npm ci
-npm test                    # 105 unit assertions
+npm test                    # 395 tests across three runners (unit, intake, OAuth callback)
 npm run build
 node scripts/webhook-e2e.mjs   # 8, against a running build
 ```
@@ -281,11 +284,15 @@ endpoints.
 
 ## Known gaps at launch
 
-- **Analytics OAuth (§7.3) is not built.** It needs a verified Google consent
-  screen for `yt-analytics.readonly` and a Meta App Review. Until then no
-  creator can reach a verified state, so §7.4 caps every high-value deal at
-  yellow. That is the system working as designed, but it means the verified
-  path is untested end to end.
+- **Analytics OAuth (§7.3) is built but not verified live.** YouTube requests
+  `youtube.readonly` and `yt-analytics.readonly`, checks the granted scopes,
+  and deletes data on a revoked grant. It still needs both scopes on a
+  verified Google consent screen. Instagram still calls Graph v19.0 and the
+  deprecated `audience_country` metric (D7), so it fails safely (never a
+  false "verified") but cannot work, and it needs Meta App Review. Until a
+  real connection succeeds, §7.4 caps every high-value deal at yellow.
+- **The YouTube cleanup cron is inactive until `CRON_SECRET` is set** (see the
+  table above).
 - **The company role has no RLS policy**, so a company account reads nothing.
   Deliberate — see the note at the end of `0003_rls_policies.sql` before
   changing it.
@@ -306,6 +313,8 @@ endpoints.
   balanced-brace scan) for exactly this reason. Send one real evaluation
   through the Manual Analyzer after deploying and confirm the result looks
   sane before relying on it.
-- **Basic stats are creator-entered.** Nothing calls the YouTube Data API or
-  Twitch Helix yet, so §1's anti-fraud promise currently holds for audience
-  geography and not for view counts.
+- **Average views are creator-entered.** The YouTube sync (API key) fills
+  subscribers, channel views and video count, and the engagement rate when it
+  can compute one, but `avg_views` is typed in, and nothing calls Twitch Helix
+  yet. §1's anti-fraud promise therefore holds for verified geography and
+  synced counts, not for average views.

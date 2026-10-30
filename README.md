@@ -26,7 +26,8 @@ system, data model and business logic. Read it before changing anything here.
 | URL | `https://kpuecrvdrkhemyvibyfa.supabase.co` |
 | Plan | Free tier ($0/mo), per the zero-cost MVP constraint in §9 |
 
-All migrations in `supabase/migrations/` are **applied**. The Supabase
+All migrations in `supabase/migrations/` (0001–0023) are **applied**. The latest
+is 0023, history version `20261030171145`, applied 2026-10-30. The Supabase
 security linter returns one intentional warning — see
 “Company-side access” below — and otherwise zero lints.
 

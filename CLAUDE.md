@@ -961,7 +961,7 @@ else as a blocker.
    `lint`, `build`), and the production deployment of that commit is READY.
 2. Every migration in `supabase/migrations/` is applied to the live project
    (0022, outstanding when this section was written, was applied on
-   2026-10-29).
+   2026-10-29; 0023 on 2026-10-30, see the update below).
 3. The production smoke test passes end to end, with real test accounts:
    - admin creates a creator and a company, and the forced reset works;
    - mail to a creator's alias opens a deal room;
@@ -987,6 +987,29 @@ else as a blocker.
    company's real email (`deal_chats.sender_email`) to the creator. Today
    they do. It is not a §6 violation (that rule protects the creator), but it
    does give both sides a way around the platform.
+
+> **Update — production at `24db05b`, migration 0023 applied, cron not yet
+> active (2026-10-30).** `main` was fast-forwarded to `24db05b` and Vercel
+> production deployment `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` is READY on
+> `www.greenlightadvs.com`. Migration `0023_verified_geo_synced_at` was applied
+> to the live project **before** that deploy (migration history version
+> `20261030171145`). It only adds two nullable timestamp columns to
+> `media_kits` (`verified_geo_synced_at`, `youtube_stats_synced_at`); no data
+> changed, and every migration in `supabase/migrations/` (0001–0023) is now
+> applied.
+>
+> **`CRON_SECRET` is not set in Vercel Production.** `vercel.json` registers
+> the daily `/api/cron/youtube-data-freshness` job (03:17 UTC), but without
+> the secret the route answers 401 to every call. That was checked on
+> production after the deploy. So the YouTube freshness cleanup is
+> **not actually running**: nothing is deleted, and no stored token is
+> re-checked with Google. `/admin/system` reports `CRON_SECRET` as a missing
+> *required* variable because `GOOGLE_OAUTH_CLIENT_ID` is set, which keeps
+> item 4 above open. Until the owner sets it (16+ characters, then a
+> redeploy), the privacy policy's 30-day deletion statement describes code
+> that is deployed but not scheduled. Once it is set, the job's first runs
+> will refresh the one stored YouTube token through Google every day. No
+> secret value is recorded in this repository.
 
 **Not launch-gating** (fast-follow): verified audience geo via YouTube /
 Instagram OAuth (§7.3). Google and Meta review times are outside our control.

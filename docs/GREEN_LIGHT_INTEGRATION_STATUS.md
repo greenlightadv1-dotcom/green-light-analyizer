@@ -1,5 +1,14 @@
 # GREEN_LIGHT_INTEGRATION_STATUS
 
+> **Status note, 2026-10-30 (supersedes the database and deployment facts below).**
+> This document is a snapshot from 2026-10-29. Since then, migration 0022 was
+> applied on 2026-10-29 and 0023 on 2026-10-30 (version `20261030171145`), so
+> 0001–0023 are all live. Production runs `main` at `24db05b`, which includes
+> D2–D6, G1, G2, the negotiation co-pilot and the §7.4 high-value rule.
+> `CRON_SECRET` is not set, so the daily YouTube cleanup is inactive. Anything
+> below that says 0022 is unapplied, or that these items are branch-only, is
+> historical. CLAUDE.md §16 is the current record.
+
 Status of every external integration: email, social platforms, AI and supporting services.
 Investigation date: **2026-10-29**. Method: code reading, read-only SQL aggregates on the live Supabase project `kpuecrvdrkhemyvibyfa` (counts and booleans only, never content or personal data), read-only Resend configuration listing, and official provider documentation.
 
