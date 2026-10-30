@@ -127,6 +127,8 @@ export type RateKit = {
   last_synced_at: string | null;
   audience_verified: boolean | null;
   verified_geo_synced_at: string | null;
+  /** 0023's clock for the public stats; preferred over last_synced_at when present. */
+  youtube_stats_synced_at?: string | null;
 };
 
 export type SuggestedRate = {
@@ -170,7 +172,10 @@ export function suggestRate(input: {
   const assumptions: string[] = [];
   const missing: string[] = [];
 
-  const syncedAt = kit?.last_synced_at ? Date.parse(kit.last_synced_at) : NaN;
+  // last_synced_at is also written by other syncs, so the dedicated stats
+  // clock wins whenever the row has one.
+  const statsClock = kit?.youtube_stats_synced_at ?? kit?.last_synced_at ?? null;
+  const syncedAt = statsClock ? Date.parse(statsClock) : NaN;
   const statsSyncedFresh =
     kit?.subscriber_count !== null &&
     kit?.subscriber_count !== undefined &&

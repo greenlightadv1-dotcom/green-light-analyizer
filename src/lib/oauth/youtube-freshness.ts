@@ -73,3 +73,29 @@ export function isRevokedGrant(status: number, body: unknown): boolean {
     (body as Record<string, unknown>).error === "invalid_grant"
   );
 }
+
+/**
+ * What a YouTube kit whose public stats are older than the limit is set to.
+ * Only the three columns the API-key sync alone writes (0023's comment);
+ * engagement_rate, avg_views and everything else a creator may have typed
+ * stay as they are.
+ */
+export function clearedYouTubeStats() {
+  return {
+    subscriber_count: null,
+    channel_view_count: null,
+    media_count: null,
+    youtube_stats_synced_at: null,
+  };
+}
+
+/** True when a kit's synced public stats are younger than 30 days. */
+export function isYouTubeStatsFresh(
+  kit: { youtube_stats_synced_at?: string | null } | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  const syncedAt = kit?.youtube_stats_synced_at ? Date.parse(kit.youtube_stats_synced_at) : Number.NaN;
+  if (!Number.isFinite(syncedAt)) return false;
+  const age = now.getTime() - syncedAt;
+  return age >= -60_000 && age < VERIFIED_GEO_MAX_AGE_MS;
+}

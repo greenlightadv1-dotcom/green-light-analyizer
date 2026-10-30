@@ -1,4 +1,4 @@
--- 0023 — media_kits.verified_geo_synced_at (G1).
+-- 0023 — media_kits.verified_geo_synced_at and youtube_stats_synced_at (G1).
 --
 -- YouTube API Services Developer Policies require stored API data to be
 -- refreshed or deleted, and data for users whose tokens cannot be refreshed
@@ -19,3 +19,18 @@ ALTER TABLE public.media_kits
 
 COMMENT ON COLUMN public.media_kits.verified_geo_synced_at IS
   'When verified_top_countries was last fetched from an official Analytics API. NULL = never or cleared. Service role only. Older than 30 days = not verified (YouTube API Services data policy).';
+
+-- The same rule for the public YouTube statistics the API-key sync writes
+-- (syncYoutubeStats): subscriber_count, channel_view_count and media_count are
+-- written only by that sync on a YouTube kit — the media-kit form never
+-- touches them — so they can be refreshed-or-deleted without touching
+-- anything a creator typed. engagement_rate is deliberately excluded: the
+-- form and the sync both write it, and nothing records which one did.
+-- NULL = never synced or cleared; existing synced rows start NULL, so the
+-- first cleanup run clears their stats until the creator syncs again.
+
+ALTER TABLE public.media_kits
+  ADD COLUMN IF NOT EXISTS youtube_stats_synced_at TIMESTAMP WITH TIME ZONE;
+
+COMMENT ON COLUMN public.media_kits.youtube_stats_synced_at IS
+  'When subscriber_count/channel_view_count/media_count were last fetched from the YouTube Data API. NULL = never or cleared. Service role only. Older than 30 days = cleared (YouTube API Services data policy).';

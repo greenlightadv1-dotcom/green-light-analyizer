@@ -338,6 +338,9 @@ export async function syncYoutubeStats(
       // should never silently blank out a value the creator already set.
       ...(stats.engagementRate !== null && { engagement_rate: stats.engagementRate }),
       last_synced_at: new Date().toISOString(),
+      // The freshness clock for the three stats above (0023): refreshed or
+      // deleted within 30 days by the youtube-data-freshness cron.
+      youtube_stats_synced_at: new Date().toISOString(),
     })
     .eq("id", mediaKitId);
 

@@ -251,9 +251,11 @@ export default function PrivacyPage() {
         recommendation (see section 7). They are not shared with anyone else.
       </p>
       <p>
-        Verified audience data is kept only while it is current: if it has not
-        been refreshed from YouTube for 30 days, it stops being treated as
-        verified and is deleted. If Google tells us your authorization has been
+        Data from YouTube is kept only while it is current: verified audience
+        data, and the public subscriber, view and video counts we sync, are
+        deleted once they have not been refreshed from YouTube for 30 days (a
+        daily job removes them before that point, and verified data stops being
+        used as verified as soon as it is 30 days old). If Google tells us your authorization has been
         revoked or can no longer be refreshed, we delete the stored tokens and
         the verified data derived from them.
       </p>
@@ -438,9 +440,11 @@ export default function PrivacyPage() {
           authorization was revoked, and when your account closes.
         </li>
         <li>
-          <strong>Verified audience data from YouTube</strong> — deleted once it
-          has not been refreshed for 30 days, or when your YouTube authorization
-          is revoked (section 5).
+          <strong>Data from YouTube</strong> — verified audience data and synced
+          public channel statistics are deleted once they have not been
+          refreshed for 30 days; verified data and tokens are also deleted when
+          your YouTube authorization is revoked (section 5). Figures you typed
+          into your media kit yourself are not affected.
         </li>
         <li>
           <strong>Rate-limit counters</strong> — overwritten continuously; they

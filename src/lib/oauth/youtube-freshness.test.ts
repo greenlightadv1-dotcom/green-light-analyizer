@@ -6,6 +6,8 @@ import {
   STALE_CLEANUP_AFTER_MS,
   VERIFIED_GEO_MAX_AGE_MS,
   clearedVerifiedGeo,
+  clearedYouTubeStats,
+  isYouTubeStatsFresh,
   isRevokedGrant,
   isVerifiedGeoFresh,
   staleCleanupCutoff,
@@ -88,4 +90,28 @@ test("cron auth requires the exact bearer secret, and refuses when none is set",
   assert.equal(isAuthorizedCron("Bearer ", ""), false);
   assert.equal(isAuthorizedCron("Bearer undefined", undefined), false);
   assert.equal(isAuthorizedCron("Bearer short", "short"), false, "a short secret is refused");
+});
+
+// --- public YouTube stats (API-key sync) -----------------------------------------
+
+test("public stats clearing touches only the three sync-only columns", () => {
+  assert.deepEqual(clearedYouTubeStats(), {
+    subscriber_count: null,
+    channel_view_count: null,
+    media_count: null,
+    youtube_stats_synced_at: null,
+  });
+  // engagement_rate is written by both the form and the sync, so it is never cleared;
+  // avg_views and everything else are creator input.
+  for (const field of ["engagement_rate", "avg_views", "avg_ccv", "content_category", "declared_top_countries", "platform_handle"]) {
+    assert.ok(!(field in clearedYouTubeStats()), field);
+  }
+});
+
+test("public stats are fresh only within 30 days of their own sync", () => {
+  assert.ok(isYouTubeStatsFresh({ youtube_stats_synced_at: ago(29 * DAY) }, NOW));
+  assert.equal(isYouTubeStatsFresh({ youtube_stats_synced_at: ago(30 * DAY) }, NOW), false);
+  assert.equal(isYouTubeStatsFresh({ youtube_stats_synced_at: null }, NOW), false);
+  assert.equal(isYouTubeStatsFresh({}, NOW), false);
+  assert.equal(isYouTubeStatsFresh({ youtube_stats_synced_at: ago(-2 * DAY) }, NOW), false);
 });

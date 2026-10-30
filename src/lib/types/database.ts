@@ -177,6 +177,8 @@ type MediaKit = {
   last_synced_at: string | null;
   /** 0023: when verified_top_countries was fetched; see youtube-freshness.ts. */
   verified_geo_synced_at: string | null;
+  /** 0023: when the public YouTube stats below were fetched; see youtube-freshness.ts. */
+  youtube_stats_synced_at: string | null;
   /** Subscribers (YouTube) or followers (Instagram). Non-NULL = synced (migration 0014). */
   subscriber_count: number | null;
   /** BIGINT column — a large channel's lifetime total can exceed INTEGER range. */

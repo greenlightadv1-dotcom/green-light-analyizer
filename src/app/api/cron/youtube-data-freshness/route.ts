@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isAuthorizedCron } from "@/lib/cron-auth";
 import { log } from "@/lib/log";
-import { clearedVerifiedGeo, staleCleanupCutoff } from "@/lib/oauth/youtube-freshness";
+import { clearedVerifiedGeo, clearedYouTubeStats, staleCleanupCutoff } from "@/lib/oauth/youtube-freshness";
 import { getValidAccessToken } from "@/lib/oauth/youtube";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -11,6 +11,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  *
  * 1. Deletes verified geography older than STALE_CLEANUP_AFTER_MS (or with no
  *    sync time at all) from YouTube media kits. Only those columns.
+ *    The same for the public stats the API-key sync writes (subscriber,
+ *    view and video counts) — only those three columns.
  * 2. Re-confirms each stored YouTube token: getValidAccessToken refreshes an
  *    expired one, and a refresh Google answers with invalid_grant deletes that
  *    creator's token and verified geography. Any other failure (5xx, timeout,
@@ -45,6 +47,17 @@ export async function GET(request: NextRequest) {
     .select("id");
   if (clearError) log.error("youtube_freshness.stale_clear_failed", { error: clearError });
 
+  // Public YouTube stats from the API-key sync: same 30-day rule. Only the
+  // columns that sync alone writes are cleared (0023), never creator input.
+  const { data: statsCleared, error: statsError } = await service
+    .from("media_kits")
+    .update(clearedYouTubeStats())
+    .eq("platform", "youtube")
+    // A single .or(): already-empty rows simply stay empty.
+    .or(`youtube_stats_synced_at.is.null,youtube_stats_synced_at.lt.${cutoff}`)
+    .select("id");
+  if (statsError) log.error("youtube_freshness.stats_clear_failed", { error: statsError });
+
   const { data: connections, error: listError } = await service
     .from("oauth_connections")
     .select("creator_id")
@@ -64,6 +77,7 @@ export async function GET(request: NextRequest) {
 
   const summary = {
     stale_kits_cleared: cleared?.length ?? 0,
+    stale_stats_cleared: statsCleared?.length ?? 0,
     tokens_checked: checked,
     tokens_unavailable: unavailable,
     tokens_pending: Math.max((connections?.length ?? 0) - checked, 0),

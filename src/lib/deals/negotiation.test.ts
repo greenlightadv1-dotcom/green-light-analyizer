@@ -317,3 +317,11 @@ test("stated figures are read in every common form", () => {
   assert.deepEqual(statedUsdFigures("$1,500 or 1.200 USD, maybe 2k dollars"), [1500, 1200, 2000]);
   assert.deepEqual(statedUsdFigures("2 videos, 30 days, 6 months"), []);
 });
+
+test("rate: the dedicated stats clock wins over last_synced_at", () => {
+  // last_synced_at is fresh (a geo sync touched it) but the stats themselves are old.
+  const kit = { ...KIT, avg_views: null, last_synced_at: daysAgo(1), youtube_stats_synced_at: daysAgo(40) };
+  const r = suggestRate({ kit, sponsorshipType: "integration", scope: NO_SCOPE, baseRateUsd: null, now: NOW });
+  assert.equal(r.targetUsd, null, "stale stats are not used for an estimate");
+  assert.ok(!r.factors.some((f) => f.provenance === "synced"));
+});
