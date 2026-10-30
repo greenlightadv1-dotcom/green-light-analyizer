@@ -10,9 +10,11 @@ import { fetchYoutubeChannelStats, fetchYoutubeRecentVideos } from "@/lib/youtub
 import { deleteOAuthConnection } from "@/lib/oauth/tokens";
 import * as youtubeOAuth from "@/lib/oauth/youtube";
 import * as instagramOAuth from "@/lib/oauth/instagram";
+import { verifiedGeoUpdate } from "@/lib/oauth/youtube-geo";
+import { log } from "@/lib/log";
 import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
-import type { Database, Platform, SocialLinks } from "@/lib/types/database";
+import type { CountryShare, Database, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
 import { PLATFORMS, canAddConnection } from "./platforms";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
@@ -204,29 +206,41 @@ export async function syncVerifiedGeo(
     return { error: "Reconnect above to sync.", synced: false };
   }
 
-  const countries =
-    platform === "youtube"
-      ? await youtubeOAuth.fetchAudienceCountries(
-          accessToken,
-          connection.external_account_id,
-        )
-      : await instagramOAuth.fetchAudienceCountries(
-          accessToken,
-          connection.external_account_id,
-        );
+  let verified: { verified_top_countries: CountryShare[]; audience_verified: true };
 
-  if (!countries) {
-    return {
-      error: `Could not reach ${platform === "youtube" ? "YouTube Analytics" : "Instagram"} — try again shortly.`,
-      synced: false,
-    };
+  if (platform === "youtube") {
+    // An explicit result: a failed, malformed or empty answer can only ever
+    // produce an error here, never a verified update (youtube-geo.ts).
+    const result = await youtubeOAuth.fetchAudienceCountries(
+      accessToken,
+      connection.external_account_id,
+    );
+    const outcome = verifiedGeoUpdate(result);
+    if (!outcome.update) {
+      if (!result.ok) {
+        log.warn("youtube_geo.sync_failed", {
+          reason: result.reason,
+          status: result.status ?? null,
+        });
+      }
+      return { error: outcome.error, synced: false };
+    }
+    verified = outcome.update;
+  } else {
+    const countries = await instagramOAuth.fetchAudienceCountries(
+      accessToken,
+      connection.external_account_id,
+    );
+    if (!countries) {
+      return { error: "Could not reach Instagram — try again shortly.", synced: false };
+    }
+    verified = { verified_top_countries: countries, audience_verified: true };
   }
 
   const { error } = await service
     .from("media_kits")
     .update({
-      verified_top_countries: countries,
-      audience_verified: true,
+      ...verified,
       last_synced_at: new Date().toISOString(),
     })
     .eq("creator_id", profile.id)

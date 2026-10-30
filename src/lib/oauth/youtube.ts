@@ -1,7 +1,12 @@
 import "server-only";
 
 import { getOAuthConnection, saveOAuthTokens } from "./tokens";
-import type { CountryShare } from "@/lib/types/database";
+import {
+  REPORTS_ENDPOINT,
+  audienceGeoFromReport,
+  buildCountryViewsQuery,
+  type AudienceGeoResult,
+} from "./youtube-geo";
 
 /**
  * YouTube Analytics OAuth (§7.3) — `yt-analytics.readonly`, a sensitive
@@ -147,40 +152,40 @@ export async function getValidAccessToken(creatorId: string): Promise<string | n
   return refreshed.access_token;
 }
 
-/** Viewer percentage by country, via YouTube Analytics reports.query. */
+/**
+ * Verified audience geography: the share of the channel's views by country
+ * over the last AUDIENCE_GEO_WINDOW_DAYS days (youtube-geo.ts explains the
+ * query, the maths and why it is views rather than viewerPercentage).
+ *
+ * Returns an explicit result rather than null so the caller can tell "the
+ * API failed" from "the channel has no country data yet" — and so neither can
+ * be mistaken for an empty-but-valid answer.
+ */
 export async function fetchAudienceCountries(
   accessToken: string,
   channelId: string,
-): Promise<CountryShare[] | null> {
+  now: Date = new Date(),
+): Promise<AudienceGeoResult> {
+  let response: Response;
   try {
-    const params = new URLSearchParams({
-      ids: `channel==${channelId}`,
-      // A wide trailing window so this is representative without needing
-      // per-creator date tuning.
-      startDate: "2020-01-01",
-      endDate: new Date().toISOString().slice(0, 10),
-      metrics: "viewerPercentage",
-      dimensions: "country",
-      sort: "-viewerPercentage",
-      maxResults: "10",
-    });
-    const response = await fetch(
-      `https://youtubeanalytics.googleapis.com/v2/reports?${params.toString()}`,
+    response = await fetch(
+      `${REPORTS_ENDPOINT}?${buildCountryViewsQuery(channelId, now).toString()}`,
       {
         headers: { authorization: `Bearer ${accessToken}` },
         signal: AbortSignal.timeout(10_000),
       },
     );
-    if (!response.ok) return null;
-
-    const body: { rows?: [string, number][] } = await response.json();
-    if (!body.rows) return null;
-
-    return body.rows.map(([country, pct]) => ({
-      country,
-      pct: Math.round(pct),
-    }));
   } catch {
-    return null;
+    return { ok: false, reason: "network" };
   }
+
+  if (!response.ok) return { ok: false, reason: "http_error", status: response.status };
+
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, reason: "malformed" };
+  }
+  return audienceGeoFromReport(body, now);
 }
