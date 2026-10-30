@@ -30,6 +30,7 @@ export type RateLimitAction =
   | "analyzer_create_deal"
   | "message_send"
   | "promo_redeem"
+  | "platform_sync"
   | "ai_reply_draft"
   | "ai_detect_niche"
   | "ai_company_intel";
@@ -78,6 +79,14 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   promo_redeem: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 30, windowSeconds: DAY, label: "day" },
+  ],
+  // YouTube/Instagram syncs: no AI cost, but each spends the project's shared
+  // platform API quota (YouTube Data API: ~3 units of 10,000/day per sync), so
+  // one account must not be able to exhaust it for every creator. Shared by
+  // the stats and verified-geography syncs.
+  platform_sync: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
   ],
   ai_reply_draft: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },

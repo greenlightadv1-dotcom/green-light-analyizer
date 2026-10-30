@@ -198,6 +198,10 @@ export async function syncVerifiedGeo(
     if (scopeError) return { error: scopeError, synced: false };
   }
 
+  // A token refresh and an Analytics query per press, against shared quota.
+  const limit = await consumeRateLimit("platform_sync", profile.id);
+  if (!limit.allowed) return { error: limit.message, synced: false };
+
   const accessToken =
     platform === "youtube"
       ? await youtubeOAuth.getValidAccessToken(profile.id)
@@ -310,6 +314,11 @@ export async function syncYoutubeStats(
   if (!kit || kit.creator_id !== profile.id || kit.platform !== "youtube") {
     return { error: "That media kit could not be found.", synced: false };
   }
+
+  // Every sync spends the project's shared YouTube Data API quota, so one
+  // account must not be able to exhaust it for everyone.
+  const limit = await consumeRateLimit("platform_sync", profile.id);
+  if (!limit.allowed) return { error: limit.message, synced: false };
   if (!kit.platform_handle) {
     return {
       error: "Add your channel handle above before syncing.",
@@ -369,6 +378,9 @@ export async function syncInstagramStats(
   _formData: FormData,
 ): Promise<SyncInstagramState> {
   const profile = await requireProfile();
+
+  const limit = await consumeRateLimit("platform_sync", profile.id);
+  if (!limit.allowed) return { error: limit.message, synced: false };
 
   const accessToken = await instagramOAuth.getValidAccessToken(profile.id);
   if (!accessToken) {
