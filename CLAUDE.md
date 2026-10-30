@@ -293,6 +293,25 @@ A lightweight alternate entry point with these fields:
 Build this as a standalone form/modal, reusing the same AI evaluation
 function as step 4 above.
 
+> **Update — opening a room from the Analyzer is signed (D3), and Gmail's
+> forwarding confirmation is not a deal (D4).** `analyzeOffer` signs its
+> result (`src/lib/deals/analysis-quote.ts`: creator, sender, offer text, type,
+> countries, risk, price; 30-minute expiry, its own key label so a Discover
+> token never verifies here). `createDealFromAnalysis` is creator-only, stores
+> the risk and recommended price only under a valid signature, validates the
+> form server-side, and has its own `analyzer_create_deal` rate limit, the same
+> fix Discover received.
+>
+> Step 2 of §5 produces one email the intake used to mishandle: Gmail's
+> forwarding confirmation (`forwarding-noreply@google.com`, subject
+> `(#code) …`) was accepted by the screener and opened a "sponsorship" room.
+> `src/lib/email/gmail-confirmation.ts` now recognises it, and refuses it on a
+> DKIM/DMARC failure, since it comes straight from Google, not via forwarding.
+> The intake then creates no room, runs no evaluation, sends no WhatsApp
+> alert, and **never visits the link**. The Deal Inbox's held panel shows the
+> code (digits only) for the creator to type into Gmail. The setup guide no
+> longer claims Green Light accepts it automatically.
+
 ---
 
 ## 6. Masked in-app chat
@@ -460,8 +479,9 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > The existing `CopyButton` covers the 1-click copy.
 >
 > *Direct reply.* `DirectReplyPanel` shows a ready-to-send reply, pre-filled
-> server-side with the deal's structured context (deliverable, their offer, the
-> creator's rate), editable, one click to send. It is **not** a `mailto:`, and
+> server-side with the deal's structured context (deliverable, their offer, and
+> a rate only once the negotiation stage states one — see the negotiation
+> update below), editable, one click to send. It is **not** a `mailto:`, and
 > that was a deliberate deviation from the request: a `mailto:` sends from the
 > creator's own mail client, putting their real address permanently in the
 > sponsor's inbox — which §6 forbids in as many words, §1's second value
@@ -470,6 +490,26 @@ target_countries:  text[]   -- countries the company wants to reach with this de
 > same `sendMessage` action the composer uses, so it inherits the identical
 > §6.1 server-side mask, violation log and platform relay; a second send path
 > with its own rules is how a masking guarantee grows a hole.
+
+> **Update — staged negotiation co-pilot (2026-10-30).** For the room's
+> creator, "Generate AI reply" and the Direct Reply body now come from
+> `src/lib/deals/negotiation.ts` (pure) and `negotiation-context.ts` (server).
+> The rate is computed from the creator's own media kit, with every factor
+> labelled verified / synced / self-reported / sponsor-stated / estimated /
+> missing. Synced and verified inputs are used only when under 30 days old;
+> CPM and scope uplifts are labelled Green Light defaults, not market data.
+> The stage comes from the thread:
+> - **discovery:** the first reply asks for scope, usage rights, exclusivity,
+>   timeline and budget range, and names no price;
+> - then proposal, counter, hold, accept_ready ("could work… before I
+>   confirm"), and agreed.
+>
+> The creator's optional **private minimum** is validated, never stored,
+> never logged, never sent to the model and never returned. Counters, quoted
+> ranges and held rates never land at or below it. A model draft that states
+> any figure outside the plan's allowed set, or the minimum, is replaced by the
+> deterministic draft (`draftIsAcceptable`). Nothing is sent, accepted or
+> agreed without the creator pressing Send. Company-side drafting is unchanged.
 
 > **Update — Discover's rating is signed (company-flow audit).** A Discover
 > offer is two steps, preview then send, and the send step used to store
@@ -563,6 +603,17 @@ the risk rating (`green|yellow|red`) should be capped at `yellow` at best
 when the deal's value is high and the only geo data is self-reported —
 i.e., unverified audience data should never by itself produce a `green`
 rating on a high-value deal.
+
+> **Update — which value is "the deal's value" (owner decision, 2026-10-30).**
+> The cap compares `rules.highValueBasisUsd(recommended, offered)`, the larger
+> of the engine's recommended price and the sponsor's stated offer, against
+> `HIGH_VALUE_DEAL_USD`. A missing or invalid offer is ignored, so the cap can
+> only get stricter. Both the model path (`evaluate.ts`) and the rule-based path
+> (`heuristic.ts`) apply it, and `EvaluationInput.offered_amount_usd` carries
+> the offer only for this test. Still open: `HIGH_VALUE_DEAL_USD = 1000` is a
+> placeholder this section never defines, and a deal with no geography at all
+> is capped like self-reported. Separately (D6), missing creator analytics
+> never by itself makes an offer red; it holds the rating at yellow.
 
 > **Update — a friendlier Creator Profile layer, on top of this section, not
 > instead of it.** Migration 0017 added `profiles.bio` / `avatar_url` /
@@ -816,6 +867,28 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 > version `20261029204942`), after the owner confirmed it. Verified there: no
 > INSERT/UPDATE grant left for `authenticated` on either table, only the two
 > SELECT policies, realtime unchanged, row counts and checksums unchanged.
+
+> **Update — YouTube API data retention (G1, migration 0023).** Per the
+> YouTube API Services Developer Policies:
+> - A token refresh Google answers with `invalid_grant` deletes that creator's
+>   YouTube token and clears only the verified-geography columns on their
+>   YouTube kit. A 5xx, timeout or `invalid_client` deletes nothing.
+> - Verified geography counts as verified only while `verified_geo_synced_at`
+>   is under 30 days old. That covers pricing, the Media Kit, the Dashboard and
+>   the Analyzer. Discover's RPC has no timestamp and relies on the cleanup.
+> - The daily `/api/cron/youtube-data-freshness` job clears verified geography
+>   and the three sync-only public stats (`subscriber_count`,
+>   `channel_view_count`, `media_count`, clocked by `youtube_stats_synced_at`)
+>   at 29 days, and re-checks every stored token.
+> - `engagement_rate` and everything a creator typed are never cleared.
+>   `engagement_rate` has mixed provenance (form or sync) and no record of
+>   which.
+>
+> The job only runs with `CRON_SECRET` set, which it is not in production yet
+> (§16). Sensitive actions are rate-limited, and `rate-limit-coverage.test.ts`
+> fails if one loses its limit: analyse, create deal, preview, send offer,
+> send message, reply draft, company intel, promo redemption, niche
+> detection, platform syncs.
 
 ---
 
