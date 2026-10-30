@@ -812,9 +812,10 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 > - a company opened a room in another creator's inbox as
 >   `security@greenlightadvs.com`.
 >
-> **Status: the file is in the repo, but it is not yet applied to the live
-> database.** The Supabase tools wait on the owner's confirmation for
-> `REVOKE`/`DROP`.
+> **Status: applied to the live database on 2026-10-29** (migration history
+> version `20261029204942`), after the owner confirmed it. Verified there: no
+> INSERT/UPDATE grant left for `authenticated` on either table, only the two
+> SELECT policies, realtime unchanged, row counts and checksums unchanged.
 
 ---
 
@@ -959,7 +960,8 @@ else as a blocker.
 1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,
    `lint`, `build`), and the production deployment of that commit is READY.
 2. Every migration in `supabase/migrations/` is applied to the live project
-   (0022 is the one outstanding as of this section's date).
+   (0022, outstanding when this section was written, was applied on
+   2026-10-29).
 3. The production smoke test passes end to end, with real test accounts:
    - admin creates a creator and a company, and the forced reset works;
    - mail to a creator's alias opens a deal room;
