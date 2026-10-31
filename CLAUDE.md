@@ -1061,9 +1061,31 @@ else as a blocker.
    they do. It is not a §6 violation (that rule protects the creator), but it
    does give both sides a way around the platform.
 
-> **Update — production at `24db05b`, migration 0023 applied, cron not yet
+> **Update — production at `5580a78` (2026-10-31).** `main` was fast-forwarded
+> from `24db05b` to `5580a78`. Vercel production deployment
+> `dpl_mBdwmQuq6HS8n32i7aRMYPWMKTfy` is READY on `www.greenlightadvs.com` and
+> `greenlightadvs.com`. Its only code change over `24db05b` is the
+> `platform_sync` rate limit; the rest is documentation. No migration, data or
+> environment change went with it. The previous production deployment,
+> `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` (`24db05b`), stays available for rollback.
+>
+> Read-only smoke tests passed after the deploy:
+> - `/` returns 200, and `greenlightadvs.com` lands on `www`;
+> - `/privacy` and `/terms` return 200 with the YouTube/Google disclosures;
+> - `/api/cron/youtube-data-freshness` returns 401 JSON, not a login
+>   redirect;
+> - a signed-out `/dashboard` redirects to `/login?next=%2Fdashboard`.
+>
+> Not verified:
+> - **Runtime logs.** They stayed inaccessible: the Vercel API answers 403 to
+>   both runtime-log calls, even with the team id.
+> - **CI run 136 on `main`** (`5580a78`) was still pending when the
+>   deployment was verified. It completed with `success` afterwards.
+> - Nothing signed-in was exercised.
+>
+> **Earlier — production at `24db05b`, migration 0023 applied, cron not yet
 > active (2026-10-30).** `main` was fast-forwarded to `24db05b` and Vercel
-> production deployment `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` is READY on
+> production deployment `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` was READY on
 > `www.greenlightadvs.com`. Migration `0023_verified_geo_synced_at` was applied
 > to the live project **before** that deploy (migration history version
 > `20261030171145`). It only adds two nullable timestamp columns to
@@ -1071,7 +1093,8 @@ else as a blocker.
 > changed, and every migration in `supabase/migrations/` (0001–0023) is now
 > applied.
 >
-> **`CRON_SECRET` is not set in Vercel Production.** `vercel.json` registers
+> **`CRON_SECRET` is not set in Vercel Production** (still true at `5580a78`).
+> `vercel.json` registers
 > the daily `/api/cron/youtube-data-freshness` job (03:17 UTC), but without
 > the secret the route answers 401 to every call. That was checked on
 > production after the deploy. So the YouTube freshness cleanup is
