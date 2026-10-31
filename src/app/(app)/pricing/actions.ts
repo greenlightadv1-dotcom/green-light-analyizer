@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
-import { daysFromNow } from "@/lib/subscription";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export type RedeemCodeState = {
@@ -11,69 +8,28 @@ export type RedeemCodeState = {
   success: boolean;
 };
 
+/** Shown to anyone who still submits a code (an old link, a saved form). */
+export const PROMO_RETIRED_MESSAGE =
+  "Promo codes are retired: every creator is already on the Creator Plan.";
+
 /**
- * Redeem a single-use promo/trial code — Pricing & Plans (moved out of
- * Settings, which no longer carries any billing UI per CLAUDE.md §4.3).
+ * Promo-code redemption is retired with the unified Creator Plan.
  *
- * The code is claimed with one atomic conditional UPDATE before it is ever
- * applied to the caller's own profile. That ordering (not a lock, not a
- * transaction) is what makes two callers racing the same code safe:
- * whichever request's UPDATE actually matches `is_used = false` commits
- * first, and the loser gets zero rows back — its own profile is never
- * touched, so there is no path to two people ending up with the same code.
+ * Every code targeted Pro or Elite, and those plans no longer grant anything,
+ * so redeeming one would claim the code and rewrite the profile's stored plan
+ * for no change in access. The action now refuses before touching the
+ * database: no code is claimed and no profile is written. The rate limit is
+ * kept in front of it, unchanged, so the endpoint stays as costly to spray as
+ * before (rate-limit-coverage.test.ts).
  */
 export async function redeemCode(
   _prev: RedeemCodeState,
-  formData: FormData,
+  _formData: FormData,
 ): Promise<RedeemCodeState> {
   const profile = await requireProfile();
 
-  const code = String(formData.get("code") ?? "")
-    .trim()
-    .toUpperCase();
-  if (!code) return { error: "Enter a code.", success: false };
-
-  // Codes are ~40 bits, so guessing is not practical — but every attempt is a
-  // service-role write, and nothing should be guessable for free.
   const limit = await consumeRateLimit("promo_redeem", profile.id);
   if (!limit.allowed) return { error: limit.message, success: false };
 
-  const service = createAdminClient();
-
-  const { data: claimed } = await service
-    .from("promo_codes")
-    .update({
-      is_used: true,
-      used_by: profile.id,
-      used_at: new Date().toISOString(),
-    })
-    .eq("code", code)
-    .eq("is_used", false)
-    .gt("expires_at", new Date().toISOString())
-    .select("duration_days, target_plan")
-    .maybeSingle();
-
-  if (!claimed) {
-    // One generic message for "wrong code", "already used" and "expired" —
-    // distinguishing them would tell a guesser which one is true.
-    return { error: "That code isn't valid.", success: false };
-  }
-
-  const { error: profileError } = await service
-    .from("profiles")
-    .update({
-      subscription_plan: claimed.target_plan,
-      subscription_expires_at: daysFromNow(claimed.duration_days),
-    })
-    .eq("id", profile.id);
-
-  if (profileError) {
-    return {
-      error: "Code accepted but the plan update failed — contact support.",
-      success: false,
-    };
-  }
-
-  revalidatePath("/pricing");
-  return { error: null, success: true };
+  return { error: PROMO_RETIRED_MESSAGE, success: false };
 }

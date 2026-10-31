@@ -146,8 +146,52 @@ try {
     const { sw, cw } = await ar.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
     assert.ok(sw <= cw);
   });
+  await check("dark theme: the drawer is opaque navy, readable over the page", async () => {
+    assert.ok(await ar.evaluate(() => document.documentElement.classList.contains("dark")));
+    const bg = await ar.getByRole("dialog").evaluate((el) => getComputedStyle(el).backgroundColor);
+    assert.match(bg, /^rgb\(31, 46, 71\)$/, bg); // navy-dark #1F2E47, fully opaque
+  });
   await shot(ar, "3-mobile-rtl-open.png");
   await rtl.close();
+
+  // --- phone width, light theme: the drawer and G's fixed elements ---
+  const light = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await light.addInitScript(() => localStorage.setItem("theme", "light"));
+  const lp = await light.newPage();
+  await lp.goto(PAGE, { waitUntil: "networkidle" });
+  const lmenu = lp.getByRole("button", { name: "Open menu" });
+  await check("light theme: the drawer is opaque white", async () => {
+    await lmenu.click();
+    const bg = await lp.getByRole("dialog").evaluate((el) => getComputedStyle(el).backgroundColor);
+    assert.equal(bg, "rgb(255, 255, 255)");
+  });
+  await shot(lp, "5-mobile-light-open-390.png");
+  await check("the open drawer covers G's floating button (no overlap or stray taps)", async () => {
+    const hit = await lp.evaluate(() => {
+      const g = document.querySelector('button[aria-label^="Open G"]');
+      if (!g) return "no G button";
+      const r = g.getBoundingClientRect();
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return top?.closest('[data-testid="mobile-nav"]') ? "drawer" : top?.outerHTML.slice(0, 80);
+    });
+    assert.equal(hit, "drawer");
+    await lp.keyboard.press("Escape");
+  });
+  await check("after G's panel is closed with Escape, the menu opens above G's floating button", async () => {
+    // In /preview the yellow preview banner pushes the TopBar under G's
+    // 88dvh bottom sheet on phones; the sheet has its own close and Escape.
+    await lp.locator('button[aria-label^="Open G"]').click();
+    await lp.locator("section[role=dialog]").waitFor();
+    await lp.keyboard.press("Escape");
+    await lp.waitForTimeout(150);
+    await lmenu.click();
+    const nav = lp.locator('[data-testid="mobile-nav"]');
+    await nav.waitFor();
+    const z = await nav.evaluate((el) => Number(getComputedStyle(el).zIndex));
+    assert.ok(z > 40, `drawer z-index ${z} must be above G (z-40)`);
+    await lp.keyboard.press("Escape");
+  });
+  await light.close();
 
   console.log(`\n${passed} checks passed`);
 } finally {

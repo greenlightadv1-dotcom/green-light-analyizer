@@ -17,7 +17,8 @@ import type { MediaKit } from "@/lib/media-kit/queries";
  *     side by side
  *   - a green, a yellow and a red rating, including one the §7.4 cap pulled
  *     down from green
- *   - a Starter plan at its §8 connection limit, so the locked card renders
+ *   - an old stored plan value (Starter), which under the unified Creator
+ *     Plan no longer limits anything — the preview shows the same access
  */
 
 const now = Date.now();
@@ -50,6 +51,9 @@ export const mockProfile: Profile = {
   shareable_slug: "amirkhaled",
   whatsapp_number: null,
   whatsapp_notifications_enabled: false,
+  creator_categories: ["gaming", "tech"],
+  creator_games: ["valorant", "ea_fc"],
+  content_formats: ["live_stream", "long_video"],
 };
 
 export const mockAdminProfile: Profile = {

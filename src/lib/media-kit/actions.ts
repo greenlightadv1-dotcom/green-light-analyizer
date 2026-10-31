@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
+import { CREATOR_ONLY_ERROR, canUseCreatorFeatures } from "@/lib/access";
 import { toHandle } from "@/lib/alias";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,7 +19,7 @@ import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import type { CountryShare, Database, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
-import { PLATFORMS, canAddConnection } from "./platforms";
+import { MAX_CONNECTIONS, PLATFORMS, canAddConnection } from "./platforms";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 
 export type MediaKitState = {
@@ -48,6 +49,8 @@ export async function saveMediaKit(
   formData: FormData,
 ): Promise<MediaKitState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, savedPlatform: null };
 
   const platform = String(formData.get("platform") ?? "") as Platform;
   if (!PLATFORMS.includes(platform)) {
@@ -68,20 +71,20 @@ export async function saveMediaKit(
 
   const supabase = await createClient();
 
-  // §8 connection limit. Editing an existing kit is always allowed — the limit
+  // Connection ceiling. Editing an existing kit is always allowed — the limit
   // is on how many platforms are connected, not on correcting data already
-  // entered, so a downgrade never strands a creator with uneditable rows.
+  // entered.
   const { data: existing } = await supabase
     .from("media_kits")
     .select("id, platform")
     .eq("creator_id", profile.id);
 
   const isNew = !existing?.some((k) => k.platform === platform);
-  const plan = profile.subscription_plan ?? "Starter";
-
-  if (isNew && !canAddConnection(plan, existing?.length ?? 0)) {
+  // One ceiling for every creator, whatever plan value is stored: the
+  // platforms the schema supports (platforms.ts).
+  if (isNew && !canAddConnection(existing?.length ?? 0)) {
     return {
-      error: `The ${plan} plan covers ${existing?.length ?? 0} platform connections. Upgrade over Discord to add more.`,
+      error: `The Creator Plan covers ${MAX_CONNECTIONS} platform connections, and they are all in use.`,
       savedPlatform: null,
     };
   }
@@ -133,6 +136,8 @@ export async function saveMediaKit(
  */
 export async function disconnectAnalytics(formData: FormData): Promise<void> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return;
 
   const platform = String(formData.get("platform") ?? "") as Platform;
   if (!PLATFORMS.includes(platform)) return;
@@ -176,6 +181,8 @@ export async function syncVerifiedGeo(
   formData: FormData,
 ): Promise<SyncVerifiedGeoState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const platform = String(formData.get("platform") ?? "");
   if (!isRealOAuthPlatform(platform)) {
@@ -297,6 +304,8 @@ export async function syncYoutubeStats(
   formData: FormData,
 ): Promise<SyncYoutubeState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const mediaKitId = String(formData.get("media_kit_id") ?? "");
   if (!mediaKitId) return { error: "Missing media kit.", synced: false };
@@ -378,6 +387,8 @@ export async function syncInstagramStats(
   _formData: FormData,
 ): Promise<SyncInstagramState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const limit = await consumeRateLimit("platform_sync", profile.id);
   if (!limit.allowed) return { error: limit.message, synced: false };
@@ -448,6 +459,8 @@ export async function detectNiche(
   formData: FormData,
 ): Promise<DetectNicheState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, result: null };
 
   const mediaKitId = String(formData.get("media_kit_id") ?? "");
   if (!mediaKitId) return { error: "Missing media kit.", result: null };
@@ -584,6 +597,8 @@ export async function saveCreatorProfile(
   formData: FormData,
 ): Promise<CreatorProfileState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, saved: false };
 
   const bio = String(formData.get("bio") ?? "").trim().slice(0, 1000) || null;
   const avatarUrl = String(formData.get("avatar_url") ?? "").trim() || null;

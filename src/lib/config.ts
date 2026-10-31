@@ -125,7 +125,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
       required: false,
       impact:
-        "YouTube verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+        "YouTube verified-audience-geography OAuth (§7.3, every creator) shows 'not configured' instead of connecting.",
     },
     {
       name: "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -148,7 +148,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.META_APP_ID),
       required: false,
       impact:
-        "Instagram verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+        "Instagram verified-audience-geography OAuth (§7.3) — in development; not offered to creators until the integration is operational.",
     },
     {
       name: "META_APP_SECRET",

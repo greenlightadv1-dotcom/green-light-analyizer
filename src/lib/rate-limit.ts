@@ -10,12 +10,12 @@ import { log } from "@/lib/log";
  * button, and the Manual Analyzer additionally spends a WHOIS lookup and a
  * Safe Browsing call. None of them had any ceiling.
  *
- * This is an abuse and cost guard, deliberately distinct from the §8 plan
- * quotas ("5 email analyses/mo" on Starter, unlimited on Pro). Those are a
- * billing rule about what a plan entitles someone to; these are a technical
- * rule about what any one account can do to the bill in an hour. The plan
- * quota is not implemented yet — adding it here would conflate the two and
- * silently give Starter a limit nobody agreed to.
+ * This is an abuse and cost guard, not a plan quota. Under the unified
+ * Creator Plan there are no per-plan quotas at all (the old "5 email
+ * analyses/mo" and "unlimited" tiers are retired), so these limits apply the
+ * same to every account. The Pricing page calls them fair-use limits and
+ * never "unlimited". Adding a monthly quota here would be a new billing rule
+ * nobody has agreed to.
  *
  * The counter lives in Postgres (migration 0019) because the app is
  * serverless: a module-level Map is per-instance and per-cold-start, so on
@@ -33,7 +33,10 @@ export type RateLimitAction =
   | "platform_sync"
   | "ai_reply_draft"
   | "ai_detect_niche"
-  | "ai_company_intel";
+  | "ai_company_intel"
+  | "g_chat"
+  | "access_request"
+  | "upload";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -102,6 +105,24 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   ai_company_intel: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 40, windowSeconds: DAY, label: "day" },
+  ],
+  // G: each question can spend one NVIDIA call. A conversation is many short
+  // turns, so the hourly ceiling sits above a long working session; the daily
+  // one bounds what one account can add to the bill.
+  g_chat: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // Public Get Started form, keyed by a hash of the client address: each
+  // submission is a service-role write and lands in an admin's queue.
+  access_request: [
+    { limit: 3, windowSeconds: HOUR, label: "hour" },
+    { limit: 10, windowSeconds: DAY, label: "day" },
+  ],
+  // Avatar and document uploads: storage writes, bounded per account.
+  upload: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
   ],
 };
 

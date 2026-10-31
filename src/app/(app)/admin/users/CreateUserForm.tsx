@@ -20,7 +20,15 @@ function SubmitButton() {
   );
 }
 
-export function CreateUserForm() {
+export type CreateUserPrefill = {
+  requestId: string;
+  full_name: string;
+  email: string;
+  role: "creator" | "company";
+  note: string;
+};
+
+export function CreateUserForm({ prefill }: { prefill?: CreateUserPrefill | null }) {
   const [state, formAction] = useActionState<CreateUserState, FormData>(
     createUser,
     { error: null, created: null },
@@ -34,13 +42,21 @@ export function CreateUserForm() {
         forced to replace it on first login.
       </p>
 
-      <form action={formAction} className="mt-5 space-y-4">
+      {prefill ? (
+        <p className="mt-3 rounded-lg border border-brand-green/25 bg-brand-green/10 px-3 py-2 text-xs text-fg/75">
+          From application: {prefill.note}. Saving marks it approved.
+        </p>
+      ) : null}
+
+      <form action={formAction} className="mt-5 space-y-4" key={prefill?.requestId ?? "blank"}>
+        {prefill ? <input type="hidden" name="request_id" value={prefill.requestId} /> : null}
         <Field
           id="full_name"
           name="full_name"
           label="Full name"
           autoComplete="off"
           required
+          defaultValue={prefill?.full_name}
         />
         <Field
           id="email"
@@ -49,6 +65,7 @@ export function CreateUserForm() {
           label="Email"
           autoComplete="off"
           required
+          defaultValue={prefill?.email}
         />
 
         <div className="space-y-1.5">
@@ -58,7 +75,7 @@ export function CreateUserForm() {
           >
             Role
           </label>
-          <select id="role" name="role" className={selectClass} required>
+          <select id="role" name="role" className={selectClass} required defaultValue={prefill?.role ?? "creator"}>
             <option value="creator">Creator</option>
             <option value="company">Company</option>
             <option value="admin">Admin</option>

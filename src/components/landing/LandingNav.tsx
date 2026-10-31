@@ -6,7 +6,6 @@ import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { CtaLink } from "@/components/landing/CtaLink";
 import { useTranslation } from "@/components/LocaleProvider";
-import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
 /**
  * Floating nav (spec point 2): inset from the viewport edges rather than
@@ -29,7 +28,7 @@ export function LandingNav() {
           <CtaLink href="/login" variant="ghost" className="hidden sm:inline-flex">
             {t("landing.ctaSignIn")}
           </CtaLink>
-          <CtaLink href={DISCORD_INVITE_URL} external variant="primary">
+          <CtaLink href="/get-started" variant="primary">
             {t("landing.ctaRequestAccess")}
           </CtaLink>
         </div>

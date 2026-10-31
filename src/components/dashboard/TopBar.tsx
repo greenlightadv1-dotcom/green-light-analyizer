@@ -5,6 +5,7 @@ import { SendInviteModal } from "@/components/outreach/SendInviteModal";
 import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { useTranslation } from "@/components/LocaleProvider";
+import { signOutG } from "@/components/g/events";
 import type { Profile } from "@/lib/auth";
 import { MobileNav } from "./MobileNav";
 
@@ -33,7 +34,7 @@ export function TopBar({
           {profile.full_name}
         </p>
         <p className="text-xs text-fg/45 capitalize">
-          {profile.role} · {profile.subscription_plan ?? "Starter"}
+          {profile.role}
         </p>
       </div>
 
@@ -42,9 +43,10 @@ export function TopBar({
         <LanguageMenu />
         <ThemeMenu />
 
-        <form action={demo ? undefined : "/auth/signout"} method="post">
+        <form action={demo ? undefined : "/auth/signout"} method="post" onSubmit={signOutG}>
           <button
             type={demo ? "button" : "submit"}
+            onClick={demo ? signOutG : undefined}
             className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
           >
             {t("topbar.signOut")}

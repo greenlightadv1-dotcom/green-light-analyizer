@@ -51,6 +51,45 @@ export type CreatorDirectoryEntry = {
   verified_top_countries: CountryShare[] | null;
   audience_verified: boolean;
   platforms: Platform[] | null;
+  /** Added by migration 0024; absent until it is applied. */
+  avatar_url?: string | null;
+  country?: string | null;
+  creator_categories?: string[] | null;
+  creator_games?: string[] | null;
+  content_formats?: string[] | null;
+  /** Self-reported starting rate (0017). */
+  base_rate_usd?: number | null;
+  verified_geo_synced_at?: string | null;
+  stats_synced_at?: string | null;
+  /** Public profile slug; the /p/<slug> page is public by design. */
+  shareable_slug?: string | null;
+};
+
+/** A Get Started application (migration 0024). Service-role only. */
+export type AccessRequest = {
+  id: string;
+  journey: "creator" | "company" | "company_representative";
+  full_name: string;
+  email: string;
+  company_name: string | null;
+  website: string | null;
+  primary_platform: string | null;
+  channel_handle: string | null;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  created_profile_id: string | null;
+};
+
+/** A company account's link to another account acting for it (0024). */
+export type CompanyMember = {
+  member_id: string;
+  company_id: string;
+  member_role: "owner" | "representative";
+  created_at: string;
+  created_by: string | null;
 };
 
 /**
@@ -120,6 +159,16 @@ type Profile = {
   shareable_slug: string | null;
   whatsapp_number: string | null;
   whatsapp_notifications_enabled: boolean;
+  /**
+   * Creator taxonomy and company details (migration 0024, local until
+   * applied). Optional because a database without 0024 does not return them;
+   * every reader treats a missing value as empty.
+   */
+  creator_categories?: string[] | null;
+  creator_games?: string[] | null;
+  content_formats?: string[] | null;
+  company_website?: string | null;
+  company_industry?: string | null;
 };
 
 /** §5.3 inbound-delivery trail. provider_message_id is the idempotency key. */
@@ -330,6 +379,27 @@ export type Database = {
       messages: Table<
         Message,
         Optional<Message, Exclude<keyof Message, "message_text">>
+      >;
+      access_requests: Table<
+        AccessRequest,
+        Optional<
+          AccessRequest,
+          | "id"
+          | "company_name"
+          | "website"
+          | "primary_platform"
+          | "channel_handle"
+          | "message"
+          | "status"
+          | "created_at"
+          | "reviewed_at"
+          | "reviewed_by"
+          | "created_profile_id"
+        >
+      >;
+      company_members: Table<
+        CompanyMember,
+        Optional<CompanyMember, "created_at" | "created_by">
       >;
       inbound_emails: Table<
         InboundEmail,

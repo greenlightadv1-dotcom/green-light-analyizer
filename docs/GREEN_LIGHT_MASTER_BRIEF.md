@@ -7,7 +7,10 @@
 > `dpl_mBdwmQuq6HS8n32i7aRMYPWMKTfy`, 2026-10-31), which includes D2–D6, G1, G2,
 > the negotiation co-pilot, the §7.4 high-value rule and the platform-sync rate
 > limit.
-> `CRON_SECRET` is not set, so the daily YouTube cleanup is inactive. Anything
+> `CRON_SECRET` is not set, so the daily YouTube cleanup is inactive.
+> **Commission:** a single 10% for every creator, effective 31 October 2026
+> (Starter/Pro/Elite and their 15% / 8–10% / 5% rates are retired; see
+> CLAUDE.md §8). The plan-based figures below are historical. Anything
 > below that says 0022 is unapplied, or that these items are branch-only, is
 > historical. CLAUDE.md §16 is the current record.
 
@@ -38,7 +41,7 @@ Section numbers like "§6.1" without a document name refer to `CLAUDE.md`, the p
 ## 1. Executive summary
 
 - **What it is [D][C].** Green Light ("Your Personal Business Manager") is a closed, admin-vetted web marketplace that connects content **creators** with **companies/sponsors** for paid sponsorship deals.
-  - The platform takes a 5–15% commission per deal, settled through a manually reconciled "internal escrow".
+  - The platform takes a 10% commission per deal (since 31 October 2026; previously 5–15% by plan), settled through a manually reconciled "internal escrow".
   - Its three selling points are:
     1. creator stats come from official platform APIs or are labelled self-reported;
     2. a creator's real email and phone never reach a company, because all contact runs through masked in-app chat and a platform email relay;
@@ -77,12 +80,12 @@ Section numbers like "§6.1" without a document name refer to `CLAUDE.md`, the p
 **Problem [D].** Creator sponsorships are usually negotiated informally over DMs and email, with stats "proven" by screenshots. That invites fraud and lets brands and creators go around any intermediary. Green Light wants to be the trusted, commission-protected channel instead (PRODUCT.md, §1).
 
 **Business model [D].**
-- The commission per deal depends on the creator's plan:
+- Historical (retired 31 October 2026, now a single 10% for every creator): the commission per deal depended on the creator's plan:
   - Starter: 15%;
   - Pro: 8–10%;
   - Elite/Agency: 5%.
 - Companies browse for free; commission is charged on the deal.
-- Subscriptions (§8):
+- Historical subscriptions (retired 31 October 2026; there is now one Creator Plan with no listed price, see CLAUDE.md §8):
 
   | Plan | MENA price | International price |
   |---|---|---|
@@ -90,7 +93,7 @@ Section numbers like "§6.1" without a document name refer to `CLAUDE.md`, the p
   | Pro | $12–15 | $29 |
   | Elite | $49 | $99 |
 
-- Billing, plan changes and payment confirmation happen **manually through Discord support tickets**. There is deliberately no in-app billing or payment processor.
+- Billing and payment confirmation happen **manually through Discord support tickets** (plan changes are historical: there is one Creator Plan). There is deliberately no in-app billing or payment processor.
 - Escrow is modelled only as `deal_status` (`agreed → paid`) and reconciled by an admin.
 - Payment rails named for support flows: Vodafone Cash, InstaPay and Meeza (MENA), PayPal and crypto (international).
 
@@ -151,7 +154,7 @@ There is **no self-signup anywhere** (§4) [C]. That is a deliberate trust decis
 7. **Media kit & verification.**
    - Per-platform self-reported stats.
    - YouTube Data API stats sync.
-   - Optional YouTube Analytics / Instagram Graph OAuth for verified audience geography (Pro/Elite).
+   - Optional YouTube Analytics / Instagram Graph OAuth for verified audience geography (historically Pro/Elite; now every creator, YouTube only while Instagram is in development).
    - AI niche detection.
    - A profile card and a public `/p/[slug]` page.
 8. **Ban.**
@@ -195,11 +198,11 @@ Statuses use the requested scale. "Verified" means verified working in this inve
 | F1 | Public landing page | Implemented but not verified (production) | Marketing page. Every CTA routes to Discord/WhatsApp, with no signup. | `src/app/page.tsx`, `src/components/landing/*`, `src/lib/constants/contact.ts` | Pre-launch copy; must not fabricate social proof (PRODUCT.md) |
 | F2 | Admin-gated onboarding + forced reset | Implemented but not verified | Admin creates the account; a temporary password is issued; the proxy pins the user to `/set-password` | `admin/users/actions.ts` (`createUser`), `(auth)/set-password/*`, `lib/supabase/session.ts`, `scripts/bootstrap-admin.mjs`; Auth `app_metadata.must_change_password`, `profiles.must_change_password` (mirror, 0002) | Reset enforced by the proxy only (audit lead A9) |
 | F3 | Login / logout / session guard | Implemented but not verified | Supabase Auth password login; `src/proxy.ts` refreshes the session and guards routes | `(auth)/login/*`, `auth/signout/route.ts`, `src/proxy.ts`, `lib/supabase/{server,client,session}.ts`, `lib/auth.ts` (`requireProfile`, `requireRole`) | Login `next` open-redirect candidate (A8). Proxy skips image-extension and `/preview*` paths |
-| F4 | Admin: account management | Implemented but not verified | Edit role/plan/region, ban/unban, renew subscriptions; audit trail | `admin/users/{page,actions}.ts`; tables `admin_actions` (0012, 0014), `profiles` | Banning another admin leaves the role in place (A1, A2) |
-| F5 | Admin: promo/trial codes | Implemented but not verified | Admin generates single-use codes; users redeem on `/pricing` (atomic claim) | `admin/promo-codes/*`, `pricing/actions.ts` (`redeemCode`); table `promo_codes` (0013) | No rate limit on redemption; companies can redeem (hardening) |
+| F4 | Admin: account management | Implemented but not verified | Edit role/region (plan is now a legacy field with no effect on access), ban/unban; audit trail | `admin/users/{page,actions}.ts`; tables `admin_actions` (0012, 0014), `profiles` | Banning another admin leaves the role in place (A1, A2) |
+| F5 | Admin: promo/trial codes | Implemented but not verified | Historical: admin generated single-use codes redeemed on `/pricing`; retired with the unified Creator Plan (both actions refuse; past codes read-only) | `admin/promo-codes/*`, `pricing/actions.ts` (`redeemCode`); table `promo_codes` (0013) | No rate limit on redemption; companies can redeem (hardening) |
 | F6 | Admin: violation queue | Implemented but not verified | Review masking violations; ban or dismiss | `admin/violations/*`; table `violation_logs` (0006) | Inbound-email violations are attributed to the receiving creator (hardening) |
 | F7 | Admin: system readiness page | Implemented but not verified | Shows presence (never values) of every env var and what is degraded | `admin/system/page.tsx`, `lib/config.ts` | — |
-| F8 | Subscription expiry | Implemented but not verified | `requireProfile` lazily downgrades an expired plan to Starter | `lib/auth.ts`, `lib/subscription.ts` [V unit tests]; `profiles.subscription_expires_at` (0013) | Expiry does not stop verified-geo syncs (A13) |
+| F8 | Subscription expiry | Implemented but not verified | Historical: `requireProfile` lazily downgraded an expired plan to Starter; retired with the unified Creator Plan (no downgrade, expiry no longer affects access) | `lib/auth.ts`, `lib/subscription.ts` [V unit tests]; `profiles.subscription_expires_at` (0013) | Expiry does not stop verified-geo syncs (A13) |
 | F9 | Inbound email intake (§5) | Implemented but not verified | Svix-verified webhook → screener → mask → AI → WHOIS/Safe Browsing → deal room → summary → WhatsApp | `api/webhooks/resend/route.ts`, `lib/email/{verify,parse,intake}.ts`, `lib/ai/spam-filter.ts`, `lib/alias.ts`; tables `inbound_emails` (0008, 0021), `deal_chats`, `messages` | Real Resend payload never observed [D]. The signature gate is verified 8/8 [V]. Audit leads A4, A5, A10, A16, A17 |
 | F10 | Inbound alias + rotation | Implemented but not verified | `{handle}.{4 chars from a 32-glyph alphabet}@analyze.greenlightadvs.com`; the previous alias stays accepted | `lib/alias.ts` [V unit tests], `scripts/rotate-inbound-aliases.mjs`; `profiles.inbound_alias`, `previous_inbound_alias` (0020) | No in-app rotation |
 | F11 | Inbound spam screener + held-mail panel | Implemented but not verified | `accept/flag/reject` (reject only for machine-declared bulk mail with no sponsorship wording); creators see held mail from the last 30 days | `lib/ai/spam-filter.ts` [V unit tests], `lib/email/{held,held-queries}.ts` [V unit tests for `held.ts`], `components/deals/HeldDeliveriesPanel.tsx` | — |

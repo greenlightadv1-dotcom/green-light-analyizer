@@ -20,13 +20,19 @@ export type NavItem = {
 
 export const NAV: readonly NavItem[] = [
   { href: "/dashboard", labelKey: "nav.dashboard", roles: ["creator", "company", "admin"] },
+  // Onboarding checklist (feature 2); the page redirects an admin away.
+  { href: "/onboarding", labelKey: "nav.onboarding", roles: ["creator", "company"] },
   { href: "/inbox", labelKey: "nav.inbox", roles: ["creator", "company", "admin"] },
   { href: "/discover", labelKey: "nav.discover", roles: ["company", "admin"] },
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
   { href: "/pricing", labelKey: "nav.pricing", roles: ["creator", "company", "admin"] },
+  // Creator-side, like the Media Kit: the page itself enforces the same rule
+  // (requireCreatorFeatures), so this list only decides what is shown.
+  { href: "/support", labelKey: "nav.support", roles: ["creator", "admin"] },
   { href: "/settings", labelKey: "nav.settings", roles: ["creator", "company", "admin"] },
   { href: "/admin/users", labelKey: "nav.adminUsers", roles: ["admin"] },
+  { href: "/admin/requests", labelKey: "nav.adminRequests", roles: ["admin"] },
   { href: "/admin/promo-codes", labelKey: "nav.adminPromoCodes", roles: ["admin"] },
   { href: "/admin/violations", labelKey: "nav.adminViolations", roles: ["admin"] },
   { href: "/admin/system", labelKey: "nav.adminSystem", roles: ["admin"] },

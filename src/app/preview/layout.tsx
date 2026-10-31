@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { mockProfile } from "@/lib/preview/mock";
+import { GAssistant } from "@/components/g/GAssistant";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 /**
@@ -51,6 +52,8 @@ export default function PreviewLayout({
         <TopBar profile={mockProfile} basePath="/preview" demo />
         <PageTransition>{children}</PageTransition>
       </div>
+      {/* Preview has no session: G renders, but answers with a preview notice. */}
+      <GAssistant userId="preview" role={mockProfile.role} demo basePath="/preview" />
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { log } from "@/lib/log";
  * Google's OAuth verification and Meta's App Review fetch the privacy URL
  * without a session.
  */
-const PUBLIC_PATHS = ["/", "/login", "/auth", "/p", "/terms", "/privacy"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/p", "/terms", "/privacy", "/get-started"];
 
 /** Where a user with a pending forced password change is pinned (§4.2). */
 export const SET_PASSWORD_PATH = "/set-password";

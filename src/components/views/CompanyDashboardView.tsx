@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { SetupBanner } from "@/components/onboarding/SetupBanner";
+import { companyDetailsComplete, companyOnboarding } from "@/lib/onboarding";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
@@ -25,6 +27,7 @@ export function CompanyDashboardView({
   const openDeals = chats.filter(
     (c) => c.deal_status !== "paid" && c.deal_status !== "disputed",
   ).length;
+  const setup = companyOnboarding(profile, { kitCount: 0, analyticsConnected: false, emailDealSeen: false, representsCompany: null });
 
   return (
     <>
@@ -37,6 +40,10 @@ export function CompanyDashboardView({
           </Link>
         }
       />
+
+      {profile.role === "company" && !setup.complete ? (
+        <SetupBanner done={setup.done} total={setup.required} gatedNote={!companyDetailsComplete(profile)} />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <GlassPanel className="p-5">

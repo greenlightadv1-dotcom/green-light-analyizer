@@ -73,7 +73,7 @@ export const SECURITY_EMAIL = "security@greenlightadvs.com";
  * Both documents carry the same date so a reader can tell at a glance whether
  * they are looking at one revision or two. Update on every substantive change.
  */
-export const LEGAL_LAST_UPDATED = "24 September 2026";
+export const LEGAL_LAST_UPDATED = "31 October 2026";
 
 /** Notice given before a material change takes effect. */
 export const CHANGE_NOTICE_DAYS = 30;

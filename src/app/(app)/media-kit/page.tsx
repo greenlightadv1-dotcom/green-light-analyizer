@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MediaKitView } from "@/components/views/MediaKitView";
-import { requireProfile } from "@/lib/auth";
+import { requireCreatorFeatures } from "@/lib/auth";
 import { listMediaKits } from "@/lib/media-kit/queries";
 
 export const metadata: Metadata = { title: "Media kit" };
@@ -27,7 +27,7 @@ export default async function MediaKitPage({
 }: {
   searchParams: Promise<{ oauth_connected?: string; oauth_error?: string }>;
 }) {
-  const profile = await requireProfile();
+  const profile = await requireCreatorFeatures();
   const kits = await listMediaKits(profile.id);
   const { oauth_connected, oauth_error } = await searchParams;
 
@@ -35,7 +35,6 @@ export default async function MediaKitPage({
     <MediaKitView
       profile={profile}
       kits={kits}
-      plan={profile.subscription_plan ?? "Starter"}
       oauthConnected={oauth_connected ?? null}
       oauthError={oauth_error ?? null}
     />

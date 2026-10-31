@@ -2,23 +2,24 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/components/LocaleProvider";
+import { IntegrationStatusBadge } from "@/components/media-kit/IntegrationStatusBadge";
 import {
   VERIFICATION_SUPPORT,
   verificationAvailability,
 } from "@/lib/media-kit/platforms";
-import type { Platform, SubscriptionPlan } from "@/lib/types/database";
+import type { Platform } from "@/lib/types/database";
 
 /**
  * The §7.3 connection state, read-only, in four honest states.
  *
- *   connected     — verified geo is live, sourced from an Analytics API
- *   available     — platform supports it and the plan includes it
- *   needs-upgrade — platform supports it, the plan does not (§8)
- *   unsupported   — no API exists, so no plan can deliver it (§7.3)
+ *   connected      — verified geo is live, sourced from an Analytics API
+ *   available      — the platform's integration is operational (YouTube)
+ *   in-development — the platform could support it, but its integration is
+ *                    not operational yet (Instagram); no Connect is offered
+ *   unsupported    — no API exists, so stats stay self-reported (§7.3)
  *
- * The last two are kept separate on purpose: telling a Starter creator to
- * upgrade for Twitch audience geography would be selling something upgrading
- * cannot provide.
+ * Every creator is on the same Creator Plan, so none of these states is
+ * about a plan — they describe the platform (media-kit/platforms.ts).
  *
  * Connect, sync and disconnect are not here. They live once, in Settings'
  * SocialConnections card, so a creator is never choosing between two places
@@ -27,16 +28,14 @@ import type { Platform, SubscriptionPlan } from "@/lib/types/database";
  */
 export function VerificationPanel({
   platform,
-  plan,
   connected,
 }: {
   platform: Platform;
-  plan: SubscriptionPlan;
   connected: boolean;
 }) {
   const { t } = useTranslation();
   const support = VERIFICATION_SUPPORT[platform];
-  const availability = verificationAvailability(platform, plan);
+  const availability = verificationAvailability(platform);
 
   if (connected) {
     return (
@@ -62,14 +61,12 @@ export function VerificationPanel({
     );
   }
 
-  if (availability === "needs-upgrade") {
+  if (availability === "in-development") {
     return (
       <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
-        <p className="text-xs leading-relaxed text-fg/50">
-          {t("mediaKit.includedProElite", { source: support.source })}
-        </p>
-        <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
-          {t("mediaKit.upgradesOverDiscordNote")}
+        <IntegrationStatusBadge status="in_development" />
+        <p className="mt-2 text-xs leading-relaxed text-fg/50">
+          {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       </div>
     );

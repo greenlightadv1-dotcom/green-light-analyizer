@@ -16,7 +16,7 @@ Also present: **Admins** — the only role that can create accounts (no self-sig
 
 ## Product Purpose
 
-Green Light is an admin-gated sponsorship marketplace connecting Creators and Companies for paid sponsorship deals, taking a 5–15% commission on every deal settled through an internal escrow flow (`deal_status` progression: `agreed → paid`, reconciled manually via Discord for now — no live payment processor is wired up). It exists to replace the informal, screenshot-based, DM-negotiated sponsorship deals creators currently do off-platform with something verifiable and commission-safe.
+Green Light is an admin-gated sponsorship marketplace connecting Creators and Companies for paid sponsorship deals, taking a single 10% commission on every deal (effective 31 October 2026, for every creator; the earlier plan-based 5–15% range is retired) settled through an internal escrow flow (`deal_status` progression: `agreed → paid`, reconciled manually via Discord for now — no live payment processor is wired up). It exists to replace the informal, screenshot-based, DM-negotiated sponsorship deals creators currently do off-platform with something verifiable and commission-safe.
 
 Success means: creators trust the pricing/risk guidance enough to negotiate through the platform rather than off it, and companies trust the audience data enough to close deals without ever needing a screenshot.
 

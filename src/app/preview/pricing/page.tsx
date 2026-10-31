@@ -5,5 +5,5 @@ import { mockProfile } from "@/lib/preview/mock";
 export const metadata: Metadata = { title: "Pricing · Preview" };
 
 export default function PreviewPricing() {
-  return <PricingView profile={mockProfile} demo />;
+  return <PricingView profile={mockProfile} />;
 }

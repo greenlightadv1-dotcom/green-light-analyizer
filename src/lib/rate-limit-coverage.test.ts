@@ -31,6 +31,10 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["lib/media-kit/actions.ts", "syncYoutubeStats", "platform_sync"],
   ["lib/media-kit/actions.ts", "syncVerifiedGeo", "platform_sync"],
   ["lib/media-kit/actions.ts", "syncInstagramStats", "platform_sync"],
+  ["app/api/g/route.ts", "POST", "g_chat"],
+  ["app/api/uploads/avatar/route.ts", "POST", "upload"],
+  ["app/api/uploads/documents/route.ts", "POST", "upload"],
+  ["app/get-started/actions.ts", "submitAccessRequest", "access_request"],
 ];
 
 for (const [file, fn, action] of GUARDED) {

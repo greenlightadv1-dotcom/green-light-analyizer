@@ -2,7 +2,6 @@
 
 import { CtaLink } from "@/components/landing/CtaLink";
 import { useTranslation } from "@/components/LocaleProvider";
-import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
 /**
  * Ambient glow mesh scoped to the hero (spec point 3) — separate from the
@@ -40,7 +39,7 @@ export function Hero() {
       </p>
 
       <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <CtaLink href={DISCORD_INVITE_URL} external variant="primary" className="w-full sm:w-auto">
+        <CtaLink href="/get-started" variant="primary" className="w-full sm:w-auto">
           {t("landing.ctaRequestAccess")}
         </CtaLink>
         <CtaLink href="/login" variant="ghost" className="w-full sm:w-auto">

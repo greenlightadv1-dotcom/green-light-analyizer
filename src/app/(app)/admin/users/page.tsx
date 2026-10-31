@@ -3,7 +3,9 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CreateUserForm } from "./CreateUserForm";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { roleForJourney } from "@/lib/access-requests";
+import { CreateUserForm, type CreateUserPrefill } from "./CreateUserForm";
 import { setBan, updateProfile } from "./actions";
 
 export const metadata: Metadata = { title: "Accounts" };
@@ -28,8 +30,40 @@ const unbanButtonClass =
  * the gap where an account was frozen at whatever was set on creation, with
  * no way to apply a plan upgrade confirmed via Discord (§4.3).
  */
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ request?: string }>;
+}) {
   const admin = await requireRole("admin");
+
+  // ?request=<id>: prefill from a pending Get Started application. Read with
+  // the service role (access_requests has no client policies), after the
+  // admin check above.
+  const { request: requestId } = await searchParams;
+  let prefill: CreateUserPrefill | null = null;
+  if (requestId && /^[0-9a-f-]{36}$/i.test(requestId)) {
+    const { data: req } = await createAdminClient()
+      .from("access_requests")
+      .select("id, journey, full_name, email, company_name, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (req && req.status === "pending") {
+      const role = roleForJourney(req.journey);
+      prefill = {
+        requestId: req.id,
+        // A company account is named after the company; a creator or a
+        // representative after the person.
+        full_name: req.journey === "company" && req.company_name ? req.company_name : req.full_name,
+        email: req.email,
+        role,
+        note:
+          req.journey === "company_representative"
+            ? `representative of ${req.company_name ?? "a company"} — link them under Applications after creating`
+            : req.journey,
+      };
+    }
+  }
 
   const supabase = await createClient();
   const { data: profiles } = await supabase
@@ -49,7 +83,7 @@ export default async function AdminUsersPage() {
 
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <CreateUserForm />
+          <CreateUserForm prefill={prefill} />
         </div>
 
         <GlassPanel className="overflow-hidden lg:col-span-3">
@@ -106,7 +140,7 @@ export default async function AdminUsersPage() {
 
                         <div className="space-y-1">
                           <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
-                            Plan
+                            Legacy plan (no effect on access)
                           </label>
                           <select
                             name="subscription_plan"

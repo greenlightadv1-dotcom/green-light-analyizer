@@ -7,7 +7,7 @@ import { SocialConnections } from "@/components/settings/SocialConnections";
 import { WhatsAppSettingsCard } from "@/components/settings/WhatsAppSettingsCard";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Profile } from "@/lib/auth";
-import type { OAuthPlatform, SubscriptionPlan } from "@/lib/types/database";
+import type { OAuthPlatform } from "@/lib/types/database";
 
 /**
  * Settings, presentation only. Shared with /preview.
@@ -61,7 +61,6 @@ export function SettingsView({
           {profile.role === "creator" ? (
             <SocialConnections
               connections={connections}
-              plan={(profile.subscription_plan ?? "Starter") as SubscriptionPlan}
               configured={oauthConfigured}
               demo={demo}
             />

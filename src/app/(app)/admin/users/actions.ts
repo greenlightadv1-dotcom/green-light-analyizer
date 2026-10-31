@@ -20,6 +20,7 @@ export type CreateUserState = {
 };
 
 const ROLES: Role[] = ["creator", "company", "admin"];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REGIONS: Region[] = ["MENA", "International"];
 const PLANS: SubscriptionPlan[] = ["Starter", "Pro", "Elite"];
 /** Monthly / Quarterly / Yearly, per the admin renewal UI. "custom"/"none" are handled separately. */
@@ -43,7 +44,13 @@ export async function createUser(
   _prev: CreateUserState,
   formData: FormData,
 ): Promise<CreateUserState> {
-  await requireRole("admin");
+  const reviewer = await requireRole("admin");
+
+  // Optional: the Get Started application this account is created from. Only
+  // a still-pending row is used; its website is the one field carried over
+  // that the form itself does not show.
+  const requestIdRaw = String(formData.get("request_id") ?? "");
+  const requestId = UUID.test(requestIdRaw) ? requestIdRaw : null;
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -63,6 +70,18 @@ export async function createUser(
   }
 
   const admin = createAdminClient();
+  let fromRequest: { website: string | null } | null = null;
+  if (requestId) {
+    const { data: req } = await admin
+      .from("access_requests")
+      .select("website, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!req || req.status !== "pending") {
+      return { error: "That application is no longer pending.", created: null };
+    }
+    fromRequest = { website: role === "company" ? req.website : null };
+  }
   const tempPassword = temporaryPassword();
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -96,6 +115,7 @@ export async function createUser(
     inbound_alias: inboundAlias,
     primary_email: email,
     must_change_password: true,
+    ...(fromRequest?.website ? { company_website: fromRequest.website } : {}),
   });
 
   if (profileError) {
@@ -105,6 +125,21 @@ export async function createUser(
       error: `Account rolled back — profile could not be created: ${profileError.message}`,
       created: null,
     };
+  }
+
+  if (requestId) {
+    // Compare-and-set on status so two admins cannot both approve one row.
+    await admin
+      .from("access_requests")
+      .update({
+        status: "approved",
+        reviewed_by: reviewer.id,
+        reviewed_at: new Date().toISOString(),
+        created_profile_id: data.user.id,
+      })
+      .eq("id", requestId)
+      .eq("status", "pending");
+    revalidatePath("/admin/requests");
   }
 
   revalidatePath("/admin/users");

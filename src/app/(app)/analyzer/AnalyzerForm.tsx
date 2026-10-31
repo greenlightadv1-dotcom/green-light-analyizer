@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { RiskBadge } from "@/components/deals/RiskBadge";
+import { emitG } from "@/components/g/events";
 import { useTranslation } from "@/components/LocaleProvider";
 import {
   analyzeOffer,
@@ -203,6 +204,25 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           <p className="mt-3 text-sm leading-relaxed text-fg/60">
             {r.reasoning}
           </p>
+
+          {/* Feature 6: G explains this result. Only the result itself is
+              sent, as the user's own message; the offer text never is. */}
+          <button
+            type="button"
+            onClick={() =>
+              emitG({
+                type: "ask",
+                text: t("analyzer.askGMessage", {
+                  risk: r.risk,
+                  price: r.recommended_price_usd.toLocaleString("en-US"),
+                  reasoning: r.reasoning.slice(0, 600),
+                }),
+              })
+            }
+            className="mt-3 text-xs font-semibold text-brand-green underline-offset-4 hover:underline"
+          >
+            {t("analyzer.askG")}
+          </button>
 
           {r.risk_capped ? (
             <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100">

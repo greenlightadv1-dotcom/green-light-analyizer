@@ -22,7 +22,7 @@ export default function PreviewMediaKit() {
     <MediaKitView
       profile={mockProfile}
       kits={mockKits}
-      plan={mockProfile.subscription_plan ?? "Starter"}
+      demo
     />
   );
 }

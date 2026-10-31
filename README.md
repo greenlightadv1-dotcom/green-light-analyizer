@@ -304,21 +304,23 @@ same column grants. `audience_verified`, `verified_top_countries` and
 cannot mark themselves verified even by crafting the request directly — and
 `media_kit_test.sql` asserts exactly that, on update *and* on insert.
 
-### Verification states (§7.3 × §8)
+### Verification states (§7.3, unified Creator Plan)
 
-The connection control has four states, and the last two are kept apart on
-purpose:
+Every creator is on the same Creator Plan, so no state depends on a plan.
+They describe the platform (`src/lib/media-kit/platforms.ts`,
+`INTEGRATION_STATUS`):
 
 | State | Meaning |
 |---|---|
 | connected | Verified geo is live; offers disconnect |
-| available | Platform supports it (§7.3) and the plan includes it (§8) |
-| needs-upgrade | Platform supports it, the plan does not |
-| **unsupported** | No API exists, so **no plan can deliver it** |
+| available | The platform's integration is operational (YouTube) |
+| in-development | The platform could support it, but its integration is not operational yet (Instagram); no Connect is offered and the OAuth start route answers 403 |
+| **unsupported** | No API exists (Twitch, Kick), so stats stay self-reported |
 
-Telling a Starter creator to upgrade for Twitch audience geography would be
-selling something upgrading cannot provide. Twitch and Kick expose no
-per-viewer country data to third parties, so those cards say so instead.
+Who may connect is decided by role, on the server: creators and admins
+(`src/lib/access.ts`). A company is refused by the Media Kit page, every
+Media Kit server action and both OAuth routes, whatever plan value its
+profile still stores.
 
 ### Disconnecting
 
@@ -501,8 +503,8 @@ alongside a configured app.
 
 The mock data deliberately covers the states that are easy to get wrong: a
 masked message, a verified media kit beside a self-reported one, a rating the
-§7.4 cap pulled down from green, and a Starter plan sitting at its §8
-connection limit.
+§7.4 cap pulled down from green, and an old stored plan value (Starter) that
+no longer limits anything under the unified Creator Plan.
 
 ## Tests
 
@@ -535,6 +537,14 @@ That last one exists because a route can be entirely correct and still
 unreachable — it caught the auth proxy redirecting `/api/webhooks/*` to
 `/login`, which returned a cheerful 200 for deliveries that were never
 processed.
+
+## Marketplace features and G
+
+Get Started, onboarding, uploads, Discovery filters, representatives and the G
+assistant are documented in CLAUDE.md §17. They need migration
+`0024_marketplace_onboarding_taxonomy_uploads.sql`. The owner **applied** it to
+the live project through the Supabase SQL Editor and its verification checks
+passed (confirmed by the owner, 2026-10-31). The code is not yet deployed.
 
 ## Not done yet
 

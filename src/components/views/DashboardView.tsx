@@ -7,8 +7,8 @@ import { RiskBadge } from "@/components/deals/RiskBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { CREATOR_COMMISSION } from "@/lib/plans";
 import { useTranslation } from "@/components/LocaleProvider";
-import { canVerifyAudience } from "@/lib/media-kit/platforms";
 import { isProfileIncomplete } from "@/lib/media-kit/profile-completeness";
 import type { DealChatListItem } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
@@ -37,7 +37,6 @@ export function DashboardView({
     (c) => c.deal_status !== "paid" && c.deal_status !== "disputed",
   ).length;
   const verifiedKits = kits.filter((k) => isVerifiedGeoFresh(k)).length;
-  const plan = profile.subscription_plan ?? "Starter";
   const incompleteProfile = isProfileIncomplete(profile, kits);
 
   return (
@@ -49,7 +48,7 @@ export function DashboardView({
 
       {incompleteProfile ? (
         <Link
-          href="/media-kit"
+          href="/onboarding"
           className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-green/25 bg-brand-green/8 px-5 py-4 transition hover:bg-brand-green/12"
         >
           <div>
@@ -71,7 +70,7 @@ export function DashboardView({
             {openDeals}
           </p>
           <p className="mt-2 text-xs text-fg/40">
-            {t("dashboard.pricingNote", { region: profile.region ?? "MENA", plan })}
+            {t("dashboard.pricingNote", { pct: CREATOR_COMMISSION })}
           </p>
         </GlassPanel>
 
@@ -160,9 +159,7 @@ export function DashboardView({
           ) : (
             <p className="mt-2 text-sm leading-relaxed text-fg/55">
               {t("dashboard.audienceUnverifiedNote")}{" "}
-              {canVerifyAudience(plan)
-                ? t("dashboard.audienceUnverifiedCanUpgrade")
-                : t("dashboard.audienceUnverifiedIncluded")}
+              {t("dashboard.audienceUnverifiedCanUpgrade")}
             </p>
           )}
           <Link

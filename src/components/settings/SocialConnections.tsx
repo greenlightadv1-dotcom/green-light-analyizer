@@ -15,7 +15,8 @@ import {
   verificationAvailability,
 } from "@/lib/media-kit/platforms";
 import { REAL_OAUTH_PLATFORMS } from "@/lib/oauth/platforms";
-import type { OAuthPlatform, SubscriptionPlan } from "@/lib/types/database";
+import type { OAuthPlatform } from "@/lib/types/database";
+import { IntegrationStatusBadge } from "@/components/media-kit/IntegrationStatusBadge";
 
 const ICON_CLASSNAMES: Record<OAuthPlatform, string> = {
   youtube: "bg-[#FF0000]/10 text-[#FF0000]",
@@ -77,18 +78,16 @@ function SyncButton({ demo }: { demo: boolean }) {
 function ConnectionRow({
   platform,
   connected,
-  plan,
   configured,
   demo,
 }: {
   platform: OAuthPlatform;
   connected: boolean;
-  plan: SubscriptionPlan;
   configured: boolean;
   demo: boolean;
 }) {
   const { t } = useTranslation();
-  const availability = verificationAvailability(platform, plan);
+  const availability = verificationAvailability(platform);
   const support = VERIFICATION_SUPPORT[platform];
   const [syncState, syncAction] = useActionState<SyncVerifiedGeoState, FormData>(
     syncVerifiedGeo,
@@ -109,6 +108,9 @@ function ConnectionRow({
             {PLATFORM_LABELS[platform]}
           </span>
           <StatusBadge connected={connected} />
+          {!connected && availability === "in-development" ? (
+            <IntegrationStatusBadge status="in_development" />
+          ) : null}
         </div>
 
         {/*
@@ -174,9 +176,9 @@ function ConnectionRow({
             {t("mediaKit.disconnectClearsNote")}
           </p>
         </div>
-      ) : availability === "needs-upgrade" ? (
+      ) : availability === "in-development" ? (
         <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg/45">
-          {t("mediaKit.includedProElite", { source: support.source })}
+          {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       ) : !configured ? (
         <p className="mt-3 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
@@ -201,12 +203,10 @@ function ConnectionRow({
  */
 export function SocialConnections({
   connections = {},
-  plan = "Starter",
   configured = {},
   demo = false,
 }: {
   connections?: Partial<Record<OAuthPlatform, boolean>>;
-  plan?: SubscriptionPlan;
   /** Whether each platform's OAuth app is actually registered on this env. */
   configured?: Partial<Record<OAuthPlatform, boolean>>;
   /** /preview renders the shell with no session — nothing may navigate or post. */
@@ -227,7 +227,6 @@ export function SocialConnections({
             key={platform}
             platform={platform}
             connected={connections[platform] === true}
-            plan={plan}
             configured={configured[platform] === true}
             demo={demo}
           />

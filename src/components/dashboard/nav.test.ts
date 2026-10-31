@@ -9,16 +9,16 @@ import { NAV, isActivePath, navItemsForRole } from "./nav.ts";
 const hrefs = (role: "creator" | "company" | "admin") => navItemsForRole(role).map((i) => i.href);
 
 test("creator sees exactly the creator links, in order", () => {
-  assert.deepEqual(hrefs("creator"), ["/dashboard", "/inbox", "/analyzer", "/media-kit", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("creator"), ["/dashboard", "/onboarding", "/inbox", "/analyzer", "/media-kit", "/pricing", "/support", "/settings"]);
 });
 
 test("company sees exactly the company links, in order", () => {
-  assert.deepEqual(hrefs("company"), ["/dashboard", "/inbox", "/discover", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/pricing", "/settings"]);
 });
 
-test("admin sees every link, including the admin pages", () => {
-  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href));
-  for (const href of ["/admin/users", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
+test("admin sees every link but onboarding, including the admin pages", () => {
+  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => h !== "/onboarding"));
+  for (const href of ["/admin/users", "/admin/requests", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
     assert.ok(hrefs("admin").includes(href), href);
   }
 });
@@ -28,7 +28,7 @@ test("unauthorized links never appear", () => {
     assert.ok(!hrefs(role).some((h) => h.startsWith("/admin")), `${role} must not see admin pages`);
   }
   assert.ok(!hrefs("creator").includes("/discover"), "Discover is company/admin only");
-  for (const href of ["/analyzer", "/media-kit"]) assert.ok(!hrefs("company").includes(href), href);
+  for (const href of ["/analyzer", "/media-kit", "/support"]) assert.ok(!hrefs("company").includes(href), href);
 });
 
 test("every link has a translation key that exists in every dictionary", () => {
@@ -60,4 +60,26 @@ test("Sidebar and the mobile drawer both render the shared list, and nothing els
     assert.ok(!/roles:\s*\[/.test(source), `${file} must not define its own role list`);
   }
   assert.match(read("./NavLinks.tsx"), /navItemsForRole\(role\)/);
+});
+
+test("each layout gives the desktop Sidebar and the mobile menu the same role and link prefix", () => {
+  const read = (f: string) => readFileSync(new URL(f, import.meta.url), "utf8");
+  // TopBar renders MobileNav from the same profile.role and basePath it is given.
+  assert.match(read("./TopBar.tsx"), /<MobileNav role=\{profile\.role\} basePath=\{basePath\} \/>/);
+  const app = read("../../app/(app)/layout.tsx");
+  assert.match(app, /<Sidebar role=\{profile\.role\} \/>/);
+  assert.match(app, /<TopBar profile=\{profile\} \/>/);
+  const preview = read("../../app/preview/layout.tsx");
+  assert.match(preview, /<Sidebar role=\{mockProfile\.role\} basePath="\/preview" \/>/);
+  assert.match(preview, /<TopBar profile=\{mockProfile\} basePath="\/preview" demo \/>/);
+});
+
+test("for every role, the drawer and the Sidebar list the same authorized links", () => {
+  // Both render <NavLinks role={role}>, whose only source is navItemsForRole.
+  for (const role of ["creator", "company", "admin"] as const) {
+    const items = navItemsForRole(role);
+    assert.ok(items.length > 0);
+    for (const item of items) assert.ok(item.roles.includes(role), `${item.href} leaked to ${role}`);
+    assert.deepEqual(items, NAV.filter((i) => i.roles.includes(role)));
+  }
 });
