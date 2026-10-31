@@ -16,6 +16,9 @@ const ar: Dictionary = {
   },
   topbar: {
     signOut: "تسجيل الخروج",
+    openMenu: "فتح القائمة",
+    closeMenu: "إغلاق القائمة",
+    navigation: "التنقل الرئيسي",
   },
   theme: {
     changeTheme: "تغيير المظهر",

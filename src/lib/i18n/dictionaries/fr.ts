@@ -16,6 +16,9 @@ const fr: Dictionary = {
   },
   topbar: {
     signOut: "Se déconnecter",
+    openMenu: "Ouvrir le menu",
+    closeMenu: "Fermer le menu",
+    navigation: "Navigation principale",
   },
   theme: {
     changeTheme: "Changer de thème",

@@ -6,12 +6,16 @@ import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Profile } from "@/lib/auth";
+import { MobileNav } from "./MobileNav";
 
 export function TopBar({
   profile,
+  basePath = "",
   demo = false,
 }: {
   profile: Profile;
+  /** Link prefix for the mobile menu; the UI preview passes "/preview". */
+  basePath?: string;
   /** UI preview: render the bar without a working sign-out. */
   demo?: boolean;
 }) {
@@ -19,7 +23,8 @@ export function TopBar({
 
   return (
     <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
-      <div className="lg:hidden">
+      <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+        <MobileNav role={profile.role} basePath={basePath} />
         <ThemedLogo size={30} />
       </div>
 

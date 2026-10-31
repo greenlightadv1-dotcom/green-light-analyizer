@@ -48,7 +48,7 @@ export default function PreviewLayout({
           saved. The real product is admin-gated and holds no data yet.
         </div>
 
-        <TopBar profile={mockProfile} demo />
+        <TopBar profile={mockProfile} basePath="/preview" demo />
         <PageTransition>{children}</PageTransition>
       </div>
     </div>

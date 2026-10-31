@@ -28,6 +28,9 @@ const en = {
   },
   topbar: {
     signOut: "Sign out",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    navigation: "Main navigation",
   },
   theme: {
     changeTheme: "Change theme",
