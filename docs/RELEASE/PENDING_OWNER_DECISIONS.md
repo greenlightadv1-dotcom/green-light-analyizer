@@ -32,7 +32,7 @@ Only items that need the owner. Nothing here has been changed or invented.
 - An unban clears `profiles.banned_*`.
 - The server log line is temporary.
 
-**Proposed migration (not written; it takes the next free number when approved, since 0026–0031 are now used)**
+**Proposed migration (not written; it takes the next free number when approved, since 0026–0032 are now used)**
 
 1. Extend `admin_actions.action` CHECK with `violation_ban`, `violation_dismiss`, `application_reject` and `representative_unlink`. Add a nullable `subject_id uuid` (the violation, application or member id). Update the table comment, which today scopes it to `/admin/users`.
 2. Add `SECURITY DEFINER` functions, executable by `service_role` only, that do the change and the audit insert in **one transaction**:
@@ -93,4 +93,15 @@ The portfolio (migration 0028) names a brand on the public profile only when the
 ## 12. Pricing reach source (see docs/AI_ANALYZER_ROOT_CAUSE_REPORT.md A2)
 
 The sync now stores the median views of a YouTube channel's recent uploads (migration 0031). Pricing still uses the creator-typed average views. Should pricing prefer the fresh synced figure when one exists? That would change recommended prices.
+
+## 13. Self-registration, verification emails and retention (migration 0032)
+
+- **D2, now concrete:** self-registration is built but off. Turning it on needs:
+  - `SELF_SIGNUP_ENABLED=1`;
+  - Supabase Auth email sign-ups with "Confirm email" on;
+  - the confirmation link template;
+  - Terms §2 rewritten (it says the team creates every account).
+- **Approval email wording:** it states no fee, the 10% commission and manual settlement. Confirm it, and whether it should name payment rails.
+- **Retention:** how long identity and company documents are kept after a decision, and the Privacy Policy text.
+- **Identity provider (D3/D4):** whether to integrate a face and liveness provider, which one, and with what legal basis. Until then, approval is a manual document review only.
 

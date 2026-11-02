@@ -1319,7 +1319,7 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0032 or later, since 0026–0031 are used in §19).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0033 or later, since 0026–0032 are used in §19).
 
 ## 19. Collaboration lifecycle (branch only, 2026-11-02)
 
@@ -1392,3 +1392,10 @@ Not deployed. **Migration 0026 is not applied anywhere.**
 - **Hidden like counts:** they no longer count as zero likes in engagement.
 - **Synced reach:** the YouTube sync keeps the median views of the recent uploads (migration 0031, not applied). These columns are server-only and cleared at 29 days with the other synced stats. The assessment shows them as synced; pricing does not use them yet (owner decision 12).
 - **API failures:** YouTube API failures during a sync are logged.
+
+**Verification and self-registration (migration 0032, not applied; `docs/CREATOR_KYC_SPEC.md`, `COMPANY_KYB_SPEC.md`, `COMPANY_REPRESENTATIVES_PERMISSIONS.md`).**
+- **Account status:** `profiles.account_status` defaults to `active`. A `pending_verification` or `rejected` account is confined to `/verification`: `requireProfile` redirects it there, and `loadApiSession` answers 403.
+- **Cases:** cases (`creator_kyc`, `company_kyb`, `representative`) move through `verification_transition()`. That function is service-role only; it locks the row, checks the actor and state, writes the history, and activates or links on approval.
+- **Documents:** they live in the private `verification-docs` bucket. Uploads go only to the caller's own editable case, and the type is decided by magic bytes. Admins view documents through 5-minute signed URLs, and each view is logged.
+- **Admin review:** at `/admin/verification`. Approval is a **manual document review**: no face or liveness provider is integrated, and the UI never says "identity verified".
+- **Self-registration:** `/register` is off unless `SELF_SIGNUP_ENABLED=1`, which is an owner decision (it changes §3/§4 and Terms §2). New and existing emails get the same answer, and accounts start `pending_verification`.

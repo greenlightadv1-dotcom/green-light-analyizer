@@ -22,6 +22,8 @@ const PAGES = [
   ["/preview/portfolio", "portfolio"],
   ["/preview/content", "content-board"],
   ["/preview/content?view=calendar", "content-calendar"],
+  ["/preview/verification", "verification"],
+  ["/register", "register"],
 ];
 let pass = 0, fail = 0;
 const check = (ok, label) => { if (ok) pass++; else fail++; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); };
@@ -40,7 +42,7 @@ for (const locale of ["en", "ar"]) {
       const tag = `${locale} ${vp} ${name}`;
       check(res?.status() === 200, `${tag}: 200`);
       const text = await page.locator("main, body").first().innerText();
-      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications|shortlists|portfolio|content)\.[a-zA-Z_.]+/g);
+      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications|shortlists|portfolio|content|verification|register)\.[a-zA-Z_.]+/g);
       check(!leaked, `${tag}: no raw keys${leaked ? " " + leaked.slice(0, 3).join(",") : ""}`);
       if (locale === "ar") check((await page.getAttribute("html", "dir")) === "rtl", `${tag}: rtl`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -123,6 +125,23 @@ check(await confirmBox.isVisible(), "saving a G draft asks for confirmation");
 await confirmBox.getByRole("button", { name: "Save", exact: true }).click();
 await page.getByText("This is a preview. Nothing can be saved here.").first().waitFor();
 check(true, "preview refuses the save instead of pretending it worked");
+// Verification: required documents are listed, the drop zone is keyboard
+// reachable, and submitting asks first and needs the consent box.
+await page.goto(BASE + "/preview/verification", { waitUntil: "networkidle" });
+check(await page.getByText("Required: ID card (front) or Passport").count() === 1, "missing required document is named");
+check(await page.getByRole("button", { name: "Drag a file here, or choose one" }).count() === 1, "drop zone is a keyboard-reachable control");
+check(await page.getByText("Please upload a clearer photo").count() === 1, "the team's request is shown");
+check(await page.getByText("not a biometric identity check").count() === 0, "no approval wording before approval");
+await page.getByRole("button", { name: "Submit for review" }).click();
+check(await page.getByRole("dialog", { name: "Submit for review?" }).count() === 0, "submit is blocked until the consent box is ticked");
+await page.getByLabel(/I confirm these details/).check();
+await page.getByRole("button", { name: "Submit for review" }).click();
+check(await page.getByRole("dialog", { name: "Submit for review?" }).isVisible(), "submitting asks for confirmation");
+await page.keyboard.press("Escape");
+// Self-registration is off by default and points to the application form.
+await page.goto(BASE + "/register?journey=company", { waitUntil: "networkidle" });
+check(await page.getByText("Online registration isn't open yet").count() === 1, "registration is off unless enabled");
+check((await page.getByRole("link", { name: "Apply instead" }).getAttribute("href")) === "/get-started/company", "apply link keeps the journey");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

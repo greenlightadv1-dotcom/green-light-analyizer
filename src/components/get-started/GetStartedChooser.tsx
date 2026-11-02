@@ -8,7 +8,7 @@ import { JOURNEYS } from "@/lib/access-requests";
  * Get Started (feature 1): the three journeys. Each leads to one application
  * form; there is no second registration path anywhere in the product.
  */
-export function GetStartedChooser() {
+export function GetStartedChooser({ selfSignup = false }: { selfSignup?: boolean }) {
   const { t } = useTranslation();
   return (
     <section className="mx-auto max-w-5xl px-4 pt-16 pb-20 sm:px-6">
@@ -18,7 +18,7 @@ export function GetStartedChooser() {
         {JOURNEYS.map((j) => (
           <li key={j}>
             <Link
-              href={`/get-started/${j}`}
+              href={selfSignup ? `/register?journey=${j}` : `/get-started/${j}`}
               className="glass-panel flex h-full flex-col p-6 transition hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
             >
               <span className="text-base font-semibold text-fg">{t(`getStarted.journey.${j}.title`)}</span>

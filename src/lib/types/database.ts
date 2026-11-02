@@ -146,6 +146,8 @@ type Profile = {
   /** Non-null = permanently banned (§6, §12). Only service_role writes it. */
   banned_at: string | null;
   banned_reason: string | null;
+  /** 0032: 'active' | 'pending_verification' | 'rejected'. Absent before 0032 = active. Server-written only. */
+  account_status?: AccountStatus;
   created_at: string | null;
   /** Creator-profile layer (migration 0017) — additive to §7, not a replacement. */
   bio: string | null;
@@ -444,6 +446,39 @@ export type CollaborationEvent = {
   created_at: string;
 };
 
+export type AccountStatus = "pending_verification" | "active" | "rejected";
+export type VerificationKind = "creator_kyc" | "company_kyb" | "representative";
+export type VerificationStatus = "draft" | "submitted" | "under_review" | "needs_info" | "approved" | "rejected";
+export type VerificationDocType = "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other";
+export type VerificationCase = {
+  id: string;
+  profile_id: string;
+  kind: VerificationKind;
+  status: VerificationStatus;
+  details: Record<string, string>;
+  company_profile_id: string | null;
+  method: "manual_document_review" | "provider" | null;
+  provider_ref: string | null;
+  info_request: string | null;
+  decision_reason: string | null;
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type VerificationDocument = {
+  id: string;
+  case_id: string;
+  doc_type: VerificationDocType;
+  storage_path: string;
+  mime: string;
+  size_bytes: number;
+  uploaded_at: string;
+  removed_at: string | null;
+};
+export type VerificationEvent = { id: number; case_id: string; actor_id: string | null; event: string; detail: Record<string, unknown>; created_at: string };
+
 export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status" | "messages";
 
 export type AppNotification = {
@@ -620,6 +655,9 @@ export type Database = {
       portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;
       public_profile_settings: Table<PublicProfileSettings, Optional<PublicProfileSettings, Exclude<keyof PublicProfileSettings, "profile_id">>>;
       content_items: Table<ContentItem, Optional<ContentItem, Exclude<keyof ContentItem, "creator_id" | "kind" | "title">>>;
+      verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "profile_id" | "kind">>>;
+      verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at">>;
+      verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
@@ -651,6 +689,10 @@ export type Database = {
       creator_public_profile: {
         Args: { p_slug: string };
         Returns: CreatorPublicProfile[];
+      };
+      verification_transition: {
+        Args: { p_actor: string; p_case: string; p_action: string; p_note?: string | null; p_company?: string | null };
+        Returns: string;
       };
       creator_public_portfolio: {
         Args: { p_slug: string };

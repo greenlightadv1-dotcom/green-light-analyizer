@@ -18,6 +18,21 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
  * if the matcher is later changed.
  */
 export async function requireProfile(): Promise<Profile> {
+  const profile = await requireAnyStatusProfile();
+  // 0032: a self-registered account is usable only after an admin approves
+  // its verification. Until then (and after a rejection) the only signed-in
+  // page is /verification. A database without 0032 has no account_status,
+  // which reads as active, so admin-created accounts are never affected.
+  if (profile.account_status && profile.account_status !== "active") redirect("/verification");
+  return profile;
+}
+
+/**
+ * The signed-in profile whatever its account_status (still refusing banned
+ * accounts). Only the verification flow uses this; everything else goes
+ * through requireProfile().
+ */
+export async function requireAnyStatusProfile(): Promise<Profile> {
   // Every route under (app) reaches this via its layout, unconditionally — so
   // a missing or broken Supabase config would otherwise 500 the whole product
   // rather than the specific integration that's degraded. The root page

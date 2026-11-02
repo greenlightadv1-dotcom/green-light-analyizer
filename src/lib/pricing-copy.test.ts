@@ -48,9 +48,11 @@ for (const [lang, dict] of Object.entries(DICTIONARIES)) {
   test(`${lang}: no retired tier, old commission, or unbuilt feature is advertised`, () => {
     // The browser print button (printing.*) is a built feature and may say
     // "PDF"; the retired "Media Kit PDF export" plan feature may not appear
-    // anywhere else, including pricing.
-    const { printing: _printing, ...rest } = dict as typeof dict & { printing?: unknown };
+    // anywhere else, including pricing. Verification names PDF as an accepted
+    // upload file type (verification.*), which is not the retired feature.
+    const { printing: _printing, verification: _verification, ...rest } = dict as typeof dict & { printing?: unknown; verification?: unknown };
     void _printing;
+    void _verification;
     const text = allStrings(rest as typeof dict).join("\n");
     for (const banned of [
       /\bStarter\b/,

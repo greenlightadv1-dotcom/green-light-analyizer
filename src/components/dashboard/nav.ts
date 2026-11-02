@@ -41,6 +41,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/settings", labelKey: "nav.settings", roles: ["creator", "company", "admin"] },
   { href: "/admin/users", labelKey: "nav.adminUsers", roles: ["admin"] },
   { href: "/admin/requests", labelKey: "nav.adminRequests", roles: ["admin"] },
+  { href: "/admin/verification", labelKey: "nav.adminVerification", roles: ["admin"] },
   { href: "/admin/promo-codes", labelKey: "nav.adminPromoCodes", roles: ["admin"] },
   { href: "/admin/violations", labelKey: "nav.adminViolations", roles: ["admin"] },
   { href: "/admin/system", labelKey: "nav.adminSystem", roles: ["admin"] },

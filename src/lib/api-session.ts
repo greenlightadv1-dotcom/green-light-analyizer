@@ -22,6 +22,9 @@ export async function loadApiSession(): Promise<
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle();
   if (!profile) return { ok: false, status: 403, error: "no_profile" };
   if (profile.banned_at) return { ok: false, status: 403, error: "suspended" };
+  // 0032: an account awaiting verification approval uses no API but the
+  // verification upload route, which checks this itself.
+  if (profile.account_status && profile.account_status !== "active") return { ok: false, status: 403, error: "pending_verification" };
   if (profile.must_change_password) return { ok: false, status: 403, error: "password_reset_required" };
   return { ok: true, profile };
 }

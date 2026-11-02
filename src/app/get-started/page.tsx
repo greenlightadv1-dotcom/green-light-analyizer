@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GetStartedChooser } from "@/components/get-started/GetStartedChooser";
 import { GetStartedShell } from "@/components/get-started/GetStartedShell";
+import { selfSignupEnabled } from "@/lib/registration";
 
 export const metadata: Metadata = {
   title: "Get started",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default function GetStartedPage() {
   return (
     <GetStartedShell>
-      <GetStartedChooser />
+      <GetStartedChooser selfSignup={selfSignupEnabled()} />
     </GetStartedShell>
   );
 }

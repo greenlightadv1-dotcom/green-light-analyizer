@@ -40,7 +40,8 @@ export type RateLimitAction =
   | "collab_write"
   | "shortlist_write"
   | "portfolio_write"
-  | "content_write";
+  | "content_write"
+  | "verification_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -138,6 +139,11 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   shortlist_write: [
     { limit: 120, windowSeconds: HOUR, label: "hour" },
     { limit: 600, windowSeconds: DAY, label: "day" },
+  ],
+  // Verification drafts and submissions (0032).
+  verification_write: [
+    { limit: 40, windowSeconds: HOUR, label: "hour" },
+    { limit: 120, windowSeconds: DAY, label: "day" },
   ],
   // Content plans (0029): private drafts, autosave-free, so a modest cap.
   content_write: [
