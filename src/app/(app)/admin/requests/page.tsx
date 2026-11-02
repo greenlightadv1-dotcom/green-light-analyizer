@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LinkRepresentativeForm } from "./LinkRepresentativeForm";
 import { rejectRequest, unlinkRepresentative } from "./actions";
+import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 
 export const metadata: Metadata = { title: "Applications" };
 
@@ -76,10 +77,18 @@ export default async function AdminRequestsPage() {
                     <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
                       Create account
                     </Link>
-                    <form action={rejectRequest}>
-                      <input type="hidden" name="request_id" value={r.id} />
-                      <button className="h-9 rounded-lg border border-red-400/30 bg-red-500/10 px-3 text-xs font-medium text-red-700 hover:bg-red-500/20 dark:text-red-200">Reject</button>
-                    </form>
+                    <ConfirmActionForm
+                      action={rejectRequest}
+                      hidden={{ request_id: r.id }}
+                      trigger={{ labelKey: "admin.requests.rejectTrigger" }}
+                      triggerClassName="h-9 rounded-chip border border-danger/30 bg-danger/10 px-3 text-xs font-medium text-danger hover:bg-danger/20 focus-visible:focus-ring"
+                      titleKey="admin.requests.rejectTitle"
+                      bodyKey="admin.requests.rejectBody"
+                      confirmKey="admin.requests.rejectConfirm"
+                      successKey="admin.requests.rejectDone"
+                      tone="danger"
+                      className="flex flex-wrap items-center gap-2"
+                    />
                   </div>
                 </li>
               ))}
@@ -112,10 +121,17 @@ export default async function AdminRequestsPage() {
                   <span>
                     {name(l.member_id)} → {name(l.company_id)}
                   </span>
-                  <form action={unlinkRepresentative}>
-                    <input type="hidden" name="member_id" value={l.member_id} />
-                    <button className="text-fg/50 underline hover:text-fg">Unlink</button>
-                  </form>
+                  <ConfirmActionForm
+                    action={unlinkRepresentative}
+                    hidden={{ member_id: l.member_id }}
+                    trigger={{ labelKey: "admin.requests.unlinkTrigger" }}
+                    triggerClassName="text-fg-muted underline hover:text-fg focus-visible:focus-ring"
+                    titleKey="admin.requests.unlinkTitle"
+                    bodyKey="admin.requests.unlinkBody"
+                    confirmKey="admin.requests.unlinkConfirm"
+                    successKey="admin.requests.unlinkDone"
+                    className="flex flex-col items-end gap-1"
+                  />
                 </li>
               ))}
             </ul>

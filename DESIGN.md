@@ -122,6 +122,31 @@ The palette is intentionally narrow: one electric accent, a structural navy/obsi
 
 Every state color follows the same construction as the brand tokens: a soft tinted background (`/10`–`/15` opacity), a matching border (`/25`–`/30` opacity), and a solid-opacity text color paired per-theme (a light-mode shade and a distinct dark-mode shade, e.g. `text-red-700 dark:text-red-200`) so contrast holds in both themes.
 
+### Semantic tokens (Phase 1, implemented locally)
+Defined in `src/app/globals.css`. New and touched UI uses these instead of ad-hoc
+opacities and stock palette classes; older screens still use `fg/NN` and are
+migrated as they are touched, not in one sweep.
+
+| Token (utility) | Value | Use |
+|---|---|---|
+| `fg-secondary` | `fg` at 78% | secondary text |
+| `fg-muted` | `fg` at 64% | the floor for readable body text (≈4.6:1 on the light glass surface, WCAG AA) |
+| `fg-subtle` | `fg` at 45% | placeholders, separators, decoration only; never sentences |
+| `line` / `line-strong` | `fg` at 10% / 18% | hairlines, table rules, borders |
+| `surface-muted` / `surface-hover` | `fg` at 5% / 9% | quiet fills, hover |
+| `success` / `warning` / `danger` / `info` | light `#2f7a0c` / `#92400e` / `#b91c1c` / `#293e61`; dark `#62e823` / `#fcd34d` / `#fca5a5` / `#a5c4f3` | state text, tinted at /10 for fills and /30 for borders |
+| `rounded-chip` / `rounded-control` / `rounded-card` | 8px / 12px / 20px | badges and tags / buttons and inputs / panels |
+| `shadow-overlay` | dialog shadow | dialogs and sheets |
+| `focus-ring` (utility) | 2px brand-green outline, 2px offset | every focusable control, via `focus-visible:focus-ring` |
+
+Brand green is about 1.6:1 on white, so light mode uses the darker `success`
+for success *text*; green stays the fill for CTAs and the active state.
+
+Shared components in `src/components/ui/`: `Dialog`, `ConfirmDialog`,
+`ConfirmActionForm`, `StatusBadge`, `Metric`, `Table`, `Tabs`, `Skeleton`
+(`SkeletonText`, `LoadingRegion`), `PageLoading`, `Pagination`, `EmptyState`.
+Their keyboard and state logic lives in `src/lib/ui/` and is unit-tested.
+
 ## Typography
 
 **Display Font:** Inter (with a full native system-font fallback stack)

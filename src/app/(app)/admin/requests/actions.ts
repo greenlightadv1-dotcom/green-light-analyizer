@@ -4,21 +4,32 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { log } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Reject a pending application. Admin-only; nothing is sent to the applicant. */
-export async function rejectRequest(formData: FormData): Promise<void> {
+export async function rejectRequest(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const admin = await requireRole("admin");
   const id = String(formData.get("request_id") ?? "");
-  if (!UUID.test(id)) return;
-  const { error } = await createAdminClient()
+  if (!UUID.test(id)) return fail("ui.errors.invalid");
+  const { data, error } = await createAdminClient()
     .from("access_requests")
     .update({ status: "rejected", reviewed_by: admin.id, reviewed_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("status", "pending");
-  if (error) log.error("access_request.reject_failed", { code: error.code });
+    .eq("status", "pending")
+    .select("id");
+  if (error) {
+    log.error("access_request.reject_failed", { code: error.code });
+    return fail("admin.requests.errors.rejectFailed");
+  }
+  // Matched nothing: already reviewed by someone else, or gone.
+  if (!data?.length) return fail("admin.requests.errors.rejectFailed");
   revalidatePath("/admin/requests");
+  return OK;
 }
 
 export type LinkState = { error: string | null; linked: boolean };
@@ -64,10 +75,23 @@ export async function linkRepresentative(_prev: LinkState, formData: FormData): 
 }
 
 /** Remove a representative link. */
-export async function unlinkRepresentative(formData: FormData): Promise<void> {
+export async function unlinkRepresentative(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   await requireRole("admin");
   const memberId = String(formData.get("member_id") ?? "");
-  if (!UUID.test(memberId)) return;
-  await createAdminClient().from("company_members").delete().eq("member_id", memberId);
+  if (!UUID.test(memberId)) return fail("ui.errors.invalid");
+  const { data, error } = await createAdminClient()
+    .from("company_members")
+    .delete()
+    .eq("member_id", memberId)
+    .select("member_id");
+  if (error) {
+    log.error("company_members.unlink_failed", { code: error.code });
+    return fail("admin.requests.errors.unlinkFailed");
+  }
+  if (!data?.length) return fail("ui.errors.notFound");
   revalidatePath("/admin/requests");
+  return OK;
 }

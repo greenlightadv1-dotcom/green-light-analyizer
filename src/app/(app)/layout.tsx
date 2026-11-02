@@ -18,7 +18,8 @@ export default async function AppLayout({
   return (
     <div className="mx-auto flex w-full max-w-[1680px] gap-5 p-4 lg:gap-6 lg:p-6 2xl:p-8">
       <Sidebar role={profile.role} />
-      <div className="min-w-0 flex-1">
+      {/* pb-24: the last content can always scroll clear of the fixed G launcher. */}
+      <div className="min-w-0 flex-1 pb-24">
         <TopBar profile={profile} />
         <PageTransition>{children}</PageTransition>
       </div>

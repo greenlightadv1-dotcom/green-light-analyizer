@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Pagination } from "@/components/ui/Pagination";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CountryShareList } from "@/components/media-kit/CountryShareList";
@@ -48,21 +49,6 @@ export function DiscoverView({
   directoryEmpty: boolean;
 }) {
   const { t, locale } = useTranslation();
-
-  const href = (p: number) => {
-    const sp = new URLSearchParams();
-    if (query.q) sp.set("q", query.q);
-    if (query.category) sp.set("category", query.category);
-    if (query.game) sp.set("game", query.game);
-    if (query.platform) sp.set("platform", query.platform);
-    if (query.country) sp.set("country", query.country);
-    if (query.minViews !== null) sp.set("minViews", String(query.minViews));
-    if (query.verifiedOnly) sp.set("verified", "1");
-    if (query.sort !== "reach") sp.set("sort", query.sort);
-    if (p > 1) sp.set("page", String(p));
-    const s = sp.toString();
-    return s ? `/discover?${s}` : "/discover";
-  };
 
   const card = (c: DiscoverEntry, highlight = false) => {
     const cats = knownCategories(c.creator_categories ?? (c.content_category ? [c.content_category] : []));
@@ -265,25 +251,23 @@ export function DiscoverView({
             {t("discover.resultCount", { count: total })}
           </p>
           <div className="space-y-3">{items.map((c) => card(c))}</div>
-          {pages > 1 ? (
-            <nav className="mt-5 flex items-center justify-between text-sm" aria-label={t("discover.pagination")}>
-              {page > 1 ? (
-                <Link href={href(page - 1)} className="text-brand-green underline underline-offset-4">
-                  {t("discover.previous")}
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-xs text-fg/45">{t("discover.pageOf", { page, pages })}</span>
-              {page < pages ? (
-                <Link href={href(page + 1)} className="text-brand-green underline underline-offset-4">
-                  {t("discover.next")}
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          ) : null}
+          <div className="mt-5">
+            <Pagination
+              page={page}
+              totalPages={pages}
+              basePath="/discover"
+              query={{
+                q: query.q || undefined,
+                category: query.category || undefined,
+                game: query.game || undefined,
+                platform: query.platform || undefined,
+                country: query.country || undefined,
+                minViews: query.minViews !== null ? String(query.minViews) : undefined,
+                verified: query.verifiedOnly ? "1" : undefined,
+                sort: query.sort !== "reach" ? query.sort : undefined,
+              }}
+            />
+          </div>
         </>
       )}
     </>

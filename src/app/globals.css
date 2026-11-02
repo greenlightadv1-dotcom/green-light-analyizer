@@ -53,10 +53,75 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   --radius-glass: 20px;
+
+  /* -------------------------------------------------------------------------
+     Semantic tokens (Phase 1 design system). New and touched UI uses these
+     instead of ad-hoc opacities such as text-fg/45. Each one is derived from
+     --color-fg, so it flips with the theme without a dark: pair.
+
+     Text, strongest to weakest. fg-muted is the floor for readable body copy:
+     64% of ink on the light glass surface is about 4.6:1 (WCAG AA). fg-subtle
+     is for placeholders, separators and decoration only, never sentences.
+  ------------------------------------------------------------------------- */
+  --color-fg-secondary: color-mix(in srgb, var(--color-fg) 78%, transparent);
+  --color-fg-muted: color-mix(in srgb, var(--color-fg) 64%, transparent);
+  --color-fg-subtle: color-mix(in srgb, var(--color-fg) 45%, transparent);
+
+  /* Hairlines and quiet fills. */
+  --color-line: color-mix(in srgb, var(--color-fg) 10%, transparent);
+  --color-line-strong: color-mix(in srgb, var(--color-fg) 18%, transparent);
+  --color-surface-muted: color-mix(in srgb, var(--color-fg) 5%, transparent);
+  --color-surface-hover: color-mix(in srgb, var(--color-fg) 9%, transparent);
+
+  /* State text colours. Light values are dark enough for AA on the light
+     shell (brand green itself is about 1.6:1 on white, so it is never used
+     for success text in light mode); :root.dark swaps in lighter values. */
+  --color-success: #2f7a0c;
+  --color-warning: #92400e;
+  --color-danger: #b91c1c;
+  --color-info: #293e61;
+
+  /* Radii: controls (buttons, inputs), chips (badges, tags), cards (= glass). */
+  --radius-chip: 0.5rem;
+  --radius-control: 0.75rem;
+  --radius-card: 20px;
+
+  /* Elevation for overlays (dialogs, sheets); panels keep the glass shadow. */
+  --shadow-overlay: 0 30px 80px -20px rgba(10, 13, 20, 0.55);
 }
 
 :root.dark {
   --color-fg: #ffffff;
+  --color-success: #62e823;
+  --color-warning: #fcd34d;
+  --color-danger: #fca5a5;
+  --color-info: #a5c4f3;
+}
+
+/* Keyboard focus, shared by every Phase 1 component. */
+@utility focus-ring {
+  outline: 2px solid var(--color-brand-green);
+  outline-offset: 2px;
+}
+
+/* Native <dialog> (Dialog / ConfirmDialog). The element is the panel; the
+   backdrop dims the page. Open state comes from showModal(), which also
+   makes the rest of the page inert and handles Escape. */
+.gl-dialog::backdrop {
+  background: rgba(10, 13, 20, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.gl-dialog[open] {
+  animation: g-panel-in 0.18s ease-out;
+}
+
+/* Skeleton placeholder. Reduced motion (below) flattens the pulse. */
+@keyframes gl-pulse {
+  50% { opacity: 0.45; }
+}
+.gl-skeleton {
+  animation: gl-pulse 1.6s ease-in-out infinite;
 }
 
 :root {

@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { roleForJourney } from "@/lib/access-requests";
 import { CreateUserForm, type CreateUserPrefill } from "./CreateUserForm";
 import { setBan, updateProfile } from "./actions";
+import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 
 export const metadata: Metadata = { title: "Accounts" };
 
@@ -231,51 +232,53 @@ export default async function AdminUsersPage({
 
                       <div className="border-t border-fg/8 pt-3.5">
                         {p.banned_at ? (
-                          <form
-                            action={setBan}
-                            className="flex flex-wrap items-center gap-3"
-                          >
-                            <input
-                              type="hidden"
-                              name="profile_id"
-                              value={p.id}
-                            />
-                            <input type="hidden" name="action" value="unban" />
-                            <p className="min-w-0 flex-1 text-xs text-fg/50">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <p className="min-w-0 flex-1 text-xs text-fg-muted">
                               Banned{" "}
                               {new Date(p.banned_at).toLocaleDateString()} —{" "}
                               {p.banned_reason}
                             </p>
-                            <button type="submit" className={unbanButtonClass}>
-                              Unban
-                            </button>
-                          </form>
+                            <ConfirmActionForm
+                              action={setBan}
+                              hidden={{ profile_id: p.id, action: "unban" }}
+                              trigger={{ labelKey: "admin.users.unbanTrigger" }}
+                              triggerClassName={unbanButtonClass}
+                              titleKey="admin.users.unbanTitle"
+                              bodyKey="admin.users.unbanBody"
+                              confirmKey="admin.users.unbanConfirm"
+                              successKey="admin.users.unbanDone"
+                              className="flex flex-wrap items-center gap-2"
+                            />
+                          </div>
                         ) : (
-                          <form
+                          <ConfirmActionForm
                             action={setBan}
+                            hidden={{ profile_id: p.id, action: "ban" }}
+                            trigger={{ labelKey: "admin.users.banTrigger" }}
+                            triggerClassName={banButtonClass}
+                            titleKey="admin.users.banTitle"
+                            bodyKey="admin.users.banBody"
+                            confirmKey="admin.users.banConfirm"
+                            successKey="admin.users.banDone"
+                            tone="danger"
                             className="flex flex-wrap items-end gap-3"
                           >
-                            <input
-                              type="hidden"
-                              name="profile_id"
-                              value={p.id}
-                            />
-                            <input type="hidden" name="action" value="ban" />
                             <div className="min-w-[220px] flex-1 space-y-1">
-                              <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                              <label
+                                htmlFor={`ban-reason-${p.id}`}
+                                className="block text-[10px] tracking-wide text-fg-muted uppercase"
+                              >
                                 Ban reason
                               </label>
                               <input
+                                id={`ban-reason-${p.id}`}
                                 name="reason"
                                 required
                                 placeholder="e.g. confirmed fraud, Discord report"
                                 className={inputClass}
                               />
                             </div>
-                            <button type="submit" className={banButtonClass}>
-                              Ban
-                            </button>
-                          </form>
+                          </ConfirmActionForm>
                         )}
                       </div>
                     </div>

@@ -265,16 +265,18 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
 
   if (!state.open) {
     return (
-      <div className="fixed end-4 bottom-4 z-40 flex flex-col items-end gap-2 sm:end-6 sm:bottom-6">
+      <div className="fixed end-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 sm:end-6 sm:bottom-6" data-testid="g-launcher">
         <WakeIndicator status={wake.status} enabled={wake.enabled} onOff={wake.disable} onResume={() => void wake.enable()} />
         <button
           type="button"
           onClick={() => update((s) => ({ ...s, open: true }))}
           aria-label={t("g.open")}
-          className="flex items-center gap-2 rounded-full border border-brand-green/30 bg-white/90 py-1.5 ps-1.5 pe-4 text-sm font-semibold text-fg shadow-xl backdrop-blur transition hover:-translate-y-0.5 dark:bg-navy-dark/90"
+          className="flex items-center gap-2 rounded-full border border-brand-green/30 bg-white/90 p-1.5 text-sm font-semibold text-fg shadow-xl backdrop-blur transition hover:-translate-y-0.5 focus-visible:focus-ring sm:pe-4 dark:bg-navy-dark/90"
         >
           <GMark size={34} state={markState} />
-          <span>{t("g.askG")}</span>
+          {/* Icon-only on phones so the launcher covers less of the page; the
+              button keeps its accessible name from aria-label either way. */}
+          <span aria-hidden className="hidden sm:inline">{t("g.askG")}</span>
         </button>
       </div>
     );
@@ -288,7 +290,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col rounded-t-2xl border border-fg/10 bg-white shadow-2xl dark:bg-navy-dark sm:inset-x-auto sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-2xl"
+      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col rounded-t-2xl border border-fg/10 bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl dark:bg-navy-dark sm:inset-x-auto sm:pb-0 sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-2xl"
     >
       <header className="flex items-center gap-3 border-b border-fg/10 px-4 py-3">
         <GMark state={markState} />

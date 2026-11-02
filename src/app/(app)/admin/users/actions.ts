@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
+import { log } from "@/lib/log";
 import { generateInboundAlias } from "@/lib/alias";
 import { extendExpiry } from "@/lib/subscription";
 import { requireRole } from "@/lib/auth";
@@ -292,48 +294,65 @@ export async function updateProfile(formData: FormData): Promise<void> {
  * be reversed: an admin's own mistaken ban should not require a database
  * edit to undo.
  */
-export async function setBan(formData: FormData): Promise<void> {
+export async function setBan(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const admin = await requireRole("admin");
 
   const targetId = String(formData.get("profile_id") ?? "");
   const action = String(formData.get("action") ?? "");
-  if (!targetId || targetId === admin.id) return;
-  if (action !== "ban" && action !== "unban") return;
+  if (!targetId) return fail("ui.errors.invalid");
+  if (targetId === admin.id) return fail("admin.users.errors.self");
+  if (action !== "ban" && action !== "unban") return fail("ui.errors.invalid");
 
   const service = createAdminClient();
 
   if (action === "ban") {
     const reason = String(formData.get("reason") ?? "").trim();
-    if (!reason) return;
+    if (!reason) return fail("admin.users.errors.reason");
 
-    const { error } = await service
+    const { data, error } = await service
       .from("profiles")
       .update({ banned_at: new Date().toISOString(), banned_reason: reason })
-      .eq("id", targetId);
-    if (error) return;
+      .eq("id", targetId)
+      .select("id");
+    if (error) {
+      log.error("admin.ban_failed", { profile_id: targetId, error });
+      return fail("admin.users.errors.failed");
+    }
+    if (!data?.length) return fail("ui.errors.notFound");
 
-    await service.from("admin_actions").insert({
+    const { error: auditError } = await service.from("admin_actions").insert({
       admin_id: admin.id,
       target_profile_id: targetId,
       action: "ban",
       old_value: null,
       new_value: reason,
     });
+    if (auditError) log.error("admin.audit_failed", { action: "ban", profile_id: targetId, error: auditError });
   } else {
-    const { error } = await service
+    const { data, error } = await service
       .from("profiles")
       .update({ banned_at: null, banned_reason: null })
-      .eq("id", targetId);
-    if (error) return;
+      .eq("id", targetId)
+      .select("id");
+    if (error) {
+      log.error("admin.unban_failed", { profile_id: targetId, error });
+      return fail("admin.users.errors.failed");
+    }
+    if (!data?.length) return fail("ui.errors.notFound");
 
-    await service.from("admin_actions").insert({
+    const { error: auditError } = await service.from("admin_actions").insert({
       admin_id: admin.id,
       target_profile_id: targetId,
       action: "unban",
       old_value: null,
       new_value: null,
     });
+    if (auditError) log.error("admin.audit_failed", { action: "unban", profile_id: targetId, error: auditError });
   }
 
   revalidatePath("/admin/users");
+  return OK;
 }
