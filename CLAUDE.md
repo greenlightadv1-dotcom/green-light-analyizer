@@ -1297,3 +1297,26 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## 18. Growth history, design system and release docs (branch only, 2026-11-02)
+
+Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
+- `MASTER_IMPLEMENTATION_AUDIT.md`
+- `MISSING_FEATURES_MATRIX.md`
+- `IMPLEMENTATION_REPORT.md`
+- `DATABASE_MIGRATION_PLAN.md`
+- `PRODUCTION_RELEASE_CHECKLIST.md`
+- `PENDING_OWNER_DECISIONS.md`
+- `ROLLBACK_PLAN.md`
+
+- **Migration 0025 `media_kit_snapshots`** (not applied anywhere):
+  - **Writes:** one row per media kit per UTC day, written only by the server after a successful YouTube stats sync.
+  - **Reads:** owner or admin only.
+  - **Growth:** shown only from two real snapshots on different days (`lib/media-kit/growth.ts`).
+  - **Retention:** snapshots are deleted at 29 days, on each sync and by the daily freshness job. YouTube API policy III.E.4 forbids keeping Non-Authorized Data longer than 30 days, so longer history is an owner decision.
+- **Design system:** `src/components/ui/` and `src/lib/ui/`, with semantic tokens in `globals.css` and `DESIGN.md`.
+  - Consequential actions use `ConfirmDialog` / `ConfirmActionForm`, and success is shown only after the server confirms.
+  - Server-action errors are dictionary keys, translated on the client.
+- **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
+- **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (0026, not written).
