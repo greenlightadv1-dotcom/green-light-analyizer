@@ -367,7 +367,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   {m.engine === "rules" && !demo ? <p className="text-[11px] text-fg-muted">{t("g.rulesNotice")}</p> : null}
                   {m.engine === "ai" ? <p className="text-[10px] text-fg-muted">{t("g.aiNotice")}</p> : null}
                   {m.cards?.assessment ? <AssessmentCard a={m.cards.assessment as CreatorAssessment} /> : null}
-                  {m.cards?.brief ? <BriefCard {...(m.cards.brief as { value: Brief; missing: string[] })} brief={(m.cards.brief as { value: Brief }).value} /> : null}
+                  {m.cards?.brief ? <BriefCard {...(m.cards.brief as { value: Brief; missing: string[]; understood?: string[] })} brief={(m.cards.brief as { value: Brief }).value} /> : null}
                   {m.cards?.recommendations ? (
                     <RecommendationsCard
                       rec={m.cards.recommendations as { directorySize: number; items: Recommendation[] }}

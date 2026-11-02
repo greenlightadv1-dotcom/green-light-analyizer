@@ -7,6 +7,7 @@ import { log } from "@/lib/log";
 import type { Profile } from "@/lib/auth";
 import type { DeliverableStatus } from "@/lib/types/database";
 import { countDeliverables, nextStep, type CollabSummary, type InvitationSummary } from "./collab";
+import { mergeBrief } from "./brief-text";
 import { assessCreator, type CreatorAssessment, type DealSummary } from "./assessment";
 import {
   compareCreators,
@@ -81,10 +82,12 @@ export async function companyContext(
   profile: Profile,
   rawBrief: unknown,
   compareIds: readonly string[],
+  /** Criteria read from the company's own words (brief-text.ts); the structured brief wins. */
+  fromText: Partial<Brief> = {},
 ): Promise<CompanyGData> {
   const [directory, deals] = await Promise.all([listCreatorDirectory(), ownDeals(profile)]);
   const rows = directory as unknown as DirectoryRow[];
-  const brief = parseBrief(rawBrief);
+  const brief = mergeBrief(parseBrief(rawBrief), fromText);
   return {
     brief,
     briefMissing: missingBriefFields(brief),

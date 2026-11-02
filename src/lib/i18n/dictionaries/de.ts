@@ -665,6 +665,7 @@ const de: Dictionary = {
       recommended: "empfohlen",
       brief: "Kampagnen-Brief",
       briefEmpty: "Noch kein Brief. Füge unten Details hinzu.",
+      fromYourWords: "Kriterien aus deiner Nachricht. Gesucht wird nur unter Creatorn auf Green Light; fehlende Daten werden nie geschätzt.",
       briefMissing: "Noch nötig",
       recommendations: "Vorgeschlagene Creator",
       recommendationsBasis: "Aus {count} Creatorn im Discover-Verzeichnis.",

@@ -135,7 +135,7 @@ export function DealsCard({ deals }: { deals: { summary?: CreatorAssessment["dea
   );
 }
 
-export function BriefCard({ brief, missing }: { brief: Brief; missing: string[] }) {
+export function BriefCard({ brief, missing, understood = [] }: { brief: Brief; missing: string[]; understood?: string[] }) {
   const { t } = useTranslation();
   const parts = [
     brief.objective,
@@ -150,6 +150,7 @@ export function BriefCard({ brief, missing }: { brief: Brief; missing: string[] 
     <div className={`${BOX} space-y-1.5`}>
       <p className="text-xs font-semibold text-fg">{t("g.card.brief")}</p>
       <p className="text-xs text-fg/70">{parts.length ? parts.join(" · ") : t("g.card.briefEmpty")}</p>
+      {understood.length ? <p className="text-[11px] text-fg-muted">{t("g.card.fromYourWords")}</p> : null}
       {missing.length ? (
         <p className="text-[11px] text-amber-700 dark:text-amber-200">
           {t("g.card.briefMissing")}: {missing.map((m) => t(`g.briefField.${m}`)).join(", ")}

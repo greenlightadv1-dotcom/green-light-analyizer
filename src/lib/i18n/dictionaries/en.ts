@@ -677,6 +677,7 @@ const en = {
       recommended: "recommended",
       brief: "Campaign brief",
       briefEmpty: "No brief yet. Add details below.",
+      fromYourWords: "Criteria read from your message. Only creators on Green Light are searched, and missing data is never estimated.",
       briefMissing: "Still needed",
       recommendations: "Suggested creators",
       recommendationsBasis: "From {count} creators in the Discovery directory.",

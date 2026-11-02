@@ -665,6 +665,7 @@ const fr: Dictionary = {
       recommended: "recommandé",
       brief: "Brief de campagne",
       briefEmpty: "Pas encore de brief. Ajoutez des détails ci-dessous.",
+      fromYourWords: "Critères lus dans votre message. Seuls les créateurs présents sur Green Light sont recherchés, et aucune donnée manquante n’est estimée.",
       briefMissing: "Encore nécessaire",
       recommendations: "Créateurs suggérés",
       recommendationsBasis: "Parmi {count} créateurs de l'annuaire Discover.",

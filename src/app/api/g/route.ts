@@ -4,6 +4,7 @@ import { log } from "@/lib/log";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { G_ACTIONS, allowedActions, type GAction, type GActionId } from "@/lib/g/actions";
 import { collabContext, companyContext, creatorContext, loadGSession, type CollabGData } from "@/lib/g/context";
+import { briefFromText } from "@/lib/g/brief-text";
 import { allowedProposals, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
 import {
   buildPrompt,
@@ -71,6 +72,13 @@ export async function POST(request: Request) {
   }
 
   const intents: Intent[] = detectIntents(req.message, profile.role, req.page);
+  // Company creator search in plain words: criteria the message states become
+  // part of the brief (the structured brief still wins), and a message that
+  // states any criterion is a search even without the word "recommend".
+  const fromText = profile.role === "company" ? briefFromText(req.message) : { brief: {}, understood: [] as string[] };
+  if (fromText.understood.length && !intents.includes("recommend")) {
+    intents.splice(intents.indexOf("help") >= 0 ? intents.indexOf("help") : intents.length, intents.includes("help") ? 1 : 0, "recommend");
+  }
   const roleActions = (Object.keys(G_ACTIONS) as GActionId[]).filter((a) =>
     G_ACTIONS[a].roles.includes(profile.role),
   );
@@ -122,7 +130,7 @@ export async function POST(request: Request) {
           ? [{ action: "open_collaborations" }, { action: "open_opportunities" }]
           : ctx.assessment.nextActions.map((action) => ({ action }));
     } else if (profile.role === "company") {
-      const [ctx, collab] = await Promise.all([companyContext(profile, req.brief, req.compare), collabContext(profile)]);
+      const [ctx, collab] = await Promise.all([companyContext(profile, req.brief, req.compare, fromText.brief), collabContext(profile)]);
       scope = { ...scope, dealIds: ctx.dealIds, creatorIds: ctx.creatorIds, briefIds: collab.briefIds, collaborationIds: collab.collaborationIds };
       creatorNames = ctx.creatorNames;
       proposalScope = {
@@ -134,7 +142,7 @@ export async function POST(request: Request) {
       };
       if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: [], briefs: collab.briefs };
       if (intents.includes("recommend") || intents.includes("brief") || intents.includes("help")) {
-        cards.brief = { value: ctx.brief, missing: ctx.briefMissing };
+        cards.brief = { value: ctx.brief, missing: ctx.briefMissing, understood: fromText.understood };
         cards.recommendations = { directorySize: ctx.directorySize, items: ctx.recommendations };
       }
       if (intents.includes("compare")) cards.comparison = ctx.comparison;

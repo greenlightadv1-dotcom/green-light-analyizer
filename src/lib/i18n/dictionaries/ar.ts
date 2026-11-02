@@ -657,6 +657,7 @@ const ar: Dictionary = {
       recommended: "المقترح",
       brief: "متطلبات الحملة",
       briefEmpty: "لا توجد متطلبات بعد. أضف التفاصيل أدناه.",
+      fromYourWords: "المعايير مأخوذة من رسالتك. البحث يشمل صنّاع المحتوى على Green Light فقط، ولا تُقدَّر أي بيانات ناقصة.",
       briefMissing: "ما زال مطلوبًا",
       recommendations: "صناع محتوى مقترحون",
       recommendationsBasis: "من {count} صانع محتوى في دليل الاكتشاف.",
