@@ -131,6 +131,27 @@ for (const locale of ["en", "ar"]) {
     check(clear.lastBottom <= clear.launcherTop + 1, `${tag} last content scrolls clear of the G launcher (${Math.round(clear.lastBottom)} <= ${Math.round(clear.launcherTop)})`);
     if (SHOTS && vp.width === 390) await page.screenshot({ path: `${SHOTS}/${locale}-dashboard-bottom.png` });
 
+    // --- Growth summary from real (preview) snapshots --------------------------
+    await page.goto(`${BASE}/preview/media-kit`, { waitUntil: "networkidle" });
+    const growth = page.locator("[data-testid='growth-summary']").first();
+    check((await growth.count()) === 1, `${tag} growth summary present`);
+    const gtext = await growth.innerText();
+    // 208,500 -> 212,000 subscribers over 8 days: +3,500 (+1.7%).
+    check(gtext.includes("+3,500") && gtext.includes("+1.7%"), `${tag} growth computed from the two snapshots (+3,500, +1.7%)`);
+    check(locale === "ar" ? /المشتركون/.test(gtext) : /Subscribers/.test(gtext), `${tag} growth labels translated`);
+    const gdir = await growth.evaluate((el) => getComputedStyle(el).direction);
+    check(locale === "ar" ? gdir === "rtl" : gdir === "ltr", `${tag} growth summary direction ${gdir}`);
+
+    // --- Print stylesheet (Media Kit PDF v1) -----------------------------------
+    await page.emulateMedia({ media: "print" });
+    const printed = await page.evaluate(() => {
+      const panel = document.querySelector(".glass-panel");
+      const cs = panel ? getComputedStyle(panel) : null;
+      return { bg: getComputedStyle(document.body).backgroundImage, panelBg: cs?.backgroundColor, blur: cs?.backdropFilter };
+    });
+    check(printed.bg === "none" && printed.panelBg === "rgb(255, 255, 255)" && (printed.blur === "none" || !printed.blur), `${tag} print media: white page, no glass blur`);
+    await page.emulateMedia({ media: "screen" });
+
     check(errors.length === 0, `${tag} no page errors${errors.length ? `: ${errors[0]}` : ""}`);
     await ctx.close();
   }

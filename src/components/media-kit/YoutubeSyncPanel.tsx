@@ -11,6 +11,8 @@ import {
   type SyncYoutubeState,
 } from "@/lib/media-kit/actions";
 import type { MediaKit } from "@/lib/media-kit/queries";
+import type { MediaKitSnapshot } from "@/lib/types/database";
+import { computeGrowth, type Growth } from "@/lib/media-kit/growth";
 
 function SyncButton() {
   const { pending } = useFormStatus();
@@ -36,7 +38,7 @@ function SyncButton() {
  * than duplicating it, since it's the same measured quantity either way
  * (see media-kit/actions.ts's syncYoutubeStats doc comment).
  */
-export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
+export function YoutubeSyncPanel({ kit, snapshots = [] }: { kit: MediaKit; snapshots?: MediaKitSnapshot[] }) {
   const { t } = useTranslation();
   const [state, formAction] = useActionState<SyncYoutubeState, FormData>(
     syncYoutubeStats,
@@ -85,7 +87,9 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
               </dd>
             </div>
           </dl>
-        ) : (
+        ) : null}
+        {hasStats ? <GrowthSummary snapshots={snapshots} /> : null}
+        {hasStats ? null : (
           <p className="mt-2 text-xs leading-relaxed text-fg-muted">
             {t("mediaKit.notSyncedRequiresHandle")}
           </p>
@@ -111,6 +115,54 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
         currentCategory={kit.content_category}
         currentTags={kit.content_tags}
       />
+    </div>
+  );
+}
+
+const signed = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toLocaleString("en-US")}`;
+
+/**
+ * Growth from real snapshots only (lib/media-kit/growth.ts). With fewer than
+ * two snapshots on different days it says so instead of showing a number.
+ */
+function GrowthSummary({ snapshots }: { snapshots: MediaKitSnapshot[] }) {
+  const { t } = useTranslation();
+  const now = new Date();
+  const rows = (
+    [
+      ["subscriber_count", "growth.subscribers"],
+      ["channel_view_count", "growth.views"],
+    ] as const
+  )
+    .map(([metric, label]) => ({ label, g: computeGrowth(snapshots, metric, now) }))
+    .filter((r): r is { label: "growth.subscribers" | "growth.views"; g: Growth } => r.g !== null);
+
+  return (
+    <div className="mt-3 border-t border-line pt-3" data-testid="growth-summary">
+      <p className="text-xs font-medium text-fg-muted">{t("growth.title")}</p>
+      {rows.length ? (
+        <>
+          <dl className="mt-1.5 space-y-1">
+            {rows.map(({ label, g }) => (
+              <div key={label} className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+                <dt className="text-fg-secondary">{t(label)}</dt>
+                <dd className={`tabular-nums ${g.change < 0 ? "text-danger" : g.change > 0 ? "text-success" : "text-fg"}`}>
+                  {g.pct === null
+                    ? t("growth.changeNoPct", { change: signed(g.change), days: g.days })
+                    : t("growth.change", { change: signed(g.change), pct: `${g.pct > 0 ? "+" : ""}${g.pct}%`, days: g.days })}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-1.5 text-xs text-fg-muted">
+            {/* Each date is isolated left-to-right (U+2066…U+2069) so it reads
+                correctly inside an Arabic sentence. */}
+            {t("growth.period", { from: `\u2066${rows[0].g.fromDate}\u2069`, to: `\u2066${rows[0].g.toDate}\u2069` })}
+          </p>
+        </>
+      ) : (
+        <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("growth.empty")}</p>
+      )}
     </div>
   );
 }

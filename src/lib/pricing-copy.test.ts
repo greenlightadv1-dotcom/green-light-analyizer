@@ -46,7 +46,12 @@ for (const [lang, dict] of Object.entries(DICTIONARIES)) {
   });
 
   test(`${lang}: no retired tier, old commission, or unbuilt feature is advertised`, () => {
-    const text = allStrings(dict).join("\n");
+    // The browser print button (printing.*) is a built feature and may say
+    // "PDF"; the retired "Media Kit PDF export" plan feature may not appear
+    // anywhere else, including pricing.
+    const { printing: _printing, ...rest } = dict as typeof dict & { printing?: unknown };
+    void _printing;
+    const text = allStrings(rest as typeof dict).join("\n");
     for (const banned of [
       /\bStarter\b/,
       /\bElite\b/,

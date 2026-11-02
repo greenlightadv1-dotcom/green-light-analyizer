@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { PrintButton } from "@/components/ui/PrintButton";
 import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -115,6 +116,10 @@ export default async function PublicProfilePage({
           </p>
         ) : null}
       </GlassPanel>
+
+      <div className="mt-6">
+        <PrintButton />
+      </div>
 
       <p className="mt-6 text-center text-[11px] leading-relaxed text-fg-muted">
         Sponsorship offers for {profile.full_name} go through Green Light — real

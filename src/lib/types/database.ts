@@ -332,6 +332,20 @@ type OAuthConnection = {
 };
 
 /** Columns with a database default (or that are nullable) are optional on insert. */
+/** Dated platform-stats measurement for growth (0025). Server-written only. */
+export type MediaKitSnapshot = {
+  id: number;
+  media_kit_id: string;
+  creator_id: string;
+  platform: Platform;
+  source: "youtube_data_api" | "instagram_graph_api";
+  captured_on: string;
+  captured_at: string;
+  subscriber_count: number | null;
+  channel_view_count: number | null;
+  media_count: number | null;
+};
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -416,6 +430,13 @@ export type Database = {
             keyof ViolationLog,
             "profile_id" | "matched_rules" | "redacted_excerpt"
           >
+        >
+      >;
+      media_kit_snapshots: Table<
+        MediaKitSnapshot,
+        Optional<
+          MediaKitSnapshot,
+          Exclude<keyof MediaKitSnapshot, "media_kit_id" | "creator_id" | "platform" | "source">
         >
       >;
       admin_actions: Table<

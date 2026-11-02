@@ -1135,6 +1135,19 @@ const fr: Dictionary = {
     messageNotSent: "Votre message n'a pas été envoyé et rien n'a été enregistré. Réessayez de l'envoyer.",
     dealRoomNotCreated: "L'espace de négociation n'a pas été créé ; rien n'a été ajouté à votre boîte. Réessayez « Ouvrir un salon de deal pour cette offre » dans un instant.",
   },
+  growth: {
+    title: "Croissance",
+    subscribers: "Abonnés",
+    views: "Vues de la chaîne",
+    change: "{change} ({pct}) en {days} jours",
+    changeNoPct: "{change} en {days} jours",
+    period: "Du {from} au {to}, d'après vos synchronisations YouTube",
+    empty: "La croissance s'affiche dès que vous avez synchronisé deux jours différents. L'historique est conservé 29 jours, comme l'exige la politique de données de YouTube.",
+  },
+  printing: {
+    button: "Imprimer ou enregistrer en PDF",
+    hint: "Utilise la fenêtre d'impression de votre navigateur ; choisissez « Enregistrer au format PDF » comme imprimante.",
+  },
 };
 
 export default fr;

@@ -19,6 +19,7 @@ import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import type { CountryShare, Database, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
+import { cutoffDay } from "./growth";
 import { MAX_CONNECTIONS, PLATFORMS, canAddConnection } from "./platforms";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 
@@ -377,6 +378,35 @@ export async function syncYoutubeStats(
       synced: false,
     };
   }
+
+  // Growth history (0025): one dated snapshot per kit per UTC day, written
+  // only after the stats themselves were saved. These are YouTube
+  // Non-Authorized Data, which may not be stored for more than 30 days, so
+  // this kit's snapshots older than 29 days are deleted here as well as by
+  // the daily freshness job. A failure here is logged and does not undo or
+  // fail the sync the creator just completed.
+  const today = new Date().toISOString().slice(0, 10);
+  const { error: snapshotError } = await service.from("media_kit_snapshots").upsert(
+    {
+      media_kit_id: kit.id,
+      creator_id: profile.id,
+      platform: "youtube",
+      source: "youtube_data_api",
+      captured_on: today,
+      captured_at: new Date().toISOString(),
+      subscriber_count: stats.subscriberCount,
+      channel_view_count: stats.viewCount,
+      media_count: stats.videoCount,
+    },
+    { onConflict: "media_kit_id,captured_on" },
+  );
+  if (snapshotError) log.error("media_kit_snapshot.write_failed", { media_kit_id: kit.id, error: snapshotError });
+  const { error: pruneError } = await service
+    .from("media_kit_snapshots")
+    .delete()
+    .eq("media_kit_id", kit.id)
+    .lt("captured_on", cutoffDay(new Date()));
+  if (pruneError) log.error("media_kit_snapshot.prune_failed", { media_kit_id: kit.id, error: pruneError });
 
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");

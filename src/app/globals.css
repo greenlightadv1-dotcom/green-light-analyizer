@@ -273,3 +273,16 @@ body {
 .g-bar { animation: g-bar 0.8s ease-in-out infinite; transform-origin: bottom; }
 .g-panel-in { animation: g-panel-in 0.22s ease-out; }
 .g-blink { animation: g-blink 1.6s ease-in-out infinite; }
+
+/* Print (Media Kit PDF v1 via the browser's "Save as PDF"): plain white page,
+   dark text, no glass blur or shadows, which print engines render poorly. */
+@media print {
+  :root, :root.dark { --color-fg: #231f20; color-scheme: light; }
+  body, :root.dark body { background: #ffffff !important; background-image: none !important; }
+  .glass-panel, .glass-panel-solid, :root.dark .glass-panel, :root.dark .glass-panel-solid {
+    background: #ffffff !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    border-color: #d4d4d8 !important;
+  }
+  .gl-skeleton { animation: none; }
+}

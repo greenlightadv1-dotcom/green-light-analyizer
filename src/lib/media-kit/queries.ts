@@ -5,7 +5,8 @@ export type { MediaKit } from "./helpers";
 export { kitByPlatform } from "./helpers";
 import type { MediaKit } from "./helpers";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
-import type { OAuthPlatform } from "@/lib/types/database";
+import type { MediaKitSnapshot, OAuthPlatform } from "@/lib/types/database";
+import { cutoffDay } from "./growth";
 
 /**
  * Reads for the Media Kit page. Uses the caller's client, so RLS decides what
@@ -46,4 +47,23 @@ export async function listAnalyticsConnections(
     }
   }
   return connections;
+}
+
+/**
+ * The caller's own growth snapshots (0025), newest first, within the 29-day
+ * window. Read with the caller's client: RLS limits it to the creator's own
+ * rows (or every row for an admin). Returns [] on any error, so the Media Kit
+ * shows "no growth yet" rather than failing.
+ */
+export async function listSnapshots(creatorId: string): Promise<MediaKitSnapshot[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("media_kit_snapshots")
+    .select("*")
+    .eq("creator_id", creatorId)
+    .gte("captured_on", cutoffDay(new Date()))
+    .order("captured_on", { ascending: false })
+    .limit(200);
+  if (error) return [];
+  return data ?? [];
 }

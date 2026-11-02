@@ -9,6 +9,7 @@ import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { ShareableLinkCard } from "@/components/media-kit/ShareableLinkCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
+import type { MediaKitSnapshot } from "@/lib/types/database";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { Alert } from "@/components/ui/Alert";
@@ -30,12 +31,15 @@ import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 export function MediaKitView({
   profile,
   kits,
+  snapshots = [],
   oauthConnected = null,
   oauthError = null,
   demo = false,
 }: {
   profile: Profile;
   kits: MediaKit[];
+  /** The creator's own growth snapshots (0025); empty means no growth to show. */
+  snapshots?: MediaKitSnapshot[];
   /** Preview: the classification form and document upload are inert. */
   demo?: boolean;
   /** Set right after a successful /api/oauth/[platform]/callback redirect. */
@@ -186,7 +190,7 @@ export function MediaKitView({
                   />
 
                   {platform === "youtube" ? (
-                    <YoutubeSyncPanel kit={kit} />
+                    <YoutubeSyncPanel kit={kit} snapshots={snapshots.filter((s) => s.media_kit_id === kit.id)} />
                   ) : null}
 
                   {platform === "instagram" &&

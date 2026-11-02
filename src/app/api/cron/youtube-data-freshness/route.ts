@@ -4,6 +4,7 @@ import { log } from "@/lib/log";
 import { clearedVerifiedGeo, clearedYouTubeStats, staleCleanupCutoff } from "@/lib/oauth/youtube-freshness";
 import { getValidAccessToken } from "@/lib/oauth/youtube";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cutoffDay } from "@/lib/media-kit/growth";
 
 /**
  * Daily YouTube API data upkeep (G1) — see lib/oauth/youtube-freshness.ts for
@@ -58,6 +59,15 @@ export async function GET(request: NextRequest) {
     .select("id");
   if (statsError) log.error("youtube_freshness.stats_clear_failed", { error: statsError });
 
+  // Growth snapshots (0025) hold the same Non-Authorized YouTube statistics,
+  // so they follow the same rule: nothing older than 29 days is kept.
+  const { data: snapshotsDeleted, error: snapshotError } = await service
+    .from("media_kit_snapshots")
+    .delete()
+    .lt("captured_on", cutoffDay(new Date()))
+    .select("id");
+  if (snapshotError) log.error("youtube_freshness.snapshot_prune_failed", { error: snapshotError });
+
   const { data: connections, error: listError } = await service
     .from("oauth_connections")
     .select("creator_id")
@@ -78,6 +88,7 @@ export async function GET(request: NextRequest) {
   const summary = {
     stale_kits_cleared: cleared?.length ?? 0,
     stale_stats_cleared: statsCleared?.length ?? 0,
+    snapshots_deleted: snapshotsDeleted?.length ?? 0,
     tokens_checked: checked,
     tokens_unavailable: unavailable,
     tokens_pending: Math.max((connections?.length ?? 0) - checked, 0),

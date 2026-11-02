@@ -1135,6 +1135,19 @@ const es: Dictionary = {
     messageNotSent: "Tu mensaje no se envió y no se guardó nada. Intenta enviarlo de nuevo.",
     dealRoomNotCreated: "La sala de negociación no se creó, así que no se añadió nada a tu bandeja. Vuelve a intentar «Abrir una sala de deal para esta oferta» en un momento.",
   },
+  growth: {
+    title: "Crecimiento",
+    subscribers: "Suscriptores",
+    views: "Vistas del canal",
+    change: "{change} ({pct}) en {days} días",
+    changeNoPct: "{change} en {days} días",
+    period: "Del {from} al {to}, según tus sincronizaciones de YouTube",
+    empty: "El crecimiento aparece cuando hayas sincronizado en dos días distintos. El historial se guarda 29 días, como exige la política de datos de YouTube.",
+  },
+  printing: {
+    button: "Imprimir o guardar como PDF",
+    hint: "Usa el diálogo de impresión de tu navegador; elige «Guardar como PDF» como impresora.",
+  },
 };
 
 export default es;

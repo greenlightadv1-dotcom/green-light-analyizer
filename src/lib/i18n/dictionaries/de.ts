@@ -1135,6 +1135,19 @@ const de: Dictionary = {
     messageNotSent: "Deine Nachricht wurde nicht gesendet und nichts wurde gespeichert. Versuch sie erneut zu senden.",
     dealRoomNotCreated: "Der Deal-Raum wurde nicht erstellt; deinem Postfach wurde nichts hinzugefügt. Versuch „Deal-Raum für dieses Angebot öffnen“ gleich noch einmal.",
   },
+  growth: {
+    title: "Wachstum",
+    subscribers: "Abonnenten",
+    views: "Kanalaufrufe",
+    change: "{change} ({pct}) in {days} Tagen",
+    changeNoPct: "{change} in {days} Tagen",
+    period: "{from} bis {to}, aus deinen YouTube-Synchronisierungen",
+    empty: "Wachstum erscheint, sobald du an zwei verschiedenen Tagen synchronisiert hast. Der Verlauf wird 29 Tage gespeichert, wie es die Datenrichtlinie von YouTube verlangt.",
+  },
+  printing: {
+    button: "Drucken oder als PDF speichern",
+    hint: "Nutzt den Druckdialog deines Browsers; wähle „Als PDF speichern“ als Drucker.",
+  },
 };
 
 export default de;

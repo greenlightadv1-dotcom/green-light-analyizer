@@ -1,6 +1,7 @@
 import type { Profile } from "@/lib/auth";
 import type { DealChat, Message } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
+import type { MediaKitSnapshot } from "@/lib/types/database";
 
 /**
  * Mock dataset for the UI preview at /preview.
@@ -317,5 +318,24 @@ export const mockKits: MediaKit[] = [
     channel_view_count: null,
     media_count: null,
     content_tags: null,
+  },
+];
+
+/**
+ * Two invented growth snapshots for the preview's YouTube kit, 8 days apart,
+ * so the Media Kit's growth summary renders. Real snapshots are written only
+ * by the YouTube stats sync (migration 0025).
+ */
+const dayAgo = (days: number) => new Date(now - days * 86_400_000).toISOString().slice(0, 10);
+export const mockSnapshots: MediaKitSnapshot[] = [
+  {
+    id: 2, media_kit_id: "00000000-0000-4000-8000-00000000cc01", creator_id: mockProfile.id, platform: "youtube",
+    source: "youtube_data_api", captured_on: dayAgo(0), captured_at: ago(180),
+    subscriber_count: 212_000, channel_view_count: 18_400_000, media_count: 340,
+  },
+  {
+    id: 1, media_kit_id: "00000000-0000-4000-8000-00000000cc01", creator_id: mockProfile.id, platform: "youtube",
+    source: "youtube_data_api", captured_on: dayAgo(8), captured_at: ago(8 * 1440),
+    subscriber_count: 208_500, channel_view_count: 18_050_000, media_count: 337,
   },
 ];

@@ -1147,6 +1147,19 @@ const en = {
     messageNotSent: "Your message was not sent and nothing was stored. Try sending it again.",
     dealRoomNotCreated: "The deal room was not created, so nothing was added to your inbox. Try “Open a deal room for this offer” again in a moment.",
   },
+  growth: {
+    title: "Growth",
+    subscribers: "Subscribers",
+    views: "Channel views",
+    change: "{change} ({pct}) over {days} days",
+    changeNoPct: "{change} over {days} days",
+    period: "{from} to {to}, from your YouTube syncs",
+    empty: "Growth appears once you have synced on two different days. History is kept for 29 days, as YouTube's data policy requires.",
+  },
+  printing: {
+    button: "Print or save as PDF",
+    hint: "Uses your browser's print dialog; choose “Save as PDF” as the printer.",
+  },
 };
 
 export default en;
