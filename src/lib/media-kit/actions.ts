@@ -659,22 +659,11 @@ export async function saveCreatorProfile(
   if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, saved: false };
 
   const bio = String(formData.get("bio") ?? "").trim().slice(0, 1000) || null;
-  const avatarUrl = String(formData.get("avatar_url") ?? "").trim() || null;
   const country = String(formData.get("country") ?? "").trim().slice(0, 100) || null;
   const primaryLanguage = String(formData.get("primary_language") ?? "").trim().slice(0, 100) || null;
   const baseRateRaw = String(formData.get("base_rate_usd") ?? "").trim();
   const baseRateUsd = baseRateRaw ? Number(baseRateRaw) : null;
 
-  if (avatarUrl) {
-    try {
-      const url = new URL(avatarUrl);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        return { error: "Avatar must be an http(s) link.", saved: false };
-      }
-    } catch {
-      return { error: "Avatar must be a valid link.", saved: false };
-    }
-  }
   if (baseRateUsd !== null && (!Number.isFinite(baseRateUsd) || baseRateUsd < 0)) {
     return { error: "Base rate must be a non-negative, whole number.", saved: false };
   }
@@ -693,7 +682,9 @@ export async function saveCreatorProfile(
     .from("profiles")
     .update({
       bio,
-      avatar_url: avatarUrl,
+      // avatar_url is no longer a typed link: it is set only by the upload
+      // route (/api/uploads/avatar), which stores the file in the caller's
+      // own folder and writes the URL itself.
       country,
       primary_language: primaryLanguage,
       base_rate_usd: baseRateUsd,

@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarUpload } from "@/components/uploads/AvatarUpload";
+
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/Alert";
@@ -58,31 +60,9 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
         <h2 className="text-sm font-semibold text-fg">{t("mediaKit.creatorProfile")}</h2>
 
         <div className="mt-4 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-fg/10 bg-fg/5">
-              {profile.avatar_url ? (
-                // Arbitrary creator-supplied external URL; next/image needs a
-                // configured remote-pattern allowlist that can't cover an
-                // unknown host set.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-fg-muted">
-                  {profile.full_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <Field
-                id="avatar_url"
-                name="avatar_url"
-                type="url"
-                label={t("mediaKit.avatarUrl")}
-                placeholder="https://…"
-                defaultValue={profile.avatar_url ?? ""}
-              />
-            </div>
-          </div>
+          {/* Drag-and-drop upload with preview, progress, replace and remove
+              (components/uploads). Replaces the old "paste an image link" field. */}
+          <AvatarUpload initialUrl={profile.avatar_url ?? null} />
 
           <div className="space-y-1.5">
             <p className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
