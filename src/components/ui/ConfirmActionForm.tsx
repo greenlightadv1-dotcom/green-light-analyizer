@@ -90,6 +90,13 @@ export function ConfirmActionForm({
         <button type="submit" className={triggerClassName}>
           {t(trigger.labelKey, trigger.params)}
         </button>
+        {error && !open ? (
+          // The dialog was closed while the request was running (see Dialog):
+          // the outcome must still be visible.
+          <p role="alert" className="basis-full text-xs text-danger">
+            {error}
+          </p>
+        ) : null}
         {done && successKey ? (
           <p role="status" className="basis-full text-xs text-success">
             {t(successKey, params)}

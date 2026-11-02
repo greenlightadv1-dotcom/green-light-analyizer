@@ -31,7 +31,7 @@ export async function updateDisplayName(
     .update({ full_name: fullName })
     .eq("id", profile.id);
 
-  if (error) return { error: "Your name was not changed: the update was not accepted. Try again; if it keeps failing, contact support.", saved: false };
+  if (error) return { error: "actionErrors.nameNotChanged", saved: false };
 
   revalidatePath("/settings");
   return { error: null, saved: true };
@@ -103,7 +103,7 @@ export async function updateWhatsAppSettings(
     })
     .eq("id", profile.id);
 
-  if (error) return { error: "Your WhatsApp settings were not changed: the update was not accepted. Try again; if it keeps failing, contact support.", saved: false };
+  if (error) return { error: "actionErrors.whatsappNotChanged", saved: false };
 
   revalidatePath("/settings");
   return { error: null, saved: true };

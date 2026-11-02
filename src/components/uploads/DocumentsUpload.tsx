@@ -81,9 +81,9 @@ export function DocumentsUpload({ demo = false }: { demo?: boolean }) {
         </p>
       ) : null}
       {files === null ? (
-        <p className="text-xs text-fg/45">{t("uploads.loading")}</p>
+        <p className="text-xs text-fg-muted">{t("uploads.loading")}</p>
       ) : files.length === 0 ? (
-        <p className="text-xs text-fg/45">{t("uploads.noDocuments")}</p>
+        <p className="text-xs text-fg-muted">{t("uploads.noDocuments")}</p>
       ) : (
         <ul className="divide-y divide-fg/10 rounded-xl border border-fg/10">
           {files.map((f) => (
@@ -95,14 +95,14 @@ export function DocumentsUpload({ demo = false }: { demo?: boolean }) {
               ) : (
                 <span className="truncate text-fg" dir="ltr">{f.name}</span>
               )}
-              <button type="button" onClick={() => remove(f.path)} className="shrink-0 text-xs text-fg/55 underline hover:text-fg">
+              <button type="button" onClick={() => remove(f.path)} className="shrink-0 text-xs text-fg-muted underline hover:text-fg">
                 {t("uploads.remove")}
               </button>
             </li>
           ))}
         </ul>
       )}
-      <p className="text-xs text-fg/45">{t("uploads.documentsPrivate")}</p>
+      <p className="text-xs text-fg-muted">{t("uploads.documentsPrivate")}</p>
     </div>
   );
 }

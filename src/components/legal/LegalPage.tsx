@@ -34,10 +34,10 @@ export function LegalPage({
         <h1 className="mt-7 text-3xl font-semibold tracking-tight text-fg">
           {title}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-fg/55">
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-fg-muted">
           {summary}
         </p>
-        <p className="mt-4 font-mono text-xs text-fg/40">
+        <p className="mt-4 font-mono text-xs text-fg-muted">
           Last updated {LEGAL_LAST_UPDATED}
         </p>
       </header>
@@ -63,7 +63,7 @@ export function LegalPage({
         </article>
       </GlassPanel>
 
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 text-xs text-fg/40">
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 text-xs text-fg-muted">
         <div className="flex flex-wrap gap-4">
           <Link href="/terms" className="transition hover:text-fg/70">
             Terms of Service
@@ -80,7 +80,7 @@ export function LegalPage({
         </p>
       </footer>
 
-      <p className="mt-6 text-[11px] leading-relaxed text-fg/30">
+      <p className="mt-6 text-[11px] leading-relaxed text-fg-muted">
         This document is published in English only. Green Light&apos;s interface
         is available in five languages, but the legal documents are not
         translated: a mistranslated term of art changes what the parties agreed

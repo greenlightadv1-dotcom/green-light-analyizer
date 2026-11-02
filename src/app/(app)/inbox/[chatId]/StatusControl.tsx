@@ -106,6 +106,12 @@ export function StatusControl({
         })}
       </div>
 
+      {error && target === null ? (
+        <p role="alert" className="mt-3 text-xs text-danger">
+          {error}
+        </p>
+      ) : null}
+
       {done ? (
         <p role="status" className="mt-3 text-xs text-success">
           {t("dealStatus.changed")}

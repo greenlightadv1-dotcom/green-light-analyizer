@@ -59,7 +59,7 @@ export function AvatarUpload({ initialUrl, demo = false }: { initialUrl: string 
           // eslint-disable-next-line @next/next/no-img-element -- user upload from storage; next/image would need remote config per project
           <img src={shown} alt={t("uploads.previewAlt")} className="h-full w-full object-cover" />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-xs text-fg/40">{t("uploads.none")}</span>
+          <span className="flex h-full w-full items-center justify-center text-xs text-fg-muted">{t("uploads.none")}</span>
         )}
       </div>
       <div className="flex-1 space-y-2">
@@ -76,7 +76,7 @@ export function AvatarUpload({ initialUrl, demo = false }: { initialUrl: string 
           </p>
         ) : null}
         {url ? (
-          <button type="button" onClick={remove} className="text-xs text-fg/55 underline hover:text-fg">
+          <button type="button" onClick={remove} className="text-xs text-fg-muted underline hover:text-fg">
             {t("uploads.remove")}
           </button>
         ) : null}

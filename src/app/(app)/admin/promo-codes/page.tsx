@@ -49,19 +49,19 @@ export default async function PromoCodesPage() {
                 <span className="text-xs text-fg/60">
                   {c.target_plan} (legacy) · {c.duration_days}d
                 </span>
-                <span className="text-xs text-fg/40">
+                <span className="text-xs text-fg-muted">
                   code valid until{" "}
                   {new Date(c.expires_at).toLocaleDateString()}
                 </span>
                 {c.is_used ? (
-                  <span className="text-xs text-fg/40">Redeemed</span>
+                  <span className="text-xs text-fg-muted">Redeemed</span>
                 ) : (
                   <span className="text-xs text-brand-green">Unused</span>
                 )}
               </li>
             ))}
             {!codes?.length ? (
-              <li className="px-5 py-8 text-sm text-fg/40">
+              <li className="px-5 py-8 text-sm text-fg-muted">
                 No codes yet.
               </li>
             ) : null}

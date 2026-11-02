@@ -108,7 +108,7 @@ export async function saveMediaKit(
 
   if (error) {
     return {
-      error: "Nothing was saved: the update was not accepted. Check your entries and press Save again; if it keeps failing, contact support.",
+      error: "actionErrors.notSaved",
       savedPlatform: null,
     };
   }
@@ -255,7 +255,7 @@ export async function syncVerifiedGeo(
     );
     if (!countries) {
       return {
-      error: "Instagram did not respond, so nothing was synced and your existing figures are unchanged. Try again in a few minutes.",
+      error: "actionErrors.instagramNoResponse",
       synced: false,
     };
     }
@@ -275,7 +275,7 @@ export async function syncVerifiedGeo(
 
   if (error) {
     return {
-      error: "Your audience data was fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      error: "actionErrors.geoFetchedNotSaved",
       synced: false,
     };
   }
@@ -348,7 +348,7 @@ export async function syncYoutubeStats(
   if (!stats) {
     return {
       error:
-        "YouTube returned no channel for this handle, or could not be reached. Nothing was synced. Check the handle above, then try again; if it keeps failing, contact support.",
+        "actionErrors.youtubeNotReached",
       synced: false,
     };
   }
@@ -373,7 +373,7 @@ export async function syncYoutubeStats(
 
   if (error) {
     return {
-      error: "Your YouTube stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      error: "actionErrors.youtubeStatsNotSaved",
       synced: false,
     };
   }
@@ -431,7 +431,7 @@ export async function syncInstagramStats(
   );
   if (!metrics) {
     return {
-      error: "Instagram did not respond, so nothing was synced and your existing figures are unchanged. Try again in a few minutes.",
+      error: "actionErrors.instagramNoResponse",
       synced: false,
     };
   }
@@ -448,7 +448,7 @@ export async function syncInstagramStats(
 
   if (error) {
     return {
-      error: "Your Instagram stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      error: "actionErrors.instagramStatsNotSaved",
       synced: false,
     };
   }
@@ -510,7 +510,7 @@ export async function detectNiche(
     const videos = await fetchYoutubeRecentVideos(kit.platform_handle);
     if (!videos) {
       return {
-        error: "Your recent YouTube videos could not be read, so your niche was not changed. Check the channel handle above, then try again; if it keeps failing, contact support.",
+        error: "actionErrors.youtubeVideosUnreadable",
         result: null,
       };
     }
@@ -536,7 +536,7 @@ export async function detectNiche(
     );
     if (!posts) {
       return {
-        error: "Instagram did not return your recent posts, so your niche was not changed. Try again in a few minutes.",
+        error: "actionErrors.instagramPostsUnreadable",
         result: null,
       };
     }
@@ -551,7 +551,7 @@ export async function detectNiche(
   const niche = await detectNicheWithAi(items);
   if (!niche) {
     return {
-      error: "The AI service could not suggest a niche right now, so nothing was changed. You can pick a category yourself in the form above, or try again later.",
+      error: "actionErrors.nicheUnavailable",
       result: null,
     };
   }
@@ -564,7 +564,7 @@ export async function detectNiche(
 
   if (error) {
     return {
-      error: "A niche was suggested but could not be saved, so your category is unchanged. Try again.",
+      error: "actionErrors.nicheNotSaved",
       result: null,
     };
   }
@@ -670,7 +670,7 @@ export async function saveCreatorProfile(
 
   if (error) {
     return {
-      error: "Nothing was saved: the update was not accepted. Check your entries and press Save again; if it keeps failing, contact support.",
+      error: "actionErrors.notSaved",
       saved: false,
     };
   }

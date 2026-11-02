@@ -56,7 +56,7 @@ export function VerificationPanel({
   if (availability === "unsupported") {
     return (
       <div className="rounded-xl border border-fg/8 bg-fg/3 p-3.5">
-        <p className="text-xs leading-relaxed text-fg/40">{support.note}</p>
+        <p className="text-xs leading-relaxed text-fg-muted">{support.note}</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export function VerificationPanel({
     return (
       <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
         <IntegrationStatusBadge status="in_development" />
-        <p className="mt-2 text-xs leading-relaxed text-fg/50">
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
           {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       </div>
@@ -74,7 +74,7 @@ export function VerificationPanel({
 
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
-      <p className="text-xs leading-relaxed text-fg/55">{support.note}</p>
+      <p className="text-xs leading-relaxed text-fg-muted">{support.note}</p>
       <Link
         href="/settings"
         className="mt-2.5 inline-block text-xs text-brand-green underline underline-offset-4 transition hover:text-fg"

@@ -53,15 +53,15 @@ export function OnboardingView({
           <span className="font-semibold text-fg">
             {onboarding.complete ? t("onboarding.allDone") : t("onboarding.progress", { done: String(onboarding.done), total: String(onboarding.required) })}
           </span>
-          <span className="text-fg/50">{pct}%</span>
+          <span className="text-fg-muted">{pct}%</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-fg/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t("onboarding.title")}>
           <div className="h-full bg-brand-green" style={{ width: `${pct}%` }} />
         </div>
         {role === "company" && !onboarding.steps.find((s) => s.id === "company_details")?.done ? (
-          <p className="mt-3 text-xs text-fg/55">{t("onboarding.offersGated")}</p>
+          <p className="mt-3 text-xs text-fg-muted">{t("onboarding.offersGated")}</p>
         ) : null}
-        {representsCompany ? <p className="mt-3 text-xs text-fg/55">{t("onboarding.representing", { company: representsCompany })}</p> : null}
+        {representsCompany ? <p className="mt-3 text-xs text-fg-muted">{t("onboarding.representing", { company: representsCompany })}</p> : null}
       </GlassPanel>
 
       <ol className="space-y-3">
@@ -80,7 +80,7 @@ export function OnboardingView({
                 <div className="min-w-0 flex-1">
                   <h2 className="text-sm font-semibold text-fg">
                     {t(`onboarding.step.${step.id}.title`)}
-                    {step.optional ? <span className="ms-2 text-xs font-normal text-fg/45">{t("onboarding.optional")}</span> : null}
+                    {step.optional ? <span className="ms-2 text-xs font-normal text-fg-muted">{t("onboarding.optional")}</span> : null}
                     <span className="sr-only"> — {step.done ? t("onboarding.done") : t("onboarding.todo")}</span>
                   </h2>
                   <p className="mt-1 text-sm leading-relaxed text-fg/60">{t(`onboarding.step.${step.id}.body`)}</p>

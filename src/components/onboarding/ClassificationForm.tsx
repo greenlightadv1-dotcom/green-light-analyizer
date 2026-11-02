@@ -28,7 +28,7 @@ function Chips({
   return (
     <fieldset>
       <legend className="text-xs font-medium tracking-wide text-fg/70 uppercase">
-        {label} <span className="normal-case text-fg/45">{t("onboarding.upTo", { n: String(max) })}</span>
+        {label} <span className="normal-case text-fg-muted">{t("onboarding.upTo", { n: String(max) })}</span>
       </legend>
       <div className="mt-2 flex flex-wrap gap-2">
         {options.map((o) => {

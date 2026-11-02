@@ -70,7 +70,7 @@ export function DiscoverView({
             )}
             <div className="min-w-0">
               <p className="text-sm font-semibold break-words text-fg">{c.full_name}</p>
-              <p className="mt-0.5 text-xs text-fg/45">
+              <p className="mt-0.5 text-xs text-fg-muted">
                 {c.platforms?.length
                   ? c.platforms.map((p) => PLATFORM_LABELS[p as Platform] ?? p).join(", ")
                   : t("discover.noPlatforms")}
@@ -97,21 +97,21 @@ export function DiscoverView({
 
         <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-fg/8 pt-4 sm:grid-cols-3">
           <div>
-            <dt className="text-[11px] text-fg/45">{t("g.metric.avg_views")}</dt>
+            <dt className="text-[11px] text-fg-muted">{t("g.metric.avg_views")}</dt>
             <dd className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-fg">
               {c.avg_views !== null ? compact(c.avg_views, locale) : "—"}
               <ProvenanceBadge provenance={c.avg_views !== null ? "self_reported" : "missing"} />
             </dd>
           </div>
           <div>
-            <dt className="text-[11px] text-fg/45">{t("g.metric.engagement_rate")}</dt>
+            <dt className="text-[11px] text-fg-muted">{t("g.metric.engagement_rate")}</dt>
             <dd className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-fg">
               {c.engagement_rate !== null ? `${Number(c.engagement_rate)}%` : "—"}
               <ProvenanceBadge provenance={c.engagement_rate !== null ? "self_reported" : "missing"} />
             </dd>
           </div>
           <div>
-            <dt className="text-[11px] text-fg/45">{t("g.metric.base_rate_usd")}</dt>
+            <dt className="text-[11px] text-fg-muted">{t("g.metric.base_rate_usd")}</dt>
             <dd className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-fg">
               {c.base_rate_usd !== null && c.base_rate_usd !== undefined ? `$${Number(c.base_rate_usd)}` : "—"}
               <ProvenanceBadge provenance={c.base_rate_usd !== null && c.base_rate_usd !== undefined ? "self_reported" : "missing"} />
@@ -143,7 +143,7 @@ export function DiscoverView({
           <button
             type="button"
             onClick={() => emitG({ type: "ask", text: t("discover.askGAbout", { name: c.full_name }) })}
-            className="text-fg/55 underline underline-offset-4 hover:text-fg"
+            className="text-fg-muted underline underline-offset-4 hover:text-fg"
           >
             {t("discover.askG")}
           </button>
@@ -158,11 +158,11 @@ export function DiscoverView({
 
       <GlassPanel as="section" className="mb-4 p-4 sm:p-5">
         <form method="get" action="/discover" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="space-y-1 text-xs text-fg/55 lg:col-span-2">
+          <label className="space-y-1 text-xs text-fg-muted lg:col-span-2">
             <span>{t("discover.search")}</span>
             <input name="q" defaultValue={query.q} className={INPUT} placeholder={t("discover.searchPlaceholder")} />
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.category")}</span>
             <select name="category" defaultValue={query.category ?? ""} className={INPUT}>
               <option value="">{t("discover.any")}</option>
@@ -173,7 +173,7 @@ export function DiscoverView({
               ))}
             </select>
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.game")}</span>
             <select name="game" defaultValue={query.game ?? ""} className={INPUT}>
               <option value="">{t("discover.any")}</option>
@@ -184,7 +184,7 @@ export function DiscoverView({
               ))}
             </select>
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.platform")}</span>
             <select name="platform" defaultValue={query.platform ?? ""} className={INPUT}>
               <option value="">{t("discover.any")}</option>
@@ -195,7 +195,7 @@ export function DiscoverView({
               ))}
             </select>
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.country")}</span>
             <input
               name="country"
@@ -206,11 +206,11 @@ export function DiscoverView({
               dir="ltr"
             />
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.minViews")}</span>
             <input name="minViews" type="number" min={0} defaultValue={query.minViews ?? ""} className={INPUT} dir="ltr" />
           </label>
-          <label className="space-y-1 text-xs text-fg/55">
+          <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.sort")}</span>
             <select name="sort" defaultValue={query.sort} className={INPUT}>
               {DISCOVERY_SORTS.map((s) => (
@@ -225,7 +225,7 @@ export function DiscoverView({
             {t("discover.verifiedOnly")}
           </label>
           <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-2 lg:justify-end">
-            <Link href="/discover" className="text-xs text-fg/50 underline underline-offset-4 hover:text-fg">
+            <Link href="/discover" className="text-xs text-fg-muted underline underline-offset-4 hover:text-fg">
               {t("discover.reset")}
             </Link>
             <button
@@ -236,7 +236,7 @@ export function DiscoverView({
             </button>
           </div>
         </form>
-        <p className="mt-3 text-[11px] leading-relaxed text-fg/40">{t(`discover.sortExplain.${query.sort}`)}</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">{t(`discover.sortExplain.${query.sort}`)}</p>
       </GlassPanel>
 
       {selected ? <div className="mb-4">{card(selected, true)}</div> : null}
@@ -247,7 +247,7 @@ export function DiscoverView({
         <EmptyState title={t("discover.noMatchTitle")} body={t("discover.noMatchBody")} />
       ) : (
         <>
-          <p className="mb-3 text-xs text-fg/45" aria-live="polite">
+          <p className="mb-3 text-xs text-fg-muted" aria-live="polite">
             {t("discover.resultCount", { count: total })}
           </p>
           <div className="space-y-3">{items.map((c) => card(c))}</div>

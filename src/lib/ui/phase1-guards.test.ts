@@ -7,7 +7,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import en from "../i18n/dictionaries/en.ts";
 import ar from "../i18n/dictionaries/ar.ts";
@@ -139,4 +139,35 @@ test("the G launcher clears content on phones and respects the safe area", () =>
   for (const p of ["app/(app)/layout.tsx", "app/preview/layout.tsx"]) {
     assert.match(read(p), /min-w-0 flex-1 pb-24/, p);
   }
+});
+
+test("every dictionary key a server action returns as an error exists in English", () => {
+  const files = [
+    "lib/media-kit/actions.ts",
+    "app/(app)/settings/actions.ts",
+    "app/(app)/inbox/[chatId]/actions.ts",
+    "app/(app)/analyzer/actions.ts",
+    "app/(app)/admin/violations/actions.ts",
+    "app/(app)/admin/users/actions.ts",
+    "app/(app)/admin/requests/actions.ts",
+  ];
+  const base = flatten(en as unknown as Tree);
+  let seen = 0;
+  for (const f of files) {
+    for (const m of read(f).matchAll(/"((?:actionErrors|ui|admin|dealStatus)\.[a-zA-Z.]+)"/g)) {
+      seen++;
+      assert.ok(base.has(m[1]), `${f}: ${m[1]} is not in the English dictionary`);
+    }
+  }
+  assert.ok(seen >= 30, `only ${seen} keys found`);
+});
+
+test("no body text uses the low-contrast fg/30–55 opacities (WCAG AA)", () => {
+  const walk = (d: string): string[] =>
+    readdirSync(d).flatMap((n) => {
+      const p = join(d, n);
+      return statSync(p).isDirectory() ? walk(p) : p.endsWith(".tsx") ? [p] : [];
+    });
+  const hits = walk(SRC).filter((f) => /(^|[^:a-z-])text-fg\/(30|35|40|45|50|55)\b/.test(readFileSync(f, "utf8")));
+  assert.deepEqual(hits, [], "use text-fg-muted (64%) instead");
 });

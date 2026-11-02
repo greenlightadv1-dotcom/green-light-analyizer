@@ -67,7 +67,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-fg/30">
+                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-fg-muted">
                   {profile.full_name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -89,7 +89,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
               {t("mediaKit.nameLabel")}
             </p>
             <p className="text-sm text-fg">{profile.full_name}</p>
-            <p className="text-xs text-fg/40">{t("mediaKit.editNameInSettings")}</p>
+            <p className="text-xs text-fg-muted">{t("mediaKit.editNameInSettings")}</p>
           </div>
 
           <div className="space-y-1.5">
@@ -140,7 +140,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
 
       <GlassPanel className="p-6">
         <h2 className="text-sm font-semibold text-fg">{t("mediaKit.socialAccounts")}</h2>
-        <p className="mt-1 text-xs text-fg/40">{t("mediaKit.socialAccountsNote")}</p>
+        <p className="mt-1 text-xs text-fg-muted">{t("mediaKit.socialAccountsNote")}</p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {SOCIAL_FIELDS.map(({ key, labelKey, placeholder }) => (
@@ -156,7 +156,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
         </div>
       </GlassPanel>
 
-      {state.error ? <Alert>{state.error}</Alert> : null}
+      {state.error ? <Alert>{t(state.error)}</Alert> : null}
       {state.saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
       <SaveButton />

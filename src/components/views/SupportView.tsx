@@ -53,9 +53,9 @@ export function SupportView() {
       <GlassPanel as="section" className="mb-4 p-5 sm:p-6">
         <h2 className="text-sm font-semibold text-fg">{t("support.hoursTitle")}</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-fg/65">{t("support.hours")}</p>
-        <p className="mt-1 text-xs leading-relaxed text-fg/45">{t("support.hoursNote")}</p>
+        <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("support.hoursNote")}</p>
         {openNow === null ? null : (
-          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg/50"}`}>
+          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg-muted"}`}>
             {openNow ? t("support.openNow") : t("support.closedNow")}
           </p>
         )}
@@ -74,7 +74,7 @@ export function SupportView() {
                 <p className="mt-1.5 flex-1 text-sm leading-relaxed text-fg/60">{t(keys.body)}</p>
                 {channel.id === "email" ? (
                   // The address itself, so it can be copied when no mail app is set up.
-                  <p className="mt-3 text-xs break-all text-fg/50" dir="ltr">
+                  <p className="mt-3 text-xs break-all text-fg-muted" dir="ltr">
                     {SUPPORT_EMAIL}
                   </p>
                 ) : null}

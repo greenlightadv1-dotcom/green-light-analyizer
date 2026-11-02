@@ -101,13 +101,13 @@ export function MediaKitView({
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.platforms")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
-            {kits.length} <span className="text-sm text-fg/35">/ {limit}</span>
+            {kits.length} <span className="text-sm text-fg-muted">/ {limit}</span>
           </p>
-          <p className="mt-2 text-xs text-fg/40">
+          <p className="mt-2 text-xs text-fg-muted">
             {t("mediaKit.planLabel")}{" "}
             {canAddConnection(kits.length)
               ? t("mediaKit.canConnectMore")
@@ -116,19 +116,19 @@ export function MediaKitView({
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.verifiedAudiences")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {verifiedCount}
           </p>
-          <p className="mt-2 text-xs text-fg/40">
+          <p className="mt-2 text-xs text-fg-muted">
             {t("mediaKit.verifiedIncluded")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.pricingImpact")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-fg/60">
@@ -206,7 +206,7 @@ export function MediaKitView({
         stored. Flagged rather than silently widened — adding a platform is a
         product decision.
       */}
-      <p className="mt-6 text-xs leading-relaxed text-fg/30">
+      <p className="mt-6 text-xs leading-relaxed text-fg-muted">
         {t("mediaKit.tiktokNote")}
       </p>
 

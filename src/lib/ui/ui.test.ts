@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { nextTabIndex } from "./tabs.ts";
+import { utcStamp } from "./format.ts";
 import { clampPage, paginationItems } from "./pagination.ts";
 import { DEAL_STATUS_LABEL_KEY, DEAL_STATUS_TONE, TONE_CLASSES, dealStatusChangeNeedsConfirm } from "./status.ts";
 
@@ -71,4 +72,11 @@ test("status: any real change needs confirmation; re-selecting does not", () => 
   assert.equal(dealStatusChangeNeedsConfirm("new", "agreed"), true);
   assert.equal(dealStatusChangeNeedsConfirm("agreed", "paid"), true);
   assert.equal(dealStatusChangeNeedsConfirm("agreed", "agreed"), false);
+});
+
+test("utcStamp: same text everywhere, empty for missing or invalid input", () => {
+  assert.equal(utcStamp("2026-11-02T14:05:59.123Z"), "2026-11-02 14:05 UTC");
+  assert.equal(utcStamp("2026-11-02T16:05:00+02:00"), "2026-11-02 14:05 UTC");
+  assert.equal(utcStamp(null), "");
+  assert.equal(utcStamp("not a date"), "");
 });

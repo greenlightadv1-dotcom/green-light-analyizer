@@ -53,7 +53,7 @@ export function DashboardView({
         >
           <div>
             <p className="text-sm font-semibold text-fg">{t("dashboard.completeProfileTitle")}</p>
-            <p className="mt-1 text-xs leading-relaxed text-fg/55">{t("dashboard.completeProfileBody")}</p>
+            <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("dashboard.completeProfileBody")}</p>
           </div>
           <span className="shrink-0 text-xs font-medium text-brand-green">
             {t("dashboard.completeProfileCta")}
@@ -63,20 +63,20 @@ export function DashboardView({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("dashboard.openDeals")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {openDeals}
           </p>
-          <p className="mt-2 text-xs text-fg/40">
+          <p className="mt-2 text-xs text-fg-muted">
             {t("dashboard.pricingNote", { pct: CREATOR_COMMISSION })}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs tracking-wide text-fg/45 uppercase">
+            <p className="text-xs tracking-wide text-fg-muted uppercase">
               {t("dashboard.inboundAlias")}
             </p>
             {profile.inbound_alias ? <CopyButton value={profile.inbound_alias} /> : null}
@@ -84,7 +84,7 @@ export function DashboardView({
           <p className="mt-2 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {profile.inbound_alias ?? t("dashboard.notIssuedYet")}
           </p>
-          <p className="mt-2 text-xs text-fg/40">
+          <p className="mt-2 text-xs text-fg-muted">
             {t("dashboard.forwardEmailNote")}
           </p>
         </GlassPanel>
@@ -105,7 +105,7 @@ export function DashboardView({
                 </h2>
                 <Link
                   href="/inbox"
-                  className="text-xs text-fg/45 transition hover:text-fg/80"
+                  className="text-xs text-fg-muted transition hover:text-fg/80"
                 >
                   {t("dashboard.viewAll", { count: chats.length })}
                 </Link>
@@ -146,7 +146,7 @@ export function DashboardView({
             {t("dashboard.audienceVerification")}
           </h2>
           {verifiedKits > 0 ? (
-            <p className="mt-2 text-sm leading-relaxed text-fg/55">
+            <p className="mt-2 text-sm leading-relaxed text-fg-muted">
               {t("dashboard.audienceVerifiedNote", {
                 count: verifiedKits,
                 total: kits.length,
@@ -156,7 +156,7 @@ export function DashboardView({
               })}
             </p>
           ) : (
-            <p className="mt-2 text-sm leading-relaxed text-fg/55">
+            <p className="mt-2 text-sm leading-relaxed text-fg-muted">
               {t("dashboard.audienceUnverifiedNote")}{" "}
               {t("dashboard.audienceUnverifiedCanUpgrade")}
             </p>

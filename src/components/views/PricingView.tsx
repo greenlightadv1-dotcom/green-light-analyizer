@@ -53,11 +53,11 @@ export function PricingView({ profile }: { profile: Profile }) {
               </span>
             ) : null}
           </div>
-          <p className="mt-1.5 text-sm text-fg/55">{t("pricing.creatorSummary")}</p>
+          <p className="mt-1.5 text-sm text-fg-muted">{t("pricing.creatorSummary")}</p>
 
           <p className="mt-4 text-2xl font-semibold text-fg">
             {CREATOR_PLAN.commission}{" "}
-            <span className="text-sm font-normal text-fg/45">{t("pricing.commissionPerDeal")}</span>
+            <span className="text-sm font-normal text-fg-muted">{t("pricing.commissionPerDeal")}</span>
           </p>
           <p className="mt-2 text-xs font-medium leading-relaxed text-fg/65">
             {/*
@@ -69,7 +69,7 @@ export function PricingView({ profile }: { profile: Profile }) {
             */}
             {t("pricing.commissionEffective", { days: CHANGE_NOTICE_DAYS })}
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-fg/45">{t("pricing.settlementNote")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("pricing.settlementNote")}</p>
 
           <ul className="mt-5 grid gap-2 text-sm leading-relaxed text-fg/65 sm:grid-cols-2">
             {CREATOR_PLAN.featureKeys.map((key) => (
@@ -80,7 +80,7 @@ export function PricingView({ profile }: { profile: Profile }) {
             ))}
           </ul>
 
-          <p className="mt-5 text-xs leading-relaxed text-fg/40">{t("pricing.fairUseNote")}</p>
+          <p className="mt-5 text-xs leading-relaxed text-fg-muted">{t("pricing.fairUseNote")}</p>
         </GlassPanel>
 
         <GlassPanel
@@ -101,7 +101,7 @@ export function PricingView({ profile }: { profile: Profile }) {
 
       <GlassPanel as="section" className="mt-4 p-6">
         <h2 className="text-sm font-semibold text-fg">{t("integrations.title")}</h2>
-        <p className="mt-1.5 text-xs leading-relaxed text-fg/50">{t("integrations.description")}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">{t("integrations.description")}</p>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {INTEGRATION_PLATFORMS.map((platform) => {
             const status = INTEGRATION_STATUS[platform];
@@ -111,7 +111,7 @@ export function PricingView({ profile }: { profile: Profile }) {
                   <span className="text-sm font-medium text-fg">{INTEGRATION_LABELS[platform]}</span>
                   <IntegrationStatusBadge status={status} />
                 </div>
-                <p className="mt-2 text-xs leading-relaxed text-fg/50">{t(STATUS_NOTE_KEY[status])}</p>
+                <p className="mt-2 text-xs leading-relaxed text-fg-muted">{t(STATUS_NOTE_KEY[status])}</p>
               </li>
             );
           })}
@@ -121,9 +121,9 @@ export function PricingView({ profile }: { profile: Profile }) {
       <GlassPanel as="section" className="mt-4 p-6">
         <h2 className="text-sm font-semibold text-fg">{t("support.title")}</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-fg/60">{t("support.hours")}</p>
-        <p className="mt-1 text-xs leading-relaxed text-fg/45">{t("support.hoursNote")}</p>
+        <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("support.hoursNote")}</p>
         {openNow === null ? null : (
-          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg/50"}`}>
+          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg-muted"}`}>
             {openNow ? t("support.openNow") : t("support.closedNow")}
           </p>
         )}

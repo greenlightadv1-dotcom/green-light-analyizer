@@ -1131,6 +1131,22 @@ const en = {
       },
     },
   },
+  actionErrors: {
+    notSaved: "Nothing was saved: the update was not accepted. Check your entries and press Save again; if it keeps failing, contact support.",
+    instagramNoResponse: "Instagram did not respond, so nothing was synced and your existing figures are unchanged. Try again in a few minutes.",
+    geoFetchedNotSaved: "Your audience data was fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+    youtubeNotReached: "YouTube returned no channel for this handle, or could not be reached. Nothing was synced. Check the handle above, then try again; if it keeps failing, contact support.",
+    youtubeStatsNotSaved: "Your YouTube stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+    instagramStatsNotSaved: "Your Instagram stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+    youtubeVideosUnreadable: "Your recent YouTube videos could not be read, so your niche was not changed. Check the channel handle above, then try again; if it keeps failing, contact support.",
+    instagramPostsUnreadable: "Instagram did not return your recent posts, so your niche was not changed. Try again in a few minutes.",
+    nicheUnavailable: "The AI service could not suggest a niche right now, so nothing was changed. You can pick a category yourself in the form above, or try again later.",
+    nicheNotSaved: "A niche was suggested but could not be saved, so your category is unchanged. Try again.",
+    nameNotChanged: "Your name was not changed: the update was not accepted. Try again; if it keeps failing, contact support.",
+    whatsappNotChanged: "Your WhatsApp settings were not changed: the update was not accepted. Try again; if it keeps failing, contact support.",
+    messageNotSent: "Your message was not sent and nothing was stored. Try sending it again.",
+    dealRoomNotCreated: "The deal room was not created, so nothing was added to your inbox. Try “Open a deal room for this offer” again in a moment.",
+  },
 };
 
 export default en;

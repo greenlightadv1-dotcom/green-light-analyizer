@@ -67,7 +67,7 @@ export default async function PublicProfilePage({
             // eslint-disable-next-line @next/next/no-img-element -- arbitrary external URL, see CreatorProfileCard.
             <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-fg/30">
+            <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-fg-muted">
               {profile.full_name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -75,7 +75,7 @@ export default async function PublicProfilePage({
 
         <h1 className="mt-4 text-xl font-semibold text-fg">{profile.full_name}</h1>
 
-        <p className="mt-1 text-xs text-fg/45">
+        <p className="mt-1 text-xs text-fg-muted">
           {[profile.country, profile.primary_language].filter(Boolean).join(" · ") || null}
         </p>
 
@@ -116,7 +116,7 @@ export default async function PublicProfilePage({
         ) : null}
       </GlassPanel>
 
-      <p className="mt-6 text-center text-[11px] leading-relaxed text-fg/30">
+      <p className="mt-6 text-center text-[11px] leading-relaxed text-fg-muted">
         Sponsorship offers for {profile.full_name} go through Green Light — real
         contact details stay private, and every negotiation happens on-platform.
       </p>

@@ -1119,6 +1119,22 @@ const fr: Dictionary = {
       },
     },
   },
+  actionErrors: {
+    notSaved: "Rien n'a été enregistré : la mise à jour n'a pas été acceptée. Vérifiez vos saisies et cliquez de nouveau sur Enregistrer ; si le problème persiste, contactez le support.",
+    instagramNoResponse: "Instagram n'a pas répondu ; rien n'a été synchronisé et vos chiffres actuels sont inchangés. Réessayez dans quelques minutes.",
+    geoFetchedNotSaved: "Vos données d'audience ont été récupérées mais n'ont pas pu être enregistrées ; les chiffres affichés sont inchangés. Relancez la synchronisation.",
+    youtubeNotReached: "YouTube n'a renvoyé aucune chaîne pour cet identifiant, ou n'a pas pu être joint. Rien n'a été synchronisé. Vérifiez l'identifiant ci-dessus puis réessayez ; si le problème persiste, contactez le support.",
+    youtubeStatsNotSaved: "Vos statistiques YouTube ont été récupérées mais n'ont pas pu être enregistrées ; les chiffres affichés sont inchangés. Relancez la synchronisation.",
+    instagramStatsNotSaved: "Vos statistiques Instagram ont été récupérées mais n'ont pas pu être enregistrées ; les chiffres affichés sont inchangés. Relancez la synchronisation.",
+    youtubeVideosUnreadable: "Vos vidéos YouTube récentes n'ont pas pu être lues ; votre niche n'a pas changé. Vérifiez l'identifiant de la chaîne ci-dessus puis réessayez ; si le problème persiste, contactez le support.",
+    instagramPostsUnreadable: "Instagram n'a pas renvoyé vos publications récentes ; votre niche n'a pas changé. Réessayez dans quelques minutes.",
+    nicheUnavailable: "Le service d'IA n'a pas pu proposer de niche pour le moment ; rien n'a changé. Vous pouvez choisir une catégorie vous-même dans le formulaire ci-dessus, ou réessayer plus tard.",
+    nicheNotSaved: "Une niche a été proposée mais n'a pas pu être enregistrée ; votre catégorie est inchangée. Réessayez.",
+    nameNotChanged: "Votre nom n'a pas changé : la mise à jour n'a pas été acceptée. Réessayez ; si le problème persiste, contactez le support.",
+    whatsappNotChanged: "Vos réglages WhatsApp n'ont pas changé : la mise à jour n'a pas été acceptée. Réessayez ; si le problème persiste, contactez le support.",
+    messageNotSent: "Votre message n'a pas été envoyé et rien n'a été enregistré. Réessayez de l'envoyer.",
+    dealRoomNotCreated: "L'espace de négociation n'a pas été créé ; rien n'a été ajouté à votre boîte. Réessayez « Ouvrir un salon de deal pour cette offre » dans un instant.",
+  },
 };
 
 export default fr;

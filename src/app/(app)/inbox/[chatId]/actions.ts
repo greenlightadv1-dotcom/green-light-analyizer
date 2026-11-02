@@ -99,7 +99,7 @@ export async function sendMessage(
     .select("id")
     .single();
 
-  if (error) return fail("Your message was not sent and nothing was stored. Try sending it again.");
+  if (error) return fail("actionErrors.messageNotSent");
 
   if (isMasked) {
     // §6: log which rule matched, redacted, for admin review — in addition to

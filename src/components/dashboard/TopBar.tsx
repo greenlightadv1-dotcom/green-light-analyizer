@@ -33,7 +33,7 @@ export function TopBar({
         <p className="truncate text-sm font-medium text-fg">
           {profile.full_name}
         </p>
-        <p className="text-xs text-fg/45 capitalize">
+        <p className="text-xs text-fg-muted capitalize">
           {profile.role}
         </p>
       </div>

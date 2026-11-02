@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { ActionResult } from "@/lib/ui/action-result";
+import { utcStamp } from "@/lib/ui/format";
 
 export type ViolationItem = {
   id: string;
@@ -38,7 +39,7 @@ export function ViolationsView({
   banAction: (prev: ActionResult | null, formData: FormData) => Promise<ActionResult>;
   dismissAction: (prev: ActionResult | null, formData: FormData) => Promise<ActionResult>;
 }) {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -62,7 +63,7 @@ export function ViolationsView({
                         ) : null}
                       </p>
                       <p className="mt-0.5 text-xs text-fg-muted">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleString(locale) : ""}
+                        <span dir="ltr">{utcStamp(item.createdAt)}</span>
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">

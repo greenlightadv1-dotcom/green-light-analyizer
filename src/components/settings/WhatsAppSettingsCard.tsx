@@ -44,7 +44,7 @@ export function WhatsAppSettingsCard({ profile, demo = false }: { profile: Profi
   return (
     <GlassPanel className="p-6">
       <h2 className="text-sm font-semibold text-fg">{t("settings.whatsapp")}</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-fg/50">{t("settings.whatsappNote")}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">{t("settings.whatsappNote")}</p>
 
       <form action={demo ? undefined : formAction} className="mt-4 space-y-3">
         <Field
@@ -67,7 +67,7 @@ export function WhatsAppSettingsCard({ profile, demo = false }: { profile: Profi
           {t("settings.whatsappToggle")}
         </label>
 
-        {state.error ? <Alert>{state.error}</Alert> : null}
+        {state.error ? <Alert>{t(state.error)}</Alert> : null}
         {state.saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
         <SaveButton demo={demo} />

@@ -94,7 +94,7 @@ export function FileDrop({
         {children ?? (
           <>
             <span className="font-medium text-fg">{t("uploads.dropTitle")}</span>
-            <span className="text-xs text-fg/50">{t("uploads.dropHint", { mb: String(Math.round(maxBytes / 1024 / 1024)) })}</span>
+            <span className="text-xs text-fg-muted">{t("uploads.dropHint", { mb: String(Math.round(maxBytes / 1024 / 1024)) })}</span>
           </>
         )}
       </button>

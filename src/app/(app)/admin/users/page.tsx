@@ -96,7 +96,7 @@ export default async function AdminUsersPage({
                     <span className="block truncate text-sm text-fg">
                       {p.full_name}
                     </span>
-                    <span className="block truncate text-xs text-fg/40">
+                    <span className="block truncate text-xs text-fg-muted">
                       {p.primary_email}
                     </span>
                   </div>
@@ -125,10 +125,10 @@ export default async function AdminUsersPage({
                 </div>
 
                 {p.id === admin.id ? (
-                  <p className="mt-2 text-xs text-fg/30">This is you.</p>
+                  <p className="mt-2 text-xs text-fg-muted">This is you.</p>
                 ) : (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-fg/45 transition select-none hover:text-fg/80">
+                    <summary className="cursor-pointer text-xs text-fg-muted transition select-none hover:text-fg/80">
                       Manage
                     </summary>
 
@@ -140,7 +140,7 @@ export default async function AdminUsersPage({
                         <input type="hidden" name="profile_id" value={p.id} />
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Legacy plan (no effect on access)
                           </label>
                           <select
@@ -155,7 +155,7 @@ export default async function AdminUsersPage({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Region
                           </label>
                           <select
@@ -171,7 +171,7 @@ export default async function AdminUsersPage({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Role
                           </label>
                           <select
@@ -186,7 +186,7 @@ export default async function AdminUsersPage({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Renew / extend
                           </label>
                           <select
@@ -203,7 +203,7 @@ export default async function AdminUsersPage({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Custom days
                           </label>
                           <input
@@ -220,7 +220,7 @@ export default async function AdminUsersPage({
                         </button>
                       </form>
 
-                      <p className="text-[11px] leading-relaxed text-fg/35">
+                      <p className="text-[11px] leading-relaxed text-fg-muted">
                         Changing role does not move this account&apos;s
                         existing deals or media kits — use this to correct a
                         miscreated account, not to reassign an active one.
@@ -287,7 +287,7 @@ export default async function AdminUsersPage({
               </li>
             ))}
             {!profiles?.length ? (
-              <li className="px-5 py-8 text-sm text-fg/40">
+              <li className="px-5 py-8 text-sm text-fg-muted">
                 No accounts yet.
               </li>
             ) : null}

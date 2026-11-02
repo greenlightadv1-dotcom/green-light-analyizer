@@ -1119,6 +1119,22 @@ const de: Dictionary = {
       },
     },
   },
+  actionErrors: {
+    notSaved: "Nichts wurde gespeichert: Die Änderung wurde nicht angenommen. Prüfe deine Eingaben und klicke erneut auf Speichern; wenn es weiter fehlschlägt, wende dich an den Support.",
+    instagramNoResponse: "Instagram hat nicht geantwortet; nichts wurde synchronisiert und deine bisherigen Zahlen sind unverändert. Versuch es in ein paar Minuten erneut.",
+    geoFetchedNotSaved: "Deine Zielgruppendaten wurden abgerufen, konnten aber nicht gespeichert werden; die angezeigten Zahlen sind unverändert. Synchronisiere erneut.",
+    youtubeNotReached: "YouTube hat für dieses Handle keinen Kanal geliefert oder war nicht erreichbar. Nichts wurde synchronisiert. Prüfe das Handle oben und versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
+    youtubeStatsNotSaved: "Deine YouTube-Statistiken wurden abgerufen, konnten aber nicht gespeichert werden; die angezeigten Zahlen sind unverändert. Synchronisiere erneut.",
+    instagramStatsNotSaved: "Deine Instagram-Statistiken wurden abgerufen, konnten aber nicht gespeichert werden; die angezeigten Zahlen sind unverändert. Synchronisiere erneut.",
+    youtubeVideosUnreadable: "Deine neuesten YouTube-Videos konnten nicht gelesen werden; deine Nische wurde nicht geändert. Prüfe das Kanal-Handle oben und versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
+    instagramPostsUnreadable: "Instagram hat deine neuesten Beiträge nicht geliefert; deine Nische wurde nicht geändert. Versuch es in ein paar Minuten erneut.",
+    nicheUnavailable: "Der KI-Dienst konnte gerade keine Nische vorschlagen; nichts wurde geändert. Du kannst oben im Formular selbst eine Kategorie wählen oder es später erneut versuchen.",
+    nicheNotSaved: "Eine Nische wurde vorgeschlagen, konnte aber nicht gespeichert werden; deine Kategorie ist unverändert. Versuch es erneut.",
+    nameNotChanged: "Dein Name wurde nicht geändert: Die Änderung wurde nicht angenommen. Versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
+    whatsappNotChanged: "Deine WhatsApp-Einstellungen wurden nicht geändert: Die Änderung wurde nicht angenommen. Versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
+    messageNotSent: "Deine Nachricht wurde nicht gesendet und nichts wurde gespeichert. Versuch sie erneut zu senden.",
+    dealRoomNotCreated: "Der Deal-Raum wurde nicht erstellt; deinem Postfach wurde nichts hinzugefügt. Versuch „Deal-Raum für dieses Angebot öffnen“ gleich noch einmal.",
+  },
 };
 
 export default de;

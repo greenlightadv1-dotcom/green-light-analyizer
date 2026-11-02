@@ -298,7 +298,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           <h2 id={titleId} className="text-sm font-semibold text-fg">
             G
           </h2>
-          <p className="truncate text-[11px] text-fg/50">{t(`g.subtitle.${role}`)}</p>
+          <p className="truncate text-[11px] text-fg-muted">{t(`g.subtitle.${role}`)}</p>
         </div>
         {voice.canSpeak ? (
           <button
@@ -355,8 +355,8 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
               ) : (
                 <>
                   {m.text ? <p className="text-sm leading-relaxed whitespace-pre-wrap text-fg">{m.text}</p> : null}
-                  {m.engine === "rules" && !demo ? <p className="text-[11px] text-fg/45">{t("g.rulesNotice")}</p> : null}
-                  {m.engine === "ai" ? <p className="text-[10px] text-fg/35">{t("g.aiNotice")}</p> : null}
+                  {m.engine === "rules" && !demo ? <p className="text-[11px] text-fg-muted">{t("g.rulesNotice")}</p> : null}
+                  {m.engine === "ai" ? <p className="text-[10px] text-fg-muted">{t("g.aiNotice")}</p> : null}
                   {m.cards?.assessment ? <AssessmentCard a={m.cards.assessment as CreatorAssessment} /> : null}
                   {m.cards?.brief ? <BriefCard {...(m.cards.brief as { value: Brief; missing: string[] })} brief={(m.cards.brief as { value: Brief }).value} /> : null}
                   {m.cards?.recommendations ? (
@@ -390,7 +390,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           ),
         )}
         {busy ? (
-          <p className="flex items-center gap-2 text-xs text-fg/50">
+          <p className="flex items-center gap-2 text-xs text-fg-muted">
             <span className="h-2 w-2 animate-pulse rounded-full bg-brand-green" aria-hidden />
             {t("g.thinking")}
           </p>
@@ -401,7 +401,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
         <div className="border-t border-fg/10 px-4 py-2">
           {state.compare.length ? (
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-fg/50">{t("g.compareTray")}</span>
+              <span className="text-[11px] text-fg-muted">{t("g.compareTray")}</span>
               {state.compare.map((c) => (
                 <button
                   key={c.id}
@@ -508,13 +508,13 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
         }}
       >
         {wokeAt || listening || speaking || voice.phase === "processing" || voice.error ? (
-          <p className="mb-2 text-[11px] text-fg/55" role="status">
+          <p className="mb-2 text-[11px] text-fg-muted" role="status">
             {wokeAt && !voice.error && voice.phase !== "processing" ? `${t("g.wake.greeting")} ` : ""}
             {voice.error ? t(`g.voice.error.${voice.error}`) : t(`g.voice.${voice.phase}`)}
           </p>
         ) : null}
         {voice.canListen && !voiceNoticeSeen ? (
-          <p className="mb-2 text-[10px] leading-relaxed text-fg/40">{t("g.voice.privacy")}</p>
+          <p className="mb-2 text-[10px] leading-relaxed text-fg-muted">{t("g.voice.privacy")}</p>
         ) : null}
         <div className="flex items-end gap-2">
           <textarea
@@ -564,7 +564,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
             {t("g.send")}
           </button>
         </div>
-        {!voice.canListen ? <p className="mt-1.5 text-[10px] text-fg/40">{t("g.voice.unsupported")}</p> : null}
+        {!voice.canListen ? <p className="mt-1.5 text-[10px] text-fg-muted">{t("g.voice.unsupported")}</p> : null}
       </form>
     </section>
   );
@@ -643,7 +643,7 @@ function WakeSettings({
             <li>{t("g.wake.consentDisable")}</li>
             <li>{t("g.wake.consentLimits")}</li>
           </ul>
-          <p className="text-fg/55" dir="auto">
+          <p className="text-fg-muted" dir="auto">
             {t("g.wake.phrases")}: {phrases}
           </p>
           <div className="flex gap-2">
@@ -674,7 +674,7 @@ function WakeSettings({
           >
             {t("g.wake.enable")}
           </button>
-          {wake.status === "unsupported" ? <span className="text-fg/50">{t("g.wake.error.unsupported")}</span> : null}
+          {wake.status === "unsupported" ? <span className="text-fg-muted">{t("g.wake.error.unsupported")}</span> : null}
           {wake.status === "denied" ? <span className="text-red-600 dark:text-red-300" role="alert">{t("g.wake.error.denied")}</span> : null}
           {wake.status === "unavailable" ? <span className="text-red-600 dark:text-red-300" role="alert">{t("g.wake.error.unavailable")}</span> : null}
         </div>

@@ -61,32 +61,32 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
         {hasStats ? (
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.subscribers")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.subscribers")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.subscriber_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.lifetimeViews")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.lifetimeViews")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.channel_view_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.videos")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.videos")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.media_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.engagementLast10")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.engagementLast10")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
               </dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-2 text-xs leading-relaxed text-fg/40">
+          <p className="mt-2 text-xs leading-relaxed text-fg-muted">
             {t("mediaKit.notSyncedRequiresHandle")}
           </p>
         )}
@@ -98,7 +98,7 @@ export function YoutubeSyncPanel({ kit }: { kit: MediaKit }) {
 
         {state.error ? (
           <div className="mt-2.5">
-            <Alert>{state.error}</Alert>
+            <Alert>{t(state.error)}</Alert>
           </div>
         ) : null}
         {state.synced ? (

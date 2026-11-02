@@ -26,11 +26,11 @@ export function NotFoundCard() {
         </div>
 
         <GlassPanel className="p-7 sm:p-8">
-          <p className="font-mono text-xs tracking-widest text-fg/35 uppercase">404</p>
+          <p className="font-mono text-xs tracking-widest text-fg-muted uppercase">404</p>
           <h1 className="mt-2 text-xl font-semibold text-fg">
             {t("errors.notFoundTitle")}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-fg/55">
+          <p className="mt-3 text-sm leading-relaxed text-fg-muted">
             {t("errors.notFoundBody")}
           </p>
 

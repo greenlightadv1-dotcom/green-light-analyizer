@@ -8,7 +8,10 @@ import { useTranslation } from "@/components/LocaleProvider";
  * layer (above the G panel, drawer and banners), makes the rest of the page
  * inert, moves focus inside, and on close the browser returns focus to the
  * element that opened it. Escape and a backdrop click close it unless
- * `dismissible` is false (e.g. while a request is in flight).
+ * `dismissible` is false (e.g. while a request is in flight). Even then the
+ * browser may force it closed after repeated Escape presses; `onClose` is
+ * called in that case too, so callers must keep any error visible outside
+ * the dialog (ConfirmActionForm and StatusControl do).
  *
  * Render it outside any <form>: a button inside a dialog nested in a form
  * would submit that form.
@@ -58,6 +61,13 @@ export function Dialog({
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && dismissible) onClose();
+      }}
+      onClose={() => {
+        // The browser can close a modal dialog on its own: Chromium ignores
+        // preventDefault() on a repeated Escape with no user activation in
+        // between (close-request abuse protection). Report it, so `open`
+        // never stays true for a dialog that is no longer showing.
+        if (open) onClose();
       }}
       className={`gl-dialog m-auto w-[calc(100%-2rem)] ${width} rounded-card border border-line bg-white p-0 text-fg shadow-overlay backdrop:bg-transparent dark:bg-navy-dark`}
     >

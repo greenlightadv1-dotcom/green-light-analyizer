@@ -110,13 +110,13 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
           maxLength={1000}
           className="w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg focus:border-brand-green/50 focus:outline-none"
         />
-        <p className="text-xs text-fg/45">{err("message") ?? t("getStarted.optional")}</p>
+        <p className="text-xs text-fg-muted">{err("message") ?? t("getStarted.optional")}</p>
       </div>
 
       {state.status === "error" ? <Alert>{t(`getStarted.error.${state.code}`)}</Alert> : null}
       {state.status === "invalid" ? <Alert>{t("getStarted.error.invalid")}</Alert> : null}
 
-      <p className="text-xs leading-relaxed text-fg/50">
+      <p className="text-xs leading-relaxed text-fg-muted">
         {t("getStarted.consentPrefix")}{" "}
         <Link href="/terms" className="underline">
           {t("getStarted.terms")}

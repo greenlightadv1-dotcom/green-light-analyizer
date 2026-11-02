@@ -55,22 +55,22 @@ export default async function AdminRequestsPage() {
         <GlassPanel className="overflow-hidden lg:col-span-2">
           <h2 className="border-b border-fg/5 px-5 py-3 text-sm font-semibold text-fg">Pending ({pending.length})</h2>
           {pending.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-fg/50">No pending applications.</p>
+            <p className="px-5 py-6 text-sm text-fg-muted">No pending applications.</p>
           ) : (
             <ul className="divide-y divide-fg/5">
               {pending.map((r) => (
                 <li key={r.id} className="space-y-2 px-5 py-4 text-sm">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <span className="font-medium text-fg">{r.full_name}</span>
-                    <span className="text-xs text-fg/55" dir="ltr">{r.email}</span>
+                    <span className="text-xs text-fg-muted" dir="ltr">{r.email}</span>
                     <span className="rounded-full border border-fg/15 px-2 py-0.5 text-[11px] text-fg/60">{r.journey.replace(/_/g, " ")}</span>
-                    <span className="text-xs text-fg/40">{new Date(r.created_at).toISOString().slice(0, 10)}</span>
+                    <span className="text-xs text-fg-muted">{new Date(r.created_at).toISOString().slice(0, 10)}</span>
                   </div>
                   <dl className="grid gap-x-4 gap-y-0.5 text-xs text-fg/60 sm:grid-cols-2">
-                    {r.company_name ? <div><dt className="inline text-fg/40">Company: </dt><dd className="inline">{r.company_name}</dd></div> : null}
-                    {r.website ? <div><dt className="inline text-fg/40">Website: </dt><dd className="inline" dir="ltr">{r.website}</dd></div> : null}
-                    {r.primary_platform ? <div><dt className="inline text-fg/40">Platform: </dt><dd className="inline">{r.primary_platform}</dd></div> : null}
-                    {r.channel_handle ? <div><dt className="inline text-fg/40">Channel: </dt><dd className="inline" dir="ltr">{r.channel_handle}</dd></div> : null}
+                    {r.company_name ? <div><dt className="inline text-fg-muted">Company: </dt><dd className="inline">{r.company_name}</dd></div> : null}
+                    {r.website ? <div><dt className="inline text-fg-muted">Website: </dt><dd className="inline" dir="ltr">{r.website}</dd></div> : null}
+                    {r.primary_platform ? <div><dt className="inline text-fg-muted">Platform: </dt><dd className="inline">{r.primary_platform}</dd></div> : null}
+                    {r.channel_handle ? <div><dt className="inline text-fg-muted">Channel: </dt><dd className="inline" dir="ltr">{r.channel_handle}</dd></div> : null}
                   </dl>
                   {r.message ? <p className="text-xs whitespace-pre-wrap text-fg/60">{r.message}</p> : null}
                   <div className="flex gap-2 pt-1">
@@ -95,7 +95,7 @@ export default async function AdminRequestsPage() {
             </ul>
           )}
           {reviewed.length ? (
-            <details className="border-t border-fg/5 px-5 py-3 text-xs text-fg/55">
+            <details className="border-t border-fg/5 px-5 py-3 text-xs text-fg-muted">
               <summary className="cursor-pointer">Reviewed ({reviewed.length})</summary>
               <ul className="mt-2 space-y-1">
                 {reviewed.map((r) => (
@@ -110,7 +110,7 @@ export default async function AdminRequestsPage() {
 
         <GlassPanel className="p-5">
           <h2 className="text-sm font-semibold text-fg">Company representatives</h2>
-          <p className="mt-1 mb-4 text-xs leading-relaxed text-fg/50">
+          <p className="mt-1 mb-4 text-xs leading-relaxed text-fg-muted">
             Create the representative as a company account first, then link it to the company it acts for. A link shows the representative who they represent; it does not share the company&apos;s deals.
           </p>
           <LinkRepresentativeForm />

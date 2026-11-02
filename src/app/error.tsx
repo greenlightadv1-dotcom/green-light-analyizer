@@ -42,7 +42,7 @@ export default function Error({
 
         <GlassPanel className="p-7 sm:p-8">
           <h1 className="text-xl font-semibold text-fg">{t("errors.errorTitle")}</h1>
-          <p className="mt-3 text-sm leading-relaxed text-fg/55">
+          <p className="mt-3 text-sm leading-relaxed text-fg-muted">
             {t("errors.errorBody")}
           </p>
 
@@ -70,13 +70,13 @@ export default function Error({
             </button>
             <Link
               href="/"
-              className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
+              className="text-xs text-fg-muted underline underline-offset-4 transition hover:text-fg/80"
             >
               {t("errors.backHome")}
             </Link>
           </div>
 
-          <p className="mt-6 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg/35">
+          <p className="mt-6 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg-muted">
             {t("errors.stillStuck")}{" "}
             <a
               href={DISCORD_INVITE_URL}

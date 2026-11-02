@@ -193,7 +193,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <p className="text-3xl font-semibold text-fg tabular-nums">
               ${r.recommended_price_usd.toLocaleString("en-US")}
             </p>
-            <p className="text-sm text-fg/45 tabular-nums">
+            <p className="text-sm text-fg-muted tabular-nums">
               {t("analyzer.fairRange", {
                 low: r.price_range_usd.low.toLocaleString("en-US"),
                 high: r.price_range_usd.high.toLocaleString("en-US"),
@@ -237,14 +237,14 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             about the one feature the product is sold on.
           */}
           {r.engine === "heuristic" ? (
-            <p className="mt-3 text-[11px] leading-relaxed text-fg/35">
+            <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">
               {t("analyzer.ruleBasedEstimate")}
             </p>
           ) : null}
 
           {createState.error ? (
             <div className="mt-5">
-              <Alert>{createState.error}</Alert>
+              <Alert>{t(createState.error)}</Alert>
             </div>
           ) : null}
           <form
@@ -295,7 +295,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 {t("analyzer.trustPercent", { score: r.security.trustScore })}
               </span>
             ) : (
-              <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg/45">
+              <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg-muted">
                 {t("analyzer.safetyScoreUnavailable")}
               </span>
             )}
@@ -321,7 +321,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           {r.security.whois ? (
             <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-fg/45">
+                <dt className="text-xs text-fg-muted">
                   {t("analyzer.companyOrg")}
                 </dt>
                 <dd className="text-sm text-fg">
@@ -329,13 +329,13 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.registrantCountry")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.registrantCountry")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.registrantCountry ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.domainCreated")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.domainCreated")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.createdAt
                     ? new Date(r.security.whois.createdAt).toLocaleDateString()
@@ -343,7 +343,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.domainExpires")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.domainExpires")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.expiresAt
                     ? new Date(r.security.whois.expiresAt).toLocaleDateString()
@@ -352,19 +352,19 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               </div>
             </dl>
           ) : (
-            <p className="mt-4 text-xs text-fg/40">
+            <p className="mt-4 text-xs text-fg-muted">
               {t("analyzer.whoisUnavailable")}
             </p>
           )}
 
           <div className="mt-4 space-y-1 border-t border-fg/8 pt-3">
             {r.security.whois?.whoisServer ? (
-              <p className="text-[11px] text-fg/30">
+              <p className="text-[11px] text-fg-muted">
                 {t("analyzer.whoisSource", { server: r.security.whois.whoisServer })}
               </p>
             ) : null}
             {!r.security.safeBrowsing ? (
-              <p className="text-[11px] text-fg/30">
+              <p className="text-[11px] text-fg-muted">
                 {t("analyzer.phishingCheckUnavailable")}
               </p>
             ) : null}

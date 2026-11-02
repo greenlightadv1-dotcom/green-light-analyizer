@@ -49,7 +49,7 @@ export function CompanyDetailsForm({ initial, demo = false }: { initial: Company
           aria-describedby="bio-hint"
           className="w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
         />
-        <p id="bio-hint" className="text-xs text-fg/45">
+        <p id="bio-hint" className="text-xs text-fg-muted">
           {t("onboarding.descriptionHint")}
         </p>
       </div>

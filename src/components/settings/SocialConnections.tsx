@@ -48,7 +48,7 @@ function StatusBadge({ connected }: { connected: boolean }) {
       {t("common.connected")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-fg/5 px-2.5 py-1 text-[11px] font-medium text-fg/45">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-fg/5 px-2.5 py-1 text-[11px] font-medium text-fg-muted">
       <span className="h-1.5 w-1.5 rounded-full bg-fg/25" aria-hidden />
       {t("common.notConnected")}
     </span>
@@ -140,7 +140,7 @@ function ConnectionRow({
 
       {connected ? (
         <div className="mt-3 border-t border-fg/8 pt-3">
-          <p className="text-xs leading-relaxed text-fg/55">
+          <p className="text-xs leading-relaxed text-fg-muted">
             {t("mediaKit.syncingFromSource", { source: support.source })}
           </p>
 
@@ -154,7 +154,7 @@ function ConnectionRow({
               <input type="hidden" name="platform" value={platform} />
               <button
                 type={demo ? "button" : "submit"}
-                className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
+                className="text-xs text-fg-muted underline underline-offset-4 transition hover:text-fg/80"
               >
                 {t("common.disconnect")}
               </button>
@@ -163,7 +163,7 @@ function ConnectionRow({
 
           {syncState.error ? (
             <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">
-              {syncState.error}
+              {t(syncState.error)}
             </p>
           ) : null}
           {syncState.synced ? (
@@ -172,12 +172,12 @@ function ConnectionRow({
             </p>
           ) : null}
 
-          <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
+          <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
             {t("mediaKit.disconnectClearsNote")}
           </p>
         </div>
       ) : availability === "in-development" ? (
-        <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg/45">
+        <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg-muted">
           {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       ) : !configured ? (
@@ -217,7 +217,7 @@ export function SocialConnections({
   return (
     <GlassPanel as="section" className="p-6">
       <h2 className="text-sm font-semibold text-fg">{t("settings.socialTitle")}</h2>
-      <p className="mt-1.5 text-xs leading-relaxed text-fg/50">
+      <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
         {t("settings.socialNote")}
       </p>
 
@@ -233,7 +233,7 @@ export function SocialConnections({
         ))}
       </ul>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-fg/30">
+      <p className="mt-4 text-[11px] leading-relaxed text-fg-muted">
         {t("settings.socialManageNote")}
       </p>
     </GlassPanel>

@@ -1119,6 +1119,22 @@ const es: Dictionary = {
       },
     },
   },
+  actionErrors: {
+    notSaved: "No se guardó nada: la actualización no se aceptó. Revisa tus datos y vuelve a pulsar Guardar; si sigue fallando, contacta con soporte.",
+    instagramNoResponse: "Instagram no respondió, así que no se sincronizó nada y tus cifras actuales no cambiaron. Inténtalo de nuevo en unos minutos.",
+    geoFetchedNotSaved: "Se obtuvieron tus datos de audiencia pero no se pudieron guardar, así que las cifras mostradas no cambiaron. Vuelve a sincronizar.",
+    youtubeNotReached: "YouTube no devolvió ningún canal para este identificador o no se pudo contactar. No se sincronizó nada. Revisa el identificador de arriba e inténtalo de nuevo; si sigue fallando, contacta con soporte.",
+    youtubeStatsNotSaved: "Se obtuvieron tus estadísticas de YouTube pero no se pudieron guardar, así que las cifras mostradas no cambiaron. Vuelve a sincronizar.",
+    instagramStatsNotSaved: "Se obtuvieron tus estadísticas de Instagram pero no se pudieron guardar, así que las cifras mostradas no cambiaron. Vuelve a sincronizar.",
+    youtubeVideosUnreadable: "No se pudieron leer tus vídeos recientes de YouTube, así que tu nicho no cambió. Revisa el identificador del canal de arriba e inténtalo de nuevo; si sigue fallando, contacta con soporte.",
+    instagramPostsUnreadable: "Instagram no devolvió tus publicaciones recientes, así que tu nicho no cambió. Inténtalo de nuevo en unos minutos.",
+    nicheUnavailable: "El servicio de IA no pudo sugerir un nicho ahora, así que no cambió nada. Puedes elegir una categoría tú mismo en el formulario de arriba o intentarlo más tarde.",
+    nicheNotSaved: "Se sugirió un nicho pero no se pudo guardar, así que tu categoría no cambió. Inténtalo de nuevo.",
+    nameNotChanged: "Tu nombre no cambió: la actualización no se aceptó. Inténtalo de nuevo; si sigue fallando, contacta con soporte.",
+    whatsappNotChanged: "Tu configuración de WhatsApp no cambió: la actualización no se aceptó. Inténtalo de nuevo; si sigue fallando, contacta con soporte.",
+    messageNotSent: "Tu mensaje no se envió y no se guardó nada. Intenta enviarlo de nuevo.",
+    dealRoomNotCreated: "La sala de negociación no se creó, así que no se añadió nada a tu bandeja. Vuelve a intentar «Abrir una sala de deal para esta oferta» en un momento.",
+  },
 };
 
 export default es;

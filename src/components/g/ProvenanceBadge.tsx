@@ -8,7 +8,7 @@ const TONE: Record<Provenance, string> = {
   synced: "border-sky-400/30 bg-sky-400/10 text-sky-700 dark:text-sky-200",
   self_reported: "border-amber-400/30 bg-amber-400/10 text-amber-700 dark:text-amber-200",
   stale: "border-orange-400/30 bg-orange-400/10 text-orange-700 dark:text-orange-200",
-  missing: "border-fg/10 bg-fg/5 text-fg/45",
+  missing: "border-fg/10 bg-fg/5 text-fg-muted",
 };
 
 /**
