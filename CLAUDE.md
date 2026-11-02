@@ -1319,7 +1319,7 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0028 or later, since 0026 and 0027 are used in §19).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0029 or later, since 0026–0028 are used in §19).
 
 ## 19. Collaboration lifecycle (branch only, 2026-11-02)
 
@@ -1354,3 +1354,15 @@ Not deployed. **Migration 0026 is not applied anywhere.**
 - **Writes:** the server marks rows read (`read_at` is the only column `service_role` may update) and saves preferences, always scoped to the session's id. Nobody but the trigger inserts.
 - **UI:** the bell in `TopBar` (creators and companies) and `/notifications`.
 - **Delivery:** in-app only; no email or push.
+
+**Shortlists, portfolio and public-profile sections (migration 0028, not applied).**
+- **Shortlists:** company-private (owner-only RLS; creators and admins cannot read them). Saved from Discover's selected-creator panel and managed at `/shortlists`.
+- **Portfolio:** `/portfolio`, creator-owned.
+  - Items are private by default.
+  - A brand is named publicly only with `brand_name_public`, the creator's recorded consent. The wording is pending the owner (PENDING_OWNER_DECISIONS item 10).
+  - Portfolio text goes through the §6.1 mask.
+- **Section visibility:** `public_profile_settings` toggles what `/p/<slug>` shows.
+  - `creator_public_profile()` keeps 0017's columns and returns NULL for a hidden section.
+  - `creator_public_portfolio()` returns public items only, when the section is on.
+  - With no settings row, the public page is unchanged and the portfolio is off.
+- **Writes:** service role, scoped to the session's id, rate-limited (`shortlist_write`, `portfolio_write`).

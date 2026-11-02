@@ -18,6 +18,8 @@ const PAGES = [
   ["/preview/collaborations/00000000-0000-4000-8000-0000000000e1", "collab-creator"],
   ["/preview/collaborations/00000000-0000-4000-8000-0000000000e1?side=company", "collab-company"],
   ["/preview/notifications", "notifications"],
+  ["/preview/shortlists", "shortlists"],
+  ["/preview/portfolio", "portfolio"],
 ];
 let pass = 0, fail = 0;
 const check = (ok, label) => { if (ok) pass++; else fail++; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); };
@@ -36,7 +38,7 @@ for (const locale of ["en", "ar"]) {
       const tag = `${locale} ${vp} ${name}`;
       check(res?.status() === 200, `${tag}: 200`);
       const text = await page.locator("main, body").first().innerText();
-      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications)\.[a-zA-Z_.]+/g);
+      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications|shortlists|portfolio)\.[a-zA-Z_.]+/g);
       check(!leaked, `${tag}: no raw keys${leaked ? " " + leaked.slice(0, 3).join(",") : ""}`);
       if (locale === "ar") check((await page.getAttribute("html", "dir")) === "rtl", `${tag}: rtl`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -79,6 +81,21 @@ check(await bell.count() >= 1, "bell announces the unread count");
 check((await page.getByText("(Unread)").count()) === 2, "two unread items are labelled for screen readers");
 check(!(await page.getByLabel("Completion and cancellation").isChecked()), "muted category is unticked");
 check(await page.getByLabel("Invitations and responses").isChecked(), "other categories stay on");
+// Shortlists: removing asks first and cancelling sends nothing.
+posts = 0;
+await page.goto(BASE + "/preview/shortlists", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Remove", exact: true }).first().click();
+const sdialog = page.getByRole("dialog");
+check((await sdialog.innerText()).includes("Remove Layla Hassan (demo) from this list?"), "remove names the creator");
+await sdialog.getByRole("button", { name: /cancel/i }).click();
+check(posts === 0, "cancelled removal sends nothing");
+
+// Portfolio: public/private is visible, an unconsented brand is flagged, and
+// the portfolio section defaults are shown as checkboxes.
+await page.goto(BASE + "/preview/portfolio", { waitUntil: "networkidle" });
+check((await page.getByText("Private", { exact: true }).count()) === 1, "one private item is labelled");
+check((await page.getByText("Brand not shown publicly").count()) === 1, "unconsented brand is flagged");
+check(await page.getByLabel("Bio").isChecked(), "bio section on by default");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

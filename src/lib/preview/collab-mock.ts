@@ -1,4 +1,4 @@
-import type { AppNotification, Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
+import type { AppNotification, PortfolioItem, Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
 
 /**
  * Invented collaboration data for the /preview screens only. Nothing here is
@@ -175,4 +175,22 @@ export const previewNotifications: AppNotification[] = [
   { id: "00000000-0000-4000-8000-000000000101", recipient_id: CR, event_id: 8, kind: "revision_requested", category: "deliverables", brief_id: previewBriefs[0].id, invitation_id: previewInvitations[0].id, collaboration_id: previewCollaboration.id, actor_id: CO, read_at: null, created_at: "2026-11-02T12:00:00Z" },
   { id: "00000000-0000-4000-8000-000000000102", recipient_id: CR, event_id: 9, kind: "invitation_sent", category: "invitations", brief_id: previewBriefs[0].id, invitation_id: "00000000-0000-4000-8000-0000000000d3", collaboration_id: null, actor_id: CO, read_at: null, created_at: "2026-11-02T10:00:00Z" },
   { id: "00000000-0000-4000-8000-000000000103", recipient_id: CR, event_id: 5, kind: "terms_agreed", category: "terms", brief_id: previewBriefs[0].id, invitation_id: previewInvitations[0].id, collaboration_id: previewCollaboration.id, actor_id: CO, read_at: "2026-11-02T09:30:00Z", created_at: "2026-11-02T09:00:00Z" },
+];
+
+export const previewShortlists = [
+  {
+    id: "00000000-0000-4000-8000-000000000201",
+    name: "Tech reviewers (demo)",
+    entries: [
+      { creator_id: CR, name: previewNames[CR], note: "Strong Arabic audience, fast turnaround.", added_at: "2026-11-01T08:00:00Z" },
+      { creator_id: CR2, name: previewNames[CR2], note: null, added_at: "2026-11-02T08:00:00Z" },
+    ],
+  },
+  { id: "00000000-0000-4000-8000-000000000202", name: "Holiday campaign (demo)", entries: [] },
+];
+
+export const previewPortfolio: PortfolioItem[] = [
+  { id: "00000000-0000-4000-8000-000000000301", creator_id: CR, title: "Budget phone showdown", description: "Side-by-side review of five budget phones, filmed in Cairo.", url: "https://example.com/phones", platform: "youtube", brand_name: "Nimbus Audio (demo)", brand_name_public: true, published_on: "2026-09-14", is_public: true, sort_order: 1, created_at: "2026-10-01T00:00:00Z", updated_at: "2026-10-01T00:00:00Z" },
+  { id: "00000000-0000-4000-8000-000000000302", creator_id: CR, title: "Launch-day story set", description: null, url: null, platform: "instagram", brand_name: "Unnamed partner (demo)", brand_name_public: false, published_on: "2026-08-02", is_public: true, sort_order: 2, created_at: "2026-10-02T00:00:00Z", updated_at: "2026-10-02T00:00:00Z" },
+  { id: "00000000-0000-4000-8000-000000000303", creator_id: CR, title: "Draft: studio tour", description: "Not ready to share yet.", url: null, platform: null, brand_name: null, brand_name_public: false, published_on: null, is_public: false, sort_order: 3, created_at: "2026-10-03T00:00:00Z", updated_at: "2026-10-03T00:00:00Z" },
 ];

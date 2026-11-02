@@ -9,15 +9,15 @@ import { NAV, isActivePath, navItemsForRole } from "./nav.ts";
 const hrefs = (role: "creator" | "company" | "admin") => navItemsForRole(role).map((i) => i.href);
 
 test("creator sees exactly the creator links, in order", () => {
-  assert.deepEqual(hrefs("creator"), ["/dashboard", "/onboarding", "/inbox", "/opportunities", "/collaborations", "/analyzer", "/media-kit", "/pricing", "/support", "/settings"]);
+  assert.deepEqual(hrefs("creator"), ["/dashboard", "/onboarding", "/inbox", "/opportunities", "/collaborations", "/analyzer", "/media-kit", "/portfolio", "/pricing", "/support", "/settings"]);
 });
 
 test("company sees exactly the company links, in order", () => {
-  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/collaborations", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/shortlists", "/collaborations", "/pricing", "/settings"]);
 });
 
-test("admin sees every link but onboarding, briefs and opportunities, including the admin pages", () => {
-  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => !["/onboarding", "/briefs", "/opportunities"].includes(h)));
+test("admin sees every link but the party-only pages, including the admin pages", () => {
+  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => !["/onboarding", "/briefs", "/shortlists", "/opportunities", "/portfolio"].includes(h)));
   for (const href of ["/admin/users", "/admin/requests", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
     assert.ok(hrefs("admin").includes(href), href);
   }

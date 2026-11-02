@@ -27,10 +27,12 @@ export const NAV: readonly NavItem[] = [
   // Collaboration lifecycle: companies write briefs, creators see invitations
   // and published briefs, both sides (and admins, read-only) track the work.
   { href: "/briefs", labelKey: "nav.briefs", roles: ["company"] },
+  { href: "/shortlists", labelKey: "nav.shortlists", roles: ["company"] },
   { href: "/opportunities", labelKey: "nav.opportunities", roles: ["creator"] },
   { href: "/collaborations", labelKey: "nav.collaborations", roles: ["creator", "company", "admin"] },
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
+  { href: "/portfolio", labelKey: "nav.portfolio", roles: ["creator"] },
   { href: "/pricing", labelKey: "nav.pricing", roles: ["creator", "company", "admin"] },
   // Creator-side, like the Media Kit: the page itself enforces the same rule
   // (requireCreatorFeatures), so this list only decides what is shown.

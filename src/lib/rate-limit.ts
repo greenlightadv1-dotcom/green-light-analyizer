@@ -37,7 +37,9 @@ export type RateLimitAction =
   | "g_chat"
   | "access_request"
   | "upload"
-  | "collab_write";
+  | "collab_write"
+  | "shortlist_write"
+  | "portfolio_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -128,6 +130,16 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   // Briefs, invitations, terms and deliverables (0026): every write can
   // notify the other party, so one account cannot flood another.
   collab_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // Shortlists (0028): private to the company; a generous cap on churn.
+  shortlist_write: [
+    { limit: 120, windowSeconds: HOUR, label: "hour" },
+    { limit: 600, windowSeconds: DAY, label: "day" },
+  ],
+  // Portfolio and public-profile visibility (0028).
+  portfolio_write: [
     { limit: 60, windowSeconds: HOUR, label: "hour" },
     { limit: 300, windowSeconds: DAY, label: "day" },
   ],

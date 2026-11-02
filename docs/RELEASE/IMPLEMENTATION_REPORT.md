@@ -123,6 +123,26 @@ Not done:
   - `src/lib/notifications/rules.test.ts`: targets, preferences, write scoping;
   - browser checks in `scripts/collab-ui-e2e.mjs`.
 
+## Feature: shortlists, portfolio and public-profile sections (migration 0028, not applied)
+
+- **Shortlists** (`/shortlists`, companies):
+  - create, rename and delete named lists;
+  - save a creator from Discover's selected-creator panel, with an optional private note;
+  - remove a creator after confirming.
+  - Lists are private to the company: creators never see them, and admins cannot read them.
+- **Portfolio** (`/portfolio`, creators):
+  - add, edit, reorder and delete work (https links only);
+  - each item is private until marked public;
+  - a brand is named publicly only when the creator records the brand's consent;
+  - text goes through the contact-detail mask, and violations are logged.
+- **Section visibility:** six toggles decide what `/p/<slug>` shows. Existing sections default on, so the page is unchanged; the portfolio defaults off. The public RPCs enforce the toggles, so a hidden section never reaches the browser.
+- **Database checks:** triggers enforce owner roles and limits (20 lists, 200 creators per list, 30 portfolio items).
+- **Tests:**
+  - `supabase/tests/shortlists_portfolio_test.sql`;
+  - `src/lib/portfolio/rules.test.ts`;
+  - rate-limit coverage;
+  - browser checks.
+
 ## Not built in this pass
 
 Deal-room message read state, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).

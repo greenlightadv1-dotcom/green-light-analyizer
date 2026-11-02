@@ -8,6 +8,7 @@ import { CountryShareList } from "@/components/media-kit/CountryShareList";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { ProvenanceBadge } from "@/components/g/ProvenanceBadge";
 import { emitG } from "@/components/g/events";
+import { SaveToShortlist } from "@/components/shortlists/SaveToShortlist";
 import { useTranslation } from "@/components/LocaleProvider";
 import { OfferPanel } from "@/app/(app)/discover/OfferPanel";
 import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -39,6 +40,7 @@ export function DiscoverView({
   query,
   selected,
   directoryEmpty,
+  shortlists = null,
 }: {
   items: DiscoverEntry[];
   total: number;
@@ -47,6 +49,8 @@ export function DiscoverView({
   query: DiscoveryQuery;
   selected: DiscoverEntry | null;
   directoryEmpty: boolean;
+  /** The company's own lists (null for admins, who have none). */
+  shortlists?: { id: string; name: string; hasCreator: boolean }[] | null;
 }) {
   const { t, locale } = useTranslation();
 
@@ -240,6 +244,11 @@ export function DiscoverView({
       </GlassPanel>
 
       {selected ? <div className="mb-4">{card(selected, true)}</div> : null}
+      {selected && shortlists ? (
+        <div className="mb-4">
+          <SaveToShortlist creatorId={selected.creator_id} creatorName={selected.full_name} lists={shortlists} />
+        </div>
+      ) : null}
 
       {directoryEmpty ? (
         <EmptyState title={t("discover.emptyTitle")} body={t("discover.emptyBody")} />

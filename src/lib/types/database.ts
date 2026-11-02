@@ -463,6 +463,36 @@ export type NotificationPreferences = {
   updated_at: string;
 };
 
+export type Shortlist = { id: string; company_id: string; name: string; created_at: string; updated_at: string };
+export type ShortlistEntry = { shortlist_id: string; creator_id: string; note: string | null; added_at: string };
+export type PortfolioPlatform = "youtube" | "twitch" | "kick" | "instagram" | "tiktok" | "x" | "other";
+export type PortfolioItem = {
+  id: string;
+  creator_id: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  platform: PortfolioPlatform | null;
+  brand_name: string | null;
+  brand_name_public: boolean;
+  published_on: string | null;
+  is_public: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+export type PublicProfileSettings = {
+  profile_id: string;
+  show_bio: boolean;
+  show_location: boolean;
+  show_social_links: boolean;
+  show_rate: boolean;
+  show_platforms: boolean;
+  show_portfolio: boolean;
+  updated_at: string;
+};
+export type PublicPortfolioItem = Pick<PortfolioItem, "title" | "description" | "url" | "platform" | "brand_name" | "published_on">;
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -562,6 +592,10 @@ export type Database = {
       deliverables: Table<Deliverable, Optional<Deliverable, Exclude<keyof Deliverable, "collaboration_id" | "title">>>;
       collaboration_events: Table<CollaborationEvent, Optional<CollaborationEvent, Exclude<keyof CollaborationEvent, "event_type">>>;
       notifications: Table<AppNotification, Optional<AppNotification, Exclude<keyof AppNotification, "recipient_id" | "event_id" | "kind" | "category">>>;
+      shortlists: Table<Shortlist, Optional<Shortlist, Exclude<keyof Shortlist, "company_id" | "name">>>;
+      shortlist_entries: Table<ShortlistEntry, Optional<ShortlistEntry, Exclude<keyof ShortlistEntry, "shortlist_id" | "creator_id">>>;
+      portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;
+      public_profile_settings: Table<PublicProfileSettings, Optional<PublicProfileSettings, Exclude<keyof PublicProfileSettings, "profile_id">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
@@ -593,6 +627,10 @@ export type Database = {
       creator_public_profile: {
         Args: { p_slug: string };
         Returns: CreatorPublicProfile[];
+      };
+      creator_public_portfolio: {
+        Args: { p_slug: string };
+        Returns: PublicPortfolioItem[];
       };
       /* 0026 transitions: service_role only. Each raises 'collab:<code>' on refusal. */
       collab_create_invitation: { Args: { p_company: string; p_brief: string; p_creator: string; p_message: string; p_amount: number | null }; Returns: string };

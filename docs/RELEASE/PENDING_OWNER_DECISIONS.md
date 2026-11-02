@@ -32,7 +32,7 @@ Only items that need the owner. Nothing here has been changed or invented.
 - An unban clears `profiles.banned_*`.
 - The server log line is temporary.
 
-**Proposed migration (not written; it takes the next free number when approved, since 0026 is now the collaboration lifecycle)**
+**Proposed migration (not written; it takes the next free number when approved, since 0026–0028 are now used)**
 
 1. Extend `admin_actions.action` CHECK with `violation_ban`, `violation_dismiss`, `application_reject` and `representative_unlink`. Add a nullable `subject_id uuid` (the violation, application or member id). Update the table comment, which today scopes it to `/admin/users`.
 2. Add `SECURITY DEFINER` functions, executable by `service_role` only, that do the change and the audit insert in **one transaction**:
@@ -78,3 +78,9 @@ The benchmark needs real model calls using the production key and quota. Approve
 Briefs, invitations, deliverables, revisions and completion are now built (migration 0026, not applied anywhere). Two questions remain open, and the build takes the conservative answer to each until the owner decides:
 - **Who on the company side may act.** Today only the company account itself can write briefs, send invitations and review deliverables. A linked representative gets no access to the company's briefs or collaborations. Granting it needs a policy and function change.
 - **Reviews (ratings after completion).** Not built. Whether reviews are public, private or admin-only decides the schema, so nothing was guessed.
+
+## 10. Portfolio consent wording and collaboration showcase
+
+The portfolio (migration 0028) names a brand on the public profile only when the creator ticks "The brand agreed to be named on my public profile". Please confirm:
+- whether that wording is enough, or legal wants different text or a stronger record (for example, an uploaded approval);
+- whether completed Green Light collaborations may appear on a creator's public profile. If so, decide whether the company must consent inside the app. Nothing is shown automatically today.

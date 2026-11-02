@@ -12,9 +12,9 @@ the full list are in `MASTER_IMPLEMENTATION_AUDIT.md`.
 | 5 | Support tickets | MISSING | Yes: `support_tickets`, `support_messages` | — | — | Creators and admins only |
 | 6 | Content planning and saved drafts (G) | MISSING | Yes: `content_items` | G | — | Owner-only RLS |
 | 7 | G drafts and proposals with explicit confirmation | MISSING | Depends on 1–6 | 1–6 | — | Preview, confirm, then execute on the server; never claim success before the server confirms |
-| 8 | Portfolio and collaboration history with consent | MISSING | Yes | 3 | Owner: brand consent wording | Company names or logos only with consent |
-| 9 | Public-profile section visibility toggles | MISSING | Yes: column or table | — | — | Default off; enforced in the public RPC |
-| 10 | Company shortlists | MISSING | Yes: `shortlists` | Discovery | — | Company-scoped |
+| 8 | Portfolio with consent | BUILT, NOT APPLIED (0028). Automatic showcase of completed collaborations: not built | 0028 `portfolio_items` | — | Apply 0028; owner: consent wording, and whether completed collaborations may be shown | Private by default; brand named publicly only with the creator's recorded consent; text masked |
+| 9 | Public-profile section visibility toggles | BUILT, NOT APPLIED (0028) | 0028 `public_profile_settings` | — | Apply 0028 | Enforced in the public RPCs. Existing sections default on (unchanged page); portfolio defaults off |
+| 10 | Company shortlists | BUILT, NOT APPLIED (0028) | 0028 `shortlists`, `shortlist_entries` | Discovery | Apply 0028 | Company-private; creators and admins cannot read them |
 | 11 | Durable admin audit for violations, reject, unlink | BLOCKED | Yes: see PENDING_OWNER_DECISIONS.md | — | Owner approval | Append-only |
 | 12 | Growth history over 29 days | BLOCKED | Policy-dependent | YouTube OAuth path | Owner and Google policy | Authorized data only, with 30-day re-checks |
 | 13 | Instagram metrics and geography | BLOCKED | No | Meta App Review; API version upgrade | External | Disabled on the server today |

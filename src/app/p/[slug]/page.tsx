@@ -6,7 +6,7 @@ import { ThemedLogo } from "@/components/brand/ThemedLogo";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
-import type { CreatorPublicProfile } from "@/lib/types/database";
+import type { CreatorPublicProfile, PublicPortfolioItem } from "@/lib/types/database";
 
 /**
  * Public shareable profile — greenlightadvs.com/p/<slug> (§ Media Kit's
@@ -27,6 +27,25 @@ async function fetchProfile(slug: string): Promise<CreatorPublicProfile | null> 
     return null;
   }
 }
+
+/**
+ * Public portfolio items (migration 0028): only items the creator marked
+ * public, only when they turned the section on, and a brand name only where
+ * they recorded the brand's consent. Before 0028 is applied the RPC does not
+ * exist and the section is simply absent.
+ */
+async function fetchPortfolio(slug: string): Promise<PublicPortfolioItem[]> {
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("creator_public_portfolio", { p_slug: slug });
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+const WORK_PLATFORM: Record<string, string> = { youtube: "YouTube", twitch: "Twitch", kick: "Kick", instagram: "Instagram", tiktok: "TikTok", x: "X", other: "" };
 
 export async function generateMetadata({
   params,
@@ -55,6 +74,7 @@ export default async function PublicProfilePage({
   const { slug } = await params;
   const profile = await fetchProfile(slug);
   if (!profile) notFound();
+  const portfolio = await fetchPortfolio(slug);
 
   const socialEntries = SOCIAL_ORDER.filter((key) => profile.social_links?.[key]);
 
@@ -116,6 +136,28 @@ export default async function PublicProfilePage({
           </p>
         ) : null}
       </GlassPanel>
+
+      {portfolio.length ? (
+        <GlassPanel className="mt-4 w-full p-6">
+          <h2 className="text-sm font-semibold text-fg">Selected work</h2>
+          <ul className="mt-3 divide-y divide-fg/5">
+            {portfolio.map((item, i) => (
+              <li key={i} className="py-3 text-sm">
+                <p dir="auto" className="font-medium [overflow-wrap:anywhere] text-fg">{item.title}</p>
+                <p className="text-xs text-fg-muted">
+                  {[item.platform ? WORK_PLATFORM[item.platform] : "", item.brand_name ?? "", item.published_on ?? ""].filter(Boolean).join(" · ")}
+                </p>
+                {item.description ? <p dir="auto" className="mt-1 text-fg/70 [overflow-wrap:anywhere]">{item.description}</p> : null}
+                {item.url ? (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-1 block text-xs break-all text-fg-muted underline">
+                    {item.url}
+                  </a>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </GlassPanel>
+      ) : null}
 
       <div className="mt-6">
         <PrintButton />

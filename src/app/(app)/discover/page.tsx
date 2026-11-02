@@ -5,6 +5,7 @@ import { listCreatorDirectory } from "@/lib/deals/directory";
 import { filterDirectory, hasFreshVerifiedGeo, parseDiscoveryQuery } from "@/lib/discovery";
 import type { DirectoryRow } from "@/lib/g/recommend";
 import type { DiscoverEntry } from "@/components/views/DiscoverView";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Discover creators" };
 /**
@@ -27,7 +28,7 @@ export default async function DiscoverPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  await requireRole("company", "admin");
+  const profile = await requireRole("company", "admin");
   const params = await searchParams;
   const rows = (await listCreatorDirectory()) as unknown as DirectoryRow[];
   const query = parseDiscoveryQuery(params);
@@ -40,8 +41,23 @@ export default async function DiscoverPage({
   const selectedId = typeof params.creator === "string" ? params.creator : null;
   const selectedRow = selectedId ? rows.find((r) => r.creator_id === selectedId) ?? null : null;
 
+  // The company's own lists (RLS: shortlists are owner-only) and whether the
+  // selected creator is already in each. Missing tables (0028 not applied)
+  // simply mean no lists.
+  let shortlists: { id: string; name: string; hasCreator: boolean }[] | null = null;
+  if (profile.role === "company") {
+    const supabase = await createClient();
+    const { data: lists } = await supabase.from("shortlists").select("id, name").order("name").limit(20);
+    const { data: entries } = selectedRow && lists?.length
+      ? await supabase.from("shortlist_entries").select("shortlist_id").eq("creator_id", selectedRow.creator_id)
+      : { data: [] as { shortlist_id: string }[] };
+    const inList = new Set((entries ?? []).map((e) => e.shortlist_id));
+    shortlists = (lists ?? []).map((l) => ({ id: l.id, name: l.name, hasCreator: inList.has(l.id) }));
+  }
+
   return (
     <DiscoverView
+      shortlists={shortlists}
       items={items.map(withFreshness)}
       total={total}
       page={page}
