@@ -1319,7 +1319,7 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0030 or later, since 0026–0029 are used in §19).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0031 or later, since 0026–0030 are used in §19).
 
 ## 19. Collaboration lifecycle (branch only, 2026-11-02)
 
@@ -1380,3 +1380,10 @@ Not deployed. **Migration 0026 is not applied anywhere.**
   - `message_draft` (either party, own collaboration).
 - **Server filtering:** `allowedProposals` scopes the ids and masks the text, and a proposal with an ungrounded figure is dropped.
 - **Execution:** the UI (`components/g/GProposals.tsx`) shows each proposal as an editable form behind `ConfirmActionForm`. Confirming calls the ordinary server action (`saveContentItem` / `inviteCreator`), and a message draft is only copied. G itself never executes anything.
+
+**Email forwarding fixes (diagnosed in `docs/EMAIL_FORWARDING_DIAGNOSTIC.md`).**
+- **Role mailboxes:** mail to the root-domain role mailboxes (`support@`, `privacy@`, `security@`, `legal@`, `deals@`) used to be rejected by the intake and reach nobody.
+  - `src/lib/email/role-mailbox.ts` now forwards it to `ROLE_MAILBOX_FORWARD_TO`, an operator inbox that is not yet set in production. No room is created.
+  - Without that variable, the mail is recorded and logged as `inbound.role_mailbox_unrouted`.
+- **New messages:** migration 0030 (not applied) notifies the other party of a new message in an in-app room. Email rooms keep the email relay.
+- **Relay outcome:** the relay's outcome write is now checked (`relay.outcome_not_recorded`).

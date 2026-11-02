@@ -32,7 +32,7 @@ Only items that need the owner. Nothing here has been changed or invented.
 - An unban clears `profiles.banned_*`.
 - The server log line is temporary.
 
-**Proposed migration (not written; it takes the next free number when approved, since 0026–0029 are now used)**
+**Proposed migration (not written; it takes the next free number when approved, since 0026–0030 are now used)**
 
 1. Extend `admin_actions.action` CHECK with `violation_ban`, `violation_dismiss`, `application_reject` and `representative_unlink`. Add a nullable `subject_id uuid` (the violation, application or member id). Update the table comment, which today scopes it to `/admin/users`.
 2. Add `SECURITY DEFINER` functions, executable by `service_role` only, that do the change and the audit insert in **one transaction**:
@@ -84,3 +84,9 @@ Briefs, invitations, deliverables, revisions and completion are now built (migra
 The portfolio (migration 0028) names a brand on the public profile only when the creator ticks "The brand agreed to be named on my public profile". Please confirm:
 - whether that wording is enough, or legal wants different text or a stronger record (for example, an uploaded approval);
 - whether completed Green Light collaborations may appear on a creator's public profile. If so, decide whether the company must consent inside the app. Nothing is shown automatically today.
+
+## 11. Email forwarding (see docs/EMAIL_FORWARDING_DIAGNOSTIC.md)
+
+- **`ROLE_MAILBOX_FORWARD_TO`:** set it in Vercel Production to the inbox that should receive mail sent to support@, privacy@, security@, legal@ and deals@greenlightadvs.com. Today that mail reaches nobody.
+- **Relay retry:** should a failed relay of a creator's reply to an email sponsor be retried automatically (risking a duplicate email), offered as a manual "resend" button, or left as a visible failure (today's behaviour)?
+

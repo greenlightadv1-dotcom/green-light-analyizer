@@ -8,14 +8,15 @@ import type { AppNotification, NotificationCategory, Role } from "../types/datab
  * redirect.
  */
 
-export const NOTIFICATION_CATEGORIES: NotificationCategory[] = ["invitations", "terms", "deliverables", "status"];
+export const NOTIFICATION_CATEGORIES: NotificationCategory[] = ["invitations", "terms", "deliverables", "status", "messages"];
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function notificationHref(
-  n: Pick<AppNotification, "collaboration_id" | "brief_id">,
+  n: Pick<AppNotification, "collaboration_id" | "brief_id"> & { chat_id?: string | null },
   role: Role,
 ): string {
+  if (n.chat_id && UUID.test(n.chat_id)) return `/inbox/${n.chat_id}`;
   if (n.collaboration_id && UUID.test(n.collaboration_id)) return `/collaborations/${n.collaboration_id}`;
   if (role === "company" && n.brief_id && UUID.test(n.brief_id)) return `/briefs/${n.brief_id}`;
   if (role === "creator") return "/opportunities";

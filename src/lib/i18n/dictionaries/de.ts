@@ -1418,6 +1418,7 @@ const de: Dictionary = {
       deliverable_approved: "Deliverable freigegeben",
       collaboration_completed: "Kooperation abgeschlossen",
       collaboration_cancelled: "Kooperation storniert",
+      message_received: "Neue Nachricht",
     },
     errors: {
       not_found: "Dieses Element ist für dich nicht verfügbar. Lade die Seite neu.",
@@ -1471,6 +1472,7 @@ const de: Dictionary = {
       terms: "Vorschläge und Vereinbarungen zu Bedingungen",
       deliverables: "Deliverables, Einreichungen und Prüfungen",
       status: "Abschluss und Stornierung",
+      messages: "Neue Nachrichten in einem Deal-Raum",
     },
   },
   shortlists: {

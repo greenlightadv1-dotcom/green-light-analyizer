@@ -27,7 +27,7 @@ export async function openNotification(fd: FormData): Promise<void> {
     .update({ read_at: new Date().toISOString() })
     .eq("id", id)
     .eq("recipient_id", profile.id)
-    .select("collaboration_id, brief_id")
+    .select("collaboration_id, brief_id, chat_id")
     .maybeSingle();
   if (error) log.error("notifications.open_failed", { error });
   revalidatePath("/notifications");

@@ -441,12 +441,15 @@ export type CollaborationEvent = {
   created_at: string;
 };
 
-export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status";
+export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status" | "messages";
 
 export type AppNotification = {
   id: string;
   recipient_id: string;
-  event_id: number;
+  /** Null for message notifications (0030). */
+  event_id: number | null;
+  /** Deal room, for message notifications (0030). */
+  chat_id: string | null;
   kind: string;
   category: NotificationCategory;
   brief_id: string | null;
@@ -608,7 +611,7 @@ export type Database = {
       collaborations: Table<Collaboration, Optional<Collaboration, Exclude<keyof Collaboration, "invitation_id" | "brief_id" | "company_id" | "creator_id">>>;
       deliverables: Table<Deliverable, Optional<Deliverable, Exclude<keyof Deliverable, "collaboration_id" | "title">>>;
       collaboration_events: Table<CollaborationEvent, Optional<CollaborationEvent, Exclude<keyof CollaborationEvent, "event_type">>>;
-      notifications: Table<AppNotification, Optional<AppNotification, Exclude<keyof AppNotification, "recipient_id" | "event_id" | "kind" | "category">>>;
+      notifications: Table<AppNotification, Optional<AppNotification, Exclude<keyof AppNotification, "recipient_id" | "kind" | "category">>>;
       shortlists: Table<Shortlist, Optional<Shortlist, Exclude<keyof Shortlist, "company_id" | "name">>>;
       shortlist_entries: Table<ShortlistEntry, Optional<ShortlistEntry, Exclude<keyof ShortlistEntry, "shortlist_id" | "creator_id">>>;
       portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;

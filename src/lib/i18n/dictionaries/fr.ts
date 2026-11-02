@@ -1418,6 +1418,7 @@ const fr: Dictionary = {
       deliverable_approved: "Livrable approuvé",
       collaboration_completed: "Collaboration terminée",
       collaboration_cancelled: "Collaboration annulée",
+      message_received: "Nouveau message",
     },
     errors: {
       not_found: "Cet élément ne vous est pas accessible. Actualisez la page.",
@@ -1471,6 +1472,7 @@ const fr: Dictionary = {
       terms: "Propositions et accords de conditions",
       deliverables: "Livrables, remises et relectures",
       status: "Clôture et annulation",
+      messages: "Nouveaux messages dans une salle de négociation",
     },
   },
   shortlists: {

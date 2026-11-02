@@ -1410,6 +1410,7 @@ const ar: Dictionary = {
       deliverable_approved: "اعتُمد المُخرج",
       collaboration_completed: "اكتمل التعاون",
       collaboration_cancelled: "أُلغي التعاون",
+      message_received: "رسالة جديدة",
     },
     errors: {
       not_found: "هذا العنصر غير متاح لك. حدّث الصفحة.",
@@ -1463,6 +1464,7 @@ const ar: Dictionary = {
       terms: "مقترحات الشروط والاتفاقات",
       deliverables: "المخرجات والتسليمات والمراجعات",
       status: "الإكمال والإلغاء",
+      messages: "رسائل جديدة في غرفة الصفقة",
     },
   },
   shortlists: {

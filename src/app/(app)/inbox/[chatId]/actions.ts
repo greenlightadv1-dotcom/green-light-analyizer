@@ -141,7 +141,10 @@ export async function sendMessage(
       creatorAlias: profile.inbound_alias,
     });
 
-    await admin
+    // The outcome is the only record of whether the sponsor got the reply.
+    // Recording it can fail independently of the send; that must surface,
+    // or a delivered message reads as never attempted (EMAIL_FORWARDING_DIAGNOSTIC.md).
+    const { error: recordError } = await admin
       .from("messages")
       .update(
         relay.ok
@@ -149,6 +152,9 @@ export async function sendMessage(
           : { relay_error: relay.error.slice(0, 500) },
       )
       .eq("id", inserted.id);
+    if (recordError) {
+      log.error("relay.outcome_not_recorded", { chat_id: chatId, message_id: inserted.id, relayed: relay.ok, error: recordError });
+    }
 
     if (!relay.ok) {
       log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });

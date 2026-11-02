@@ -1418,6 +1418,7 @@ const es: Dictionary = {
       deliverable_approved: "Entregable aprobado",
       collaboration_completed: "Colaboración completada",
       collaboration_cancelled: "Colaboración cancelada",
+      message_received: "Nuevo mensaje",
     },
     errors: {
       not_found: "Este elemento no está disponible para ti. Actualiza la página.",
@@ -1471,6 +1472,7 @@ const es: Dictionary = {
       terms: "Propuestas y acuerdos de condiciones",
       deliverables: "Entregables, entregas y revisiones",
       status: "Finalización y cancelación",
+      messages: "Mensajes nuevos en una sala de negociación",
     },
   },
   shortlists: {

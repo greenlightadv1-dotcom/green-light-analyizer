@@ -1430,6 +1430,7 @@ const en = {
       deliverable_approved: "Deliverable approved",
       collaboration_completed: "Collaboration completed",
       collaboration_cancelled: "Collaboration cancelled",
+      message_received: "New message",
     },
     errors: {
       not_found: "That item isn't available to you. Refresh the page.",
@@ -1483,6 +1484,7 @@ const en = {
       terms: "Terms proposals and agreements",
       deliverables: "Deliverables, submissions and reviews",
       status: "Completion and cancellation",
+      messages: "New messages in a deal room",
     },
   },
   shortlists: {

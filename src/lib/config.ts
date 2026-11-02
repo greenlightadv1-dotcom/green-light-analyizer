@@ -86,6 +86,13 @@ export function readConfigReport(): ConfigReport {
         "The inbound webhook returns 503 and refuses every delivery. No offer ever becomes a deal room.",
     },
     {
+      name: "ROLE_MAILBOX_FORWARD_TO",
+      set: Boolean(process.env.ROLE_MAILBOX_FORWARD_TO),
+      required: false,
+      impact:
+        "Mail to support@, privacy@, security@, legal@ and deals@ is recorded but forwarded to nobody. These addresses are published on the Support page and in the legal pages.",
+    },
+    {
       name: "RESEND_FROM_ADDRESS",
       set: Boolean(process.env.RESEND_FROM_ADDRESS),
       required: false,

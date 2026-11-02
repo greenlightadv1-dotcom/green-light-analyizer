@@ -13,6 +13,11 @@ test("a notification opens its collaboration, else the right list", () => {
   assert.equal(notificationHref({ collaboration_id: null, brief_id: null }, "admin"), "/notifications");
 });
 
+test("a message notification opens its deal room", () => {
+  assert.equal(notificationHref({ collaboration_id: null, brief_id: null, chat_id: C }, "company"), `/inbox/${C}`);
+  assert.equal(notificationHref({ collaboration_id: null, brief_id: null, chat_id: "../x" }, "creator"), "/opportunities");
+});
+
 test("targets are built from ids only, never from arbitrary strings", () => {
   assert.equal(notificationHref({ collaboration_id: "//evil.example", brief_id: null }, "creator"), "/opportunities");
   assert.equal(notificationHref({ collaboration_id: null, brief_id: "../../x" }, "company"), "/notifications");
@@ -20,8 +25,8 @@ test("targets are built from ids only, never from arbitrary strings", () => {
 
 test("preferences accept only known categories", () => {
   assert.deepEqual(parseMuted(["terms", "marketing", "terms", "status"]), ["terms", "status"]);
-  assert.deepEqual(mutedFromEnabled(["invitations", "deliverables"]), ["terms", "status"]);
-  assert.deepEqual(mutedFromEnabled([]), ["invitations", "terms", "deliverables", "status"]);
+  assert.deepEqual(mutedFromEnabled(["invitations", "deliverables"]), ["terms", "status", "messages"]);
+  assert.deepEqual(mutedFromEnabled([]), ["invitations", "terms", "deliverables", "status", "messages"]);
 });
 
 test("badge text", () => {
