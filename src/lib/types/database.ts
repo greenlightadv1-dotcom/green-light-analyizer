@@ -346,6 +346,101 @@ export type MediaKitSnapshot = {
   media_count: number | null;
 };
 
+
+/* ---- Collaboration lifecycle (migration 0026). Server-written only. ---- */
+export type BriefStatus = "draft" | "published" | "archived";
+export type InvitationStatus = "pending" | "changes_requested" | "accepted" | "declined" | "withdrawn";
+export type CollaborationStatus = "negotiating" | "active" | "completed" | "cancelled";
+export type DeliverableStatus = "pending" | "submitted" | "revision_requested" | "approved";
+
+export type Brief = {
+  id: string;
+  company_id: string;
+  title: string;
+  description: string;
+  sponsorship_type: SponsorshipType | null;
+  platforms: string[];
+  target_countries: string[];
+  categories: string[];
+  deliverables_summary: string | null;
+  budget_min_usd: number | null;
+  budget_max_usd: number | null;
+  start_date: string | null;
+  due_date: string | null;
+  status: BriefStatus;
+  published_at: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Invitation = {
+  id: string;
+  brief_id: string;
+  company_id: string;
+  creator_id: string;
+  message: string;
+  proposed_amount_usd: number | null;
+  status: InvitationStatus;
+  response_note: string | null;
+  responded_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Collaboration = {
+  id: string;
+  invitation_id: string;
+  brief_id: string;
+  company_id: string;
+  creator_id: string;
+  deal_chat_id: string | null;
+  status: CollaborationStatus;
+  proposed_amount_usd: number | null;
+  proposed_terms: string | null;
+  proposed_by: string | null;
+  company_confirmed_at: string | null;
+  creator_confirmed_at: string | null;
+  agreed_amount_usd: number | null;
+  agreed_terms: string | null;
+  agreed_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  cancel_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Deliverable = {
+  id: string;
+  collaboration_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: DeliverableStatus;
+  submission_url: string | null;
+  submission_note: string | null;
+  submitted_at: string | null;
+  review_note: string | null;
+  reviewed_at: string | null;
+  approved_at: string | null;
+  revision_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CollaborationEvent = {
+  id: number;
+  invitation_id: string | null;
+  collaboration_id: string | null;
+  deliverable_id: string | null;
+  actor_id: string | null;
+  event_type: string;
+  detail: Record<string, unknown>;
+  created_at: string;
+};
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -439,6 +534,11 @@ export type Database = {
           Exclude<keyof MediaKitSnapshot, "media_kit_id" | "creator_id" | "platform" | "source">
         >
       >;
+      briefs: Table<Brief, Optional<Brief, Exclude<keyof Brief, "company_id" | "title" | "description">>>;
+      invitations: Table<Invitation, Optional<Invitation, Exclude<keyof Invitation, "brief_id" | "company_id" | "creator_id" | "message">>>;
+      collaborations: Table<Collaboration, Optional<Collaboration, Exclude<keyof Collaboration, "invitation_id" | "brief_id" | "company_id" | "creator_id">>>;
+      deliverables: Table<Deliverable, Optional<Deliverable, Exclude<keyof Deliverable, "collaboration_id" | "title">>>;
+      collaboration_events: Table<CollaborationEvent, Optional<CollaborationEvent, Exclude<keyof CollaborationEvent, "event_type">>>;
       admin_actions: Table<
         AdminAction,
         Optional<AdminAction, Exclude<keyof AdminAction, "action">>
@@ -470,6 +570,19 @@ export type Database = {
         Args: { p_slug: string };
         Returns: CreatorPublicProfile[];
       };
+      /* 0026 transitions: service_role only. Each raises 'collab:<code>' on refusal. */
+      collab_create_invitation: { Args: { p_company: string; p_brief: string; p_creator: string; p_message: string; p_amount: number | null }; Returns: string };
+      collab_withdraw_invitation: { Args: { p_company: string; p_invitation: string }; Returns: undefined };
+      collab_revise_invitation: { Args: { p_company: string; p_invitation: string; p_message: string; p_amount: number | null }; Returns: undefined };
+      collab_respond_invitation: { Args: { p_creator: string; p_invitation: string; p_response: string; p_note: string | null }; Returns: string | null };
+      collab_propose_terms: { Args: { p_actor: string; p_collab: string; p_amount: number; p_terms: string }; Returns: undefined };
+      collab_confirm_terms: { Args: { p_actor: string; p_collab: string }; Returns: string };
+      collab_add_deliverable: { Args: { p_company: string; p_collab: string; p_title: string; p_description: string | null; p_due: string | null }; Returns: string };
+      collab_remove_deliverable: { Args: { p_company: string; p_deliverable: string }; Returns: undefined };
+      collab_submit_deliverable: { Args: { p_creator: string; p_deliverable: string; p_url: string | null; p_note: string | null }; Returns: undefined };
+      collab_review_deliverable: { Args: { p_company: string; p_deliverable: string; p_decision: string; p_note: string | null }; Returns: undefined };
+      collab_complete: { Args: { p_company: string; p_collab: string }; Returns: undefined };
+      collab_cancel: { Args: { p_actor: string; p_collab: string; p_reason: string }; Returns: undefined };
       /** service_role-only counter (migration 0019) — see lib/rate-limit.ts. */
       consume_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };

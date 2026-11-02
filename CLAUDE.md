@@ -1319,4 +1319,30 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (0026, not written).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, since 0026 is now the collaboration lifecycle in §19).
+
+## 19. Collaboration lifecycle (branch only, 2026-11-02)
+
+Not deployed. **Migration 0026 is not applied anywhere.**
+
+- **Tables:** `briefs`, `invitations`, `collaborations`, `deliverables` and the append-only `collaboration_events`.
+- **Access:**
+  - `authenticated` has SELECT only, under RLS: parties and admins; creators also see published briefs.
+  - Every write goes through a `collab_*` SECURITY DEFINER function, executable by `service_role` only. It locks the row and refuses with `collab:<code>`, which `lib/collab/rules.ts` maps to a dictionary key.
+- **Server actions** (`src/app/(app)/collaborations/actions.ts`) take the actor from the session, never from the form. They also validate input, mask free text with the §6.1 masker (logging violations) and apply the `collab_write` rate limit.
+- **Flow:**
+  - A company publishes a brief and invites creators. Publishing needs complete company details.
+  - The creator accepts, declines or requests changes. Accepting opens a deal room (`deal_chats`, `negotiating`).
+  - Both sides confirm the same terms; the terms are then frozen and the room goes `agreed`. `paid` stays admin-only (§12).
+  - Deliverables are submitted (https link or note), approved or sent back for revision. The company completes once every deliverable is approved.
+- **Commission:** no money moves and no commission is computed. The UI states that the 10% commission is settled manually.
+- **Owner decisions still open (PENDING_OWNER_DECISIONS item 9):** representatives have no access to a company's briefs or collaborations, and there are no reviews.
+- **Pages:**
+  - `/briefs` (company);
+  - `/opportunities` (creator);
+  - `/collaborations` (both sides; admins read-only);
+  - previews under `/preview/…`.
+- **Tests:**
+  - `supabase/tests/collaboration_lifecycle_test.sql`;
+  - `src/lib/collab/*.test.ts`;
+  - `scripts/collab-ui-e2e.mjs`.

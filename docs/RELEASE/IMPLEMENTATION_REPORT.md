@@ -86,6 +86,29 @@ Not done:
 - the NVIDIA Arabic benchmark;
 - live platform API calls.
 
+## Feature: collaboration lifecycle (migration 0026, not applied)
+
+- **Company:** `/briefs` (create, edit, publish, archive) and `/briefs/[id]` (invite a creator found by name in the directory; withdraw, or revise after the creator asks for changes).
+- **Creator:** `/opportunities` (accept, decline or request changes; published briefs).
+- **Both sides:** `/collaborations` and `/collaborations/[id]`:
+  - propose terms; each side confirms, and a new proposal clears both confirmations;
+  - the company adds deliverables; the creator submits an https link or a note;
+  - the company approves or asks for a revision, and the creator resubmits;
+  - the company completes once every deliverable is approved; either side can cancel with a reason;
+  - the history comes from the append-only event table.
+- **Admins** see every collaboration read-only.
+- **Authorization:**
+  - every transition is a SECURITY DEFINER function executable only by the service role, taking the actor from the session and locking the row;
+  - server actions check the role, validate, mask free text (violations are logged) and rate-limit (`collab_write`);
+  - signed-in users have SELECT only, filtered by RLS.
+- **Accepting** an invitation opens a deal room. Confirming terms marks that room `agreed`; `paid` stays admin-only.
+- **Not built:** reviews and representative authority (owner decisions, item 9), and notifications (next phase).
+- **Tests:**
+  - `supabase/tests/collaboration_lifecycle_test.sql` (lifecycle, refusals, RLS per role, append-only, cross-company FK);
+  - `src/lib/collab/*.test.ts` (rules, display, guards);
+  - rate-limit coverage;
+  - `scripts/collab-ui-e2e.mjs`: 117 browser checks over the preview screens in en and ar, at 1440 and 390 px.
+
 ## Not built in this pass
 
-Collaboration lifecycle (briefs, invitations, deliverables), notifications, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).
+Notifications, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).

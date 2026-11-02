@@ -24,6 +24,11 @@ export const NAV: readonly NavItem[] = [
   { href: "/onboarding", labelKey: "nav.onboarding", roles: ["creator", "company"] },
   { href: "/inbox", labelKey: "nav.inbox", roles: ["creator", "company", "admin"] },
   { href: "/discover", labelKey: "nav.discover", roles: ["company", "admin"] },
+  // Collaboration lifecycle: companies write briefs, creators see invitations
+  // and published briefs, both sides (and admins, read-only) track the work.
+  { href: "/briefs", labelKey: "nav.briefs", roles: ["company"] },
+  { href: "/opportunities", labelKey: "nav.opportunities", roles: ["creator"] },
+  { href: "/collaborations", labelKey: "nav.collaborations", roles: ["creator", "company", "admin"] },
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
   { href: "/pricing", labelKey: "nav.pricing", roles: ["creator", "company", "admin"] },

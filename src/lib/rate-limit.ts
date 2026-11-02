@@ -36,7 +36,8 @@ export type RateLimitAction =
   | "ai_company_intel"
   | "g_chat"
   | "access_request"
-  | "upload";
+  | "upload"
+  | "collab_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -123,6 +124,12 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   upload: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },
     { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // Briefs, invitations, terms and deliverables (0026): every write can
+  // notify the other party, so one account cannot flood another.
+  collab_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
   ],
 };
 

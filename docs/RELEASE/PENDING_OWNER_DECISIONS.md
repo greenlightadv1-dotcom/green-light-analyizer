@@ -32,7 +32,7 @@ Only items that need the owner. Nothing here has been changed or invented.
 - An unban clears `profiles.banned_*`.
 - The server log line is temporary.
 
-**Proposed migration (0026, not written)**
+**Proposed migration (not written; it takes the next free number when approved, since 0026 is now the collaboration lifecycle)**
 
 1. Extend `admin_actions.action` CHECK with `violation_ban`, `violation_dismiss`, `application_reject` and `representative_unlink`. Add a nullable `subject_id uuid` (the violation, application or member id). Update the table comment, which today scopes it to `/admin/users`.
 2. Add `SECURITY DEFINER` functions, executable by `service_role` only, that do the change and the audit insert in **one transaction**:
@@ -75,6 +75,6 @@ The benchmark needs real model calls using the production key and quota. Approve
 
 ## 9. Collaboration lifecycle design
 
-Briefs, invitations, deliverables, revisions, completion and reviews need new tables and a state machine. Please confirm:
-- who on the company side may send invitations and approve deliverables (owner or representative);
-- whether reviews are public, private or admin-only.
+Briefs, invitations, deliverables, revisions and completion are now built (migration 0026, not applied anywhere). Two questions remain open, and the build takes the conservative answer to each until the owner decides:
+- **Who on the company side may act.** Today only the company account itself can write briefs, send invitations and review deliverables. A linked representative gets no access to the company's briefs or collaborations. Granting it needs a policy and function change.
+- **Reviews (ratings after completion).** Not built. Whether reviews are public, private or admin-only decides the schema, so nothing was guessed.

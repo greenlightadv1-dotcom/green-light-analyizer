@@ -35,6 +35,19 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/api/uploads/avatar/route.ts", "POST", "upload"],
   ["app/api/uploads/documents/route.ts", "POST", "upload"],
   ["app/get-started/actions.ts", "submitAccessRequest", "access_request"],
+  ["app/(app)/collaborations/actions.ts", "saveBrief", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "inviteCreator", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "withdrawInvitation", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "reviseInvitation", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "respondToInvitation", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "proposeTerms", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "confirmTerms", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "addDeliverable", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "removeDeliverable", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "submitDeliverable", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "reviewDeliverable", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "completeCollaboration", "collab_write"],
+  ["app/(app)/collaborations/actions.ts", "cancelCollaboration", "collab_write"],
 ];
 
 for (const [file, fn, action] of GUARDED) {

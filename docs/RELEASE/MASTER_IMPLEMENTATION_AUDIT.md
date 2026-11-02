@@ -83,19 +83,20 @@ A local test or build is never treated as proof of Production behaviour.
 | Comparison | PARTIAL | Through G only; no saved shortlist |
 | Shortlists / saved creators | MISSING | Needs a migration |
 | Recommendations from real data | PARTIAL | `lib/g/recommend.ts` [T] |
-| Briefs and campaigns | MISSING | Needs a migration and a design |
-| Invitations, accept/decline/negotiate as an entity | PARTIAL | A Discover offer opens a deal room (signed quote); no accept/decline entity |
+| Briefs and campaigns | BUILT, NOT APPLIED | Migration 0026; `/briefs` [T][B on preview] |
+| Invitations, accept/decline/negotiate as an entity | BUILT, NOT APPLIED | 0026 invitations; `/opportunities`. Discover offers are unchanged |
 | Company dashboard (translated) | COMPLETE | Phase 1 [C][T]; not browser-tested |
 
 ### Collaboration lifecycle
 
 | Step | Status |
 |---|---|
-| Brief → discover → compare | PARTIAL (no brief entity) |
-| Invitation → creator review → accept/decline | PARTIAL (offer = deal room) |
+| Brief → discover → compare | BUILT, NOT APPLIED (0026): companies publish briefs, creators see them in `/opportunities` |
+| Invitation → creator review → accept/decline/request changes | BUILT, NOT APPLIED (0026); accepting opens a deal room |
 | Terms agreed, status transitions | COMPLETE for deal status: `new`/`negotiating`/`agreed`/`disputed`, admin-only `paid`, enforced on the server (`inbox/[chatId]/actions.ts:181-217`) [T] |
-| Deliverables, revisions, approvals, completion, reviews | MISSING |
-| History retained under access rules | PARTIAL (deal rooms persist; no closure record) |
+| Terms proposed and confirmed by both sides | BUILT, NOT APPLIED (0026); confirmation freezes the terms and marks the deal room agreed |
+| Deliverables, revisions, approvals, completion | BUILT, NOT APPLIED (0026). Reviews: owner decision |
+| History retained under access rules | BUILT, NOT APPLIED (0026): append-only `collaboration_events` |
 
 ### G assistant
 
@@ -156,7 +157,7 @@ Source: `docs/GREEN_LIGHT_INTEGRATION_STATUS.md` (29 October) and code. The YouT
 
 1. Owner decisions: legal dates and details, `CRON_SECRET`, the audit design.
 2. Apply 0025 in Production, after the code that uses it is deployed or alongside it.
-3. Collaboration core: briefs, invitations, deliverables and completion, with a migration and design review.
+3. Collaboration core: built on the branch as migration 0026 (not applied); needs review, then application.
 4. In-app notifications and inbox read state.
 5. Support tickets.
 6. Content planning with saved drafts.

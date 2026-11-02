@@ -9,15 +9,15 @@ import { NAV, isActivePath, navItemsForRole } from "./nav.ts";
 const hrefs = (role: "creator" | "company" | "admin") => navItemsForRole(role).map((i) => i.href);
 
 test("creator sees exactly the creator links, in order", () => {
-  assert.deepEqual(hrefs("creator"), ["/dashboard", "/onboarding", "/inbox", "/analyzer", "/media-kit", "/pricing", "/support", "/settings"]);
+  assert.deepEqual(hrefs("creator"), ["/dashboard", "/onboarding", "/inbox", "/opportunities", "/collaborations", "/analyzer", "/media-kit", "/pricing", "/support", "/settings"]);
 });
 
 test("company sees exactly the company links, in order", () => {
-  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/collaborations", "/pricing", "/settings"]);
 });
 
-test("admin sees every link but onboarding, including the admin pages", () => {
-  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => h !== "/onboarding"));
+test("admin sees every link but onboarding, briefs and opportunities, including the admin pages", () => {
+  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => !["/onboarding", "/briefs", "/opportunities"].includes(h)));
   for (const href of ["/admin/users", "/admin/requests", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
     assert.ok(hrefs("admin").includes(href), href);
   }
@@ -28,6 +28,8 @@ test("unauthorized links never appear", () => {
     assert.ok(!hrefs(role).some((h) => h.startsWith("/admin")), `${role} must not see admin pages`);
   }
   assert.ok(!hrefs("creator").includes("/discover"), "Discover is company/admin only");
+  assert.ok(!hrefs("creator").includes("/briefs"), "Briefs are company only");
+  assert.ok(!hrefs("company").includes("/opportunities"), "Opportunities are creator only");
   for (const href of ["/analyzer", "/media-kit", "/support"]) assert.ok(!hrefs("company").includes(href), href);
 });
 

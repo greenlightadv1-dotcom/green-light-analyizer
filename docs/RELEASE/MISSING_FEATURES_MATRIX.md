@@ -5,9 +5,9 @@ the full list are in `MASTER_IMPLEMENTATION_AUDIT.md`.
 
 | # | Feature | Status | Needs a migration | Depends on | Blocker type | Security notes |
 |---|---|---|---|---|---|---|
-| 1 | Briefs and campaigns | MISSING | Yes: `briefs` with RLS by company | Company onboarding | Design review | Company-scoped RLS; representatives' authority undefined |
-| 2 | Invitations (accept/decline/negotiate) | PARTIAL | Yes: `invitations`, server-side state machine | 1 | Design review | Creator sees only their own; no contact data |
-| 3 | Deliverables, revisions, approvals, completion, reviews | MISSING | Yes: `deliverables`, `deal_events` (append-only) | 2 | Design review | Party-only access; no payments or escrow |
+| 1 | Briefs and campaigns | BUILT, NOT APPLIED (0026) | 0026 `briefs` | Company onboarding | Apply 0026; owner: representatives' authority | Company-scoped writes; creators read published only |
+| 2 | Invitations (accept/decline/request changes) | BUILT, NOT APPLIED (0026) | 0026 `invitations` | 1 | Apply 0026 | Parties only; text masked; accept opens a deal room |
+| 3 | Deliverables, revisions, approvals, completion | BUILT, NOT APPLIED (0026) | 0026 `collaborations`, `deliverables`, `collaboration_events` (append-only) | 2 | Apply 0026. Reviews: owner decision (item 9) | Party-only access; no payments or escrow |
 | 4 | In-app notifications and read state | MISSING | Yes: `notifications`, `message_reads` | 2, 3 | — | Per-user RLS; never include private message text of another tenant |
 | 5 | Support tickets | MISSING | Yes: `support_tickets`, `support_messages` | — | — | Creators and admins only |
 | 6 | Content planning and saved drafts (G) | MISSING | Yes: `content_items` | G | — | Owner-only RLS |
