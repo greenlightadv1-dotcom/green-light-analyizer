@@ -76,7 +76,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.RESEND_API_KEY),
       required: false,
       impact:
-        "Creator replies are stored but never reach the company (§6), and POST /api/emails/send returns 503 — the outreach/system-notification dispatcher (src/lib/resend.ts) sends nothing.",
+        "Creator replies are stored but never reach the company, and POST /api/emails/send returns 503, so no outreach or system-notification email is sent.",
     },
     {
       name: "RESEND_INBOUND_WEBHOOK_SECRET",
@@ -125,7 +125,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
       required: false,
       impact:
-        "YouTube verified-audience-geography OAuth (§7.3, every creator) shows 'not configured' instead of connecting.",
+        "Connecting YouTube for verified audience geography shows 'not configured' to every creator instead of connecting.",
     },
     {
       name: "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -148,7 +148,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.META_APP_ID),
       required: false,
       impact:
-        "Instagram verified-audience-geography OAuth (§7.3) — in development; not offered to creators until the integration is operational.",
+        "Instagram verified audience geography is in development and not offered to creators until the integration works.",
     },
     {
       name: "META_APP_SECRET",
@@ -189,7 +189,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.WHATSAPP_ACCESS_TOKEN),
       required: false,
       impact:
-        "Settings' WhatsApp notification toggle still saves, but no message is ever sent — src/lib/whatsapp.ts silently no-ops.",
+        "The WhatsApp notification switch in Settings still saves, but no WhatsApp message is sent.",
     },
     {
       name: "WHATSAPP_PHONE_NUMBER_ID",

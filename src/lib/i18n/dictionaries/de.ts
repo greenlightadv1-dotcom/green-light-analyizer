@@ -82,7 +82,7 @@ const de: Dictionary = {
     notEvaluated: "Nicht bewertet",
     capped: "gedeckelt",
     cappedTooltip:
-      "Auf Gelb gedeckelt: Die Audience-Daten hinter dieser Bewertung sind selbst gemeldet, und der Deal ist hochwertig (§7.4).",
+      "Auf Gelb gedeckelt: Das Angebot ist hochwertig und die Zielgruppen-Geografie dieses Creators ist nicht verifiziert (selbst angegeben, fehlend oder veraltet). Ohne verifizierte Zielgruppendaten kann ein hochwertiges Angebot nicht grün bewertet werden.",
     statusNew: "Neu",
     statusNegotiating: "In Verhandlung",
     statusAgreed: "Vereinbart",
@@ -111,8 +111,8 @@ const de: Dictionary = {
     audienceVerifiedNote:
       "{count} deiner {total} verbundenen {platformWord} haben verifizierte Audience-Daten. Angebote dagegen werden mit voller Sicherheit bepreist.",
     audienceUnverifiedNote:
-      "Deine Audience-Daten sind selbst gemeldet, daher kann ein hochwertiges Angebot allein deswegen nicht grün bewertet werden.",
-    audienceUnverifiedCanUpgrade: "Das Verbinden der YouTube-Analysen hebt diese Grenze auf.",
+      "Deine Audience-Geografie ist nicht verifiziert: Sie ist selbst gemeldet, fehlt oder ist älter als 30 Tage, daher kann ein hochwertiges Angebot nicht grün bewertet werden.",
+    audienceUnverifiedCanUpgrade: "Nur verifizierte Audience-Geografie, die in den letzten 30 Tagen synchronisiert wurde, zählt; derzeit kann sie nur ein verbundener YouTube-Kanal liefern.",
     openMediaKit: "Media-Kit öffnen →",
     platformSingular: "Plattform",
     platformPlural: "Plattformen",
@@ -135,7 +135,7 @@ const de: Dictionary = {
     noKitNote:
       "Noch kein Media-Kit hinterlegt, daher basiert die Preisbildung nur auf dem Angebotstext. Füge deine Reichweite und Audience-Daten im Media-Kit hinzu, um eine brauchbare Empfehlung zu erhalten.",
     unverifiedCapNote:
-      "Die Geografie deiner Audience ist selbst gemeldet, daher kann ein hochwertiger Deal allein deswegen nicht grün bewertet werden. Das Verbinden von YouTube- oder Instagram-Analytics hebt diese Obergrenze auf.",
+      "Die Geografie deiner Audience ist nicht verifiziert: Sie ist selbst gemeldet, fehlt oder ist älter als 30 Tage. Ohne verifizierte Geografie kann ein hochwertiger Deal nicht grün bewertet werden. Derzeit liefert nur YouTube verifizierte Geografie; Instagram ist in Entwicklung.",
     whoSentIt: "Wer es geschickt hat",
     theOffer: "Das Angebot",
     offerPlaceholder: "Füge die vollständige erhaltene Nachricht ein…",
@@ -153,7 +153,7 @@ const de: Dictionary = {
     recommendation: "Empfehlung",
     fairRange: "fairer Bereich ${low}–${high}",
     heldAtYellow:
-      "Auf Gelb gehalten: Dies ist ein hochwertiger Deal, und die Audience-Geografie hinter der Bewertung ist selbst gemeldet. Verbinde YouTube- oder Instagram-Analytics, damit ein solcher Deal grün bewertet werden kann.",
+      "Auf Gelb gehalten: Dies ist ein hochwertiger Deal, und die Audience-Geografie hinter der Bewertung ist nicht verifiziert (selbst gemeldet, fehlend oder veraltet). Ohne verifizierte Geografie kann ein solcher Deal nicht grün bewertet werden.",
     ruleBasedEstimate:
       "Regelbasierte Schätzung — die KI war nicht erreichbar, das ist also eine Rechnung auf Basis deiner Reichweite und Kategorie, keine KI-Lesung des Angebots.",
     openDealRoom: "Deal-Raum für dieses Angebot öffnen",
@@ -480,9 +480,9 @@ const de: Dictionary = {
     notFoundBody:
       "Der Link ist möglicherweise veraltet, oder der Deal-Raum bzw. das Profil dahinter existiert nicht mehr.",
     backHome: "Zurück zu Green Light",
-    errorTitle: "Etwas ist schiefgelaufen",
+    errorTitle: "Diese Seite wurde nicht geladen",
     errorBody:
-      "Diese Seite wurde nicht geladen. Ein erneuter Versuch behebt das meistens — falls nicht, nenne die Referenz unten, dann kann der Support genau nachsehen, was fehlgeschlagen ist.",
+      "Versuch es erneut. Falls das Problem bleibt, wende dich an den Support und gib die Referenz unten an, falls eine angezeigt wird, damit er es untersuchen kann.",
     reference: "Referenz",
     tryAgain: "Erneut versuchen",
     stillStuck: "Immer noch blockiert?",

@@ -52,7 +52,6 @@ export default async function ViolationsPage() {
       {!logs?.length ? (
         <EmptyState
           title="Nothing to review"
-          spec="§6"
           body="Attempts to exchange direct contact details or move a deal off-platform appear here for review."
         />
       ) : (

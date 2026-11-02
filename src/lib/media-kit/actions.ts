@@ -107,7 +107,10 @@ export async function saveMediaKit(
   );
 
   if (error) {
-    return { error: "Those details could not be saved.", savedPlatform: null };
+    return {
+      error: "Nothing was saved: the update was not accepted. Check your entries and press Save again; if it keeps failing, contact support.",
+      savedPlatform: null,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -251,7 +254,10 @@ export async function syncVerifiedGeo(
       connection.external_account_id,
     );
     if (!countries) {
-      return { error: "Could not reach Instagram — try again shortly.", synced: false };
+      return {
+      error: "Instagram did not respond, so nothing was synced and your existing figures are unchanged. Try again in a few minutes.",
+      synced: false,
+    };
     }
     verified = { verified_top_countries: countries, audience_verified: true };
   }
@@ -268,7 +274,10 @@ export async function syncVerifiedGeo(
     .eq("platform", platform);
 
   if (error) {
-    return { error: "Fetched but could not save.", synced: false };
+    return {
+      error: "Your audience data was fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      synced: false,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -339,7 +348,7 @@ export async function syncYoutubeStats(
   if (!stats) {
     return {
       error:
-        "Could not reach YouTube — check the handle, and that YOUTUBE_API_KEY is configured.",
+        "YouTube returned no channel for this handle, or could not be reached. Nothing was synced. Check the handle above, then try again; if it keeps failing, contact support.",
       synced: false,
     };
   }
@@ -363,7 +372,10 @@ export async function syncYoutubeStats(
     .eq("id", mediaKitId);
 
   if (error) {
-    return { error: "Fetched from YouTube but could not save.", synced: false };
+    return {
+      error: "Your YouTube stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      synced: false,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -418,7 +430,10 @@ export async function syncInstagramStats(
     connection.external_account_id,
   );
   if (!metrics) {
-    return { error: "Could not reach Instagram — try again shortly.", synced: false };
+    return {
+      error: "Instagram did not respond, so nothing was synced and your existing figures are unchanged. Try again in a few minutes.",
+      synced: false,
+    };
   }
 
   const { error } = await service
@@ -432,7 +447,10 @@ export async function syncInstagramStats(
     .eq("platform", "instagram");
 
   if (error) {
-    return { error: "Fetched from Instagram but could not save.", synced: false };
+    return {
+      error: "Your Instagram stats were fetched but could not be saved, so the figures shown are unchanged. Try syncing again.",
+      synced: false,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -492,7 +510,7 @@ export async function detectNiche(
     const videos = await fetchYoutubeRecentVideos(kit.platform_handle);
     if (!videos) {
       return {
-        error: "Could not fetch recent videos — check the handle and YOUTUBE_API_KEY.",
+        error: "Your recent YouTube videos could not be read, so your niche was not changed. Check the channel handle above, then try again; if it keeps failing, contact support.",
         result: null,
       };
     }
@@ -517,7 +535,10 @@ export async function detectNiche(
       connection.external_account_id,
     );
     if (!posts) {
-      return { error: "Could not fetch recent posts — try again shortly.", result: null };
+      return {
+        error: "Instagram did not return your recent posts, so your niche was not changed. Try again in a few minutes.",
+        result: null,
+      };
     }
     items = posts.map((p) => p.caption);
   } else {
@@ -530,7 +551,7 @@ export async function detectNiche(
   const niche = await detectNicheWithAi(items);
   if (!niche) {
     return {
-      error: "Could not detect a niche — check that NVIDIA_API_KEY is configured.",
+      error: "The AI service could not suggest a niche right now, so nothing was changed. You can pick a category yourself in the form above, or try again later.",
       result: null,
     };
   }
@@ -542,7 +563,10 @@ export async function detectNiche(
     .eq("id", mediaKitId);
 
   if (error) {
-    return { error: "Detected but could not save.", result: null };
+    return {
+      error: "A niche was suggested but could not be saved, so your category is unchanged. Try again.",
+      result: null,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -645,7 +669,10 @@ export async function saveCreatorProfile(
     .eq("id", profile.id);
 
   if (error) {
-    return { error: "Those details could not be saved.", saved: false };
+    return {
+      error: "Nothing was saved: the update was not accepted. Check your entries and press Save again; if it keeps failing, contact support.",
+      saved: false,
+    };
   }
 
   revalidatePath("/media-kit");

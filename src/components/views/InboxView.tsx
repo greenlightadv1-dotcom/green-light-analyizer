@@ -68,7 +68,6 @@ export function InboxView({
       {chats.length === 0 ? (
         <EmptyState
           title={t("inbox.noRoomsTitle")}
-          spec="§5, §6.2"
           body={t("inbox.noRoomsBody")}
         />
       ) : (

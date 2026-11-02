@@ -14,6 +14,16 @@
 Staged plan for features **A–M** of the Master Product Evolution plan, built on the system as it actually exists on 2026-10-29.
 **Nothing in this file has been implemented.** Each stage needs the owner's approval before work starts, and every production migration needs the gate in §6.
 
+> **Addition, 2026-10-31.** `GREEN_LIGHT_MEDIA_KIT_AND_UX_PLAN.md` adds the
+> following, as stages UX-0 to UX-3 and MK-1 to MK-7. Each stage needs
+> approval. UX-0 is implemented locally only (1 November 2026): it is not
+> committed, pushed or deployed, and not verified in Production. No other
+> stage of that plan has been started.
+> - the Media Kit transformation;
+> - public and private views;
+> - the PDF feasibility study;
+> - the zero-confusion UX standard and its acceptance criteria.
+
 Companion documents:
 - `GREEN_LIGHT_MASTER_BRIEF.md`: system state.
 - `GREEN_LIGHT_INTEGRATION_STATUS.md`: email, social and AI evidence.

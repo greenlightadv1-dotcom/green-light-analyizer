@@ -94,7 +94,7 @@ const en = {
     notEvaluated: "Not evaluated",
     capped: "capped",
     cappedTooltip:
-      "Capped at yellow: the audience data behind this rating is self-reported, and the deal is high-value (§7.4).",
+      "Capped at yellow: the deal is high-value and this creator's audience geography isn't verified (it's self-reported, missing or out of date). Without verified audience data, a high-value deal can't be rated green.",
     statusNew: "New",
     statusNegotiating: "Negotiating",
     statusAgreed: "Agreed",
@@ -123,8 +123,8 @@ const en = {
     audienceVerifiedNote:
       "{count} of your {total} connected {platformWord} has verified audience data. Offers against it are priced with full confidence.",
     audienceUnverifiedNote:
-      "Your audience data is self-reported, so a high-value offer can't be rated green on it alone.",
-    audienceUnverifiedCanUpgrade: "Connecting YouTube analytics lifts that cap.",
+      "Your audience geography isn't verified: it's self-reported, missing or more than 30 days old, so a high-value offer can't be rated green.",
+    audienceUnverifiedCanUpgrade: "Only verified audience geography synced in the last 30 days counts, and today only a connected YouTube channel can provide it.",
     openMediaKit: "Open media kit →",
     platformSingular: "platform",
     platformPlural: "platforms",
@@ -147,7 +147,7 @@ const en = {
     noKitNote:
       "No media kit on file yet, so pricing will fall back to the offer text alone. Add your reach and audience data in Media kit for a usable recommendation.",
     unverifiedCapNote:
-      "Your audience geography is self-reported, so a high-value deal can't be rated green on it alone. Connecting YouTube or Instagram analytics lifts that cap.",
+      "Your audience geography isn't verified: it's self-reported, missing or more than 30 days old. Without verified geography, a high-value deal can't be rated green. Today only YouTube can provide verified geography; Instagram is in development.",
     whoSentIt: "Who sent it",
     theOffer: "The offer",
     offerPlaceholder: "Paste the full message you received…",
@@ -165,7 +165,7 @@ const en = {
     recommendation: "Recommendation",
     fairRange: "fair range ${low}–${high}",
     heldAtYellow:
-      "Held at yellow: this is a high-value deal and the audience geography behind the rating is self-reported. Connect YouTube or Instagram analytics to let a deal like this rate green.",
+      "Held at yellow: this is a high-value deal and the audience geography behind the rating isn't verified (it's self-reported, missing or out of date). Without verified geography, a deal like this can't be rated green.",
     ruleBasedEstimate:
       "Rule-based estimate — the AI engine could not be reached, so this is arithmetic on your reach and category, not an AI reading of the offer.",
     openDealRoom: "Open a deal room for this offer",
@@ -492,9 +492,9 @@ const en = {
     notFoundBody:
       "The link may be out of date, or the deal room or profile it pointed to may no longer exist.",
     backHome: "Back to Green Light",
-    errorTitle: "Something went wrong",
+    errorTitle: "This page didn't load",
     errorBody:
-      "This page didn't load. Trying again usually clears it — if it doesn't, quote the reference below and support can look up exactly what failed.",
+      "Try again. If the problem continues, contact support and include the reference below if one is shown, so they can investigate.",
     reference: "Reference",
     tryAgain: "Try again",
     stillStuck: "Still stuck?",

@@ -57,7 +57,7 @@ export async function linkRepresentative(_prev: LinkState, formData: FormData): 
   if (error) {
     if (error.code === "23505") return { error: "That account is already linked to a company.", linked: false };
     log.error("company_members.link_failed", { code: error.code });
-    return { error: error.code === "42P01" ? "Migration 0024 is not applied yet." : "Could not link those accounts.", linked: false };
+    return { error: error.code === "42P01" ? "Representative links are not available on this database yet. Ask the developer to apply the latest database update." : "Those accounts were not linked. Check both accounts still exist, then try again.", linked: false };
   }
   revalidatePath("/admin/requests");
   return { error: null, linked: true };

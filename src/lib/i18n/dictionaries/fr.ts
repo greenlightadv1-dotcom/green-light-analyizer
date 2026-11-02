@@ -82,7 +82,7 @@ const fr: Dictionary = {
     notEvaluated: "Non évalué",
     capped: "plafonné",
     cappedTooltip:
-      "Plafonné au jaune : les données d'audience derrière cette note sont auto-déclarées, et le deal est à forte valeur (§7.4).",
+      "Plafonné au jaune : l'offre est importante et la géographie de l'audience de ce créateur n'est pas vérifiée (déclarée, absente ou trop ancienne). Sans données d'audience vérifiées, une offre importante ne peut pas être notée verte.",
     statusNew: "Nouveau",
     statusNegotiating: "En négociation",
     statusAgreed: "Accepté",
@@ -111,8 +111,8 @@ const fr: Dictionary = {
     audienceVerifiedNote:
       "{count} de vos {total} {platformWord} connectées ont des données d'audience vérifiées. Les offres qui s'y rapportent sont évaluées en toute confiance.",
     audienceUnverifiedNote:
-      "Vos données d'audience sont auto-déclarées, donc une offre à forte valeur ne peut pas être notée verte sur cette seule base.",
-    audienceUnverifiedCanUpgrade: "Connecter les statistiques YouTube lève ce plafond.",
+      "La géographie de votre audience n'est pas vérifiée : elle est auto-déclarée, absente ou date de plus de 30 jours, donc une offre à forte valeur ne peut pas être notée verte.",
+    audienceUnverifiedCanUpgrade: "Seule une géographie d'audience vérifiée et synchronisée au cours des 30 derniers jours est prise en compte ; aujourd'hui, seule une chaîne YouTube connectée peut la fournir.",
     openMediaKit: "Ouvrir le kit média →",
     platformSingular: "plateforme",
     platformPlural: "plateformes",
@@ -135,7 +135,7 @@ const fr: Dictionary = {
     noKitNote:
       "Aucun kit média enregistré pour l'instant, la tarification se basera donc uniquement sur le texte de l'offre. Ajoutez votre audience et vos données d'audience dans Kit média pour une recommandation exploitable.",
     unverifiedCapNote:
-      "La géographie de votre audience est auto-déclarée, donc un deal à forte valeur ne peut pas être noté vert sur cette seule base. Connecter YouTube ou Instagram Analytics lève ce plafond.",
+      "La géographie de votre audience n'est pas vérifiée : elle est auto-déclarée, absente ou date de plus de 30 jours. Sans géographie vérifiée, un deal à forte valeur ne peut pas être noté vert. Aujourd'hui, seul YouTube fournit une géographie vérifiée ; Instagram est en cours de développement.",
     whoSentIt: "Qui l'a envoyée",
     theOffer: "L'offre",
     offerPlaceholder: "Collez le message complet que vous avez reçu…",
@@ -153,7 +153,7 @@ const fr: Dictionary = {
     recommendation: "Recommandation",
     fairRange: "fourchette équitable {low}–{high} $",
     heldAtYellow:
-      "Maintenu au jaune : il s'agit d'un deal à forte valeur et la géographie d'audience derrière cette note est auto-déclarée. Connectez YouTube ou Instagram Analytics pour qu'un deal comme celui-ci puisse être noté vert.",
+      "Maintenu au jaune : il s'agit d'un deal à forte valeur et la géographie d'audience derrière cette note n'est pas vérifiée (auto-déclarée, absente ou trop ancienne). Sans géographie vérifiée, un deal comme celui-ci ne peut pas être noté vert.",
     ruleBasedEstimate:
       "Estimation par règles — le moteur d'IA n'a pas pu être joint : ceci est un calcul basé sur votre audience et votre catégorie, pas une lecture de l'offre par l'IA.",
     openDealRoom: "Ouvrir un salon de deal pour cette offre",
@@ -480,9 +480,9 @@ const fr: Dictionary = {
     notFoundBody:
       "Le lien est peut-être obsolète, ou la salle de deal ou le profil vers lequel il pointait n'existe plus.",
     backHome: "Retour à Green Light",
-    errorTitle: "Une erreur est survenue",
+    errorTitle: "Cette page ne s'est pas chargée",
     errorBody:
-      "Cette page ne s'est pas chargée. Réessayer suffit généralement — sinon, indiquez la référence ci-dessous et le support pourra identifier précisément la panne.",
+      "Réessayez. Si le problème persiste, contactez le support en indiquant la référence ci-dessous si elle s'affiche, pour qu'il puisse l'examiner.",
     reference: "Référence",
     tryAgain: "Réessayer",
     stillStuck: "Toujours bloqué ?",

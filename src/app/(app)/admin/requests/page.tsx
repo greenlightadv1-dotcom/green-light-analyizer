@@ -46,7 +46,7 @@ export default async function AdminRequestsPage() {
 
       {error ? (
         <GlassPanel className="mb-4 p-5 text-sm text-fg/70">
-          Applications are unavailable on this database (migration 0024 not applied).
+          Applications are not available on this database yet. Ask the developer to apply the latest database update.
         </GlassPanel>
       ) : null}
 

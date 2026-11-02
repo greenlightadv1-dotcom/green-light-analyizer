@@ -95,7 +95,6 @@ export function DashboardView({
           {recent.length === 0 ? (
             <EmptyState
               title={t("dashboard.noDealsYetTitle")}
-              spec="§5, §6.2"
               body={t("dashboard.noDealsYetBody")}
             />
           ) : (

@@ -33,7 +33,8 @@ export async function banProfile(formData: FormData): Promise<void> {
     .from("profiles")
     .update({
       banned_at: new Date().toISOString(),
-      banned_reason: "Off-platform contact exchange (§6).",
+      banned_reason:
+        "Deliberately attempted to exchange direct contact details, or to move a deal off Green Light to avoid commission.",
     })
     .eq("id", profileId);
 

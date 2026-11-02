@@ -82,7 +82,7 @@ const es: Dictionary = {
     notEvaluated: "No evaluado",
     capped: "limitado",
     cappedTooltip:
-      "Limitado a amarillo: los datos de audiencia detrás de esta calificación son autodeclarados, y el deal es de alto valor (§7.4).",
+      "Limitado a amarillo: la oferta es de alto valor y la geografía de la audiencia de este creador no está verificada (autodeclarada, ausente o desactualizada). Sin datos de audiencia verificados, una oferta de alto valor no puede calificarse en verde.",
     statusNew: "Nuevo",
     statusNegotiating: "Negociando",
     statusAgreed: "Acordado",
@@ -111,8 +111,8 @@ const es: Dictionary = {
     audienceVerifiedNote:
       "{count} de tus {total} {platformWord} conectadas tienen datos de audiencia verificados. Las ofertas contra ella se valoran con plena confianza.",
     audienceUnverifiedNote:
-      "Tus datos de audiencia son autodeclarados, por lo que una oferta de alto valor no puede calificarse en verde solo por eso.",
-    audienceUnverifiedCanUpgrade: "Conectar las estadísticas de YouTube elimina ese límite.",
+      "La geografía de tu audiencia no está verificada: es autodeclarada, falta o tiene más de 30 días, por lo que una oferta de alto valor no puede calificarse en verde.",
+    audienceUnverifiedCanUpgrade: "Solo cuenta la geografía de audiencia verificada y sincronizada en los últimos 30 días; hoy solo un canal de YouTube conectado puede aportarla.",
     openMediaKit: "Abrir kit de medios →",
     platformSingular: "plataforma",
     platformPlural: "plataformas",
@@ -135,7 +135,7 @@ const es: Dictionary = {
     noKitNote:
       "Aún no hay kit de medios registrado, por lo que la valoración se basará solo en el texto de la oferta. Añade tu alcance y datos de audiencia en Kit de medios para una recomendación útil.",
     unverifiedCapNote:
-      "La geografía de tu audiencia es autodeclarada, por lo que un deal de alto valor no puede calificarse en verde solo por eso. Conectar YouTube o Instagram Analytics eleva ese límite.",
+      "La geografía de tu audiencia no está verificada: es autodeclarada, falta o tiene más de 30 días. Sin geografía verificada, un deal de alto valor no puede calificarse en verde. Hoy solo YouTube aporta geografía verificada; Instagram está en desarrollo.",
     whoSentIt: "Quién lo envió",
     theOffer: "La oferta",
     offerPlaceholder: "Pega el mensaje completo que recibiste…",
@@ -153,7 +153,7 @@ const es: Dictionary = {
     recommendation: "Recomendación",
     fairRange: "rango justo ${low}–${high}",
     heldAtYellow:
-      "Mantenido en amarillo: este es un deal de alto valor y la geografía de audiencia detrás de la calificación es autodeclarada. Conecta YouTube o Instagram Analytics para que un deal así pueda calificarse en verde.",
+      "Mantenido en amarillo: este es un deal de alto valor y la geografía de audiencia detrás de la calificación no está verificada (autodeclarada, ausente o desactualizada). Sin geografía verificada, un deal así no puede calificarse en verde.",
     ruleBasedEstimate:
       "Estimación por reglas: no se pudo contactar con el motor de IA, así que esto es un cálculo sobre tu alcance y categoría, no una lectura de la oferta por IA.",
     openDealRoom: "Abrir una sala de deal para esta oferta",
@@ -480,9 +480,9 @@ const es: Dictionary = {
     notFoundBody:
       "Puede que el enlace esté obsoleto, o que la sala de trato o el perfil al que apuntaba ya no exista.",
     backHome: "Volver a Green Light",
-    errorTitle: "Algo ha salido mal",
+    errorTitle: "Esta página no se ha cargado",
     errorBody:
-      "Esta página no se ha cargado. Reintentar suele resolverlo — si no, indica la referencia de abajo y soporte podrá ver exactamente qué ha fallado.",
+      "Inténtalo de nuevo. Si el problema continúa, contacta con soporte e incluye la referencia de abajo si aparece, para que puedan investigarlo.",
     reference: "Referencia",
     tryAgain: "Reintentar",
     stillStuck: "¿Sigue sin funcionar?",

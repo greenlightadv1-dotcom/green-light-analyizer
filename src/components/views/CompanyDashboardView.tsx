@@ -66,7 +66,7 @@ export function CompanyDashboardView({
             Charged on the deal, not on your seat
           </p>
           <p className="mt-2 text-xs text-fg/40">
-            Browsing and messaging creators is free (§8).
+            Browsing and messaging creators is free.
           </p>
         </GlassPanel>
       </div>
@@ -75,7 +75,6 @@ export function CompanyDashboardView({
         {recent.length === 0 ? (
           <EmptyState
             title="No deals yet"
-            spec="§3"
             body="Head to Discover to browse creators and send your first offer — the Co-Pilot prices it before it goes out."
           />
         ) : (
