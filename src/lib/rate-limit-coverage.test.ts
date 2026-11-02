@@ -42,6 +42,7 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/register/actions.ts", "registerAccount", "access_request"],
   ["app/(app)/content/actions.ts", "saveContentItem", "content_write"],
   ["app/(app)/content/actions.ts", "deleteContentItem", "content_write"],
+  ["app/(app)/content/actions.ts", "decideIdea", "content_write"],
   ["app/(app)/shortlists/actions.ts", "createShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "renameShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "deleteShortlist", "shortlist_write"],

@@ -8,7 +8,8 @@ import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { deleteContentItem, saveContentItem } from "@/app/(app)/content/actions";
+import { decideIdea, deleteContentItem, saveContentItem } from "@/app/(app)/content/actions";
+import { emitG } from "@/components/g/events";
 import { BOARD_STATUSES, CONTENT_KINDS, CONTENT_LIMITS, CONTENT_STATUSES, monthGrid, monthKey, shiftMonth } from "@/lib/content/rules";
 import { PORTFOLIO_PLATFORMS } from "@/lib/portfolio/rules";
 import { day, PLATFORM_LABEL } from "@/lib/collab/display";
@@ -79,6 +80,17 @@ function ItemCard({ item, collaborations, demo }: { item: ContentItem; collabora
       <p dir="auto" className="font-medium [overflow-wrap:anywhere] text-fg">{item.title}</p>
       {item.body ? <p dir="auto" className="line-clamp-3 whitespace-pre-wrap [overflow-wrap:anywhere] text-xs text-fg-secondary">{item.body}</p> : null}
       {item.tags.length ? <p dir="auto" className="text-xs text-fg-muted">{item.tags.map((x) => `#${x}`).join(" ")}</p> : null}
+      {item.kind === "idea" && item.status === "idea" && !demo ? (
+        <div className="flex flex-wrap gap-2">
+          <ConfirmActionForm action={decideIdea} hidden={{ item_id: item.id, decision: "approve" }} trigger={{ labelKey: "content.approveIdea" }} triggerClassName={`${BTN_PRIMARY} h-8 px-3 text-xs`} titleKey="content.approveTitle" bodyKey="content.approveBody" confirmKey="content.approveIdea" className="inline-flex" />
+          <ConfirmActionForm action={decideIdea} hidden={{ item_id: item.id, decision: "reject" }} trigger={{ labelKey: "content.rejectIdea" }} triggerClassName={`${BTN_GHOST} h-8 px-3 text-xs`} titleKey="content.rejectTitle" bodyKey="content.rejectBody" confirmKey="content.rejectIdea" tone="danger" className="inline-flex" />
+        </div>
+      ) : null}
+      {item.kind === "idea" && (item.status === "drafting" || item.status === "ready") ? (
+        <button type="button" onClick={() => emitG({ type: "ask", text: t("content.askScript", { title: item.title }) })} className={`${BTN_GHOST} h-8 px-3 text-xs`}>
+          {t("content.askG")}
+        </button>
+      ) : null}
       <details>
         <summary className="cursor-pointer text-xs text-fg-muted">{t("content.edit")}</summary>
         <div className="mt-3 space-y-3">

@@ -59,3 +59,26 @@ export async function deleteContentItem(_prev: ActionResult | null, fd: FormData
   revalidatePath("/content");
   return OK;
 }
+
+/** Approve an idea (→ drafting) or set it aside (→ archived). Own items only. */
+export async function decideIdea(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const profile = await requireRole("creator");
+  const id = String(fd.get("item_id") ?? "");
+  const decision = fd.get("decision") === "approve" ? "drafting" : fd.get("decision") === "reject" ? "archived" : null;
+  if (!UUID.test(id) || !decision) return fail("ui.errors.invalid");
+  if (!(await consumeRateLimit("content_write", profile.id)).allowed) return fail("content.errors.rate_limited");
+  const { data, error } = await createAdminClient()
+    .from("content_items")
+    .update({ status: decision, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("creator_id", profile.id)
+    .eq("status", "idea")
+    .select("id");
+  if (error) {
+    log.error("content.decide_failed", { error });
+    return fail("ui.errors.generic");
+  }
+  if (!data?.length) return fail("content.errors.not_found");
+  revalidatePath("/content");
+  return OK;
+}
