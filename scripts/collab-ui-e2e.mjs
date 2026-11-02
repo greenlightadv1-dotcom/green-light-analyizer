@@ -20,6 +20,8 @@ const PAGES = [
   ["/preview/notifications", "notifications"],
   ["/preview/shortlists", "shortlists"],
   ["/preview/portfolio", "portfolio"],
+  ["/preview/content", "content-board"],
+  ["/preview/content?view=calendar", "content-calendar"],
 ];
 let pass = 0, fail = 0;
 const check = (ok, label) => { if (ok) pass++; else fail++; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); };
@@ -38,7 +40,7 @@ for (const locale of ["en", "ar"]) {
       const tag = `${locale} ${vp} ${name}`;
       check(res?.status() === 200, `${tag}: 200`);
       const text = await page.locator("main, body").first().innerText();
-      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications|shortlists|portfolio)\.[a-zA-Z_.]+/g);
+      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications|shortlists|portfolio|content)\.[a-zA-Z_.]+/g);
       check(!leaked, `${tag}: no raw keys${leaked ? " " + leaked.slice(0, 3).join(",") : ""}`);
       if (locale === "ar") check((await page.getAttribute("html", "dir")) === "rtl", `${tag}: rtl`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -96,6 +98,13 @@ await page.goto(BASE + "/preview/portfolio", { waitUntil: "networkidle" });
 check((await page.getByText("Private", { exact: true }).count()) === 1, "one private item is labelled");
 check((await page.getByText("Brand not shown publicly").count()) === 1, "unconsented brand is flagged");
 check(await page.getByLabel("Bio").isChecked(), "bio section on by default");
+// Content plan: the board groups by status; the calendar places dated items.
+await page.goto(BASE + "/preview/content", { waitUntil: "networkidle" });
+check(await page.getByRole("heading", { name: /Scheduled \(1\)/ }).count() === 1, "board column counts items");
+await page.goto(BASE + "/preview/content?view=calendar", { waitUntil: "networkidle" });
+const cell = page.locator("td", { hasText: "Budget earbuds that beat the big brands?" });
+check((await cell.innerText()).trim().startsWith("25"), "scheduled item sits on its day");
+check(await page.getByText("Without a date: 2").count() === 1, "undated items are counted");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

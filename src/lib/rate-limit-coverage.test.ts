@@ -36,6 +36,8 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/api/uploads/documents/route.ts", "POST", "upload"],
   ["app/get-started/actions.ts", "submitAccessRequest", "access_request"],
   ["app/(app)/collaborations/actions.ts", "saveBrief", "collab_write"],
+  ["app/(app)/content/actions.ts", "saveContentItem", "content_write"],
+  ["app/(app)/content/actions.ts", "deleteContentItem", "content_write"],
   ["app/(app)/shortlists/actions.ts", "createShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "renameShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "deleteShortlist", "shortlist_write"],

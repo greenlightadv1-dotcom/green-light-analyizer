@@ -143,6 +143,18 @@ Not done:
   - rate-limit coverage;
   - browser checks.
 
+## Feature: content planning (migration 0029, not applied)
+
+- `/content` (creators) holds private ideas and drafts: idea, script, hook, title, description.
+- Each item has a status (idea, drafting, ready, scheduled, published, archived), a planned date, a platform, tags, and an optional link to one of the creator's own active collaborations.
+- **Views:** a status board, and a month calendar (UTC, Monday-first) with undated items counted. Both filter by kind.
+- **Access:** owner-only; companies, other creators and admins cannot read drafts. A trigger refuses a collaboration the creator is not party to, a scheduled item with no date, and more than 500 items.
+- **Tests:**
+  - `supabase/tests/content_planning_test.sql`;
+  - `src/lib/content/rules.test.ts`;
+  - rate-limit coverage (`content_write`);
+  - browser checks.
+
 ## Not built in this pass
 
-Deal-room message read state, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).
+Deal-room message read state, support tickets, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).

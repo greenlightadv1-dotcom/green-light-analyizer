@@ -1,4 +1,4 @@
-import type { AppNotification, PortfolioItem, Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
+import type { AppNotification, ContentItem, PortfolioItem, Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
 
 /**
  * Invented collaboration data for the /preview screens only. Nothing here is
@@ -193,4 +193,17 @@ export const previewPortfolio: PortfolioItem[] = [
   { id: "00000000-0000-4000-8000-000000000301", creator_id: CR, title: "Budget phone showdown", description: "Side-by-side review of five budget phones, filmed in Cairo.", url: "https://example.com/phones", platform: "youtube", brand_name: "Nimbus Audio (demo)", brand_name_public: true, published_on: "2026-09-14", is_public: true, sort_order: 1, created_at: "2026-10-01T00:00:00Z", updated_at: "2026-10-01T00:00:00Z" },
   { id: "00000000-0000-4000-8000-000000000302", creator_id: CR, title: "Launch-day story set", description: null, url: null, platform: "instagram", brand_name: "Unnamed partner (demo)", brand_name_public: false, published_on: "2026-08-02", is_public: true, sort_order: 2, created_at: "2026-10-02T00:00:00Z", updated_at: "2026-10-02T00:00:00Z" },
   { id: "00000000-0000-4000-8000-000000000303", creator_id: CR, title: "Draft: studio tour", description: "Not ready to share yet.", url: null, platform: null, brand_name: null, brand_name_public: false, published_on: null, is_public: false, sort_order: 3, created_at: "2026-10-03T00:00:00Z", updated_at: "2026-10-03T00:00:00Z" },
+];
+
+const ci = (id: string, kind: ContentItem["kind"], title: string, status: ContentItem["status"], planned_for: string | null, body: string | null = null, tags: string[] = []): ContentItem => ({
+  id, creator_id: CR, kind, title, body, status, platform: "youtube", planned_for, tags, collaboration_id: null,
+  created_at: "2026-10-20T00:00:00Z", updated_at: "2026-10-20T00:00:00Z",
+});
+
+export const previewContent: ContentItem[] = [
+  ci("00000000-0000-4000-8000-000000000401", "idea", "Earbuds in a sandstorm test", "idea", null, null, ["tech"]),
+  ci("00000000-0000-4000-8000-000000000402", "script", "Launch integration script", "drafting", "2026-11-20", "Cold open on the commute. 60 seconds on battery and noise cancelling. Close with the honest downside."),
+  ci("00000000-0000-4000-8000-000000000403", "hook", "“I wore these for 30 days”", "ready", null),
+  ci("00000000-0000-4000-8000-000000000404", "title", "Budget earbuds that beat the big brands?", "scheduled", "2026-11-25"),
+  ci("00000000-0000-4000-8000-000000000405", "description", "October phone roundup description", "published", "2026-11-03"),
 ];

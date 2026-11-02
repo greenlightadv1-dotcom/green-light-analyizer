@@ -1319,7 +1319,7 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0029 or later, since 0026–0028 are used in §19).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0030 or later, since 0026–0029 are used in §19).
 
 ## 19. Collaboration lifecycle (branch only, 2026-11-02)
 
@@ -1366,3 +1366,8 @@ Not deployed. **Migration 0026 is not applied anywhere.**
   - `creator_public_portfolio()` returns public items only, when the section is on.
   - With no settings row, the public page is unchanged and the portfolio is off.
 - **Writes:** service role, scoped to the session's id, rate-limited (`shortlist_write`, `portfolio_write`).
+
+**Content planning (migration 0029, not applied).**
+- `/content` (creators): private ideas and drafts (script, hook, title, description) with a status board and a month calendar.
+- `content_items` is owner-only under RLS, with no admin read. Writes go through the server, scoped to the session's id and rate-limited (`content_write`).
+- A trigger refuses a collaboration the creator is not party to, a scheduled item without a date, and more than 500 items.

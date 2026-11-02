@@ -10,7 +10,7 @@ the full list are in `MASTER_IMPLEMENTATION_AUDIT.md`.
 | 3 | Deliverables, revisions, approvals, completion | BUILT, NOT APPLIED (0026) | 0026 `collaborations`, `deliverables`, `collaboration_events` (append-only) | 2 | Apply 0026. Reviews: owner decision (item 9) | Party-only access; no payments or escrow |
 | 4 | In-app notifications and read state | BUILT, NOT APPLIED (0027) for collaboration events. Deal-room message read state: still MISSING | 0027 `notifications`, `notification_preferences` | 2, 3 | Apply 0027 | Recipient-only RLS; ids and event kind only, never free text |
 | 5 | Support tickets | MISSING | Yes: `support_tickets`, `support_messages` | — | — | Creators and admins only |
-| 6 | Content planning and saved drafts (G) | MISSING | Yes: `content_items` | G | — | Owner-only RLS |
+| 6 | Content planning and saved drafts | BUILT, NOT APPLIED (0029). G drafting into it: see item 7 | 0029 `content_items` | — | Apply 0029 | Owner-only RLS; admins cannot read drafts |
 | 7 | G drafts and proposals with explicit confirmation | MISSING | Depends on 1–6 | 1–6 | — | Preview, confirm, then execute on the server; never claim success before the server confirms |
 | 8 | Portfolio with consent | BUILT, NOT APPLIED (0028). Automatic showcase of completed collaborations: not built | 0028 `portfolio_items` | — | Apply 0028; owner: consent wording, and whether completed collaborations may be shown | Private by default; brand named publicly only with the creator's recorded consent; text masked |
 | 9 | Public-profile section visibility toggles | BUILT, NOT APPLIED (0028) | 0028 `public_profile_settings` | — | Apply 0028 | Enforced in the public RPCs. Existing sections default on (unchanged page); portfolio defaults off |

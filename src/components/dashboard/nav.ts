@@ -33,6 +33,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },
   { href: "/media-kit", labelKey: "nav.mediaKit", roles: ["creator", "admin"] },
   { href: "/portfolio", labelKey: "nav.portfolio", roles: ["creator"] },
+  { href: "/content", labelKey: "nav.content", roles: ["creator"] },
   { href: "/pricing", labelKey: "nav.pricing", roles: ["creator", "company", "admin"] },
   // Creator-side, like the Media Kit: the page itself enforces the same rule
   // (requireCreatorFeatures), so this list only decides what is shown.

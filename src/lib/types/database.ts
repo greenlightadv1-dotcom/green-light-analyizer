@@ -493,6 +493,23 @@ export type PublicProfileSettings = {
 };
 export type PublicPortfolioItem = Pick<PortfolioItem, "title" | "description" | "url" | "platform" | "brand_name" | "published_on">;
 
+export type ContentKind = "idea" | "script" | "hook" | "title" | "description";
+export type ContentStatus = "idea" | "drafting" | "ready" | "scheduled" | "published" | "archived";
+export type ContentItem = {
+  id: string;
+  creator_id: string;
+  kind: ContentKind;
+  title: string;
+  body: string | null;
+  status: ContentStatus;
+  platform: PortfolioPlatform | null;
+  planned_for: string | null;
+  tags: string[];
+  collaboration_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -596,6 +613,7 @@ export type Database = {
       shortlist_entries: Table<ShortlistEntry, Optional<ShortlistEntry, Exclude<keyof ShortlistEntry, "shortlist_id" | "creator_id">>>;
       portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;
       public_profile_settings: Table<PublicProfileSettings, Optional<PublicProfileSettings, Exclude<keyof PublicProfileSettings, "profile_id">>>;
+      content_items: Table<ContentItem, Optional<ContentItem, Exclude<keyof ContentItem, "creator_id" | "kind" | "title">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,

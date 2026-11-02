@@ -39,7 +39,8 @@ export type RateLimitAction =
   | "upload"
   | "collab_write"
   | "shortlist_write"
-  | "portfolio_write";
+  | "portfolio_write"
+  | "content_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -137,6 +138,11 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   shortlist_write: [
     { limit: 120, windowSeconds: HOUR, label: "hour" },
     { limit: 600, windowSeconds: DAY, label: "day" },
+  ],
+  // Content plans (0029): private drafts, autosave-free, so a modest cap.
+  content_write: [
+    { limit: 200, windowSeconds: HOUR, label: "hour" },
+    { limit: 1000, windowSeconds: DAY, label: "day" },
   ],
   // Portfolio and public-profile visibility (0028).
   portfolio_write: [

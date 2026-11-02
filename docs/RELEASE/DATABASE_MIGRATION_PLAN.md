@@ -18,8 +18,10 @@
 
 | 0027 | `supabase/migrations/0027_notifications.sql` | In-app notifications for collaboration events, and per-person muting | Tables `notifications`, `notification_preferences`; trigger `collaboration_events_notify` and two `private` functions; RLS recipient-only | Yes: the file header lists the drop statements. They delete every notification and preference. Ask first. |
 | 0028 | `supabase/migrations/0028_shortlists_portfolio_visibility.sql` | Company shortlists, creator portfolio, public-profile section visibility | Tables `shortlists`, `shortlist_entries`, `portfolio_items`, `public_profile_settings`; three check triggers; `creator_public_profile` redefined with the same columns (hidden sections return NULL); new `creator_public_portfolio` | Yes: see the file header. Rolling back also means re-running 0017's `creator_public_profile`. Ask first. |
+| 0029 | `supabase/migrations/0029_content_planning.sql` | Creator content plans (ideas and drafts, status, calendar date) | Table `content_items`, check trigger, owner-only RLS | Yes: `drop table if exists public.content_items;` deletes every draft. Ask first. |
 
 - Additive only, except that 0028 replaces `creator_public_profile()` with the same signature and columns. With no settings row it returns exactly what 0017 did. No existing table, policy, grant or function changes. 0026 inserts into `deal_chats` only from `collab_respond_invitation` (accepting an invitation opens a deal room) and updates a room's status to `agreed` only from `collab_confirm_terms`.
+- **0029 grants:** `anon` none; `authenticated` SELECT of own rows (no admin access); `service_role` writes.
 - **0028 grants:** `anon` executes the two public RPCs only; `authenticated` SELECT of own rows (admins: portfolio and settings, read-only; never shortlists); `service_role` writes.
 - **0027 grants:** `anon` none; `authenticated` SELECT of their own rows; `service_role` SELECT/DELETE, UPDATE of `read_at` only, and preferences. Only the trigger inserts notifications.
 - **0026 grants:** `anon` none; `authenticated` SELECT only (writes go through the server after masking and validation); `service_role` CRUD, except `collaboration_events`, which is SELECT/INSERT only (append-only).
@@ -30,12 +32,12 @@
 
 `bash scripts/local-migrations-test.sh`:
 - creates a throwaway Postgres 16 cluster with Supabase stubs;
-- applies 0001–0028 in order;
-- re-applies 0024–0028;
-- runs all 13 files in `supabase/tests/` (including the collaboration, notification and shortlist/portfolio tests);
-- runs `supabase/verify/0025_verify.sql` to `0028_verify.sql`.
+- applies 0001–0029 in order;
+- re-applies 0024–0029;
+- runs all 14 files in `supabase/tests/` (including the collaboration, notification, shortlist/portfolio and content tests);
+- runs `supabase/verify/0025_verify.sql` to `0029_verify.sql`.
 
-Result on 2 November 2026: **50 passed, 0 failed**. The stubs aren't the real Supabase services, so run the verification against the real project after applying.
+Result on 2 November 2026: **54 passed, 0 failed**. The stubs aren't the real Supabase services, so run the verification against the real project after applying.
 
 ## Application order (Production; needs owner approval)
 
@@ -48,10 +50,10 @@ Result on 2 November 2026: **50 passed, 0 failed**. The stubs aren't the real Su
    0025 can go before or after the code deploy:
    - **Before:** nothing reads the table yet.
    - **After:** until it's applied, the Media Kit shows "no growth yet" and sync logs `media_kit_snapshot.write_failed`, without failing the sync.
-3. **Apply 0026, 0027, then 0028,** the same way, after 0025. Until 0026 is applied, the Briefs, Opportunities and Collaborations pages show empty lists, and every write answers with a generic error. Until 0027 is applied, the bell shows no badge and the Notifications page is empty. Until 0028 is applied, the Shortlists and Portfolio pages are empty, saving fails with a generic error, and the public profile is unchanged.
-4. **Verify:** run `supabase/verify/0025_verify.sql` to `0028_verify.sql`; every `ok` must be `true`.
+3. **Apply 0026, 0027, 0028, then 0029,** the same way, after 0025. Until 0026 is applied, the Briefs, Opportunities and Collaborations pages show empty lists, and every write answers with a generic error. Until 0027 is applied, the bell shows no badge and the Notifications page is empty. Until 0028 is applied, the Shortlists and Portfolio pages are empty, saving fails with a generic error, and the public profile is unchanged. Until 0029 is applied, the Content plan page is empty and saving fails with a generic error.
+4. **Verify:** run `supabase/verify/0025_verify.sql` to `0029_verify.sql`; every `ok` must be `true`.
 5. **Advisors:** check Database → Advisors → Security for new warnings on the new tables.
 
 ## Blocked migration
 
-The durable admin audit trail (see PENDING_OWNER_DECISIONS.md, item 4) is designed but **not written**, pending owner approval. It was once labelled 0026; it takes the next free number (0029 or later) when approved.
+The durable admin audit trail (see PENDING_OWNER_DECISIONS.md, item 4) is designed but **not written**, pending owner approval. It was once labelled 0026; it takes the next free number (0030 or later) when approved.
