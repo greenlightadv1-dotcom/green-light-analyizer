@@ -109,6 +109,20 @@ Not done:
   - rate-limit coverage;
   - `scripts/collab-ui-e2e.mjs`: 117 browser checks over the preview screens in en and ar, at 1440 and 390 px.
 
+## Feature: in-app notifications (migration 0027, not applied)
+
+- A trigger on `collaboration_events` creates one notification per party, except the actor, in the same transaction as the step. A step therefore never happens without its notification.
+- Notifications hold ids and the event kind only; wording, names and titles are rendered at read time.
+- **Preferences:** each person can mute four categories (invitations, terms, deliverables, completion and cancellation).
+- **Bell:** a bell in the top bar shows the unread count, read under RLS with the browser session.
+- **Page:** `/notifications` lists notifications. Opening one marks it read and goes to the page it is about; the target is built from stored ids, never from the request. "Mark all as read" is also available.
+- **Delivery:** in-app only. Nothing is emailed or pushed.
+- **Not built:** read state for deal-room chat messages.
+- **Tests:**
+  - `supabase/tests/notifications_test.sql`: recipients, muting, no free text, grants, RLS per role, anon;
+  - `src/lib/notifications/rules.test.ts`: targets, preferences, write scoping;
+  - browser checks in `scripts/collab-ui-e2e.mjs`.
+
 ## Not built in this pass
 
-Notifications, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).
+Deal-room message read state, support tickets, content planning, portfolio and visibility, shortlists, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).

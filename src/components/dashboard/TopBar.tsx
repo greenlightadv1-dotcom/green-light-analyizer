@@ -7,6 +7,7 @@ import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { useTranslation } from "@/components/LocaleProvider";
 import { signOutG } from "@/components/g/events";
 import type { Profile } from "@/lib/auth";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { MobileNav } from "./MobileNav";
 
 export function TopBar({
@@ -40,6 +41,7 @@ export function TopBar({
 
       <div className="flex items-center gap-2">
         {profile.role === "admin" ? <SendInviteModal /> : null}
+        {profile.role !== "admin" ? <NotificationBell basePath={basePath} demoCount={demo ? 2 : undefined} /> : null}
         <LanguageMenu />
         <ThemeMenu />
 

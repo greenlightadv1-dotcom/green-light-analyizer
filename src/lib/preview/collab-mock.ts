@@ -1,4 +1,4 @@
-import type { Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
+import type { AppNotification, Brief, Collaboration, CollaborationEvent, Deliverable, Invitation } from "@/lib/types/database";
 
 /**
  * Invented collaboration data for the /preview screens only. Nothing here is
@@ -169,4 +169,10 @@ export const previewEvents: CollaborationEvent[] = [
   ev(6, "deliverable_added", CO, "2026-11-02T09:10:00Z"),
   ev(7, "deliverable_submitted", CR, "2026-11-02T11:00:00Z"),
   ev(8, "revision_requested", CO, "2026-11-02T12:00:00Z"),
+];
+
+export const previewNotifications: AppNotification[] = [
+  { id: "00000000-0000-4000-8000-000000000101", recipient_id: CR, event_id: 8, kind: "revision_requested", category: "deliverables", brief_id: previewBriefs[0].id, invitation_id: previewInvitations[0].id, collaboration_id: previewCollaboration.id, actor_id: CO, read_at: null, created_at: "2026-11-02T12:00:00Z" },
+  { id: "00000000-0000-4000-8000-000000000102", recipient_id: CR, event_id: 9, kind: "invitation_sent", category: "invitations", brief_id: previewBriefs[0].id, invitation_id: "00000000-0000-4000-8000-0000000000d3", collaboration_id: null, actor_id: CO, read_at: null, created_at: "2026-11-02T10:00:00Z" },
+  { id: "00000000-0000-4000-8000-000000000103", recipient_id: CR, event_id: 5, kind: "terms_agreed", category: "terms", brief_id: previewBriefs[0].id, invitation_id: previewInvitations[0].id, collaboration_id: previewCollaboration.id, actor_id: CO, read_at: "2026-11-02T09:30:00Z", created_at: "2026-11-02T09:00:00Z" },
 ];

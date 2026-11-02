@@ -17,6 +17,7 @@ const PAGES = [
   ["/preview/collaborations", "collaborations"],
   ["/preview/collaborations/00000000-0000-4000-8000-0000000000e1", "collab-creator"],
   ["/preview/collaborations/00000000-0000-4000-8000-0000000000e1?side=company", "collab-company"],
+  ["/preview/notifications", "notifications"],
 ];
 let pass = 0, fail = 0;
 const check = (ok, label) => { if (ok) pass++; else fail++; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); };
@@ -35,7 +36,7 @@ for (const locale of ["en", "ar"]) {
       const tag = `${locale} ${vp} ${name}`;
       check(res?.status() === 200, `${tag}: 200`);
       const text = await page.locator("main, body").first().innerText();
-      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui)\.[a-zA-Z_.]+/g);
+      const leaked = text.match(/\b(collab|analyzer|taxonomy|ui|notifications)\.[a-zA-Z_.]+/g);
       check(!leaked, `${tag}: no raw keys${leaked ? " " + leaked.slice(0, 3).join(",") : ""}`);
       if (locale === "ar") check((await page.getAttribute("html", "dir")) === "rtl", `${tag}: rtl`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -70,6 +71,14 @@ await page.goto(BASE + "/preview/collaborations/00000000-0000-4000-8000-00000000
 check(await page.getByRole("button", { name: "Submit work" }).count() === 2, "creator can submit both open deliverables");
 check(await page.getByRole("button", { name: "Approve" }).count() === 0, "creator cannot approve");
 check(await page.getByText("10% commission").count() >= 1, "commission note shown");
+// Notifications: the bell shows the unread badge and links to the page;
+// unread items are marked for screen readers; preferences reflect muting.
+await page.goto(BASE + "/preview/notifications", { waitUntil: "networkidle" });
+const bell = page.getByRole("link", { name: "Notifications, 2 unread" });
+check(await bell.count() >= 1, "bell announces the unread count");
+check((await page.getByText("(Unread)").count()) === 2, "two unread items are labelled for screen readers");
+check(!(await page.getByLabel("Completion and cancellation").isChecked()), "muted category is unticked");
+check(await page.getByLabel("Invitations and responses").isChecked(), "other categories stay on");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

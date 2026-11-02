@@ -1411,6 +1411,29 @@ const en = {
       not_allowed: "Only the creator and the company in this collaboration can do that.",
     },
   },
+  notifications: {
+    title: "Notifications",
+    description: "Updates on your briefs, invitations and collaborations.",
+    empty: "No notifications yet",
+    emptyBody: "When the other side of an invitation or collaboration takes a step, it appears here.",
+    markAllRead: "Mark all as read",
+    markedAllRead: "All notifications are marked as read.",
+    unread: "Unread",
+    from: "From {name}",
+    bell: "Notifications",
+    bellUnread: "Notifications, {count} unread",
+    prefsTitle: "What to notify me about",
+    prefsBody: "These notifications appear only inside Green Light. Nothing is emailed or sent to your phone.",
+    save: "Save preferences",
+    saving: "Saving…",
+    saved: "Preferences saved.",
+    category: {
+      invitations: "Invitations and responses",
+      terms: "Terms proposals and agreements",
+      deliverables: "Deliverables, submissions and reviews",
+      status: "Completion and cancellation",
+    },
+  },
 };
 
 export default en;

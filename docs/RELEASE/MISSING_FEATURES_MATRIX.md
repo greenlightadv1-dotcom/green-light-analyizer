@@ -8,7 +8,7 @@ the full list are in `MASTER_IMPLEMENTATION_AUDIT.md`.
 | 1 | Briefs and campaigns | BUILT, NOT APPLIED (0026) | 0026 `briefs` | Company onboarding | Apply 0026; owner: representatives' authority | Company-scoped writes; creators read published only |
 | 2 | Invitations (accept/decline/request changes) | BUILT, NOT APPLIED (0026) | 0026 `invitations` | 1 | Apply 0026 | Parties only; text masked; accept opens a deal room |
 | 3 | Deliverables, revisions, approvals, completion | BUILT, NOT APPLIED (0026) | 0026 `collaborations`, `deliverables`, `collaboration_events` (append-only) | 2 | Apply 0026. Reviews: owner decision (item 9) | Party-only access; no payments or escrow |
-| 4 | In-app notifications and read state | MISSING | Yes: `notifications`, `message_reads` | 2, 3 | — | Per-user RLS; never include private message text of another tenant |
+| 4 | In-app notifications and read state | BUILT, NOT APPLIED (0027) for collaboration events. Deal-room message read state: still MISSING | 0027 `notifications`, `notification_preferences` | 2, 3 | Apply 0027 | Recipient-only RLS; ids and event kind only, never free text |
 | 5 | Support tickets | MISSING | Yes: `support_tickets`, `support_messages` | — | — | Creators and admins only |
 | 6 | Content planning and saved drafts (G) | MISSING | Yes: `content_items` | G | — | Owner-only RLS |
 | 7 | G drafts and proposals with explicit confirmation | MISSING | Depends on 1–6 | 1–6 | — | Preview, confirm, then execute on the server; never claim success before the server confirms |

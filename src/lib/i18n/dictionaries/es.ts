@@ -1399,6 +1399,29 @@ const es: Dictionary = {
       not_allowed: "Solo el creador y la empresa de esta colaboración pueden hacer eso.",
     },
   },
+  notifications: {
+    title: "Notificaciones",
+    description: "Novedades sobre tus briefs, invitaciones y colaboraciones.",
+    empty: "Aún no hay notificaciones",
+    emptyBody: "Cuando la otra parte de una invitación o colaboración da un paso, aparece aquí.",
+    markAllRead: "Marcar todo como leído",
+    markedAllRead: "Todas las notificaciones están marcadas como leídas.",
+    unread: "No leída",
+    from: "De {name}",
+    bell: "Notificaciones",
+    bellUnread: "Notificaciones, {count} sin leer",
+    prefsTitle: "Sobre qué quiero avisos",
+    prefsBody: "Estas notificaciones solo aparecen dentro de Green Light. No se envía nada por correo ni a tu teléfono.",
+    save: "Guardar preferencias",
+    saving: "Guardando…",
+    saved: "Preferencias guardadas.",
+    category: {
+      invitations: "Invitaciones y respuestas",
+      terms: "Propuestas y acuerdos de condiciones",
+      deliverables: "Entregables, entregas y revisiones",
+      status: "Finalización y cancelación",
+    },
+  },
 };
 
 export default es;

@@ -1399,6 +1399,29 @@ const de: Dictionary = {
       not_allowed: "Nur der Creator und das Unternehmen dieser Kooperation können das tun.",
     },
   },
+  notifications: {
+    title: "Benachrichtigungen",
+    description: "Neuigkeiten zu deinen Briefings, Einladungen und Kooperationen.",
+    empty: "Noch keine Benachrichtigungen",
+    emptyBody: "Wenn die andere Seite einer Einladung oder Kooperation etwas tut, erscheint es hier.",
+    markAllRead: "Alle als gelesen markieren",
+    markedAllRead: "Alle Benachrichtigungen sind als gelesen markiert.",
+    unread: "Ungelesen",
+    from: "Von {name}",
+    bell: "Benachrichtigungen",
+    bellUnread: "Benachrichtigungen, {count} ungelesen",
+    prefsTitle: "Worüber ich benachrichtigt werde",
+    prefsBody: "Diese Benachrichtigungen erscheinen nur in Green Light. Es wird nichts per E-Mail oder an dein Telefon gesendet.",
+    save: "Einstellungen speichern",
+    saving: "Wird gespeichert…",
+    saved: "Einstellungen gespeichert.",
+    category: {
+      invitations: "Einladungen und Antworten",
+      terms: "Vorschläge und Vereinbarungen zu Bedingungen",
+      deliverables: "Deliverables, Einreichungen und Prüfungen",
+      status: "Abschluss und Stornierung",
+    },
+  },
 };
 
 export default de;

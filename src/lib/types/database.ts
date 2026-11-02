@@ -441,6 +441,28 @@ export type CollaborationEvent = {
   created_at: string;
 };
 
+export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status";
+
+export type AppNotification = {
+  id: string;
+  recipient_id: string;
+  event_id: number;
+  kind: string;
+  category: NotificationCategory;
+  brief_id: string | null;
+  invitation_id: string | null;
+  collaboration_id: string | null;
+  actor_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type NotificationPreferences = {
+  profile_id: string;
+  muted_categories: NotificationCategory[];
+  updated_at: string;
+};
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -539,6 +561,8 @@ export type Database = {
       collaborations: Table<Collaboration, Optional<Collaboration, Exclude<keyof Collaboration, "invitation_id" | "brief_id" | "company_id" | "creator_id">>>;
       deliverables: Table<Deliverable, Optional<Deliverable, Exclude<keyof Deliverable, "collaboration_id" | "title">>>;
       collaboration_events: Table<CollaborationEvent, Optional<CollaborationEvent, Exclude<keyof CollaborationEvent, "event_type">>>;
+      notifications: Table<AppNotification, Optional<AppNotification, Exclude<keyof AppNotification, "recipient_id" | "event_id" | "kind" | "category">>>;
+      notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
         Optional<AdminAction, Exclude<keyof AdminAction, "action">>
