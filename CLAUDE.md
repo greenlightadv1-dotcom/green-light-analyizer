@@ -1319,7 +1319,7 @@ Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
   - Server-action errors are dictionary keys, translated on the client.
 - **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
 - **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
-- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0031 or later, since 0026–0030 are used in §19).
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0032 or later, since 0026–0031 are used in §19).
 
 ## 19. Collaboration lifecycle (branch only, 2026-11-02)
 
@@ -1387,3 +1387,8 @@ Not deployed. **Migration 0026 is not applied anywhere.**
   - Without that variable, the mail is recorded and logged as `inbound.role_mailbox_unrouted`.
 - **New messages:** migration 0030 (not applied) notifies the other party of a new message in an in-app room. Email rooms keep the email relay.
 - **Relay outcome:** the relay's outcome write is now checked (`relay.outcome_not_recorded`).
+
+**Analyzer fixes (`docs/AI_ANALYZER_ROOT_CAUSE_REPORT.md`).**
+- **Hidden like counts:** they no longer count as zero likes in engagement.
+- **Synced reach:** the YouTube sync keeps the median views of the recent uploads (migration 0031, not applied). These columns are server-only and cleared at 29 days with the other synced stats. The assessment shows them as synced; pricing does not use them yet (owner decision 12).
+- **API failures:** YouTube API failures during a sync are logged.

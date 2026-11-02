@@ -64,7 +64,7 @@ step() { if "$@" >"$WORK/out" 2>&1; then echo "PASS $LABEL"; pass=$((pass+1)); e
 for f in "$ROOT"/supabase/migrations/*.sql; do
   LABEL="apply $(basename "$f")" step q -f "$f"
 done
-for f in "$ROOT"/supabase/migrations/0024_*.sql "$ROOT"/supabase/migrations/0025_*.sql "$ROOT"/supabase/migrations/0026_*.sql "$ROOT"/supabase/migrations/0027_*.sql "$ROOT"/supabase/migrations/0028_*.sql "$ROOT"/supabase/migrations/0029_*.sql "$ROOT"/supabase/migrations/0030_*.sql; do
+for f in "$ROOT"/supabase/migrations/0024_*.sql "$ROOT"/supabase/migrations/0025_*.sql "$ROOT"/supabase/migrations/0026_*.sql "$ROOT"/supabase/migrations/0027_*.sql "$ROOT"/supabase/migrations/0028_*.sql "$ROOT"/supabase/migrations/0029_*.sql "$ROOT"/supabase/migrations/0030_*.sql "$ROOT"/supabase/migrations/0031_*.sql; do
   LABEL="re-apply $(basename "$f") (idempotent)" step q -f "$f"
 done
 for f in "$ROOT"/supabase/tests/*.sql; do

@@ -32,7 +32,7 @@ Only items that need the owner. Nothing here has been changed or invented.
 - An unban clears `profiles.banned_*`.
 - The server log line is temporary.
 
-**Proposed migration (not written; it takes the next free number when approved, since 0026–0030 are now used)**
+**Proposed migration (not written; it takes the next free number when approved, since 0026–0031 are now used)**
 
 1. Extend `admin_actions.action` CHECK with `violation_ban`, `violation_dismiss`, `application_reject` and `representative_unlink`. Add a nullable `subject_id uuid` (the violation, application or member id). Update the table comment, which today scopes it to `/admin/users`.
 2. Add `SECURITY DEFINER` functions, executable by `service_role` only, that do the change and the audit insert in **one transaction**:
@@ -89,4 +89,8 @@ The portfolio (migration 0028) names a brand on the public profile only when the
 
 - **`ROLE_MAILBOX_FORWARD_TO`:** set it in Vercel Production to the inbox that should receive mail sent to support@, privacy@, security@, legal@ and deals@greenlightadvs.com. Today that mail reaches nobody.
 - **Relay retry:** should a failed relay of a creator's reply to an email sponsor be retried automatically (risking a duplicate email), offered as a manual "resend" button, or left as a visible failure (today's behaviour)?
+
+## 12. Pricing reach source (see docs/AI_ANALYZER_ROOT_CAUSE_REPORT.md A2)
+
+The sync now stores the median views of a YouTube channel's recent uploads (migration 0031). Pricing still uses the creator-typed average views. Should pricing prefer the fresh synced figure when one exists? That would change recommended prices.
 

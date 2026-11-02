@@ -365,6 +365,10 @@ export async function syncYoutubeStats(
       // one recent video with views) — a temporary computation failure
       // should never silently blank out a value the creator already set.
       ...(stats.engagementRate !== null && { engagement_rate: stats.engagementRate }),
+      // Synced reach (0031): the median views of the recent uploads. Kept
+      // apart from the creator-typed avg_views, and cleared with the stats above.
+      recent_median_views: stats.recentViews?.median ?? null,
+      recent_views_sample: stats.recentViews?.sample ?? null,
       last_synced_at: new Date().toISOString(),
       // The freshness clock for the three stats above (0023): refreshed or
       // deleted within 30 days by the youtube-data-freshness cron.

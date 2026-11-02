@@ -234,6 +234,9 @@ type MediaKit = {
   channel_view_count: number | null;
   /** Video count (YouTube) or post count (Instagram) (migration 0016). */
   media_count: number | null;
+  /** 0031: median views of the most recent YouTube uploads (synced), and its sample size. */
+  recent_median_views?: number | null;
+  recent_views_sample?: number | null;
   /** AI-generated, supplementary to content_category (migration 0016). */
   content_tags: string[] | null;
 };

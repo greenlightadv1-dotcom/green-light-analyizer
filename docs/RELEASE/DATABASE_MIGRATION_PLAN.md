@@ -20,6 +20,7 @@
 | 0028 | `supabase/migrations/0028_shortlists_portfolio_visibility.sql` | Company shortlists, creator portfolio, public-profile section visibility | Tables `shortlists`, `shortlist_entries`, `portfolio_items`, `public_profile_settings`; three check triggers; `creator_public_profile` redefined with the same columns (hidden sections return NULL); new `creator_public_portfolio` | Yes: see the file header. Rolling back also means re-running 0017's `creator_public_profile`. Ask first. |
 | 0029 | `supabase/migrations/0029_content_planning.sql` | Creator content plans (ideas and drafts, status, calendar date) | Table `content_items`, check trigger, owner-only RLS | Yes: `drop table if exists public.content_items;` deletes every draft. Ask first. |
 | 0030 | `supabase/migrations/0030_message_notifications.sql` | In-app notification for a new message in a room between two accounts | `notifications.chat_id`; `event_id` nullable; kind/category checks extended; `messages_notify` trigger; one-unread-per-room index | Yes: see the file header. Ask first. |
+| 0031 | `supabase/migrations/0031_recent_views.sql` | Synced median views of recent YouTube uploads | Two nullable columns on `media_kits`; no client grant | Yes: drop the two columns |
 
 - Additive only, except that 0028 replaces `creator_public_profile()` with the same signature and columns. With no settings row it returns exactly what 0017 did. No existing table, policy, grant or function changes. 0026 inserts into `deal_chats` only from `collab_respond_invitation` (accepting an invitation opens a deal room) and updates a room's status to `agreed` only from `collab_confirm_terms`.
 - **0029 grants:** `anon` none; `authenticated` SELECT of own rows (no admin access); `service_role` writes.
@@ -57,4 +58,4 @@ Result on 2 November 2026: **54 passed, 0 failed**. The stubs aren't the real Su
 
 ## Blocked migration
 
-The durable admin audit trail (see PENDING_OWNER_DECISIONS.md, item 4) is designed but **not written**, pending owner approval. It was once labelled 0026; it takes the next free number (0031 or later) when approved.
+The durable admin audit trail (see PENDING_OWNER_DECISIONS.md, item 4) is designed but **not written**, pending owner approval. It was once labelled 0026; it takes the next free number (0032 or later) when approved.

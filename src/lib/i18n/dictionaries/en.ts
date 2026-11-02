@@ -628,6 +628,7 @@ const en = {
       engagement_rate: "Engagement rate",
       subscribers: "Subscribers",
       lifetime_views: "Lifetime views",
+      recent_median_views: "Median views, recent uploads",
       videos: "Videos",
       geography: "Audience geography",
       base_rate_usd: "Base rate (USD)",

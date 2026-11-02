@@ -39,6 +39,7 @@ export type KitInput = {
   channel_view_count?: number | null;
   media_count?: number | null;
   youtube_stats_synced_at?: string | null;
+  recent_median_views?: number | null;
 };
 
 export type CreatorProfileInput = {
@@ -118,6 +119,8 @@ function platformMetrics(kit: KitInput, now: Date): Metric[] {
       metric("subscribers", kit.subscriber_count, synced, asOf),
       metric("lifetime_views", kit.channel_view_count, synced, asOf),
       metric("videos", kit.media_count, synced, asOf),
+      // 0031: median views of the recent uploads, from the Data API.
+      metric("recent_median_views", kit.recent_median_views ?? null, synced, asOf),
     );
   }
   return out;

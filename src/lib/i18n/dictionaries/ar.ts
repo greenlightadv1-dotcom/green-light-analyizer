@@ -608,6 +608,7 @@ const ar: Dictionary = {
       engagement_rate: "معدل التفاعل",
       subscribers: "المشتركون",
       lifetime_views: "إجمالي المشاهدات",
+      recent_median_views: "وسيط المشاهدات، آخر المقاطع",
       videos: "الفيديوهات",
       geography: "جغرافيا الجمهور",
       base_rate_usd: "السعر الأساسي (دولار)",

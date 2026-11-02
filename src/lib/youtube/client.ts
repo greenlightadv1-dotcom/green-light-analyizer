@@ -1,5 +1,6 @@
 import "server-only";
-import { meanEngagementRate } from "./engagement";
+import { log } from "@/lib/log";
+import { meanEngagementRate, medianViews } from "./engagement";
 
 const CHANNELS_ENDPOINT = "https://www.googleapis.com/youtube/v3/channels";
 const PLAYLIST_ITEMS_ENDPOINT = "https://www.googleapis.com/youtube/v3/playlistItems";
@@ -12,6 +13,8 @@ export type YoutubeChannelStats = {
   videoCount: number | null;
   /** Mean of (likes + comments) / views * 100 across the RECENT_VIDEO_COUNT most recent uploads. */
   engagementRate: number | null;
+  /** Median views of the recent uploads and the sample size (0031). */
+  recentViews: { median: number; sample: number } | null;
 };
 
 export type YoutubeRecentVideo = {
@@ -49,7 +52,11 @@ async function resolveChannel(
   try {
     const url = `${CHANNELS_ENDPOINT}?part=statistics,contentDetails&forHandle=${encodeURIComponent(cleanHandle)}&key=${encodeURIComponent(key)}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // e.g. 403 quotaExceeded: without this the sync looked successful (report A3).
+      log.warn("youtube.channels_failed", { status: response.status });
+      return null;
+    }
 
     const body: {
       items?: {
@@ -80,7 +87,10 @@ async function fetchRecentVideoIds(
   try {
     const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=contentDetails&playlistId=${encodeURIComponent(uploadsPlaylistId)}&maxResults=${RECENT_VIDEO_COUNT}&key=${encodeURIComponent(key)}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) return [];
+    if (!response.ok) {
+      log.warn("youtube.playlist_items_failed", { status: response.status });
+      return [];
+    }
 
     const body: { items?: { contentDetails?: { videoId?: string } }[] } =
       await response.json();
@@ -111,7 +121,10 @@ async function fetchVideoDetails(
   try {
     const url = `${VIDEOS_ENDPOINT}?part=statistics,snippet&id=${videoIds.join(",")}&key=${encodeURIComponent(key)}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) return [];
+    if (!response.ok) {
+      log.warn("youtube.videos_failed", { status: response.status });
+      return [];
+    }
 
     const body: {
       items?: {
@@ -156,10 +169,12 @@ export async function fetchYoutubeChannelStats(
   if (!channel) return null;
 
   let engagementRate: number | null = null;
+  let recentViews: { median: number; sample: number } | null = null;
   if (channel.uploadsPlaylistId) {
     const videoIds = await fetchRecentVideoIds(key, channel.uploadsPlaylistId);
     const videos = await fetchVideoDetails(key, videoIds);
     engagementRate = meanEngagementRate(videos);
+    recentViews = medianViews(videos);
   }
 
   return {
@@ -169,6 +184,7 @@ export async function fetchYoutubeChannelStats(
     viewCount: channel.statistics?.viewCount ? Number(channel.statistics.viewCount) : null,
     videoCount: channel.statistics?.videoCount ? Number(channel.statistics.videoCount) : null,
     engagementRate,
+    recentViews,
   };
 }
 

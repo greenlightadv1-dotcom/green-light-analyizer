@@ -616,6 +616,7 @@ const fr: Dictionary = {
       engagement_rate: "Taux d'engagement",
       subscribers: "Abonnés",
       lifetime_views: "Vues totales",
+      recent_median_views: "Vues médianes, vidéos récentes",
       videos: "Vidéos",
       geography: "Géographie de l'audience",
       base_rate_usd: "Tarif de base (USD)",
