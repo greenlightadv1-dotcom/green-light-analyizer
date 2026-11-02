@@ -25,9 +25,18 @@ export type GActionId =
   | "open_creator"
   | "open_pricing"
   | "open_support"
-  | "open_settings";
+  | "open_settings"
+  | "open_briefs"
+  | "open_brief"
+  | "open_opportunities"
+  | "open_collaborations"
+  | "open_collaboration"
+  | "open_shortlists"
+  | "open_portfolio"
+  | "open_content"
+  | "open_notifications";
 
-type ActionDef = { href: string; roles: readonly Role[]; param?: "deal" | "creator" };
+type ActionDef = { href: string; roles: readonly Role[]; param?: "deal" | "creator" | "brief" | "collaboration" };
 
 export const G_ACTIONS: Record<GActionId, ActionDef> = {
   open_dashboard: { href: "/dashboard", roles: ["creator", "company", "admin"] },
@@ -42,6 +51,15 @@ export const G_ACTIONS: Record<GActionId, ActionDef> = {
   open_pricing: { href: "/pricing", roles: ["creator", "company", "admin"] },
   open_support: { href: "/support", roles: ["creator", "admin"] },
   open_settings: { href: "/settings", roles: ["creator", "company", "admin"] },
+  open_briefs: { href: "/briefs", roles: ["company"] },
+  open_brief: { href: "/briefs/", roles: ["company"], param: "brief" },
+  open_opportunities: { href: "/opportunities", roles: ["creator"] },
+  open_collaborations: { href: "/collaborations", roles: ["creator", "company", "admin"] },
+  open_collaboration: { href: "/collaborations/", roles: ["creator", "company"], param: "collaboration" },
+  open_shortlists: { href: "/shortlists", roles: ["company"] },
+  open_portfolio: { href: "/portfolio", roles: ["creator"] },
+  open_content: { href: "/content", roles: ["creator"] },
+  open_notifications: { href: "/notifications", roles: ["creator", "company"] },
 };
 
 export type GAction = { action: GActionId; param?: string };
@@ -52,6 +70,10 @@ export type ActionScope = {
   dealIds: ReadonlySet<string>;
   /** Creator ids from the authorized Discovery directory. */
   creatorIds: ReadonlySet<string>;
+  /** The company's own brief ids (RLS-scoped read). */
+  briefIds?: ReadonlySet<string>;
+  /** Collaboration ids the user is a party to (RLS-scoped read). */
+  collaborationIds?: ReadonlySet<string>;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -74,7 +96,11 @@ export function allowedActions(candidates: unknown, scope: ActionScope): GAction
     let p: string | undefined;
     if (def.param) {
       if (typeof param !== "string" || !UUID.test(param)) continue;
-      const allowed = def.param === "deal" ? scope.dealIds : scope.creatorIds;
+      const allowed =
+        def.param === "deal" ? scope.dealIds
+        : def.param === "creator" ? scope.creatorIds
+        : def.param === "brief" ? scope.briefIds ?? new Set<string>()
+        : scope.collaborationIds ?? new Set<string>();
       if (!allowed.has(param)) continue;
       p = param;
     }

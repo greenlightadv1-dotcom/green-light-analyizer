@@ -1371,3 +1371,12 @@ Not deployed. **Migration 0026 is not applied anywhere.**
 - `/content` (creators): private ideas and drafts (script, hook, title, description) with a status board and a month calendar.
 - `content_items` is owner-only under RLS, with no admin read. Writes go through the server, scoped to the session's id and rate-limited (`content_write`).
 - A trigger refuses a collaboration the creator is not party to, a scheduled item without a date, and more than 500 items.
+
+**G across collaborations and content (no migration).**
+- **Context:** G's context (`collabContext`, caller's own client, RLS) adds briefs, invitations, collaborations with a computed next step (`lib/g/collab.ts`), and the creator's content plan.
+- **Proposals:** G may prepare at most 2 per reply:
+  - `content_draft` (creator);
+  - `invitation` (company: own published brief, directory creator, not yet invited);
+  - `message_draft` (either party, own collaboration).
+- **Server filtering:** `allowedProposals` scopes the ids and masks the text, and a proposal with an ungrounded figure is dropped.
+- **Execution:** the UI (`components/g/GProposals.tsx`) shows each proposal as an editable form behind `ConfirmActionForm`. Confirming calls the ordinary server action (`saveContentItem` / `inviteCreator`), and a message draft is only copied. G itself never executes anything.

@@ -105,6 +105,24 @@ await page.goto(BASE + "/preview/content?view=calendar", { waitUntil: "networkid
 const cell = page.locator("td", { hasText: "Budget earbuds that beat the big brands?" });
 check((await cell.innerText()).trim().startsWith("25"), "scheduled item sits on its day");
 check(await page.getByText("Without a date: 2").count() === 1, "undated items are counted");
+// G prepares, the person confirms: a prepared draft is an editable form, its
+// button opens a confirmation, and in the preview the save is refused.
+posts = 0;
+await page.goto(BASE + "/preview/content", { waitUntil: "networkidle" });
+await page.locator("button[aria-haspopup=dialog], button[aria-label*='G']").last().click();
+const gPanel = page.locator("[role=dialog]").first();
+await gPanel.waitFor();
+await gPanel.locator("textarea").first().fill("Draft a script for my launch video");
+await page.keyboard.press("Enter");
+await page.getByText("Draft prepared by G").waitFor();
+check(await page.getByText("nothing happens until you confirm").count() >= 1, "proposal says nothing happens before confirming");
+check(posts === 0, "preparing a proposal sends nothing");
+await page.getByRole("button", { name: "Save to my content plan" }).click();
+const confirmBox = page.getByRole("dialog", { name: "Save this draft to your content plan?" });
+check(await confirmBox.isVisible(), "saving a G draft asks for confirmation");
+await confirmBox.getByRole("button", { name: "Save", exact: true }).click();
+await page.getByText("This is a preview. Nothing can be saved here.").first().waitFor();
+check(true, "preview refuses the save instead of pretending it worked");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

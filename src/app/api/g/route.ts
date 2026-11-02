@@ -3,7 +3,8 @@ import { AiUnavailableError, chatJson } from "@/lib/ai/chat";
 import { log } from "@/lib/log";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { G_ACTIONS, allowedActions, type GAction, type GActionId } from "@/lib/g/actions";
-import { companyContext, creatorContext, loadGSession } from "@/lib/g/context";
+import { collabContext, companyContext, creatorContext, loadGSession, type CollabGData } from "@/lib/g/context";
+import { allowedProposals, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
 import {
   buildPrompt,
   detectIntents,
@@ -29,6 +30,11 @@ import {
  *   malformed, the answer is the same cards with no prose (engine "rules").
  * - The model's suggested actions pass through allowedActions: known ids,
  *   this role's pages, and parameters from this user's own context only.
+ * - Proposals (lib/g/collab.ts) are prepared forms, never executed here:
+ *   allowedProposals keeps only ids from this user's own context, masks the
+ *   text, and a proposal stating a figure G was not given is dropped. The
+ *   user reviews, edits and confirms each one; only then does the client call
+ *   the product's ordinary server action, which re-checks everything.
  * - Nothing is stored. The conversation stays in the user's tab.
  */
 export const maxDuration = 60;
@@ -72,23 +78,61 @@ export async function POST(request: Request) {
   let cards: Record<string, unknown> = {};
   let modelData: Record<string, unknown> = { intents };
   let defaults: GAction[] = [];
-  let scope = { role: profile.role, dealIds: new Set<string>(), creatorIds: new Set<string>() };
+  let scope = {
+    role: profile.role,
+    dealIds: new Set<string>(),
+    creatorIds: new Set<string>(),
+    briefIds: new Set<string>(),
+    collaborationIds: new Set<string>(),
+  };
+  let proposalScope: ProposalScope = {
+    role: profile.role,
+    publishedBriefIds: new Set(),
+    creatorIds: new Set(),
+    invited: new Set(),
+    collaborationIds: new Set(),
+  };
+  let creatorNames = new Map<string, string>();
+  const wantsCollab = intents.includes("collab") || intents.includes("content") || intents.includes("help");
+  const collabData = (c: CollabGData) => ({
+    collaborations: c.collaborations,
+    invitations: c.invitations,
+    briefs: c.briefs,
+    ...(c.content ? { content: c.content } : {}),
+  });
 
   try {
     if (profile.role === "creator") {
-      const ctx = await creatorContext(profile);
-      scope = { ...scope, dealIds: ctx.dealIds };
+      const [ctx, collab] = await Promise.all([creatorContext(profile), collabContext(profile)]);
+      scope = { ...scope, dealIds: ctx.dealIds, collaborationIds: collab.collaborationIds };
+      proposalScope = { ...proposalScope, collaborationIds: collab.collaborationIds };
+      if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: collab.invitations };
+      if (intents.includes("content") && collab.content) cards.content = collab.content;
       if (intents.includes("assessment") || intents.includes("help")) cards.assessment = ctx.assessment;
       if (intents.includes("deals")) cards.deals = { summary: ctx.assessment.deals, recent: ctx.recentDeals };
       modelData = {
         intents,
         assessment: ctx.assessment,
         deals: { summary: ctx.assessment.deals, recent: ctx.recentDeals },
+        ...(wantsCollab ? collabData(collab) : {}),
       };
-      defaults = ctx.assessment.nextActions.map((action) => ({ action }));
+      defaults = intents.includes("content")
+        ? [{ action: "open_content" }]
+        : intents.includes("collab")
+          ? [{ action: "open_collaborations" }, { action: "open_opportunities" }]
+          : ctx.assessment.nextActions.map((action) => ({ action }));
     } else if (profile.role === "company") {
-      const ctx = await companyContext(profile, req.brief, req.compare);
-      scope = { ...scope, dealIds: ctx.dealIds, creatorIds: ctx.creatorIds };
+      const [ctx, collab] = await Promise.all([companyContext(profile, req.brief, req.compare), collabContext(profile)]);
+      scope = { ...scope, dealIds: ctx.dealIds, creatorIds: ctx.creatorIds, briefIds: collab.briefIds, collaborationIds: collab.collaborationIds };
+      creatorNames = ctx.creatorNames;
+      proposalScope = {
+        ...proposalScope,
+        publishedBriefIds: collab.publishedBriefIds,
+        creatorIds: ctx.creatorIds,
+        invited: collab.invited,
+        collaborationIds: collab.collaborationIds,
+      };
+      if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: [], briefs: collab.briefs };
       if (intents.includes("recommend") || intents.includes("brief") || intents.includes("help")) {
         cards.brief = { value: ctx.brief, missing: ctx.briefMissing };
         cards.recommendations = { directorySize: ctx.directorySize, items: ctx.recommendations };
@@ -103,8 +147,9 @@ export async function POST(request: Request) {
         recommendations: ctx.recommendations,
         comparison: ctx.comparison,
         recentDeals: ctx.recentDeals,
+        ...(wantsCollab ? collabData(collab) : {}),
       };
-      defaults = [{ action: "open_discover" }];
+      defaults = intents.includes("collab") ? [{ action: "open_collaborations" }, { action: "open_briefs" }] : [{ action: "open_discover" }];
     } else {
       cards = {};
       modelData = { intents, note: "Admin users get navigation help only." };
@@ -118,6 +163,7 @@ export async function POST(request: Request) {
   let engine: "ai" | "rules" = "rules";
   let reply: string | null = null;
   let actions = allowedActions(defaults, scope);
+  let proposals: GProposal[] = [];
   try {
     const result = await chatJson(
       {
@@ -126,12 +172,13 @@ export async function POST(request: Request) {
           locale: req.locale,
           page: req.page,
           allowedActions: roleActions,
+          proposalTypes: proposalTypesFor(profile.role),
           data: modelData,
           history: maskTurns(req.history),
           message: maskTurns([{ role: "user", text: req.message }])[0].text,
         }),
         temperature: 0.3,
-        maxTokens: 700,
+        maxTokens: 1200,
         deadlineAt: Date.now() + MODEL_BUDGET_MS,
       },
       validateModelReply,
@@ -152,9 +199,15 @@ export async function POST(request: Request) {
     reply = result.value.reply;
     const fromModel = allowedActions(result.value.actions, scope);
     if (fromModel.length) actions = fromModel;
+    const groundingSources = [JSON.stringify(modelData), req.message, ...req.history.map((t) => t.text)];
+    proposals = allowedProposals(result.value.proposals, proposalScope).filter((p) => {
+      const ok = ungroundedFigures(proposalText(p), groundingSources).length === 0;
+      if (!ok) log.warn("g.proposal_ungrounded", { type: p.type });
+      return ok;
+    }).map((p) => (p.type === "invitation" ? { ...p, creator_name: creatorNames.get(p.creator_id) } : p));
   } catch (error) {
     if (!(error instanceof AiUnavailableError)) log.warn("g.model_reply_rejected", { error });
   }
 
-  return NextResponse.json({ engine, reply, intents, cards, actions });
+  return NextResponse.json({ engine, reply, intents, cards, actions, proposals });
 }

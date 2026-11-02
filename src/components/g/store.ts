@@ -2,6 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import type { GAction } from "@/lib/g/actions";
+import type { GProposal } from "@/lib/g/collab";
 
 /**
  * G's conversation state, kept in this tab's sessionStorage under a key that
@@ -19,6 +20,7 @@ export type GMessage = {
   engine?: "ai" | "rules";
   cards?: Record<string, unknown>;
   actions?: GAction[];
+  proposals?: GProposal[];
   error?: string;
 };
 

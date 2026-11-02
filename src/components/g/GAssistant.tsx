@@ -11,6 +11,7 @@ import { useVoice } from "@/components/g/useVoice";
 import { useWakeWord, type WakeStatus } from "@/components/g/useWakeWord";
 import { WAKE_PHRASES } from "@/lib/g/wake";
 import { actionHref } from "@/lib/g/actions";
+import { CollaborationsCard, ContentCard, ProposalCard } from "@/components/g/GProposals";
 import type { CreatorAssessment, DealSummary } from "@/lib/g/assessment";
 import type { Brief, ComparisonRow, Recommendation } from "@/lib/g/recommend";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -114,7 +115,13 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       const history = state.messages.slice(-8).map((m) => ({ role: m.role, text: m.text }));
       update((s) => ({ ...s, messages: [...s.messages, { id: newId(), role: "user", text: message }] }));
       if (demo) {
-        update((s) => ({ ...s, messages: [...s.messages, { id: newId(), role: "assistant", text: t("g.previewNotice"), engine: "rules" }] }));
+        // The preview has no session, so G cannot read or prepare anything
+        // real. A drafting question shows one sample proposal card so the
+        // confirm-before-save flow can be reviewed; saving it is refused.
+        const sample = /script|draft|hook|سكريبت|مسودة/i.test(message)
+          ? [{ type: "content_draft" as const, kind: "script" as const, title: t("g.previewSampleTitle"), body: t("g.previewSampleBody") }]
+          : [];
+        update((s) => ({ ...s, messages: [...s.messages, { id: newId(), role: "assistant", text: t("g.previewNotice"), engine: "rules", proposals: sample }] }));
         // Spoken too, so the preview exercises the whole voice loop.
         return t("g.previewNotice");
       }
@@ -140,6 +147,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           reply?: string | null;
           cards?: Record<string, unknown>;
           actions?: GMessage["actions"];
+          proposals?: GMessage["proposals"];
         };
         if (!res.ok) {
           const code = res.status === 429 ? "rateLimited" : res.status === 401 || res.status === 403 ? "session" : "failed";
@@ -158,6 +166,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
               engine: data.engine,
               cards: data.cards,
               actions: data.actions ?? [],
+              proposals: data.proposals ?? [],
             },
           ],
         }));
@@ -371,6 +380,18 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                     <ComparisonCard cmp={m.cards.comparison as { creators: { creator_id: string; full_name: string }[]; rows: ComparisonRow[] }} />
                   ) : null}
                   {m.cards?.deals ? <DealsCard deals={m.cards.deals as { summary?: CreatorAssessment["deals"]; recent: DealSummary[] }} /> : null}
+                  {m.cards?.collaborations ? (
+                    <CollaborationsCard basePath={basePath} data={m.cards.collaborations as Parameters<typeof CollaborationsCard>[0]["data"]} />
+                  ) : null}
+                  {m.cards?.content ? <ContentCard data={m.cards.content as Parameters<typeof ContentCard>[0]["data"]} /> : null}
+                  {m.proposals?.map((p, i) => (
+                    <ProposalCard
+                      key={`${m.id}-p${i}`}
+                      p={p}
+                      basePath={basePath}
+                      demo={demo}
+                    />
+                  ))}
                   {m.actions?.length ? (
                     <div className="flex flex-wrap gap-2">
                       {m.actions.map((a) => (

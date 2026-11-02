@@ -155,6 +155,23 @@ Not done:
   - rate-limit coverage (`content_write`);
   - browser checks.
 
+## Feature: G across collaborations and content (no migration)
+
+- **Context:** G reads the caller's briefs, invitations, collaborations, deliverables and content plan with their own session (RLS), never the service role. For each collaboration it computes the next step for that side from the same state machine as 0026.
+- **Cards:** "Your collaborations" (status and next step) and the content plan (counts and upcoming dates).
+- **Navigation:** new actions open briefs, a brief, opportunities, collaborations, a collaboration, shortlists, the portfolio, the content plan and notifications. Parameters must be the caller's own ids.
+- **Proposals (prepare, never execute):**
+  - creators: a content draft (saved to the content plan) and a message draft (copied, then sent from the deal room by the person);
+  - companies: an invitation (sent through `inviteCreator`) and a message draft.
+  - The server keeps only proposals whose ids are in the caller's own context; for invitations that means a published brief, a directory creator, and not already invited. It masks the text, and drops a proposal that states a figure G was not given.
+  - The card is an editable form whose button opens a confirmation dialog. Only then is the ordinary server action called, with its own role, ownership, masking and rate-limit checks.
+- **Fallback:** without the model there are no proposals (the rule cards still answer). The preview shows one labelled sample, and saving it is refused.
+- **Tests:**
+  - `src/lib/g/collab.test.ts`: next step, proposal scoping and masking, action scoping, source guards;
+  - browser checks for the confirm-before-save flow;
+  - the G voice and wake suites still pass.
+- **Not verified:** proposal quality with the real NVIDIA model and real data. No model call was made in this pass.
+
 ## Not built in this pass
 
 Deal-room message read state, support tickets, and the new platform integrations. See `MISSING_FEATURES_MATRIX.md`; most need migrations and the design answers in `PENDING_OWNER_DECISIONS.md` (item 9).
