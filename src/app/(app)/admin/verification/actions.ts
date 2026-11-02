@@ -1,24 +1,34 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
 import { notifyDecision } from "@/lib/verification/server";
+import { sendActivationLink, sendResumeLink } from "@/lib/verification/application";
+import { requireReviewer } from "@/lib/verification/reviewer";
+import { decisionEmail } from "@/lib/verification/email";
+import { sendSystemNotification } from "@/lib/resend";
+import { siteUrl } from "@/lib/constants/site";
 import { verificationErrorKey } from "@/lib/verification/rules";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 /**
- * Admin review of verification cases (0032). The reviewer is the session's
- * admin; verification_transition() re-checks that, refuses an admin's own
- * case, enforces the state machine and writes the history atomically.
+ * Review of verification cases (0032). Only a verification reviewer (an admin
+ * the owner granted review to) may act; verification_transition() re-checks
+ * that, refuses a reviewer's own case, enforces the state machine and writes
+ * the history atomically.
+ *
+ * Approving an APPLICATION (no account yet) emails a one-time activation
+ * link; the account is created only when the applicant uses it. Approving an
+ * existing account's case activates it directly, as before.
  */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACTIONS = ["start_review", "request_info", "approve", "reject"] as const;
 
 export async function reviewVerification(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
-  const admin = await requireRole("admin");
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return fail("adminVerification.notReviewer");
   const caseId = String(fd.get("case_id") ?? "");
   const action = String(fd.get("action") ?? "") as (typeof ACTIONS)[number];
   if (!UUID.test(caseId) || !ACTIONS.includes(action)) return fail("ui.errors.invalid");
@@ -37,20 +47,44 @@ export async function reviewVerification(_prev: ActionResult | null, fd: FormDat
     if (key === "ui.errors.generic") log.error("verification.review_failed", { action, error });
     return fail(key);
   }
-  if (action === "approve" || action === "reject" || action === "request_info") {
-    const { data: row } = await service.from("verification_cases").select("profile_id, kind").eq("id", caseId).single();
-    if (row) await notifyDecision(row, action === "approve" ? "approved" : action === "reject" ? "rejected" : "needs_info", note);
+  const { data: row } = await service.from("verification_cases").select("profile_id, access_request_id, kind").eq("id", caseId).single();
+  let emailed = true;
+  if (row && row.profile_id === null && row.access_request_id) {
+    const { data: req } = await service.from("access_requests").select("email").eq("id", row.access_request_id).single();
+    if (action === "approve") emailed = (await sendActivationLink(row.access_request_id, admin.id)).ok;
+    else if (action === "request_info" && req) emailed = await sendResumeLink(row.access_request_id, req.email, note);
+    else if (action === "reject" && req) {
+      const mail = decisionEmail(row.kind, "rejected", siteUrl(), note);
+      emailed = (await sendSystemNotification({ to: req.email, ...mail, ctaUrl: `${siteUrl().replace(/\/+$/, "")}/get-started` })).ok;
+    }
+  } else if (row && row.profile_id && (action === "approve" || action === "reject" || action === "request_info")) {
+    emailed = await notifyDecision({ profile_id: row.profile_id, kind: row.kind }, action === "approve" ? "approved" : action === "reject" ? "rejected" : "needs_info", note);
   }
   revalidatePath("/admin/verification");
   revalidatePath(`/admin/verification/${caseId}`);
-  return OK;
+  // The decision is recorded either way; say so if the email did not go out.
+  return emailed ? OK : fail("adminVerification.emailFailed");
+}
+
+/** Send a new one-time activation link (the earlier one stops working). */
+export async function resendActivation(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return fail("adminVerification.notReviewer");
+  const caseId = String(fd.get("case_id") ?? "");
+  if (!UUID.test(caseId)) return fail("ui.errors.invalid");
+  const { data: row } = await createAdminClient().from("verification_cases").select("access_request_id, profile_id").eq("id", caseId).maybeSingle();
+  if (!row?.access_request_id || row.profile_id) return fail("activation.errors.already_activated");
+  const r = await sendActivationLink(row.access_request_id, admin.id);
+  revalidatePath(`/admin/verification/${caseId}`);
+  return r.ok ? OK : fail(r.errorKey ?? "ui.errors.generic");
 }
 
 export type ViewState = { ok: boolean; url: string | null; errorKey: string | null };
 
-/** A 5-minute signed URL for one document, recorded in the case history. */
+/** A 5-minute signed URL for one document, for a reviewer only, recorded in the case history. */
 export async function viewVerificationDocument(_prev: ViewState | null, fd: FormData): Promise<ViewState> {
-  const admin = await requireRole("admin");
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return { ok: false, url: null, errorKey: "adminVerification.notReviewer" };
   const id = String(fd.get("document_id") ?? "");
   if (!UUID.test(id)) return { ok: false, url: null, errorKey: "ui.errors.invalid" };
   const service = createAdminClient();

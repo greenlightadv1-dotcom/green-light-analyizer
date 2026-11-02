@@ -32,13 +32,20 @@ test("data already on the profile is offered, never overriding what was saved", 
 });
 
 test("required documents mirror the database rule", () => {
-  assert.deepEqual(missingDocuments("creator_kyc", ["passport"]), []);
-  assert.deepEqual(missingDocuments("company_kyb", ["tax_card"]), [["commercial_register"]]);
+  // A creator needs all three camera images; a passport or a gallery file is not accepted.
+  assert.deepEqual(missingDocuments("creator_kyc", ["passport" as never]), [["selfie"], ["id_front"], ["id_back"]]);
+  assert.deepEqual(missingDocuments("creator_kyc", ["selfie", "id_front", "id_back"]), []);
+  assert.deepEqual(DOCUMENTS.creator_kyc.upload, []);
+  assert.deepEqual(DOCUMENTS.creator_kyc.camera, ["selfie", "id_front", "id_back"]);
+  // A company needs registration, tax card and evidence the applicant may act for it.
+  assert.deepEqual(missingDocuments("company_kyb", ["tax_card"]), [["commercial_register"], ["authorization_letter"]]);
   assert.deepEqual(missingDocuments("representative", []), [["authorization_letter"]]);
   assert.ok(!DOCUMENTS.creator_kyc.allowed.includes("commercial_register"));
+  for (const k of ["company_kyb", "representative"] as const) for (const d of ["selfie", "id_front", "id_back"] as const) assert.ok(!DOCUMENTS[k].upload.includes(d));
   const sql = readFileSync(new URL("../../../supabase/migrations/0032_verification.sql", import.meta.url), "utf8");
-  assert.match(sql, /c\.kind = 'creator_kyc' and not \(v_docs && array\['id_front', 'passport'\]\)/);
-  assert.match(sql, /c\.kind = 'company_kyb' and not \(v_docs @> array\['commercial_register', 'tax_card'\]\)/);
+  assert.match(sql, /c\.kind = 'creator_kyc' and not \(v_docs @> array\['selfie', 'id_front', 'id_back'\]\)/);
+  assert.match(sql, /c\.kind = 'company_kyb' and not \(v_docs @> array\['commercial_register', 'tax_card', 'authorization_letter'\]\)/);
+  assert.match(sql, /verification_identity_images_are_camera check/);
 });
 
 test("refusals map to keys", () => {
@@ -57,12 +64,24 @@ test("decision emails state no price and never call the account identity-verifie
   assert.match(decisionEmail("creator_kyc", "approved", "https://x.example").message, /10% commission/);
 });
 
-test("verification code paths never expose document URLs to non-admins", () => {
-  const route = readFileSync(new URL("../../app/api/verification/documents/route.ts", import.meta.url), "utf8");
-  assert.doesNotMatch(route, /createSignedUrl|getPublicUrl/);
+test("verification code paths never expose document URLs to anyone but a reviewer", () => {
+  const src = (p: string) => readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
+  for (const p of ["app/api/verification/documents/route.ts", "app/api/applications/documents/route.ts", "lib/verification/documents-server.ts", "lib/verification/application.ts"]) {
+    assert.doesNotMatch(src(p), /createSignedUrl|getPublicUrl/, p);
+  }
+  const route = src("app/api/verification/documents/route.ts");
   assert.match(route, /\.eq\("profile_id", profileId\)/);
-  const adminActions = readFileSync(new URL("../../app/(app)/admin/verification/actions.ts", import.meta.url), "utf8");
-  for (const fn of adminActions.split("\nexport async function ").slice(1)) assert.match(fn, /requireRole\("admin"\)/);
+  // The application route resolves ownership from the resume cookie, never from a form id alone.
+  const appRoute = src("app/api/applications/documents/route.ts");
+  assert.match(appRoute, /currentApplication\(\)/);
+  assert.match(appRoute, /app\.cases\.find\(/);
+  // Object names are generated on the server.
+  assert.match(src("lib/verification/documents-server.ts"), /const path = `\$\{caseRow\.id\}\/\$\{crypto\.randomUUID\(\)\}\.\$\{EXTENSION\[type\]\}`/);
+  const adminActions = src("app/(app)/admin/verification/actions.ts");
+  for (const fn of adminActions.split("\nexport async function ").slice(1)) {
+    assert.match(fn, /requireReviewer\(\)/);
+    assert.match(fn, /if \(!reviewer\)/);
+  }
   assert.match(adminActions, /createSignedUrl\(doc\.storage_path, 300\)/);
   assert.match(adminActions, /event: "document_viewed"/);
   const own = readFileSync(new URL("../../app/verification/actions.ts", import.meta.url), "utf8");

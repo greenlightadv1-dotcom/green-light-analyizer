@@ -1,17 +1,9 @@
-import type { Metadata } from "next";
-import { GetStartedShell } from "@/components/get-started/GetStartedShell";
-import { RegisterForm } from "@/components/get-started/RegisterForm";
-import { REGISTER_JOURNEYS, selfSignupEnabled, type RegisterJourney } from "@/lib/registration";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Create your account" };
-
-/** Public. Self-registration is off unless SELF_SIGNUP_ENABLED=1 (lib/registration.ts). */
-export default async function RegisterPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  const sp = await searchParams;
-  const journey = (REGISTER_JOURNEYS as readonly string[]).includes(sp.journey ?? "") ? (sp.journey as RegisterJourney) : "creator";
-  return (
-    <GetStartedShell>
-      <RegisterForm enabled={selfSignupEnabled()} initialJourney={journey} />
-    </GetStartedShell>
-  );
+/**
+ * Self-registration was removed (2026-11-02): no account may exist before a
+ * reviewer approves the application. Old links land on Get Started.
+ */
+export default function RegisterPage() {
+  redirect("/get-started");
 }

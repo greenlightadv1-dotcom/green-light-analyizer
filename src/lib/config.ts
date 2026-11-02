@@ -93,6 +93,13 @@ export function readConfigReport(): ConfigReport {
         "Mail to support@, privacy@, security@, legal@ and deals@ is recorded but forwarded to nobody. These addresses are published on the Support page and in the legal pages.",
     },
     {
+      name: "VERIFICATION_RETENTION_DAYS",
+      set: Boolean(process.env.VERIFICATION_RETENTION_DAYS),
+      required: false,
+      impact:
+        "No retention period is set, so identity and company documents are kept until a case is deleted. The period is an owner and legal decision; the purge job stays off until it is set.",
+    },
+    {
       name: "RESEND_FROM_ADDRESS",
       set: Boolean(process.env.RESEND_FROM_ADDRESS),
       required: false,

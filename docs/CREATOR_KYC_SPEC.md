@@ -2,6 +2,12 @@
 
 This describes what the code does. Everything is on the development branch and **not deployed**. Migration 0032 is **not applied** to any database.
 
+> **Updated 2026-11-02 (follow-up pass).**
+> - Verification now happens **before an account exists** (docs/ACCOUNT_ACTIVATION_FLOW.md).
+> - The identity images are **camera-only** (docs/IDENTITY_DOCUMENT_SECURITY.md).
+>
+> The sections below were updated to match. Self-registration was removed.
+
 ## What it is, and what it is not
 
 - **It is:** collection of identity details and identity document images, stored privately, then reviewed manually by a Green Light admin. Approval records `method = 'manual_document_review'`.
@@ -28,19 +34,21 @@ Rules for pre-filled values:
 
 ## Documents
 
-- **Types:** `id_front`, `id_back`, `passport`, `other`.
-- **Required to submit:** `id_front` **or** `passport`. This is enforced by `verification_transition()` in the database and mirrored in `lib/verification/rules.ts`, where a test pins the two together.
+- **Types:** `selfie`, `id_front`, `id_back`. All three are captured with the device camera in the page (`CameraCapture`): no file picker, gallery, drag-and-drop or URL. Passport and "other" uploads are no longer accepted for a creator.
+- **Required to submit:** all three. This is enforced by `verification_transition()` in the database and mirrored in `lib/verification/rules.ts`, where a test pins the two together. The database also requires each of these to be `capture_method = 'camera'` and JPEG.
 - **Storage:**
   - private bucket `verification-docs`, 5 MB limit;
   - PDF, JPEG, PNG or WebP, decided by the file's own bytes (`sniffType`);
   - path `<case uuid>/<random uuid>.<ext>`;
   - at most 8 live documents per case.
-- **Upload** (`/api/verification/documents`):
+- **Upload** (`/api/applications/documents` before an account exists, cookie-scoped; `/api/verification/documents` for an existing account):
   - only to the caller's own case, and only while it is `draft` or `needs_info`;
+  - camera images must be well-formed JPEGs with no EXIF, within dimension bounds (`lib/verification/camera.ts`);
+  - a retake replaces the earlier image of the same kind;
   - the route never returns a URL;
   - removal marks the row removed and deletes the object.
 - **Viewing:**
-  - admins only, through a **5-minute** signed URL issued by `viewVerificationDocument`;
+  - verification reviewers only (an admin listed in `verification_reviewers`), through a **5-minute** signed URL issued by `viewVerificationDocument`;
   - each view writes a `document_viewed` event.
 
 ## States
@@ -57,14 +65,16 @@ submitted | under_review | needs_info ──reject (admin, reason required)─�
   - locks the case row;
   - checks the actor (the subject may only submit; an admin may not decide their own case);
   - writes the history row in the same transaction.
-- **Approving** a pending self-registered account sets `profiles.account_status = 'active'`.
-- **Rejecting** one sets `'rejected'`.
-- Existing admin-created accounts are `active` by default and are unaffected.
+- **Approving an application** (no account yet) emails a one-time activation link. The account is created only when the applicant uses it.
+- **Approving an existing account's case** sets a pending account `active`, as before.
+- **Rejecting** closes the application and revokes its links.
+- Only a verification reviewer decides. Other admins are refused by the database.
 
-## Applicant experience (`/verification`)
+## Applicant experience (`/apply`, and `/verification` for existing accounts)
 
-- The page sits outside the app shell. A pending or rejected account is redirected here from every app page (`requireProfile`), and every API answers 403 `pending_verification`, except this page's own upload route.
-- It shows: status, the team's request, the details form, the drag-and-drop uploader with progress, the required documents still missing, a consent box, a confirmed submission, and the history.
+- `/apply` is reached from the emailed link. It shows who is applying, the steps, the details form, three camera slots (each with why it is needed, how to take it, preview, retake and confirm), the documents still missing, a consent box, a confirmed submission, and the history.
+- A denied or missing camera is explained, and the page never falls back to an upload. The application stays saved and the emailed link resumes it on another device.
+- `/verification` uses the same editor for an existing account.
 - It says the team **aims** to review within 24 hours, which is not a guarantee.
 
 ## Emails
@@ -90,17 +100,15 @@ None of the following was re-verified in this pass:
 
 Egypt's Personal Data Protection Law (No. 151 of 2020) treats biometric data as sensitive. Whether processing it needs a licence or registration is a question for counsel. **Integrating a provider needs owner approval and a legal opinion first**, so the system stays on manual review.
 
-## Retention (not implemented; owner and counsel to set)
+## Retention (owner and counsel to set)
 
-- No deletion job exists yet. Documents stay until the case or account is deleted (cascade), and the storage object must then be removed by the server.
-- A retention period (for example, delete documents N days after a decision) must be set and published in the Privacy Policy before launch.
+- A configurable purge job exists (`VERIFICATION_RETENTION_DAYS`, `/api/cron/verification-retention`). It is off until a period is set, and it is not scheduled.
+- Until then documents stay until the case is deleted. See docs/IDENTITY_DOCUMENT_SECURITY.md.
 
 ## Rollout (needs owner approval)
 
 1. Apply migration 0032.
-2. Decide D2: keep admin-created accounts only (today), or enable self-registration. For self-registration:
-   - set `SELF_SIGNUP_ENABLED=1`;
-   - enable email sign-ups and "Confirm email" in Supabase Auth;
-   - set the email confirmation template's link to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`;
-   - update Terms §2, which currently says the team creates every account.
-3. Set the retention period and add it to the Privacy Policy.
+2. In Supabase Auth, turn **off** "Allow new users to sign up". Accounts are created only by the server after approval.
+3. Grant at least one admin review access (`verification_reviewers`).
+4. Update Terms §2 to describe this sequence: the team approves every application, and the applicant then creates their account from the approval email.
+5. Set the retention period and add it to the Privacy Policy.

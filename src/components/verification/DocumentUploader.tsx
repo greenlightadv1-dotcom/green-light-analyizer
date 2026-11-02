@@ -7,12 +7,14 @@ import { UPLOAD } from "@/lib/verification/rules";
 import type { VerificationDocType } from "@/lib/types/database";
 
 /**
- * Drag-and-drop (or file picker) upload of one verification document, with
- * progress. The server decides the file type from its bytes; the checks here
+ * Drag-and-drop (or file picker) upload of one ordinary verification
+ * document (company registration, tax card, authorization letter), with
+ * progress. Never used for a creator's identity images, which are camera-only
+ * (CameraCapture). The server decides the file type from its bytes; the checks here
  * only save a round trip. Nothing is shown back: documents are never
  * readable by the applicant's browser after upload.
  */
-export function DocumentUploader({ caseId, types, demo = false }: { caseId: string; types: VerificationDocType[]; demo?: boolean }) {
+export function DocumentUploader({ caseId, types, endpoint = "/api/verification/documents", demo = false }: { caseId: string; types: VerificationDocType[]; endpoint?: string; demo?: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -30,9 +32,10 @@ export function DocumentUploader({ caseId, types, demo = false }: { caseId: stri
     const body = new FormData();
     body.set("case_id", caseId);
     body.set("doc_type", docType);
+    body.set("capture", "upload");
     body.set("file", file);
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/verification/documents");
+    xhr.open("POST", endpoint);
     xhr.upload.onprogress = (e) => e.lengthComputable && setPct(Math.round((e.loaded / e.total) * 100));
     xhr.onload = () => {
       setPct(null);

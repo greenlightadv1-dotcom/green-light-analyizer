@@ -55,3 +55,38 @@ export function decisionEmail(
     tone: "warning",
   };
 }
+
+/**
+ * Email with the link that continues an application. Sent when an
+ * application starts, when the applicant asks for a new link, and with a
+ * request for more information. The link itself is the only secret; no
+ * application details are repeated in the email.
+ */
+export function resumeEmail(link: string, ttlDays: number, infoRequest?: string | null): DecisionEmail {
+  const asked = infoRequest ? `Our team reviewed your application and needs more information: ${infoRequest} ` : "";
+  return {
+    title: infoRequest ? "We need a little more information" : "Continue your Green Light application",
+    message: `${asked}Use this link to continue your application. It works for ${ttlDays} days. If you did not apply, you can ignore this email.`,
+    ctaLabel: "Continue application",
+    ctaUrl: link,
+    tone: "info",
+  };
+}
+
+/**
+ * Approval email for an application: a one-time link to create the account.
+ * No password is ever emailed; the applicant chooses one on the page.
+ */
+export function activationEmail(kind: VerificationKind, link: string, ttlHours: number): DecisionEmail {
+  const next =
+    kind === "creator_kyc"
+      ? "There is no subscription fee. Green Light takes a 10% commission on each completed deal, settled manually with our team after the deal; nothing is charged automatically."
+      : "Company access is free. Settlement of each completed deal is handled manually with our team; nothing is charged automatically.";
+  return {
+    title: "Your Green Light application is approved",
+    message: `We reviewed your ${WHO[kind]} application and approved it. Create your account with the button below: you will choose your own password. The link works once, for ${ttlHours} hours. ${next}`,
+    ctaLabel: "Create your account",
+    ctaUrl: link,
+    tone: "success",
+  };
+}

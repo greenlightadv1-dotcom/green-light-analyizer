@@ -41,7 +41,9 @@ export type RateLimitAction =
   | "shortlist_write"
   | "portfolio_write"
   | "content_write"
-  | "verification_write";
+  | "verification_write"
+  | "application_write"
+  | "activation";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -144,6 +146,19 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   verification_write: [
     { limit: 40, windowSeconds: HOUR, label: "hour" },
     { limit: 120, windowSeconds: DAY, label: "day" },
+  ],
+  // Pre-account applications (0032), keyed by application id: drafts,
+  // submissions and new-link requests.
+  application_write: [
+    { limit: 40, windowSeconds: HOUR, label: "hour" },
+    { limit: 120, windowSeconds: DAY, label: "day" },
+  ],
+  // Opening an emailed link and activating an account, keyed by a hash of the
+  // client address: guessing is already infeasible (256-bit tokens), this
+  // bounds password attempts and lookup volume.
+  activation: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
   ],
   // Content plans (0029): private drafts, autosave-free, so a modest cap.
   content_write: [

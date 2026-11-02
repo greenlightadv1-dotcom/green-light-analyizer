@@ -28,6 +28,13 @@ export default async function AdminRequestsPage() {
       .limit(100),
     service.from("company_members").select("member_id, company_id, member_role, created_at").limit(100),
   ]);
+  // Applications opened since 0032 carry a verification case: they are decided
+  // under Verification and become accounts only through the activation link.
+  const reqIds = (requests ?? []).map((r) => r.id);
+  const { data: caseRows } = reqIds.length
+    ? await service.from("verification_cases").select("id, access_request_id, status").in("access_request_id", reqIds)
+    : { data: [] as { id: string; access_request_id: string | null; status: string }[] };
+  const caseOf = (id: string) => caseRows?.find((c) => c.access_request_id === id) ?? null;
 
   const ids = [...new Set((links ?? []).flatMap((l) => [l.member_id, l.company_id]))];
   const { data: names } = ids.length
@@ -43,7 +50,7 @@ export default async function AdminRequestsPage() {
 
   return (
     <>
-      <SectionHeader title="Applications" description="Requests from the public Get Started page. Create the account from an application, or reject it. Applicants are not notified automatically." />
+      <SectionHeader title="Applications" description="Applications from the public Get Started page. New applications are decided under Verification and become accounts only when the applicant uses the emailed activation link. Older applications without a verification case can still be turned into an account here." />
 
       {error ? (
         <GlassPanel className="mb-4 p-5 text-sm text-fg/70">
@@ -74,9 +81,15 @@ export default async function AdminRequestsPage() {
                   </dl>
                   {r.message ? <p className="text-xs whitespace-pre-wrap text-fg/60">{r.message}</p> : null}
                   <div className="flex gap-2 pt-1">
-                    <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
-                      Create account
-                    </Link>
+                    {caseOf(r.id) ? (
+                      <Link href={`/admin/verification/${caseOf(r.id)!.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                        Verification: {caseOf(r.id)!.status.replace(/_/g, " ")}
+                      </Link>
+                    ) : (
+                      <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                        Create account
+                      </Link>
+                    )}
                     <ConfirmActionForm
                       action={rejectRequest}
                       hidden={{ request_id: r.id }}

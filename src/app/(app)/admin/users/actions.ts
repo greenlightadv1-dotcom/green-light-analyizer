@@ -82,6 +82,17 @@ export async function createUser(
     if (!req || req.status !== "pending") {
       return { error: "That application is no longer pending.", created: null };
     }
+    // An application with a verification case is approved by a reviewer and
+    // becomes an account only through its one-time activation link
+    // (docs/ACCOUNT_ACTIVATION_FLOW.md). It may not be turned into an account
+    // here, around that review.
+    const { count: cases } = await admin
+      .from("verification_cases")
+      .select("id", { count: "exact", head: true })
+      .eq("access_request_id", requestId);
+    if ((cases ?? 0) > 0) {
+      return { error: "This application goes through verification. Review it under Verification; the applicant creates the account from the approval email.", created: null };
+    }
     fromRequest = { website: role === "company" ? req.website : null };
   }
   const tempPassword = temporaryPassword();

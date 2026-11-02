@@ -1,12 +1,12 @@
 "use server";
 
-import { createHash } from "node:crypto";
-import { headers } from "next/headers";
 import { HONEYPOT_FIELD, parseAccessRequest, type ParsedRequest } from "@/lib/access-requests";
 import { log } from "@/lib/log";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { clientKey } from "@/lib/client-key";
+import { JOURNEY_KIND, sendResumeLink } from "@/lib/verification/application";
 
 /** What the applicant typed, echoed back so a failed submit keeps it (React resets the form). */
 export type ApplyValues = Record<(typeof ECHO)[number], string>;
@@ -19,18 +19,22 @@ export type ApplyState =
   | { status: "idle" }
   | { status: "submitted" }
   | { status: "invalid"; errors: Extract<ParsedRequest, { ok: false }>["errors"]; values: ApplyValues }
-  | { status: "error"; code: "rate_limited" | "unavailable"; values: ApplyValues };
+  | { status: "error"; code: "rate_limited" | "unavailable" | "email_failed"; values: ApplyValues };
 
 /**
- * Get Started — submit an application (features 1 and 2).
+ * Get Started, step 1: open an application (docs/ACCOUNT_ACTIVATION_FLOW.md).
  *
- * Public, so it is guarded three ways: a honeypot field, a per-address rate
- * limit (keyed by a hash of the client address, never the address itself),
- * and server-side validation of every field. It writes one row to
- * access_requests through the service role; it never creates an auth user or
- * a profile. A repeat application for an address already in the queue gets
- * the same answer as a new one, so the form reveals nothing about who has
- * applied.
+ * It never creates an auth user or a profile. It writes one access_requests
+ * row and one verification case through the service role, then emails a
+ * one-time link that lets the applicant continue (identity details,
+ * documents, submission). Nothing continues without opening that link, so
+ * the applicant must control the address before anything else happens.
+ *
+ * Public, so it is guarded by a honeypot field, a per-address rate limit
+ * (hashed client address) and server-side validation. An address that
+ * already has an open application gets the same answer as a new one, and a
+ * fresh link is sent to that address, so the form reveals nothing about who
+ * has applied.
  */
 export async function submitAccessRequest(_prev: ApplyState, formData: FormData): Promise<ApplyState> {
   if (String(formData.get(HONEYPOT_FIELD) ?? "").trim()) return { status: "submitted" };
@@ -39,17 +43,34 @@ export async function submitAccessRequest(_prev: ApplyState, formData: FormData)
   if (!parsed.ok) return { status: "invalid", errors: parsed.errors, values: echo(formData) };
   if (!isSupabaseConfigured()) return { status: "error", code: "unavailable", values: echo(formData) };
 
-  const h = await headers();
-  const ip = (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "unknown").split(",")[0].trim();
-  const subject = `ip:${createHash("sha256").update(ip).digest("hex").slice(0, 32)}`;
-  const limit = await consumeRateLimit("access_request", subject);
+  const limit = await consumeRateLimit("access_request", await clientKey());
   if (!limit.allowed) return { status: "error", code: "rate_limited", values: echo(formData) };
 
-  const { error } = await createAdminClient().from("access_requests").insert(parsed.value);
-  if (error && error.code !== "23505") {
-    // 42P01: the 0024 table does not exist yet on this database.
-    log.error("access_request.insert_failed", { code: error.code, journey: parsed.value.journey });
+  const service = createAdminClient();
+  let requestId: string | null = null;
+  const { data: inserted, error } = await service.from("access_requests").insert(parsed.value).select("id").single();
+  if (inserted) {
+    requestId = inserted.id;
+    const { error: caseError } = await service
+      .from("verification_cases")
+      .insert({ access_request_id: inserted.id, kind: JOURNEY_KIND[parsed.value.journey] });
+    if (caseError) {
+      log.error("access_request.case_failed", { code: caseError.code, journey: parsed.value.journey });
+      // No half-open application: without a case nothing can be reviewed.
+      await service.from("access_requests").delete().eq("id", inserted.id);
+      return { status: "error", code: "unavailable", values: echo(formData) };
+    }
+  } else if (error?.code === "23505") {
+    // An open application for this address exists: send a new link to that address.
+    const { data: existing } = await service.from("access_requests").select("id").eq("status", "pending").ilike("email", parsed.value.email).maybeSingle();
+    requestId = existing?.id ?? null;
+  } else {
+    log.error("access_request.insert_failed", { code: error?.code ?? null, journey: parsed.value.journey });
     return { status: "error", code: "unavailable", values: echo(formData) };
+  }
+
+  if (requestId && !(await sendResumeLink(requestId, parsed.value.email))) {
+    return { status: "error", code: "email_failed", values: echo(formData) };
   }
   log.info("access_request.received", { journey: parsed.value.journey, duplicate: error?.code === "23505" });
   return { status: "submitted" };

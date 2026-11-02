@@ -13,8 +13,8 @@ export type FieldDef = {
   max: number;
   /** "phone" | "url" | "date" | "text" | "country" */
   type: "text" | "phone" | "url" | "date" | "country";
-  /** A profile column this field can be pre-filled from. */
-  fromProfile?: "full_name" | "country" | "company_website";
+  /** A value already held (profile or application) this field can be pre-filled from. */
+  fromProfile?: "full_name" | "country" | "company_website" | "company_name";
 };
 
 export const FIELDS: Record<VerificationKind, FieldDef[]> = {
@@ -37,16 +37,36 @@ export const FIELDS: Record<VerificationKind, FieldDef[]> = {
   representative: [
     { key: "legal_name", required: true, max: 120, type: "text", fromProfile: "full_name" },
     { key: "phone", required: true, max: 20, type: "phone" },
-    { key: "company_name", required: true, max: 160, type: "text" },
+    { key: "company_name", required: true, max: 160, type: "text", fromProfile: "company_name" },
     { key: "job_title", required: true, max: 120, type: "text" },
   ],
 };
 
-/** Document types each kind may upload; `required` lists the sets the database enforces at submission. */
-export const DOCUMENTS: Record<VerificationKind, { allowed: VerificationDocType[]; requiredAnyOf: VerificationDocType[][] }> = {
-  creator_kyc: { allowed: ["id_front", "id_back", "passport", "other"], requiredAnyOf: [["id_front", "passport"]] },
-  company_kyb: { allowed: ["commercial_register", "tax_card", "other"], requiredAnyOf: [["commercial_register"], ["tax_card"]] },
-  representative: { allowed: ["authorization_letter", "id_front", "id_back", "passport", "other"], requiredAnyOf: [["authorization_letter"]] },
+/**
+ * Document types each kind accepts. `camera` types are captured with the
+ * device camera on the page (no file picker, no gallery, no drag-and-drop);
+ * `upload` types are ordinary documents such as a PDF of a commercial
+ * register. `requiredAnyOf` mirrors what the database enforces at submission.
+ */
+export const DOCUMENTS: Record<VerificationKind, { camera: VerificationDocType[]; upload: VerificationDocType[]; allowed: VerificationDocType[]; requiredAnyOf: VerificationDocType[][] }> = {
+  creator_kyc: {
+    camera: ["selfie", "id_front", "id_back"],
+    upload: [],
+    allowed: ["selfie", "id_front", "id_back"],
+    requiredAnyOf: [["selfie"], ["id_front"], ["id_back"]],
+  },
+  company_kyb: {
+    camera: [],
+    upload: ["commercial_register", "tax_card", "authorization_letter", "other"],
+    allowed: ["commercial_register", "tax_card", "authorization_letter", "other"],
+    requiredAnyOf: [["commercial_register"], ["tax_card"], ["authorization_letter"]],
+  },
+  representative: {
+    camera: [],
+    upload: ["authorization_letter", "other"],
+    allowed: ["authorization_letter", "other"],
+    requiredAnyOf: [["authorization_letter"]],
+  },
 };
 
 /** Which kinds a role may open. A company account is either the company or a representative of one. */
@@ -111,7 +131,7 @@ export function parseDetails(
 export function prefill(
   kind: VerificationKind,
   saved: Record<string, string>,
-  profile: { full_name?: string | null; country?: string | null; company_website?: string | null },
+  profile: { full_name?: string | null; country?: string | null; company_website?: string | null; company_name?: string | null },
 ): { values: Record<string, string>; missing: string[] } {
   const values: Record<string, string> = {};
   const missing: string[] = [];

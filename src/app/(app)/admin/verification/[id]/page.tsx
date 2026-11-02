@@ -6,14 +6,14 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 import { AdminDocButton } from "@/components/verification/AdminDocButton";
-import { requireRole } from "@/lib/auth";
+import { requireReviewer } from "@/lib/verification/reviewer";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { displayNames } from "@/lib/collab/queries";
 import { utcStamp } from "@/lib/ui/format";
 import { FIELDS } from "@/lib/verification/rules";
 import { VERIFICATION_TONE } from "@/lib/verification/display";
-import { reviewVerification } from "../actions";
+import { resendActivation, reviewVerification } from "../actions";
 
 export const metadata: Metadata = { title: "Verification case" };
 
@@ -26,21 +26,32 @@ const field = "w-full rounded-control border border-line bg-surface-muted px-3 p
  * each "View" issues a 5-minute signed URL and records the view.
  */
 export default async function AdminVerificationCase({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole("admin");
+  const { reviewer } = await requireReviewer();
+  if (!reviewer) notFound();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const supabase = await createClient();
   const { data: c } = await supabase.from("verification_cases").select("*").eq("id", id).maybeSingle();
   if (!c) notFound();
   const [{ data: docs }, { data: events }] = await Promise.all([
-    supabase.from("verification_documents").select("id, doc_type, mime, size_bytes, uploaded_at").eq("case_id", id).is("removed_at", null).order("uploaded_at"),
+    supabase.from("verification_documents").select("id, doc_type, mime, size_bytes, uploaded_at, capture_method").eq("case_id", id).is("removed_at", null).order("uploaded_at"),
     supabase.from("verification_events").select("id, actor_id, event, created_at").eq("case_id", id).order("id"),
   ]);
-  // Subject's account basics (service role; admin-only page).
-  const { data: subject } = await createAdminClient().from("profiles").select("full_name, role, account_status, primary_email").eq("id", c.profile_id).single();
+  // The subject: an existing account, or an application with no account yet (service role; reviewer-only page).
+  const service = createAdminClient();
+  const { data: account } = c.profile_id
+    ? await service.from("profiles").select("full_name, role, account_status, primary_email").eq("id", c.profile_id).single()
+    : { data: null };
+  const { data: application } = c.access_request_id
+    ? await service.from("access_requests").select("full_name, email, journey, company_name, website, primary_platform, channel_handle, status").eq("id", c.access_request_id).single()
+    : { data: null };
+  const subject = account
+    ? { full_name: account.full_name, line: `account ${account.account_status ?? "active"} · ${account.primary_email}` }
+    : { full_name: application?.full_name ?? "—", line: `application (no account yet) · ${application?.email ?? ""}${application?.company_name ? ` · ${application.company_name}` : ""}` };
   const companies = c.kind === "representative"
-    ? (await createAdminClient().from("profiles").select("id, full_name").eq("role", "company").neq("id", c.profile_id).order("full_name").limit(200)).data ?? []
+    ? (await service.from("profiles").select("id, full_name").eq("role", "company").order("full_name").limit(200)).data?.filter((co) => co.id !== c.profile_id) ?? []
     : [];
+  const awaitingActivation = c.status === "approved" && !c.profile_id && !!c.access_request_id;
   const names = await displayNames([c.reviewed_by, ...(events ?? []).map((e) => e.actor_id)]);
   const open = c.status === "submitted" || c.status === "under_review";
   const details = (c.details ?? {}) as Record<string, string>;
@@ -48,7 +59,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
   return (
     <>
       <Link href="/admin/verification" className="mb-3 inline-block text-xs text-fg-muted hover:text-fg">← Verification queue</Link>
-      <SectionHeader title={subject?.full_name ?? "—"} description={`${c.kind.replace(/_/g, " ")} · account ${subject?.account_status ?? "active"} · ${subject?.primary_email ?? ""}`} action={<StatusBadge tone={VERIFICATION_TONE[c.status]}>{c.status.replace(/_/g, " ")}</StatusBadge>} />
+      <SectionHeader title={subject.full_name} description={`${c.kind.replace(/_/g, " ")} · ${subject.line}`} action={<StatusBadge tone={VERIFICATION_TONE[c.status]}>{c.status.replace(/_/g, " ")}</StatusBadge>} />
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <GlassPanel className="p-5">
@@ -69,7 +80,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
             <ul className="divide-y divide-line">
               {(docs ?? []).map((d) => (
                 <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
-                  <span className="text-fg">{d.doc_type.replace(/_/g, " ")} <span className="text-xs text-fg-muted">· {d.mime} · {Math.ceil(d.size_bytes / 1024)} KB · {utcStamp(d.uploaded_at)}</span></span>
+                  <span className="text-fg">{d.doc_type.replace(/_/g, " ")} <span className="text-xs text-fg-muted">· {d.capture_method === "camera" ? "in-page camera capture" : "uploaded file"} · {d.mime} · {Math.ceil(d.size_bytes / 1024)} KB · {utcStamp(d.uploaded_at)}</span></span>
                   <AdminDocButton documentId={d.id} label="View (5-minute link)" />
                 </li>
               ))}
@@ -90,6 +101,12 @@ export default async function AdminVerificationCase({ params }: { params: Promis
         <GlassPanel className="h-fit space-y-4 p-5">
           <h2 className="text-sm font-semibold text-fg">Decision</h2>
           {!open ? <p className="text-sm text-fg-muted">This case is not waiting for a decision.</p> : null}
+          {awaitingActivation ? (
+            <div className="space-y-2 rounded-control border border-info/30 bg-info/10 p-3 text-xs text-fg">
+              <p>Approved. The applicant was emailed a one-time link to create the account; no account exists until they use it.</p>
+              <ConfirmActionForm action={resendActivation} hidden={{ case_id: c.id }} trigger={{ labelKey: "adminVerification.resendActivation" }} triggerClassName={`${btn} border border-line bg-surface-muted text-fg`} titleKey="adminVerification.resendTitle" bodyKey="adminVerification.resendBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" />
+            </div>
+          ) : null}
           {c.status === "submitted" ? (
             <ConfirmActionForm action={reviewVerification} hidden={{ case_id: c.id, action: "start_review" }} trigger={{ labelKey: "adminVerification.startReview" }} triggerClassName={`${btn} border border-line bg-surface-muted text-fg`} titleKey="adminVerification.startReviewTitle" bodyKey="adminVerification.startReviewBody" confirmKey="adminVerification.confirm" />
           ) : null}

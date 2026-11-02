@@ -17,7 +17,7 @@ export default async function VerificationPage() {
       kinds={kinds}
       cases={cases.map((c) => ({ ...c, prefill: prefill(c.kind, c.details ?? {}, profile) }))}
       documents={documents.map((d) => ({ id: d.id, case_id: d.case_id, doc_type: d.doc_type, size_bytes: d.size_bytes, uploaded_at: d.uploaded_at }))}
-      events={events.map((e) => ({ id: e.id, case_id: e.case_id, event: e.event, created_at: e.created_at, mine: e.actor_id === profile.id }))}
+      events={events.map((e) => ({ id: e.id, case_id: e.case_id, event: e.event, created_at: e.created_at }))}
     />
   );
 }

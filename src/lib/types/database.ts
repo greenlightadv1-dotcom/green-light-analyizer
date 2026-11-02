@@ -449,10 +449,12 @@ export type CollaborationEvent = {
 export type AccountStatus = "pending_verification" | "active" | "rejected";
 export type VerificationKind = "creator_kyc" | "company_kyb" | "representative";
 export type VerificationStatus = "draft" | "submitted" | "under_review" | "needs_info" | "approved" | "rejected";
-export type VerificationDocType = "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other";
+export type VerificationDocType = "selfie" | "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other";
 export type VerificationCase = {
   id: string;
-  profile_id: string;
+  /** Null while the case belongs to an application with no account yet (0032). */
+  profile_id: string | null;
+  access_request_id: string | null;
   kind: VerificationKind;
   status: VerificationStatus;
   details: Record<string, string>;
@@ -474,6 +476,7 @@ export type VerificationDocument = {
   storage_path: string;
   mime: string;
   size_bytes: number;
+  capture_method: "camera" | "upload";
   uploaded_at: string;
   removed_at: string | null;
 };
@@ -655,8 +658,9 @@ export type Database = {
       portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;
       public_profile_settings: Table<PublicProfileSettings, Optional<PublicProfileSettings, Exclude<keyof PublicProfileSettings, "profile_id">>>;
       content_items: Table<ContentItem, Optional<ContentItem, Exclude<keyof ContentItem, "creator_id" | "kind" | "title">>>;
-      verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "profile_id" | "kind">>>;
-      verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at">>;
+      verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "kind">>>;
+      verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at" | "capture_method">>;
+      verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;
       verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
@@ -691,9 +695,19 @@ export type Database = {
         Returns: CreatorPublicProfile[];
       };
       verification_transition: {
-        Args: { p_actor: string; p_case: string; p_action: string; p_note?: string | null; p_company?: string | null };
+        Args: { p_actor: string | null; p_case: string; p_action: string; p_note?: string | null; p_company?: string | null };
         Returns: string;
       };
+      /* 0032 one-time tokens: service_role only. Each raises 'activation:<code>' on refusal. */
+      application_token_issue: { Args: { p_request: string; p_purpose: "resume" | "activation"; p_hash: string; p_ttl_seconds: number; p_actor: string | null }; Returns: string };
+      application_token_lookup: { Args: { p_hash: string; p_purpose: "resume" | "activation" }; Returns: { access_request_id: string; state: "valid" | "expired" | "used" | "revoked"; expires_at: string }[] };
+      activation_claim: {
+        Args: { p_hash: string };
+        Returns: { access_request_id: string; email: string; full_name: string; journey: "creator" | "company" | "company_representative"; company_name: string | null; website: string | null; claimed_user_id: string | null }[];
+      };
+      activation_checkpoint: { Args: { p_hash: string; p_user: string }; Returns: undefined };
+      activation_release: { Args: { p_hash: string }; Returns: undefined };
+      activation_complete: { Args: { p_hash: string; p_user: string; p_alias: string | null }; Returns: string };
       creator_public_portfolio: {
         Args: { p_slug: string };
         Returns: PublicPortfolioItem[];
