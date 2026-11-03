@@ -240,6 +240,8 @@ type MediaKit = {
   media_count: number | null;
   /** 0031: median views of the most recent YouTube uploads (synced), and its sample size. */
   recent_median_views?: number | null;
+  /** The last sync returned the whole upload list (0035). */
+  recent_videos_complete?: boolean | null;
   recent_views_sample?: number | null;
   /** AI-generated, supplementary to content_category (migration 0016). */
   content_tags: string[] | null;
@@ -663,6 +665,10 @@ export type Database = {
       verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "kind">>>;
       verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at" | "capture_method">>;
       taxonomy_terms: Table<import("../taxonomy").TaxonomyTerm & { created_at: string; updated_at: string; updated_by: string | null }, Partial<import("../taxonomy").TaxonomyTerm & { updated_by: string | null }> & { id: string; kind: import("../taxonomy").TermKind; label_en: string; label_ar: string }>;
+      media_kit_videos: Table<
+        { id: number; media_kit_id: string; creator_id: string; platform: "youtube"; video_id: string; title: string | null; published_at: string | null; view_count: number | null; like_count: number | null; comment_count: number | null; synced_at: string },
+        { media_kit_id: string; creator_id: string; platform?: "youtube"; video_id: string; title?: string | null; published_at?: string | null; view_count?: number | null; like_count?: number | null; comment_count?: number | null; synced_at?: string }
+      >;
       company_member_scopes: Table<{ member_id: string; company_id: string; scope: string; granted_by: string | null; granted_at: string }, { member_id: string; company_id: string; scope: string; granted_by?: string | null }>;
       company_permission_events: Table<{ id: number; company_id: string; member_id: string; actor_id: string | null; scope: string; action: "grant" | "revoke" | "cleared_on_relink"; created_at: string }, never>;
       verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;

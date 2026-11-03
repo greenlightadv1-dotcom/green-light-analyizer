@@ -339,3 +339,15 @@ export const mockSnapshots: MediaKitSnapshot[] = [
     subscriber_count: 208_500, channel_view_count: 18_050_000, media_count: 337,
   },
 ];
+
+/** Demo uploads for the content-performance panel (0035). One has likes hidden, to show "hidden" not 0. */
+export const mockKitVideos = Array.from({ length: 12 }, (_, i) => ({
+  media_kit_id: "00000000-0000-4000-8000-00000000cc01",
+  video_id: `demoVid${String(i).padStart(4, "0")}`,
+  title: `Demo upload ${i + 1}`,
+  published_at: new Date(Date.UTC(2026, 9, 31) - i * 4 * 86_400_000).toISOString(),
+  view_count: 12000 - i * 700 + (i === 3 ? 30000 : 0),
+  like_count: i === 3 ? null : 400 - i * 20,
+  comment_count: 40 - i,
+  synced_at: "2026-11-01T09:00:00Z",
+}));

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MediaKitView } from "@/components/views/MediaKitView";
-import { mockKits, mockSnapshots, mockProfile } from "@/lib/preview/mock";
+import { mockKits, mockKitVideos, mockSnapshots, mockProfile } from "@/lib/preview/mock";
 
 export const metadata: Metadata = { title: "Media kit · Preview" };
 
@@ -23,6 +23,7 @@ export default function PreviewMediaKit() {
       profile={mockProfile}
       kits={mockKits}
       snapshots={mockSnapshots}
+      videos={mockKitVideos}
       demo
     />
   );

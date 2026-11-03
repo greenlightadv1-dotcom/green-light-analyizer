@@ -68,6 +68,14 @@ export async function GET(request: NextRequest) {
     .select("id");
   if (snapshotError) log.error("youtube_freshness.snapshot_prune_failed", { error: snapshotError });
 
+  // Recent uploads (0035): the same Non-Authorized statistics, same rule.
+  const { data: videosDeleted, error: videoError } = await service
+    .from("media_kit_videos")
+    .delete()
+    .lt("synced_at", cutoff)
+    .select("id");
+  if (videoError && videoError.code !== "42P01" && videoError.code !== "PGRST205") log.error("youtube_freshness.videos_prune_failed", { error: videoError });
+
   const { data: connections, error: listError } = await service
     .from("oauth_connections")
     .select("creator_id")
@@ -89,6 +97,7 @@ export async function GET(request: NextRequest) {
     stale_kits_cleared: cleared?.length ?? 0,
     stale_stats_cleared: statsCleared?.length ?? 0,
     snapshots_deleted: snapshotsDeleted?.length ?? 0,
+    videos_deleted: videosDeleted?.length ?? 0,
     tokens_checked: checked,
     tokens_unavailable: unavailable,
     tokens_pending: Math.max((connections?.length ?? 0) - checked, 0),

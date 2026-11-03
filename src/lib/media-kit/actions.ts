@@ -383,6 +383,28 @@ export async function syncYoutubeStats(
     };
   }
 
+  // Recent uploads (0035): replaced on every sync, so the stored set is
+  // always the last one the API returned. Only written when the upload list
+  // could be read; a partial failure keeps the previous set rather than
+  // blanking it. Non-Authorized Data: the freshness job deletes rows older
+  // than 29 days. A failure here is logged and never fails the sync.
+  if (stats.videos) {
+    const syncedAt = new Date().toISOString();
+    const { error: delErr } = await service.from("media_kit_videos").delete().eq("media_kit_id", mediaKitId);
+    if (delErr && delErr.code !== "42P01" && delErr.code !== "PGRST205") log.error("youtube.videos_replace_failed", { code: delErr.code });
+    if (!delErr && stats.videos.length) {
+      const { error: insErr } = await service.from("media_kit_videos").insert(
+        stats.videos.map((v) => ({ ...v, media_kit_id: mediaKitId, creator_id: profile.id, platform: "youtube" as const, synced_at: syncedAt })),
+      );
+      if (insErr) log.error("youtube.videos_insert_failed", { code: insErr.code });
+    }
+    if (!delErr) {
+      await service.from("media_kits").update({ recent_videos_complete: stats.videosComplete }).eq("id", mediaKitId).then(({ error: e }) => {
+        if (e && e.code !== "42703" && e.code !== "PGRST204") log.warn("youtube.videos_complete_flag_failed", { code: e.code });
+      });
+    }
+  }
+
   // Growth history (0025): one dated snapshot per kit per UTC day, written
   // only after the stats themselves were saved. These are YouTube
   // Non-Authorized Data, which may not be stored for more than 30 days, so

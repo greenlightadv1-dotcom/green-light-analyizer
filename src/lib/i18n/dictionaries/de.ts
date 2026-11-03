@@ -310,6 +310,28 @@ const de: Dictionary = {
     heldOpenAnalyzer: "Manuellen Analysator öffnen",
   },
   mediaKit: {
+    content: {
+      title: "Content-Leistung",
+      source: "YouTube Data API · {n} neueste Uploads · synchronisiert am {date}",
+      top: "Meistgesehene Uploads",
+      views: "{n} Aufrufe",
+      engagement: "{pct} % Interaktion",
+      engagementHidden: "Likes ausgeblendet",
+      last30: "Uploads, letzte 30 Tage",
+      last90: "Uploads, letzte 90 Tage",
+      gap: "Üblicher Abstand zwischen Uploads",
+      days: "{n} Tage",
+      consistency: "Regelmäßigkeit",
+      consistencyValue: {
+        regular: "Regelmäßig",
+        variable: "Wechselnd",
+        irregular: "Unregelmäßig",
+      },
+      unknown: "Zu wenig Daten",
+      note: "Aus öffentlichen YouTube-Statistiken deiner letzten Synchronisierung, höchstens 29 Tage gespeichert. Eine Anzahl erscheint nur, wenn die abgerufenen Uploads den ganzen Zeitraum abdecken; ausgeblendete Likes werden als ausgeblendet gezeigt, nie als null.",
+      notSynced: "Synchronisiere mit YouTube, um deine meistgesehenen Uploads und deinen Upload-Rhythmus zu sehen.",
+      notForPlatform: "Für {platform} nicht verfügbar: Es gibt keine autorisierte API-Verbindung mit Statistiken pro Beitrag.",
+    },
     title: "Media-Kit",
     description:
       "Was Sponsoren über deine Reichweite sehen. Statistiken stammen aus Plattform-APIs oder tragen ein Selbstmelde-Tag — niemals ein Screenshot.",

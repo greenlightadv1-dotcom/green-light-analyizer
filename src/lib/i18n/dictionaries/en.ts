@@ -322,6 +322,28 @@ const en = {
     heldOpenAnalyzer: "Open the Manual Analyzer",
   },
   mediaKit: {
+    content: {
+      title: "Content performance",
+      source: "YouTube Data API · {n} recent uploads · synced {date}",
+      top: "Top uploads by views",
+      views: "{n} views",
+      engagement: "{pct}% engagement",
+      engagementHidden: "likes hidden",
+      last30: "Uploads, last 30 days",
+      last90: "Uploads, last 90 days",
+      gap: "Typical gap between uploads",
+      days: "{n} days",
+      consistency: "Publishing consistency",
+      consistencyValue: {
+        regular: "Regular",
+        variable: "Variable",
+        irregular: "Irregular",
+      },
+      unknown: "Not enough data",
+      note: "From public YouTube statistics on your last sync, kept for at most 29 days. A count is shown only when the uploads fetched cover the whole period; hidden likes are shown as hidden, never as zero.",
+      notSynced: "Sync from YouTube to see your top uploads and posting cadence.",
+      notForPlatform: "Not available for {platform}: there is no authorized API connection that provides per-post statistics.",
+    },
     title: "Media kit",
     description:
       "What sponsors see about your reach. Stats come from platform APIs or carry a self-reported tag — never a screenshot.",

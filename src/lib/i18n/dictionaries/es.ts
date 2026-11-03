@@ -310,6 +310,28 @@ const es: Dictionary = {
     heldOpenAnalyzer: "Abrir el analizador manual",
   },
   mediaKit: {
+    content: {
+      title: "Rendimiento del contenido",
+      source: "YouTube Data API · {n} subidas recientes · sincronizado el {date}",
+      top: "Subidas con más vistas",
+      views: "{n} vistas",
+      engagement: "{pct} % de interacción",
+      engagementHidden: "me gusta ocultos",
+      last30: "Subidas, últimos 30 días",
+      last90: "Subidas, últimos 90 días",
+      gap: "Intervalo habitual entre subidas",
+      days: "{n} días",
+      consistency: "Regularidad de publicación",
+      consistencyValue: {
+        regular: "Regular",
+        variable: "Variable",
+        irregular: "Irregular",
+      },
+      unknown: "Datos insuficientes",
+      note: "Según las estadísticas públicas de YouTube de tu última sincronización, guardadas 29 días como máximo. Un recuento solo aparece si las subidas obtenidas cubren todo el periodo; los me gusta ocultos se muestran como ocultos, nunca como cero.",
+      notSynced: "Sincroniza desde YouTube para ver tus mejores subidas y tu ritmo de publicación.",
+      notForPlatform: "No disponible para {platform}: no hay una conexión API autorizada que dé estadísticas por publicación.",
+    },
     title: "Kit de medios",
     description:
       "Lo que ven los patrocinadores sobre tu alcance. Las estadísticas provienen de las API de las plataformas o llevan una etiqueta autodeclarada — nunca una captura de pantalla.",

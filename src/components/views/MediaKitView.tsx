@@ -9,6 +9,8 @@ import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { ShareableLinkCard } from "@/components/media-kit/ShareableLinkCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
+import { ContentPerformancePanel } from "@/components/media-kit/ContentPerformancePanel";
+import type { KitVideo } from "@/lib/media-kit/queries";
 import type { MediaKitSnapshot } from "@/lib/types/database";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
@@ -32,6 +34,7 @@ export function MediaKitView({
   profile,
   kits,
   snapshots = [],
+  videos = [],
   oauthConnected = null,
   oauthError = null,
   demo = false,
@@ -40,6 +43,8 @@ export function MediaKitView({
   kits: MediaKit[];
   /** The creator's own growth snapshots (0025); empty means no growth to show. */
   snapshots?: MediaKitSnapshot[];
+  /** Recent YouTube uploads from the last sync (0035). */
+  videos?: KitVideo[];
   /** Preview: the classification form and document upload are inert. */
   demo?: boolean;
   /** Set right after a successful /api/oauth/[platform]/callback redirect. */
@@ -191,8 +196,13 @@ export function MediaKitView({
                   />
 
                   {platform === "youtube" ? (
-                    <YoutubeSyncPanel kit={kit} snapshots={snapshots.filter((s) => s.media_kit_id === kit.id)} />
-                  ) : null}
+                    <>
+                      <YoutubeSyncPanel kit={kit} snapshots={snapshots.filter((s) => s.media_kit_id === kit.id)} />
+                      <ContentPerformancePanel videos={videos.filter((v) => v.media_kit_id === kit.id)} complete={kit.recent_videos_complete === true} />
+                    </>
+                  ) : (
+                    <ContentPerformancePanel unavailablePlatform={platform} videos={[]} complete={false} />
+                  )}
 
                   {platform === "instagram" &&
                   kit.analytics_oauth_connected === true ? (

@@ -310,6 +310,28 @@ const fr: Dictionary = {
     heldOpenAnalyzer: "Ouvrir l'analyseur manuel",
   },
   mediaKit: {
+    content: {
+      title: "Performance du contenu",
+      source: "YouTube Data API · {n} mises en ligne récentes · synchronisé le {date}",
+      top: "Meilleures vidéos par vues",
+      views: "{n} vues",
+      engagement: "{pct} % d’engagement",
+      engagementHidden: "j’aime masqués",
+      last30: "Mises en ligne, 30 derniers jours",
+      last90: "Mises en ligne, 90 derniers jours",
+      gap: "Écart habituel entre vidéos",
+      days: "{n} jours",
+      consistency: "Régularité de publication",
+      consistencyValue: {
+        regular: "Régulière",
+        variable: "Variable",
+        irregular: "Irrégulière",
+      },
+      unknown: "Données insuffisantes",
+      note: "D’après les statistiques publiques de YouTube lors de votre dernière synchronisation, conservées 29 jours au plus. Un nombre n’apparaît que si les vidéos récupérées couvrent toute la période ; les j’aime masqués sont indiqués comme masqués, jamais comme zéro.",
+      notSynced: "Synchronisez depuis YouTube pour voir vos meilleures vidéos et votre rythme de publication.",
+      notForPlatform: "Indisponible pour {platform} : aucune connexion API autorisée ne fournit de statistiques par publication.",
+    },
     title: "Kit média",
     description:
       "Ce que les sponsors voient de votre audience. Les statistiques proviennent des API des plateformes ou portent une étiquette auto-déclarée — jamais une capture d'écran.",
