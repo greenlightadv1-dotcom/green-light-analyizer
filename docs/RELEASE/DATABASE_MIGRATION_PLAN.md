@@ -92,7 +92,7 @@ The local harness (`scripts/local-migrations-test.sh`) applies 0001–0037 to a 
 
 **Data effects:**
 - 0033 adds a trigger that refuses unknown taxonomy ids. `0033_verify.sql` first checks that every stored value is seeded.
-- 0036 backfills relay states.
+- 0036 backfills relay states. A message relayed before 0036 becomes `sent`; one that failed before 0036 becomes `failed_permanent`, never retryable, so no retry run resends a stale message. Production holds exactly one such message (failed 2026-09-08, read-only check on 2026-11-03); an admin may requeue it deliberately from `/admin/relays`.
 - Nothing else rewrites existing rows.
 
 ### Safe deployment plan (needs approval at each step)

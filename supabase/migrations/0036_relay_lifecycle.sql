@@ -50,7 +50,10 @@ alter table public.messages drop constraint if exists messages_relay_provider_id
 alter table public.messages add constraint messages_relay_provider_id_len check (relay_provider_id is null or char_length(relay_provider_id) <= 120);
 
 update public.messages set relay_status = 'sent' where relay_status is null and relayed_at is not null;
-update public.messages set relay_status = 'failed_retryable', relay_attempts = greatest(relay_attempts, 1)
+-- A failure from before this migration may be weeks old. It is marked
+-- permanent, never retryable, so no retry run sends a stale message on its
+-- own; an admin can requeue it explicitly from /admin/relays.
+update public.messages set relay_status = 'failed_permanent', relay_attempts = greatest(relay_attempts, 1)
  where relay_status is null and relayed_at is null and relay_error is not null;
 
 create index if not exists messages_relay_due_idx on public.messages (relay_next_attempt_at)
