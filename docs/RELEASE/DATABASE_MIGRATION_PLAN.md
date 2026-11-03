@@ -60,3 +60,53 @@ Result on 2 November 2026: **54 passed, 0 failed**. The stubs aren't the real Su
 ## Blocked migration
 
 The durable admin audit trail (see PENDING_OWNER_DECISIONS.md, item 4) is designed but **not written**, pending owner approval. It was once labelled 0026; it takes the next free number (0033 or later) when approved.
+
+## Update 2026-11-03: 0025–0037 review and execution order
+
+None of 0025–0037 is applied anywhere.
+
+0024 was applied by the owner through the SQL Editor, so it is **not** in Supabase's migration history. A `supabase db push` would try to re-run it. 0024 is idempotent and the local harness re-applies it, but confirm the live schema first with `docs/handoff/migration-0024/0024_verify.sql`.
+
+The local harness (`scripts/local-migrations-test.sh`) applies 0001–0037 to a throwaway Postgres, re-applies 0024–0037 to prove idempotency, and runs every test and verify file: **84 / 84 passed** on 2026-11-03.
+
+| # | Migration | Depends on | Creates or changes | Rollback |
+|---|---|---|---|---|
+| 0025 | media_kit_snapshots | 0001 | table | drop table |
+| 0026 | collaboration_lifecycle | 0024 | briefs, invitations, collaborations, deliverables, events, `collab_*` functions | in file header |
+| 0027 | notifications | 0026 | notifications, preferences, trigger | in file header |
+| 0028 | shortlists_portfolio_visibility | 0017, 0024 | 4 tables; replaces `creator_public_profile` / `_portfolio` | in file header |
+| 0029 | content_planning | 0026 | content_items | drop table |
+| 0030 | message_notifications | 0027 | notifications.chat_id, trigger on messages | in file header |
+| 0031 | recent_views | 0001 | 2 media_kits columns | drop columns |
+| 0032 | verification (rewritten this pass) | 0004, 0024 | account_status, cases (application-owned or profile-owned), documents (camera rule), events, reviewers, application_tokens, transition and activation functions, private bucket | in file header (deletes verification data) |
+| 0033 | taxonomy | 0024, 0026 | taxonomy_terms (seeded with existing ids), creator_tags, reference triggers on profiles and briefs | in file header (keeps selections) |
+| 0034 | company_permissions | 0024, 0026 | scope and event tables, `company_set_scope`, briefs RLS, **replaces `creator_directory()`** (same signature) | re-create the 0024 function and the 0026 policy, then drop tables |
+| 0035 | media_kit_videos | 0001, 0004 | table, `media_kits.recent_videos_complete` | drop table and column |
+| 0036 | relay_lifecycle | 0009, 0022 | 5 messages columns plus backfill, `relay_claim` / `relay_record` / `relay_requeue` | in file header |
+| 0037 | news_items | — | table | drop table |
+
+**Order:** strictly by number. The hard dependencies are:
+- 0026 before 0027, 0029, 0033 and 0034;
+- 0027 before 0030;
+- 0024 (live) before 0033 and 0034.
+
+**Data effects:**
+- 0033 adds a trigger that refuses unknown taxonomy ids. `0033_verify.sql` first checks that every stored value is seeded.
+- 0036 backfills relay states.
+- Nothing else rewrites existing rows.
+
+### Safe deployment plan (needs approval at each step)
+
+1. Create a Supabase **branch** or staging project.
+2. Apply 0025–0037 there in order, then run every `supabase/verify/00xx_verify.sql`.
+3. Point a Vercel **Preview** deployment at that branch.
+4. Smoke test:
+   - application → camera capture → review → activation email (to a test inbox the owner controls) → account;
+   - taxonomy admin;
+   - representative scopes;
+   - YouTube sync;
+   - relay retry with a test sponsor address;
+   - news refresh.
+5. Apply to production during a quiet window. Back up first (Supabase PITR, or a dump).
+6. Set the approved environment variables (see `PRODUCTION_READINESS_REPORT.md`).
+7. Deploy.
