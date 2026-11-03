@@ -51,7 +51,7 @@ const de: Dictionary = {
       "Verifizierte Creator-Statistiken, maskierte Verhandlungen und ein KI-Co-Pilot, der jedes Angebot bepreist — keine Screenshots, keine durchgesickerten Kontaktdaten, kein Deal, der die Plattform umgeht.",
     ctaRequestAccess: "Loslegen",
     ctaSignIn: "Anmelden",
-    noSignupNote: "Jedes Konto wird von unserem Team geprüft und angelegt.",
+    noSignupNote: "Jede Bewerbung wird von unserem Team geprüft, bevor ein Konto erstellt wird.",
     valueProp1Title: "Kein Screenshot-Betrug",
     valueProp1Body: "Creator-Statistiken stammen aus offiziellen Plattform-APIs, wo eine Integration besteht — heute YouTube, weitere Plattformen sind in Entwicklung — niemals aus einem Screenshot. Alles Selbstangegebene wird überall, wo es erscheint, als solches gekennzeichnet.",
     valueProp2Title: "Provision bleibt geschützt",
@@ -879,7 +879,7 @@ const de: Dictionary = {
   },
   getStarted: {
     title: "Starte mit Green Light",
-    intro: "Sag uns, wer du bist. Unser Team prüft jede Bewerbung und legt dein Konto an; du erhältst ein temporäres Passwort, das du bei der ersten Anmeldung änderst.",
+    intro: "Sag uns, wer du bist, und füll einen kurzen Verifizierungsantrag aus. Unser Team prüft ihn von Hand; nach der Freigabe schicken wir dir einen einmaligen Link, um dein Konto zu erstellen und dein Passwort zu wählen.",
     choose: "Starten",
     reviewNote: "Es wird kein Konto automatisch angelegt.",
     haveAccount: "Schon ein Konto? Anmelden",

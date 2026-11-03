@@ -63,7 +63,7 @@ const en = {
       "Verified creator stats, masked negotiations, and an AI co-pilot that prices every offer — no screenshots, no leaked contact info, no deal that skips the platform.",
     ctaRequestAccess: "Get started",
     ctaSignIn: "Sign in",
-    noSignupNote: "Every account is reviewed and created by our team.",
+    noSignupNote: "Every application is reviewed by our team before an account is created.",
     valueProp1Title: "No screenshot fraud",
     valueProp1Body: "Creator stats come from official platform APIs wherever an integration exists — YouTube today, with more platforms in development — never a screenshot. Anything self-reported is labelled as such, everywhere it's shown.",
     valueProp2Title: "Commission stays protected",
@@ -891,7 +891,7 @@ const en = {
   },
   getStarted: {
     title: "Get started with Green Light",
-    intro: "Tell us who you are. Our team reviews every application and creates your account; you'll receive a temporary password and set your own on first sign-in.",
+    intro: "Tell us who you are and complete a short verification application. Our team reviews it by hand; if it's approved, we email you a one-time link to create your account and choose your password.",
     choose: "Start",
     reviewNote: "No account is created automatically.",
     haveAccount: "Already have an account? Sign in",

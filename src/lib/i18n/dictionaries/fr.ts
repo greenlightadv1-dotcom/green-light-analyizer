@@ -51,7 +51,7 @@ const fr: Dictionary = {
       "Statistiques de créateurs vérifiées, négociations masquées, et un copilote IA qui évalue chaque offre — aucune capture d'écran, aucune fuite de coordonnées, aucun deal qui contourne la plateforme.",
     ctaRequestAccess: "Commencer",
     ctaSignIn: "Se connecter",
-    noSignupNote: "Chaque compte est examiné et créé par notre équipe.",
+    noSignupNote: "Chaque candidature est examinée par notre équipe avant la création d’un compte.",
     valueProp1Title: "Aucune fraude par capture d'écran",
     valueProp1Body: "Les statistiques des créateurs proviennent des API officielles des plateformes là où une intégration existe — YouTube aujourd'hui, d'autres plateformes en développement — jamais d'une capture d'écran. Tout ce qui est auto-déclaré est signalé comme tel, partout où c'est affiché.",
     valueProp2Title: "La commission reste protégée",
@@ -879,7 +879,7 @@ const fr: Dictionary = {
   },
   getStarted: {
     title: "Commencer avec Green Light",
-    intro: "Dites-nous qui vous êtes. Notre équipe examine chaque candidature et crée votre compte ; vous recevez un mot de passe temporaire à changer à la première connexion.",
+    intro: "Dites-nous qui vous êtes et remplissez une courte demande de vérification. Notre équipe l’examine manuellement ; si elle est approuvée, nous vous envoyons un lien à usage unique pour créer votre compte et choisir votre mot de passe.",
     choose: "Commencer",
     reviewNote: "Aucun compte n'est créé automatiquement.",
     haveAccount: "Déjà un compte ? Se connecter",
