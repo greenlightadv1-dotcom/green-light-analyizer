@@ -13,7 +13,8 @@ import { useTranslation } from "@/components/LocaleProvider";
 import { OfferPanel } from "@/app/(app)/discover/OfferPanel";
 import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
 import { DISCOVERY_SORTS, type DiscoveryQuery } from "@/lib/discovery";
-import { CONTENT_CATEGORIES, GAME_IDS, gameTitle, knownCategories, knownGames } from "@/lib/taxonomy";
+import { knownCategories, knownGames, termsOf } from "@/lib/taxonomy";
+import { useTaxonomy } from "@/components/TaxonomyProvider";
 import type { CountryShare, CreatorDirectoryEntry, Platform } from "@/lib/types/database";
 
 const INPUT =
@@ -53,10 +54,11 @@ export function DiscoverView({
   shortlists?: { id: string; name: string; hasCreator: boolean }[] | null;
 }) {
   const { t, locale } = useTranslation();
+  const { snap, label } = useTaxonomy();
 
   const card = (c: DiscoverEntry, highlight = false) => {
-    const cats = knownCategories(c.creator_categories ?? (c.content_category ? [c.content_category] : []));
-    const games = knownGames(c.creator_games);
+    const cats = knownCategories(c.creator_categories ?? (c.content_category ? [c.content_category] : []), snap);
+    const games = knownGames(c.creator_games, snap);
     return (
       <GlassPanel
         key={`${highlight ? "sel-" : ""}${c.creator_id}`}
@@ -84,12 +86,12 @@ export function DiscoverView({
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {cats.map((k) => (
                     <span key={k} className="rounded-full bg-fg/6 px-2 py-0.5 text-[11px] text-fg/65">
-                      {t(`taxonomy.category.${k}`)}
+                      {label(k)}
                     </span>
                   ))}
                   {games.map((g) => (
                     <span key={g} className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[11px] text-brand-green">
-                      {gameTitle(g)}
+                      {label(g)}
                     </span>
                   ))}
                 </div>
@@ -170,9 +172,9 @@ export function DiscoverView({
             <span>{t("discover.category")}</span>
             <select name="category" defaultValue={query.category ?? ""} className={INPUT}>
               <option value="">{t("discover.any")}</option>
-              {CONTENT_CATEGORIES.map((k) => (
-                <option key={k} value={k}>
-                  {t(`taxonomy.category.${k}`)}
+              {termsOf(snap, "category").map(({ id }) => (
+                <option key={id} value={id}>
+                  {label(id)}
                 </option>
               ))}
             </select>
@@ -181,10 +183,15 @@ export function DiscoverView({
             <span>{t("discover.game")}</span>
             <select name="game" defaultValue={query.game ?? ""} className={INPUT}>
               <option value="">{t("discover.any")}</option>
-              {GAME_IDS.map((g) => (
-                <option key={g} value={g}>
-                  {gameTitle(g)}
-                </option>
+              {termsOf(snap, "genre").map((ge) => (
+                <optgroup key={ge.id} label={label(ge.id)}>
+                  {termsOf(snap, "game").filter((g) => g.parent_id === ge.id).map(({ id }) => (
+                    <option key={id} value={id}>{label(id)}</option>
+                  ))}
+                </optgroup>
+              ))}
+              {termsOf(snap, "game").filter((g) => !termsOf(snap, "genre").some((ge) => ge.id === g.parent_id)).map(({ id }) => (
+                <option key={id} value={id}>{label(id)}</option>
               ))}
             </select>
           </label>

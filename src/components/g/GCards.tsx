@@ -140,7 +140,7 @@ export function BriefCard({ brief, missing, understood = [] }: { brief: Brief; m
   const parts = [
     brief.objective,
     brief.categories.map((c) => t(`taxonomy.category.${c}`)).join(", "),
-    brief.games.map(gameTitle).join(", "),
+    brief.games.map((g) => gameTitle(g)).join(", "),
     brief.platforms.map((p) => PLATFORM_LABELS[p]).join(", "),
     brief.countries.join(", "),
     brief.maxBudgetUsd !== null ? `≤ $${brief.maxBudgetUsd}` : "",

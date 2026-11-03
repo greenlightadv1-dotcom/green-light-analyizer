@@ -15,7 +15,8 @@ import { CollaborationsCard, ContentCard, ProposalCard } from "@/components/g/GP
 import type { CreatorAssessment, DealSummary } from "@/lib/g/assessment";
 import type { Brief, ComparisonRow, Recommendation } from "@/lib/g/recommend";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/media-kit/platforms";
-import { CONTENT_CATEGORIES, GAME_IDS, gameTitle } from "@/lib/taxonomy";
+import { termsOf } from "@/lib/taxonomy";
+import { useTaxonomy } from "@/components/TaxonomyProvider";
 import type { Role } from "@/lib/types/database";
 
 export type GMarkState = "idle" | "wake" | "listening" | "thinking" | "speaking";
@@ -96,6 +97,7 @@ const chipClass = (on: boolean) =>
  */
 export function GAssistant({ userId, role, demo = false, basePath = "" }: { userId: string; role: Role; demo?: boolean; basePath?: string }) {
   const { t, locale } = useTranslation();
+  const taxonomy = useTaxonomy();
   const pathname = usePathname() ?? "/";
   const page = basePath && pathname.startsWith(basePath) ? pathname.slice(basePath.length) || "/" : pathname;
   const [state, update] = useGState(`gl:g:v1:${userId}:${role}`);
@@ -455,16 +457,16 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                 className="h-9 w-full rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
               />
               <div className="flex flex-wrap gap-1.5" aria-label={t("g.brief.categories")}>
-                {CONTENT_CATEGORIES.filter((c) => c !== "other").map((c) => (
+                {termsOf(taxonomy.snap, "category").map((x) => x.id).filter((c) => c !== "other").map((c) => (
                   <button key={c} type="button" aria-pressed={(brief.categories ?? []).includes(c)} onClick={() => setBrief({ categories: toggleIn(brief.categories, c) })} className={chipClass((brief.categories ?? []).includes(c))}>
-                    {t(`taxonomy.category.${c}`)}
+                    {taxonomy.label(c)}
                   </button>
                 ))}
               </div>
               <div className="flex flex-wrap gap-1.5" aria-label={t("g.brief.games")}>
-                {GAME_IDS.map((g) => (
+                {termsOf(taxonomy.snap, "game").map((x) => x.id).map((g) => (
                   <button key={g} type="button" aria-pressed={(brief.games ?? []).includes(g)} onClick={() => setBrief({ games: toggleIn(brief.games, g) })} className={chipClass((brief.games ?? []).includes(g))}>
-                    {gameTitle(g)}
+                    {taxonomy.label(g)}
                   </button>
                 ))}
               </div>

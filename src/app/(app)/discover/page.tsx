@@ -3,6 +3,7 @@ import { DiscoverView } from "@/components/views/DiscoverView";
 import { requireRole } from "@/lib/auth";
 import { listCreatorDirectory } from "@/lib/deals/directory";
 import { filterDirectory, hasFreshVerifiedGeo, parseDiscoveryQuery } from "@/lib/discovery";
+import { getTaxonomy } from "@/lib/taxonomy-server";
 import type { DirectoryRow } from "@/lib/g/recommend";
 import type { DiscoverEntry } from "@/components/views/DiscoverView";
 import { createClient } from "@/lib/supabase/server";
@@ -31,11 +32,12 @@ export default async function DiscoverPage({
   const profile = await requireRole("company", "admin");
   const params = await searchParams;
   const rows = (await listCreatorDirectory()) as unknown as DirectoryRow[];
-  const query = parseDiscoveryQuery(params);
+  const taxonomy = await getTaxonomy();
+  const query = parseDiscoveryQuery(params, taxonomy);
   const now = new Date();
   // Filtering, sorting and paging happen here, on the server, over the rows
   // the RPC already authorized; the browser receives one page.
-  const { items, total, page, pages } = filterDirectory(rows, query, now);
+  const { items, total, page, pages } = filterDirectory(rows, query, now, taxonomy);
   const withFreshness = (r: DirectoryRow): DiscoverEntry =>
     ({ ...r, freshVerified: hasFreshVerifiedGeo(r, now) }) as unknown as DiscoverEntry;
   const selectedId = typeof params.creator === "string" ? params.creator : null;

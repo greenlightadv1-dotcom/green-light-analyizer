@@ -169,6 +169,8 @@ type Profile = {
   creator_categories?: string[] | null;
   creator_games?: string[] | null;
   content_formats?: string[] | null;
+  /** Sports, interests and specializations (0033). */
+  creator_tags?: string[] | null;
   company_website?: string | null;
   company_industry?: string | null;
 };
@@ -660,6 +662,7 @@ export type Database = {
       content_items: Table<ContentItem, Optional<ContentItem, Exclude<keyof ContentItem, "creator_id" | "kind" | "title">>>;
       verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "kind">>>;
       verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at" | "capture_method">>;
+      taxonomy_terms: Table<import("../taxonomy").TaxonomyTerm & { created_at: string; updated_at: string; updated_by: string | null }, Partial<import("../taxonomy").TaxonomyTerm & { updated_by: string | null }> & { id: string; kind: import("../taxonomy").TermKind; label_en: string; label_ar: string }>;
       verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;
       verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
@@ -707,6 +710,8 @@ export type Database = {
       };
       activation_checkpoint: { Args: { p_hash: string; p_user: string }; Returns: undefined };
       activation_release: { Args: { p_hash: string }; Returns: undefined };
+      taxonomy_usage: { Args: { p_id: string }; Returns: number };
+      taxonomy_delete: { Args: { p_id: string }; Returns: undefined };
       activation_complete: { Args: { p_hash: string; p_user: string; p_alias: string | null }; Returns: string };
       creator_public_portfolio: {
         Args: { p_slug: string };

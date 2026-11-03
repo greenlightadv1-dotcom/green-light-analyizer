@@ -20,6 +20,7 @@ const es: Dictionary = {
     adminUsers: "Cuentas",
     adminRequests: "Solicitudes",
     adminVerification: "Verificación",
+    adminTaxonomy: "Taxonomía",
     adminPromoCodes: "Códigos promo",
     adminViolations: "Infracciones",
     adminSystem: "Sistema",
@@ -919,6 +920,11 @@ const es: Dictionary = {
     next3: "Si se aprueba, recibes un enlace de un solo uso para crear tu cuenta y elegir tu contraseña.",
   },
   onboarding: {
+    tagKind: {
+      sport: "Deportes",
+      specialization: "Especializaciones",
+      interest: "Intereses",
+    },
     title: "Configuración",
     creatorIntro: "Completa estos pasos para que los patrocinadores te encuentren y te lleguen ofertas. Tu progreso se guarda sobre la marcha.",
     companyIntro: "Completa los datos de tu empresa antes de enviar ofertas. Tu progreso se guarda sobre la marcha.",

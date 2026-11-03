@@ -6,7 +6,8 @@ import { useTranslation } from "@/components/LocaleProvider";
 import { saveBrief, type BriefFormState } from "@/app/(app)/collaborations/actions";
 import { BRIEF_PLATFORMS, LIMITS, SPONSORSHIP_TYPES } from "@/lib/collab/rules";
 import { PLATFORM_LABEL, TYPE_LABEL_KEY } from "@/lib/collab/display";
-import { CONTENT_CATEGORIES } from "@/lib/taxonomy";
+import { BRIEF_CATEGORY_KINDS, termsOf } from "@/lib/taxonomy";
+import { useTaxonomy } from "@/components/TaxonomyProvider";
 import type { Brief } from "@/lib/types/database";
 import { BTN_PRIMARY, Labelled, SELECT_CLASS, TextArea, TextInput } from "./ui";
 
@@ -17,6 +18,7 @@ import { BTN_PRIMARY, Labelled, SELECT_CLASS, TextArea, TextInput } from "./ui";
  */
 export function BriefForm({ brief }: { brief: Brief | null }) {
   const { t } = useTranslation();
+  const taxonomy = useTaxonomy();
   const router = useRouter();
   const [state, action, pending] = useActionState<BriefFormState | null, FormData>(saveBrief, null);
 
@@ -54,12 +56,14 @@ export function BriefForm({ brief }: { brief: Brief | null }) {
       <fieldset className="space-y-2">
         <legend className="text-xs font-medium text-fg-secondary">{t("collab.briefs.fieldCategories")}</legend>
         <div className="flex flex-wrap gap-2">
-          {CONTENT_CATEGORIES.map((c) => (
-            <label key={c} className="inline-flex items-center gap-2 rounded-chip border border-line px-3 py-1.5 text-sm text-fg">
-              <input type="checkbox" name="categories" value={c} defaultChecked={brief?.categories.includes(c)} />
-              {t(`taxonomy.category.${c}`)}
-            </label>
-          ))}
+          {termsOf(taxonomy.snap, BRIEF_CATEGORY_KINDS, { activeOnly: false })
+            .filter((term) => term.active || brief?.categories.includes(term.id))
+            .map(({ id: c }) => (
+              <label key={c} className="inline-flex items-center gap-2 rounded-chip border border-line px-3 py-1.5 text-sm text-fg">
+                <input type="checkbox" name="categories" value={c} defaultChecked={brief?.categories.includes(c)} />
+                {taxonomy.label(c)}
+              </label>
+            ))}
         </div>
       </fieldset>
       <TextArea id="brief-summary" name="deliverables_summary" labelKey="collab.briefs.fieldSummary" maxLength={LIMITS.summary} rows={3} defaultValue={brief?.deliverables_summary ?? ""} />

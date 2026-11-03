@@ -1,6 +1,6 @@
 import type { Platform } from "./types/database.ts";
 import { PLATFORMS } from "./media-kit/platforms.ts";
-import { CONTENT_CATEGORIES, GAME_IDS, knownCategories, knownGames, type ContentCategory, type GameId } from "./taxonomy.ts";
+import { SEED_TAXONOMY, knownCategories, knownGames, termsOf, type ContentCategory, type GameId, type TaxonomySnapshot } from "./taxonomy.ts";
 import { isFresh, toShares } from "./g/provenance.ts";
 import type { DirectoryRow } from "./g/recommend.ts";
 
@@ -39,7 +39,8 @@ export type DiscoveryQuery = {
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-export function parseDiscoveryQuery(params: Record<string, string | string[] | undefined>): DiscoveryQuery {
+export function parseDiscoveryQuery(params: Record<string, string | string[] | undefined>, snap: TaxonomySnapshot = SEED_TAXONOMY): DiscoveryQuery {
+  const ids = (kind: "category" | "game") => termsOf(snap, kind, { activeOnly: false }).map((t) => t.id);
   const q = (first(params.q) ?? "").trim().slice(0, 80);
   const category = first(params.category);
   const game = first(params.game);
@@ -50,8 +51,8 @@ export function parseDiscoveryQuery(params: Record<string, string | string[] | u
   const page = Math.floor(Number(first(params.page)));
   return {
     q,
-    category: (CONTENT_CATEGORIES as readonly string[]).includes(category ?? "") ? (category as ContentCategory) : null,
-    game: (GAME_IDS as readonly string[]).includes(game ?? "") ? (game as GameId) : null,
+    category: ids("category").includes(category ?? "") ? (category as ContentCategory) : null,
+    game: ids("game").includes(game ?? "") ? (game as GameId) : null,
     platform: (PLATFORMS as readonly string[]).includes(platform ?? "") ? (platform as Platform) : null,
     country: /^[A-Z]{2}$/.test(country) ? country : null,
     minViews: Number.isFinite(minViews) && minViews > 0 ? Math.min(minViews, 1e9) : null,
@@ -73,10 +74,10 @@ export function hasFreshVerifiedGeo(row: DirectoryRow, now: Date): boolean {
   return row.verified_geo_synced_at === undefined ? true : isFresh(row.verified_geo_synced_at, now);
 }
 
-function categoriesOf(row: DirectoryRow): ContentCategory[] {
-  const own = knownCategories(row.creator_categories);
+function categoriesOf(row: DirectoryRow, snap: TaxonomySnapshot): ContentCategory[] {
+  const own = knownCategories(row.creator_categories, snap);
   const kit = row.content_category?.trim().toLowerCase();
-  if (kit && (CONTENT_CATEGORIES as readonly string[]).includes(kit) && !own.includes(kit as ContentCategory)) {
+  if (kit && knownCategories([kit], snap).length && !own.includes(kit as ContentCategory)) {
     own.push(kit as ContentCategory);
   }
   return own;
@@ -86,12 +87,13 @@ export function filterDirectory(
   rows: readonly DirectoryRow[],
   query: DiscoveryQuery,
   now: Date = new Date(),
+  snap: TaxonomySnapshot = SEED_TAXONOMY,
 ): { items: DirectoryRow[]; total: number; page: number; pages: number } {
   const needle = query.q.toLowerCase();
   const filtered = rows.filter((r) => {
     if (needle && !r.full_name.toLowerCase().includes(needle)) return false;
-    if (query.category && !categoriesOf(r).includes(query.category)) return false;
-    if (query.game && !knownGames(r.creator_games).includes(query.game)) return false;
+    if (query.category && !categoriesOf(r, snap).includes(query.category)) return false;
+    if (query.game && !knownGames(r.creator_games, snap).includes(query.game)) return false;
     if (query.platform && !(r.platforms ?? []).includes(query.platform)) return false;
     if (query.minViews !== null && (num(r.avg_views) ?? -1) < query.minViews) return false;
     const fresh = hasFreshVerifiedGeo(r, now);

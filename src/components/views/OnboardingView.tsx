@@ -29,7 +29,7 @@ export function OnboardingView({
   role: "creator" | "company" | "admin";
   onboarding: Onboarding;
   avatarUrl: string | null;
-  classification: { categories: string[]; games: string[]; formats: string[] };
+  classification: { categories: string[]; games: string[]; formats: string[]; tags?: string[] };
   company: CompanyInitial;
   representsCompany: string | null;
   demo?: boolean;

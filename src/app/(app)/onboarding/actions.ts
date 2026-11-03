@@ -6,6 +6,7 @@ import { log } from "@/lib/log";
 import { maskSensitiveData } from "@/lib/mask";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseClassification } from "@/lib/taxonomy";
+import { getTaxonomy } from "@/lib/taxonomy-server";
 
 export type SaveState = { error: string | null; saved: boolean; values?: Record<string, string> };
 
@@ -19,15 +20,31 @@ const notMigrated = (code: string | undefined) => code === "42703" || code === "
 export async function saveClassification(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const profile = await requireProfile();
   if (profile.role !== "creator") return { error: "forbidden", saved: false };
-  const parsed = parseClassification({
-    categories: formData.getAll("categories"),
-    games: formData.getAll("games"),
-    formats: formData.getAll("formats"),
-  });
+  // Validated against the admin-managed taxonomy (0033). A term the profile
+  // already holds stays acceptable after it is deactivated; new picks must be active.
+  const parsed = parseClassification(
+    {
+      categories: formData.getAll("categories"),
+      games: formData.getAll("games"),
+      formats: formData.getAll("formats"),
+      tags: formData.getAll("tags"),
+    },
+    await getTaxonomy(),
+    {
+      creator_categories: profile.creator_categories ?? [],
+      creator_games: profile.creator_games ?? [],
+      content_formats: profile.content_formats ?? [],
+      creator_tags: profile.creator_tags ?? [],
+    },
+  );
   if (!parsed.ok) return { error: "invalid", saved: false };
   if (!parsed.value.creator_categories.length) return { error: "category_required", saved: false };
 
-  const { error } = await createAdminClient().from("profiles").update(parsed.value).eq("id", profile.id);
+  // creator_tags exists only with 0033; never send it to a database without it.
+  const { creator_tags, ...base } = parsed.value;
+  const update = profile.creator_tags !== undefined ? parsed.value : base;
+  if (profile.creator_tags === undefined && creator_tags.length) return { error: "not_available", saved: false };
+  const { error } = await createAdminClient().from("profiles").update(update).eq("id", profile.id);
   if (error) {
     log.error("onboarding.classification_failed", { code: error.code });
     return { error: notMigrated(error.code) ? "not_available" : "failed", saved: false };

@@ -1,32 +1,57 @@
-# Taxonomy and gaming catalog (2026-11-02)
+# Taxonomy and gaming catalog (updated 2026-11-03)
 
-## Today: a controlled list in code
+## Source of truth: `taxonomy_terms` (migration 0033, not applied)
 
-Defined in `src/lib/taxonomy.ts` and stored in `profiles.creator_categories`, `creator_games` and `content_formats` (migration 0024, applied).
-
-| List | Items | Limit per creator |
+| Kind | Used for | Stored on |
 |---|---|---|
-| Categories | 13: gaming, esports, tech, entertainment, education, lifestyle, beauty, fitness, finance, food, travel, music, other | 6 |
-| Games | 19, among them Valorant, Counter-Strike 2, League of Legends, Dota 2, Fortnite, Minecraft, GTA V / Online, Call of Duty, PUBG / PUBG Mobile, Free Fire, Roblox, EA SPORTS FC, Apex Legends, Rocket League, Mobile Legends, Genshin Impact, plus "Just Chatting", "Variety" and "Other game" | 12 |
-| Formats | 8: live stream, long video, short video, esports casting, tutorials, reviews, podcast, social posts | 8 |
+| `category` | Content verticals | `profiles.creator_categories`, `briefs.categories` |
+| `genre` | Groups games (parent of `game`) | (structure only) |
+| `game` | Games a creator plays | `profiles.creator_games` |
+| `format` | Content formats | `profiles.content_formats` |
+| `sport`, `interest`, `specialization` | Creator tags | `profiles.creator_tags` (new) |
+| `campaign_category` | Extra brief categories a company can pick | `briefs.categories` |
 
-### Properties
+Each term has a stable `id` (the stored value), English and Arabic labels and descriptions, a parent, an active flag and a sort order.
 
-- Ids are stable, lowercase and language-neutral.
-- Category and format labels are translated in all five dictionaries (`taxonomy.*`). Game titles are proper nouns and stay untranslated.
-- The lists are validated on the server before any write; the columns are not client-writable.
-- Discover filters and G's brief parser (`lib/g/brief-text.ts`, English and Arabic aliases) use the same ids.
+## Seed and compatibility
 
-## Not built (requested)
+- 0033 inserts **exactly** the ids already in use: 13 categories, 19 games and 8 formats, the list `src/lib/taxonomy.ts` held.
+- It adds 7 genres as parents of those games.
+- Every stored selection stays valid, and `taxonomy.test.ts` pins the code seed to the SQL seed.
+- No sports, interests, specializations or campaign categories are seeded; admins add them. Nothing was invented.
+- `src/lib/taxonomy.ts` keeps the seed only as the fallback when the table is absent. Every consumer reads one snapshot, loaded once per request (`lib/taxonomy-server.ts`) and passed down (`TaxonomyProvider`):
+  - onboarding and Media Kit pickers;
+  - Discover filters;
+  - the brief form;
+  - G's brief builder;
+  - server validation.
 
-| Requirement | Why not yet | Plan |
-|---|---|---|
-| Database-backed, admin-managed list | Needs a migration and an admin UI. Changing ids under live profiles is a data-integrity risk. | `taxonomy_terms(id text pk, kind, parent_id, label_en, label_ar, active, sort)`. Seed it with **exactly the current ids**, so stored values stay valid. Add a foreign-key-style check through a trigger (arrays cannot hold FKs). Add an admin CRUD page; deactivate terms, never delete them. |
-| Genres (FPS, MOBA, battle royale …) and parent/child | Same | `parent_id` on game terms. Discover filters by genre and expands to its games. |
-| Main, secondary and streamed games | One flat list today | Add `creator_game_roles(profile_id, game_id, role main\|secondary\|streamed)`, or a jsonb column. Backfill: the first stored game becomes main. Owner sign-off on the UX first. |
-| Arabic labels for game titles | Proper nouns | Optional `label_ar` once the table exists |
+## Rules
 
-## Assumptions
+| Rule | Where |
+|---|---|
+| Ids `^[a-z0-9_]{2,40}$`, never renamed; kind frozen after creation | DB constraint and trigger |
+| Parents: game → genre or category; genre/sport/interest/specialization/campaign category → category; no cycles | DB trigger `taxonomy_parent_check` |
+| Every id written to profiles or briefs must exist with the right kind | DB trigger and `parseClassification` / `parseBrief` |
+| A newly picked id must be active; an id a row already holds stays valid after deactivation | DB trigger and `parseClassification` |
+| A term used by a profile, brief or child term cannot be deleted, only deactivated | `taxonomy_delete()` |
+| Catalogue is public read; writes are service role from admin-only actions | RLS and grants |
 
-- The game list reflects titles popular with MENA creators; it was not drawn from market data.
-- Adding a game is a code change today, and will be an admin action after the table exists.
+## Admin management (`/admin/taxonomy`)
+
+Admins can:
+- add a term;
+- edit its labels, descriptions, parent, order and active flag;
+- delete a term only while its usage count is 0.
+
+The page shows each term's usage.
+
+## Labels and languages
+
+- Seeded ids keep their dictionary translations in all five languages.
+- A term added by an admin shows its Arabic label in Arabic and its English label in every other language. French, Spanish and German labels for new terms are not stored; that is a known limitation.
+
+## Not done
+
+- **Discover filters:** they cover categories and games, with games grouped by genre in the select. Filtering by creator tags is not built, and `creator_directory()` does not return `creator_tags`, since that would need an RPC change.
+- **Main / secondary / streamed games:** not built. That needs a role per game and owner sign-off on the UX.

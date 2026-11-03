@@ -11,7 +11,7 @@ import type {
   InvitationStatus,
   SponsorshipType,
 } from "../types/database.ts";
-import { knownCategories } from "../taxonomy.ts";
+import { SEED_TAXONOMY, knownBriefCategories, type TaxonomySnapshot } from "../taxonomy.ts";
 
 export const BRIEF_PLATFORMS = ["youtube", "twitch", "kick", "instagram", "tiktok", "x"] as const;
 export const SPONSORSHIP_TYPES: SponsorshipType[] = [
@@ -79,7 +79,7 @@ export type BriefInput = {
  * masks contact details before saving. Unknown platforms, categories and
  * malformed country codes are dropped rather than stored.
  */
-export function parseBrief(f: Record<string, unknown>): { ok: true; value: BriefInput } | { ok: false; errorKey: string } {
+export function parseBrief(f: Record<string, unknown>, snap: TaxonomySnapshot = SEED_TAXONOMY): { ok: true; value: BriefInput } | { ok: false; errorKey: string } {
   const title = String(f.title ?? "").trim();
   const description = String(f.description ?? "").trim();
   if (!within(title, LIMITS.title)) return { ok: false, errorKey: "collab.errors.title" };
@@ -100,7 +100,8 @@ export function parseBrief(f: Record<string, unknown>): { ok: true; value: Brief
   const countries = [...new Set(list(f.target_countries).map((c) => c.toUpperCase()))]
     .filter((c) => /^[A-Z]{2}$/.test(c))
     .slice(0, LIMITS.countries);
-  const categories = knownCategories(list(f.categories)).slice(0, LIMITS.categories);
+  // Content categories and admin-defined campaign categories (0033); unknown ids are dropped.
+  const categories = knownBriefCategories(list(f.categories), snap).slice(0, LIMITS.categories);
   return {
     ok: true,
     value: {

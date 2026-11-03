@@ -32,6 +32,7 @@ const en = {
     adminUsers: "Accounts",
     adminRequests: "Applications",
     adminVerification: "Verification",
+    adminTaxonomy: "Taxonomy",
     adminPromoCodes: "Promo codes",
     adminViolations: "Violations",
     adminSystem: "System",
@@ -931,6 +932,11 @@ const en = {
     next3: "If approved, you get a one-time link to create your account and choose your password.",
   },
   onboarding: {
+    tagKind: {
+      sport: "Sports",
+      specialization: "Specializations",
+      interest: "Interests",
+    },
     title: "Get set up",
     creatorIntro: "Finish these steps so sponsors can find you and offers can reach you. Your progress is saved as you go.",
     companyIntro: "Complete your company details before you send offers. Your progress is saved as you go.",

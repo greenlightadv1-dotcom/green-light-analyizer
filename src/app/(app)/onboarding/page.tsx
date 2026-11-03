@@ -60,6 +60,7 @@ export default async function OnboardingPage() {
       classification={{
         categories: profile.creator_categories ?? [],
         games: profile.creator_games ?? [],
+        tags: profile.creator_tags ?? [],
         formats: profile.content_formats ?? [],
       }}
       company={{

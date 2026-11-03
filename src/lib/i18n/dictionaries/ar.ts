@@ -20,6 +20,7 @@ const ar: Dictionary = {
     adminUsers: "الحسابات",
     adminRequests: "طلبات الانضمام",
     adminVerification: "التحقق",
+    adminTaxonomy: "التصنيفات",
     adminPromoCodes: "أكواد الخصم",
     adminViolations: "المخالفات",
     adminSystem: "النظام",
@@ -911,6 +912,11 @@ const ar: Dictionary = {
     next3: "عند الموافقة يصلك رابط لمرة واحدة لإنشاء حسابك واختيار كلمة المرور.",
   },
   onboarding: {
+    tagKind: {
+      sport: "الرياضات",
+      specialization: "التخصصات",
+      interest: "الاهتمامات",
+    },
     title: "الإعداد",
     creatorIntro: "أكمل هذه الخطوات ليعثر عليك الرعاة وتصلك العروض. يُحفظ تقدمك أولًا بأول.",
     companyIntro: "أكمل بيانات شركتك قبل إرسال العروض. يُحفظ تقدمك أولًا بأول.",

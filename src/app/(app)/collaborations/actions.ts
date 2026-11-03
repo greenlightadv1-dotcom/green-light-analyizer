@@ -1,5 +1,6 @@
 "use server";
 
+import { getTaxonomy } from "@/lib/taxonomy-server";
 import { revalidatePath } from "next/cache";
 import { requireProfile, requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -71,7 +72,7 @@ export async function saveBrief(_prev: BriefFormState | null, fd: FormData): Pro
     budget_max_usd: fd.get("budget_max_usd"),
     start_date: fd.get("start_date"),
     due_date: fd.get("due_date"),
-  });
+  }, await getTaxonomy());
   if (!parsed.ok) return { ok: false, errorKey: parsed.errorKey, id: null };
 
   const v = parsed.value;

@@ -3,6 +3,8 @@ import { TopBar } from "@/components/dashboard/TopBar";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { requireProfile } from "@/lib/auth";
 import { GAssistant } from "@/components/g/GAssistant";
+import { TaxonomyProvider } from "@/components/TaxonomyProvider";
+import { getTaxonomy } from "@/lib/taxonomy-server";
 
 /**
  * Authenticated app shell. The middleware guards the route group already; the
@@ -14,8 +16,10 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireProfile();
+  const taxonomy = await getTaxonomy();
 
   return (
+    <TaxonomyProvider value={taxonomy}>
     <div className="mx-auto flex w-full max-w-[1680px] gap-5 p-4 lg:gap-6 lg:p-6 2xl:p-8">
       <Sidebar role={profile.role} />
       {/* pb-24: the last content can always scroll clear of the fixed G launcher. */}
@@ -26,5 +30,6 @@ export default async function AppLayout({
       {/* G is mounted once in the shell, so its conversation survives navigation. */}
       <GAssistant userId={profile.id} role={profile.role} />
     </div>
+    </TaxonomyProvider>
   );
 }

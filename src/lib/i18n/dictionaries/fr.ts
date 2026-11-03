@@ -20,6 +20,7 @@ const fr: Dictionary = {
     adminUsers: "Comptes",
     adminRequests: "Candidatures",
     adminVerification: "Vérification",
+    adminTaxonomy: "Taxonomie",
     adminPromoCodes: "Codes promo",
     adminViolations: "Infractions",
     adminSystem: "Système",
@@ -919,6 +920,11 @@ const fr: Dictionary = {
     next3: "En cas d'approbation, vous recevez un lien à usage unique pour créer votre compte et choisir votre mot de passe.",
   },
   onboarding: {
+    tagKind: {
+      sport: "Sports",
+      specialization: "Spécialisations",
+      interest: "Centres d’intérêt",
+    },
     title: "Configuration",
     creatorIntro: "Terminez ces étapes pour que les sponsors vous trouvent et que les offres vous parviennent. Votre progression est enregistrée au fur et à mesure.",
     companyIntro: "Complétez les informations de votre entreprise avant d'envoyer des offres. Votre progression est enregistrée au fur et à mesure.",
