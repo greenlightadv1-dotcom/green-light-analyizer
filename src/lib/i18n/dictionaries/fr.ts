@@ -24,6 +24,7 @@ const fr: Dictionary = {
     adminTaxonomy: "Taxonomie",
     adminPromoCodes: "Codes promo",
     adminViolations: "Infractions",
+    adminRelays: "Relais e-mail",
     adminSystem: "Système",
   },
   topbar: {
@@ -2060,6 +2061,17 @@ const fr: Dictionary = {
         body: "Approbation de la plateforme requise.",
       },
     },
+  },
+  adminRelays: {
+    runDue: "Retry due relays now",
+    runDueTitle: "Retry every relay that is due?",
+    runDueBody: "Each due message is sent once more with the same idempotency key, so a message the provider already accepted is not sent twice.",
+    retry: "Retry",
+    retryTitle: "Retry this relay?",
+    retryBody: "Fix the cause first (for example the API key). The message is sent with the same idempotency key.",
+    sent: "Sent.",
+    notRetryable: "This relay is not in a failed state.",
+    stillFailing: "The retry did not go through. Check the error code.",
   },
   adminVerification: {
     startReview: "Start review",

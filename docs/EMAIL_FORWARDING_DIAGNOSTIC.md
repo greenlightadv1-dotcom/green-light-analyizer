@@ -114,3 +114,35 @@ bash scripts/local-migrations-test.sh
 
 - `npm test` runs the intake role-mailbox cases.
 - `scripts/local-migrations-test.sh` runs the message notification test.
+
+## Update 2026-11-03: relay lifecycle (migration 0036, not applied)
+
+| Previous gap | Now |
+|---|---|
+| A failed relay was never retried | `messages.relay_status`: `queued → processing → sent / failed_retryable / failed_permanent`. Transient failures back off 2, 4, 8 and 16 minutes; after 5 attempts the relay becomes permanent. |
+| The outcome write was unchecked | The outcome is written by `relay_record()`. If that write fails, the log says so (`relay.outcome_not_recorded`), and the claim expires so the message is retried. |
+| Messages with neither a relay time nor an error | Every relayed message has a state. The backfill marks old rows `sent` (relayed_at set) or `failed_retryable` (relay_error set). |
+| Duplicates on retry | Each send carries the Resend `Idempotency-Key` `gl-relay-<message id>`. `relay_claim()` is a compare-and-swap, so two workers never send at once. |
+| Transient and permanent failures handled the same | HTTP 400/401/403/404/422 are permanent. 409, 429, 5xx, timeouts, network errors and a missing `RESEND_API_KEY` are retryable. |
+| Provider id not kept | `relay_provider_id` holds the id Resend returns. |
+| No admin visibility | `/admin/relays` lists pending and failed relays with state, attempts and the HTTP code only (never message text or addresses), and offers retry. |
+| Notifications confused with delivery | In-app notifications (0030) only say a message exists. Only `relay_status = 'sent'` means the provider accepted an email, and that still does not prove the sponsor read it. |
+
+### Retry schedule
+
+`/api/cron/relay-retry` exists, requires `CRON_SECRET`, and is **not** in `vercel.json`. Until it is scheduled (an approval), retries run from `/admin/relays`.
+
+### Tests
+
+- `supabase/tests/relay_lifecycle_test.sql`
+- `src/lib/email/relay-lifecycle.test.ts` (mocked provider; no email is sent)
+
+The behaviour of Resend's idempotency key was not observed live. It is taken from Resend's API documentation as previously researched.
+
+## `ROLE_MAILBOX_FORWARD_TO` (not set; instructions only)
+
+- **What it does:** mail to `support@`, `privacy@`, `security@`, `legal@` and `deals@greenlightadvs.com` is forwarded to this one address, with `reply_to` set to the original sender. Without it, that mail is recorded and logged as `inbound.role_mailbox_unrouted`, and reaches nobody.
+- **Value:** one operator inbox the owner controls (for example a Google Workspace or Gmail address). It must not be one of the role mailboxes; the code refuses that to prevent a loop.
+- **Where:** Vercel, Production environment variable `ROLE_MAILBOX_FORWARD_TO`, then a redeploy.
+- **Sender:** forwards go out from `RESEND_FROM_ADDRESS` (default `deals@<inbound domain>`), which must be a verified sender in Resend. That is already the case for relays.
+- **Not done here:** the variable was not set and no Resend setting was changed.

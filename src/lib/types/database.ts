@@ -282,6 +282,12 @@ type Message = {
   /** Set once the message reached the company as platform email (§6). */
   relayed_at: string | null;
   relay_error: string | null;
+  /** Relay lifecycle (0036). Absent before it is applied. */
+  relay_status?: "queued" | "processing" | "sent" | "failed_retryable" | "failed_permanent" | null;
+  relay_attempts?: number;
+  relay_next_attempt_at?: string | null;
+  relay_claimed_at?: string | null;
+  relay_provider_id?: string | null;
   created_at: string | null;
 };
 
@@ -718,6 +724,9 @@ export type Database = {
       };
       activation_checkpoint: { Args: { p_hash: string; p_user: string }; Returns: undefined };
       activation_release: { Args: { p_hash: string }; Returns: undefined };
+      relay_claim: { Args: { p_message: string }; Returns: boolean };
+      relay_record: { Args: { p_message: string; p_ok: boolean; p_provider_id: string | null; p_error: string | null; p_permanent: boolean }; Returns: string };
+      relay_requeue: { Args: { p_message: string }; Returns: boolean };
       company_set_scope: { Args: { p_actor: string; p_member: string; p_scope: string; p_grant: boolean }; Returns: undefined };
       taxonomy_usage: { Args: { p_id: string }; Returns: number };
       taxonomy_delete: { Args: { p_id: string }; Returns: undefined };

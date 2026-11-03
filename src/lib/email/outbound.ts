@@ -25,7 +25,7 @@ import { fromAddress } from "./from";
 
 export type RelayResult =
   | { ok: true; providerId: string | null }
-  | { ok: false; error: string };
+  | { ok: false; error: string; status?: number };
 
 /**
  * Relay one message to the company.
@@ -40,6 +40,7 @@ export async function relayMessageToCompany({
   body,
   creatorDisplayName,
   creatorAlias,
+  idempotencyKey,
 }: {
   /** The company's address, from deal_chats.sender_email. */
   to: string;
@@ -50,6 +51,8 @@ export async function relayMessageToCompany({
   creatorDisplayName: string;
   /** The creator's inbound alias — the reply path back into the platform. */
   creatorAlias: string | null;
+  /** Resend Idempotency-Key: the same key never sends a second email (0036). */
+  idempotencyKey?: string;
 }): Promise<RelayResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -68,6 +71,7 @@ export async function relayMessageToCompany({
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
+        ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: fromAddress(),
@@ -86,6 +90,7 @@ export async function relayMessageToCompany({
       const detail = await response.text().catch(() => "");
       return {
         ok: false,
+        status: response.status,
         error: `Resend returned ${response.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`,
       };
     }

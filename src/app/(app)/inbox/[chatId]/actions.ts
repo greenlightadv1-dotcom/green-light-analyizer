@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
 import { log } from "@/lib/log";
 import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
+import { processRelay } from "@/lib/email/relay-queue";
+import { relayIdempotencyKey } from "@/lib/email/relay-lifecycle";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { generateCompanyProfile } from "@/lib/ai/company-intel";
 import type { CompanyProfile } from "@/lib/ai/company-intel-types";
@@ -132,33 +134,32 @@ export async function sendMessage(
 
   let relayFailed = false;
   if (shouldRelay) {
-    const relay = await relayMessageToCompany({
-      to: chat.sender_email,
-      subject: relaySubject(chatId),
-      body: maskedText,
-      creatorDisplayName: profile.full_name,
-      // The reply path back into the platform. Never profile.primary_email.
-      creatorAlias: profile.inbound_alias,
-    });
-
-    // The outcome is the only record of whether the sponsor got the reply.
-    // Recording it can fail independently of the send; that must surface,
-    // or a delivered message reads as never attempted (EMAIL_FORWARDING_DIAGNOSTIC.md).
-    const { error: recordError } = await admin
-      .from("messages")
-      .update(
-        relay.ok
-          ? { relayed_at: new Date().toISOString(), relay_error: null }
-          : { relay_error: relay.error.slice(0, 500) },
-      )
-      .eq("id", inserted.id);
-    if (recordError) {
-      log.error("relay.outcome_not_recorded", { chat_id: chatId, message_id: inserted.id, relayed: relay.ok, error: recordError });
-    }
-
-    if (!relay.ok) {
-      log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });
-      relayFailed = true;
+    // 0036: the message enters the relay lifecycle (queued → sent / retryable
+    // / permanent), so a failure is retried instead of being lost.
+    const { error: queueError } = await admin.from("messages").update({ relay_status: "queued" }).eq("id", inserted.id);
+    if (!queueError) {
+      const outcome = await processRelay(inserted.id);
+      relayFailed = outcome !== "sent";
+    } else {
+      // A database without 0036: the single attempt from before, still recorded.
+      const relay = await relayMessageToCompany({
+        to: chat.sender_email,
+        subject: relaySubject(chatId),
+        body: maskedText,
+        creatorDisplayName: profile.full_name,
+        // The reply path back into the platform. Never profile.primary_email.
+        creatorAlias: profile.inbound_alias,
+        idempotencyKey: relayIdempotencyKey(inserted.id),
+      });
+      const { error: recordError } = await admin
+        .from("messages")
+        .update(relay.ok ? { relayed_at: new Date().toISOString(), relay_error: null } : { relay_error: relay.error.slice(0, 500) })
+        .eq("id", inserted.id);
+      if (recordError) log.error("relay.outcome_not_recorded", { chat_id: chatId, message_id: inserted.id, relayed: relay.ok, error: recordError });
+      if (!relay.ok) {
+        log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });
+        relayFailed = true;
+      }
     }
   }
 
