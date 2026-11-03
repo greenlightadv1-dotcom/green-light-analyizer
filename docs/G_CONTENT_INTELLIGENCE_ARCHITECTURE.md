@@ -29,30 +29,47 @@ The code is in `lib/g/context.ts` and `lib/g/collab.ts`.
    - a proposal with an ungrounded figure is dropped;
    - free text is masked (§6.1).
 
-## News and trend monitoring (design only, not built, not running)
-
-Requested: monitor news for the creator's categories, games and esports, using legal sources only.
+## Official news (built 2026-11-03; migration 0037 not applied; not scheduled)
 
 ### Sources
 
-| Requirement | Design |
+The allow-list lives in `src/lib/news/sources.ts`. Each source was verified live on 2026-11-03 through an external fetch, because the sandbox network blocks these hosts.
+
+| Source | Official? | Cost | What is kept |
+|---|---|---|---|
+| YouTube Official Blog RSS (`https://blog.youtube/rss/`) | Yes (Google) | Free | Headline, link, publication date |
+| Valve Steam Web API `ISteamNews/GetNewsForApp` for CS2, Dota 2, PUBG, Apex Legends, Rocket League | Yes (Valve; documented, no key) | Free | Developer announcements only. Third-party press items in the same feed are dropped. |
+
+- Each link must be https and on the source's own host.
+- No article text is stored or shown. Nothing is generated or summarised.
+- Terms still need owner and legal review: the Steam Web API Terms of Use and the YouTube blog's terms. Attribution is the source name and a link back.
+
+### Not included
+
+These were not verified, and their unofficial APIs or scraping are not used:
+- Riot Games, Epic, Minecraft, EA, Twitch;
+- esports league sites;
+- sports bodies.
+
+Each can be added once an official feed is confirmed and the owner approves.
+
+### How it runs
+
+| Path | State |
 |---|---|
-| Legal sources only | An owner-approved allow-list of official RSS/Atom feeds (game publishers' news pages, esports league feeds) and licensed news APIs. No scraping of sites whose terms forbid it, and no paywalled content. |
-| Storage | `news_items(id, source_id, url, title, published_at, terms jsonb, fetched_at)`. Store headline, link and date only, never full articles. Purge after 30 days. |
+| `/admin/news` → "Refresh now" | Built. Admin only, one request per source, notifies nobody. |
+| `/api/cron/news-refresh` | Built. Off unless `CRON_SECRET` **and** `NEWS_MONITORING_ENABLED=1`. **Not in `vercel.json`**, so nothing runs on a schedule. |
+| Retention | Headlines older than 60 days are deleted on each refresh. |
 
-### Pipeline
+### Where it shows
 
-| Requirement | Design |
-|---|---|
-| Matching | Deterministic tags against the taxonomy ids; no model is needed to match. |
-| Use in G | Matching items enter G's DATA as citable sources. The rule 9 "source" field can then name a real headline and link. |
-| Scheduler | A Vercel cron route, like `/api/cron/youtube-data-freshness`. It needs `CRON_SECRET` (not set in production) and **owner approval to activate**. |
-| Cost | Free RSS by default. Any paid news API needs approval (rule 5). |
+- **Content plan:** an "Official news for your topics" panel, matched by the creator's taxonomy categories and games (plus YouTube platform news when they have a YouTube kit). Each headline shows its source and publication date.
+- **G:** on content questions, up to 5 matching headlines go into DATA as `officialNews`, with title, link, source and date. Prompt rule 9 lets an idea cite only a source present in DATA.
 
-### Status
+### Not verified
 
-- No table, route or cron exists.
-- Nothing in the UI claims that monitoring runs.
+- A refresh has never run from the deployed app; the parsers are tested against the real payloads fetched on 2026-11-03.
+- Sports news has no source yet.
 
 ## Known limits
 

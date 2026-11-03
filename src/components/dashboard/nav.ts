@@ -47,6 +47,7 @@ export const NAV: readonly NavItem[] = [
   { href: "/admin/promo-codes", labelKey: "nav.adminPromoCodes", roles: ["admin"] },
   { href: "/admin/violations", labelKey: "nav.adminViolations", roles: ["admin"] },
   { href: "/admin/relays", labelKey: "nav.adminRelays", roles: ["admin"] },
+  { href: "/admin/news", labelKey: "nav.adminNews", roles: ["admin"] },
   { href: "/admin/system", labelKey: "nav.adminSystem", roles: ["admin"] },
 ];
 

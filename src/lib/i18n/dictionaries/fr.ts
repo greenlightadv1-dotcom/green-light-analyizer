@@ -25,6 +25,7 @@ const fr: Dictionary = {
     adminPromoCodes: "Codes promo",
     adminViolations: "Infractions",
     adminRelays: "Relais e-mail",
+    adminNews: "Actualités officielles",
     adminSystem: "Système",
   },
   topbar: {
@@ -1613,6 +1614,11 @@ const fr: Dictionary = {
     },
   },
   content: {
+    news: {
+      title: "Actualités officielles sur vos sujets",
+      intro: "Titres issus uniquement de sources officielles (blog officiel de YouTube ; annonces des développeurs sur Steam), selon vos catégories et jeux. Ouvrez le lien pour lire la source.",
+      empty: "Aucun titre pour l’instant pour vos catégories et jeux.",
+    },
     title: "Plan de contenu",
     description: "Vos idées et brouillons privés : scripts, accroches, titres et descriptions. Vous seul pouvez les voir.",
     new: "Nouvel élément",
@@ -2072,6 +2078,12 @@ const fr: Dictionary = {
     sent: "Sent.",
     notRetryable: "This relay is not in a failed state.",
     stillFailing: "The retry did not go through. Check the error code.",
+  },
+  adminNews: {
+    refresh: "Refresh from official sources now",
+    refreshTitle: "Fetch the official feeds now?",
+    refreshBody: "One request per allow-listed source. Headlines, links and dates are stored; nobody is notified.",
+    allFailed: "No source could be reached. Check the server logs (news.source_failed).",
   },
   adminVerification: {
     startReview: "Start review",

@@ -675,6 +675,10 @@ export type Database = {
         { id: number; media_kit_id: string; creator_id: string; platform: "youtube"; video_id: string; title: string | null; published_at: string | null; view_count: number | null; like_count: number | null; comment_count: number | null; synced_at: string },
         { media_kit_id: string; creator_id: string; platform?: "youtube"; video_id: string; title?: string | null; published_at?: string | null; view_count?: number | null; like_count?: number | null; comment_count?: number | null; synced_at?: string }
       >;
+      news_items: Table<
+        { id: number; source_id: string; external_id: string; title: string; url: string; published_at: string; retrieved_at: string; tags: string[] },
+        { source_id: string; external_id: string; title: string; url: string; published_at: string; retrieved_at?: string; tags?: string[] }
+      >;
       company_member_scopes: Table<{ member_id: string; company_id: string; scope: string; granted_by: string | null; granted_at: string }, { member_id: string; company_id: string; scope: string; granted_by?: string | null }>;
       company_permission_events: Table<{ id: number; company_id: string; member_id: string; actor_id: string | null; scope: string; action: "grant" | "revoke" | "cleared_on_relink"; created_at: string }, never>;
       verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;

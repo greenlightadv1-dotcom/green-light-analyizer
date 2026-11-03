@@ -93,6 +93,13 @@ export function readConfigReport(): ConfigReport {
         "Mail to support@, privacy@, security@, legal@ and deals@ is recorded but forwarded to nobody. These addresses are published on the Support page and in the legal pages.",
     },
     {
+      name: "NEWS_MONITORING_ENABLED",
+      set: Boolean(process.env.NEWS_MONITORING_ENABLED),
+      required: false,
+      impact:
+        "Scheduled official-news refresh is off. Admins can still refresh by hand at /admin/news. Turning it on also needs CRON_SECRET and a schedule for /api/cron/news-refresh.",
+    },
+    {
       name: "VERIFICATION_RETENTION_DAYS",
       set: Boolean(process.env.VERIFICATION_RETENTION_DAYS),
       required: false,

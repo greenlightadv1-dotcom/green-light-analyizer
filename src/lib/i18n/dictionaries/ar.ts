@@ -25,6 +25,7 @@ const ar: Dictionary = {
     adminPromoCodes: "أكواد الخصم",
     adminViolations: "المخالفات",
     adminRelays: "مرحّلات البريد",
+    adminNews: "الأخبار الرسمية",
     adminSystem: "النظام",
   },
   topbar: {
@@ -1605,6 +1606,11 @@ const ar: Dictionary = {
     },
   },
   content: {
+    news: {
+      title: "أخبار رسمية لمواضيعك",
+      intro: "عناوين من مصادر رسمية فقط (مدونة YouTube الرسمية؛ إعلانات مطوري الألعاب على Steam)، مطابقة لفئاتك وألعابك. افتح الرابط لقراءة المصدر.",
+      empty: "لا توجد عناوين بعد لفئاتك وألعابك.",
+    },
     title: "خطة المحتوى",
     description: "أفكارك ومسوداتك الخاصة: نصوص، وخطافات، وعناوين، وأوصاف. لا يراها أحد غيرك.",
     new: "عنصر جديد",
@@ -2064,6 +2070,12 @@ const ar: Dictionary = {
     sent: "Sent.",
     notRetryable: "This relay is not in a failed state.",
     stillFailing: "The retry did not go through. Check the error code.",
+  },
+  adminNews: {
+    refresh: "Refresh from official sources now",
+    refreshTitle: "Fetch the official feeds now?",
+    refreshBody: "One request per allow-listed source. Headlines, links and dates are stored; nobody is notified.",
+    allFailed: "No source could be reached. Check the server logs (news.source_failed).",
   },
   adminVerification: {
     startReview: "Start review",

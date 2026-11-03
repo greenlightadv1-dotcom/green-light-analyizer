@@ -37,6 +37,7 @@ const en = {
     adminPromoCodes: "Promo codes",
     adminViolations: "Violations",
     adminRelays: "Email relays",
+    adminNews: "Official news",
     adminSystem: "System",
   },
   topbar: {
@@ -1625,6 +1626,11 @@ const en = {
     },
   },
   content: {
+    news: {
+      title: "Official news for your topics",
+      intro: "Headlines from official sources only (YouTube Official Blog; game developers' Steam announcements), matched to your categories and games. Open the link to read the source.",
+      empty: "No headlines yet for your categories and games.",
+    },
     title: "Content plan",
     description: "Your private ideas and drafts: scripts, hooks, titles and descriptions. Only you can see them.",
     new: "New item",
@@ -2084,6 +2090,12 @@ const en = {
     sent: "Sent.",
     notRetryable: "This relay is not in a failed state.",
     stillFailing: "The retry did not go through. Check the error code.",
+  },
+  adminNews: {
+    refresh: "Refresh from official sources now",
+    refreshTitle: "Fetch the official feeds now?",
+    refreshBody: "One request per allow-listed source. Headlines, links and dates are stored; nobody is notified.",
+    allFailed: "No source could be reached. Check the server logs (news.source_failed).",
   },
   adminVerification: {
     startReview: "Start review",

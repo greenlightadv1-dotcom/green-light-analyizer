@@ -1,3 +1,4 @@
+import { newsFor, newsTagsFor } from "@/lib/news/queries";
 import { NextResponse } from "next/server";
 import { AiUnavailableError, chatJson } from "@/lib/ai/chat";
 import { log } from "@/lib/log";
@@ -118,11 +119,17 @@ export async function POST(request: Request) {
       if (intents.includes("content") && collab.content) cards.content = collab.content;
       if (intents.includes("assessment") || intents.includes("help")) cards.assessment = ctx.assessment;
       if (intents.includes("deals")) cards.deals = { summary: ctx.assessment.deals, recent: ctx.recentDeals };
+      // Official headlines for content ideas (0037): stored headline, link,
+      // source and date only, so an idea can cite real news (prompt rule 9).
+      const news = intents.includes("content")
+        ? await newsFor(newsTagsFor(profile, (ctx.assessment.platforms ?? []).map((p) => p.platform)), 5)
+        : [];
       modelData = {
         intents,
         assessment: ctx.assessment,
         deals: { summary: ctx.assessment.deals, recent: ctx.recentDeals },
         ...(wantsCollab ? collabData(collab) : {}),
+        ...(news.length ? { officialNews: news } : {}),
       };
       defaults = intents.includes("content")
         ? [{ action: "open_content" }]
