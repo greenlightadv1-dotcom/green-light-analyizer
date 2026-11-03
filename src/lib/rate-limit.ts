@@ -43,7 +43,8 @@ export type RateLimitAction =
   | "content_write"
   | "verification_write"
   | "application_write"
-  | "activation";
+  | "activation"
+  | "team_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -159,6 +160,11 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   activation: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },
     { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // Representative scopes and company edits by a representative (0034).
+  team_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
   ],
   // Content plans (0029): private drafts, autosave-free, so a modest cap.
   content_write: [

@@ -39,6 +39,8 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/verification/actions.ts", "startVerification", "verification_write"],
   ["app/verification/actions.ts", "saveVerificationDetails", "verification_write"],
   ["app/verification/actions.ts", "submitVerification", "verification_write"],
+  ["app/(app)/team/actions.ts", "setRepresentativeScope", "team_write"],
+  ["app/(app)/team/actions.ts", "saveRepresentedCompany", "team_write"],
   ["app/apply/actions.ts", "saveApplicationDetails", "application_write"],
   ["app/apply/actions.ts", "submitApplication", "application_write"],
   ["app/apply/actions.ts", "requestResumeLink", "access_request"],

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { log } from "@/lib/log";
-import { maskSensitiveData } from "@/lib/mask";
+import { parseCompanyDetails } from "@/lib/company-details";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseClassification } from "@/lib/taxonomy";
 import { getTaxonomy } from "@/lib/taxonomy-server";
@@ -63,28 +63,12 @@ export async function saveCompanyDetails(_prev: SaveState, formData: FormData): 
   const profile = await requireProfile();
   if (profile.role !== "company") return { error: "forbidden", saved: false };
 
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  const bio = String(formData.get("bio") ?? "").trim();
-  const industry = String(formData.get("company_industry") ?? "").trim();
-  let website = String(formData.get("company_website") ?? "").trim();
-  const values = { full_name: fullName, bio, company_industry: industry, company_website: website };
+  const values = Object.fromEntries(["full_name", "bio", "company_industry", "company_website"].map((k) => [k, String(formData.get(k) ?? "").trim()]));
   const fail = (error: string): SaveState => ({ error, saved: false, values });
-
-  if (fullName.length < 2 || fullName.length > 120) return fail("name");
-  if (!bio || bio.length > 600) return fail("bio");
-  if (maskSensitiveData(bio).isMasked) return fail("contact_details");
-  if (!industry || industry.length > 60) return fail("industry");
-  if (website) {
-    if (!/^https?:\/\//i.test(website)) website = `https://${website}`;
-    try {
-      const u = new URL(website);
-      if (!["http:", "https:"].includes(u.protocol) || !u.hostname.includes(".") || website.length > 200) {
-        return fail("website");
-      }
-    } catch {
-      return fail("website");
-    }
-  }
+  // Same rules as a representative with company.edit (lib/company-details.ts).
+  const parsed = parseCompanyDetails(formData);
+  if (!parsed.ok) return fail(parsed.error);
+  const { full_name: fullName, bio, company_industry: industry, company_website: website } = parsed.value;
 
   const admin = createAdminClient();
   const { error } = await admin

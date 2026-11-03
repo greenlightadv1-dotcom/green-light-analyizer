@@ -28,6 +28,7 @@ export const NAV: readonly NavItem[] = [
   // and published briefs, both sides (and admins, read-only) track the work.
   { href: "/briefs", labelKey: "nav.briefs", roles: ["company"] },
   { href: "/shortlists", labelKey: "nav.shortlists", roles: ["company"] },
+  { href: "/team", labelKey: "nav.team", roles: ["company"] },
   { href: "/opportunities", labelKey: "nav.opportunities", roles: ["creator"] },
   { href: "/collaborations", labelKey: "nav.collaborations", roles: ["creator", "company", "admin"] },
   { href: "/analyzer", labelKey: "nav.analyzer", roles: ["creator", "admin"] },

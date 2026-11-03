@@ -13,12 +13,12 @@ test("creator sees exactly the creator links, in order", () => {
 });
 
 test("company sees exactly the company links, in order", () => {
-  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/shortlists", "/collaborations", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/shortlists", "/team", "/collaborations", "/pricing", "/settings"]);
 });
 
 test("admin sees every link but the party-only pages, including the admin pages", () => {
-  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => !["/onboarding", "/briefs", "/shortlists", "/opportunities", "/portfolio", "/content"].includes(h)));
-  for (const href of ["/admin/users", "/admin/requests", "/admin/verification", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
+  assert.deepEqual(hrefs("admin"), NAV.map((i) => i.href).filter((h) => !["/onboarding", "/briefs", "/shortlists", "/team", "/opportunities", "/portfolio", "/content"].includes(h)));
+  for (const href of ["/admin/users", "/admin/requests", "/admin/verification", "/admin/taxonomy", "/admin/promo-codes", "/admin/violations", "/admin/system"]) {
     assert.ok(hrefs("admin").includes(href), href);
   }
 });

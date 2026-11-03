@@ -1,34 +1,44 @@
-# Company representatives: permissions (2026-11-02)
+# Company representatives: permissions (updated 2026-11-03)
 
-## What exists
+## Model
 
-- **Account:** a representative is a normal `company` account (no new role), with its own login.
-- **Link:** `company_members` (0024) links the representative to the company account they represent, with `member_role = 'representative'`.
-- **Creating the link:**
-  - Before 0032, only an admin could create it, from `/admin/requests`.
-  - With 0032, approving a `representative` verification case also creates it, through `verification_transition('approve', …, p_company)`. The admin must choose an existing company account; a case cannot be linked to its own account or to a non-company account.
-- **Evidence collected:**
-  - legal name, phone, the company named by the applicant, and job title;
-  - a required **authorization letter from the company**, plus an optional ID.
+- **Account:** a representative is a normal `company` account with its own login. There is no new role.
+- **Link:** `company_members` (0024) links the representative to the company they represent. It is created by:
+  - a verification reviewer approving a `representative` application (0032), which requires an authorization letter;
+  - an admin, from `/admin/requests`.
+- **Least privilege:** a link alone grants **nothing**. The company account grants scopes one by one at `/team` (migration 0034, not applied).
 
-## What a link grants
+## Scopes
 
-**Nothing beyond the link itself.** A linked representative:
-- sees which company they represent;
-- cannot read that company's deals, briefs, collaborations, shortlists or notifications. Every one of those is scoped by `company_id = auth.uid()` in RLS and by the session's own id in server actions;
-- acts only as their own company account.
+| Scope | Status | Enforced where |
+|---|---|---|
+| `company.view`: see the company's public details | Available | Server (`representationOf`, `/team`) |
+| `company.edit`: edit name, industry, website, description | Available | Server (`saveRepresentedCompany`). Same validation as the company itself, including the §6 contact-detail refusal. |
+| `discovery.view`: search and compare creators (Discover, G) | Available | Database (`creator_directory()` returns nothing without it) and the Discover page |
+| `briefs.view`: read the company's briefs | Available | Database (RLS `briefs_select`) |
+| `briefs.create`, `invitations.prepare`, `collaborations.access`, `deals.view` | Not built | Refused by `company_set_scope` (`perm:not_available`) |
+| `invitations.send`, `deals.financial`, `members.manage` | **Approval required** (financial or contractual effect) | Refused by `company_set_scope` (`perm:approval_required`) until the owner decides |
 
-This is deliberate. Giving representatives scoped access (for example "send offers" or "view deals") needs the permission model in `docs/GREEN_LIGHT_VERIFICATION_AND_ONBOARDING.md` §5.2–5.4:
-- `companies` and `company_members.scopes`;
-- every company query re-scoped from the owner's profile id to the organisation.
+Only scopes the product enforces can be granted, so no checkbox promises something that does nothing.
 
-The design document calls that the highest-regression change in the roadmap. It is an owner decision (PENDING_OWNER_DECISIONS item 9), so the scopes are **not built**.
+## Rules
 
-## Guarantees tested
+| Rule | Implementation |
+|---|---|
+| Only the company account (or an admin) grants or revokes | `company_set_scope()` checks the actor is `company_members.company_id`. A representative, another company or a creator is refused. |
+| No cross-company access | Every check joins scope → link → company. A scope is valid only for the company that granted it. Re-linking clears all scopes (`cleared_on_relink`). |
+| Revocation is immediate | Scopes are read fresh on every request and in every RLS check; nothing is cached. |
+| Auditable | `company_permission_events` (append-only) records grant, revoke and relink with actor and time. The company sees it at `/team`. |
+| A banned company or member loses everything | `member_has_scope` requires both accounts unbanned. |
+| No client writes | Scope tables are SELECT-only for `authenticated` (own rows); writes go through the service-role function. |
 
-`supabase/tests/verification_test.sql`:
-- a representative is linked only by admin approval, and only to a real company account;
-- another account cannot read the case;
-- clients cannot write cases or call the transition.
+## Tests
 
-The existing collaboration, notification and shortlist tests cover cross-company isolation of the data a representative must not see.
+- `supabase/tests/company_permissions_test.sql`: least privilege, owner-only grants, gated and unbuilt scopes refused, RLS and directory enforcement, cross-company isolation, immediate revocation, relink clearing, audit rows.
+- `src/lib/company-access.test.ts`: the catalogue matches the SQL; server-side actor and scope checks.
+
+## Owner decisions still open
+
+1. **Gated scopes:** whether representatives may send invitations, see financial deal data, or manage other representatives, and on what terms.
+2. **Unbuilt scopes:** creating briefs, preparing invitations, collaboration rooms and deal information *on behalf of* the company. Each needs the collaboration functions to accept an acting member and record them, which is a larger change.
+3. **Representatives acting as independent companies:** a representative account can still use company features under its own account, such as its own briefs. Whether that should be blocked is a business decision.

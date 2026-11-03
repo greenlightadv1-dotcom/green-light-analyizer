@@ -64,7 +64,9 @@ test("onboarding writes are role-checked and scoped to the session's own row", (
   const co = body("app/(app)/onboarding/actions.ts", "saveCompanyDetails");
   assert.match(co, /profile\.role !== "company"/);
   assert.match(co, /\.eq\("id", profile\.id\)/);
-  assert.match(co, /maskSensitiveData\(bio\)\.isMasked/, "company description must refuse contact details (§6)");
+  assert.match(co, /parseCompanyDetails\(formData\)/);
+  const details = readFileSync(new URL("company-details.ts", import.meta.url), "utf8");
+  assert.match(details, /maskSensitiveData\(bio\)\.isMasked/, "company description must refuse contact details (§6)");
 });
 
 test("a company with incomplete details cannot send an offer", () => {

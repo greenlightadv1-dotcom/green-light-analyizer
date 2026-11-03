@@ -4,6 +4,9 @@ import { requireRole } from "@/lib/auth";
 import { listCreatorDirectory } from "@/lib/deals/directory";
 import { filterDirectory, hasFreshVerifiedGeo, parseDiscoveryQuery } from "@/lib/discovery";
 import { getTaxonomy } from "@/lib/taxonomy-server";
+import { representationOf } from "@/lib/company-access-server";
+import { T } from "@/components/ui/T";
+import { GlassPanel } from "@/components/ui/GlassPanel";
 import type { DirectoryRow } from "@/lib/g/recommend";
 import type { DiscoverEntry } from "@/components/views/DiscoverView";
 import { createClient } from "@/lib/supabase/server";
@@ -30,6 +33,16 @@ export default async function DiscoverPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const profile = await requireRole("company", "admin");
+  // 0034: a representative searches creators only when the company granted
+  // discovery.view (creator_directory() enforces the same in the database).
+  const rep = await representationOf(profile);
+  if (rep && !rep.scopes.includes("discovery.view")) {
+    return (
+      <GlassPanel className="p-6 text-sm text-fg">
+        <T k="team.discoveryLocked" vars={{ company: rep.companyName }} />
+      </GlassPanel>
+    );
+  }
   const params = await searchParams;
   const rows = (await listCreatorDirectory()) as unknown as DirectoryRow[];
   const taxonomy = await getTaxonomy();

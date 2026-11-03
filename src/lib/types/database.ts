@@ -663,6 +663,8 @@ export type Database = {
       verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "kind">>>;
       verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at" | "capture_method">>;
       taxonomy_terms: Table<import("../taxonomy").TaxonomyTerm & { created_at: string; updated_at: string; updated_by: string | null }, Partial<import("../taxonomy").TaxonomyTerm & { updated_by: string | null }> & { id: string; kind: import("../taxonomy").TermKind; label_en: string; label_ar: string }>;
+      company_member_scopes: Table<{ member_id: string; company_id: string; scope: string; granted_by: string | null; granted_at: string }, { member_id: string; company_id: string; scope: string; granted_by?: string | null }>;
+      company_permission_events: Table<{ id: number; company_id: string; member_id: string; actor_id: string | null; scope: string; action: "grant" | "revoke" | "cleared_on_relink"; created_at: string }, never>;
       verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;
       verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
@@ -710,6 +712,7 @@ export type Database = {
       };
       activation_checkpoint: { Args: { p_hash: string; p_user: string }; Returns: undefined };
       activation_release: { Args: { p_hash: string }; Returns: undefined };
+      company_set_scope: { Args: { p_actor: string; p_member: string; p_scope: string; p_grant: boolean }; Returns: undefined };
       taxonomy_usage: { Args: { p_id: string }; Returns: number };
       taxonomy_delete: { Args: { p_id: string }; Returns: undefined };
       activation_complete: { Args: { p_hash: string; p_user: string; p_alias: string | null }; Returns: string };
