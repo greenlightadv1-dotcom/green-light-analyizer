@@ -1399,3 +1399,35 @@ Not deployed. **Migration 0026 is not applied anywhere.**
 - **Documents:** they live in the private `verification-docs` bucket. Uploads go only to the caller's own editable case, and the type is decided by magic bytes. Admins view documents through 5-minute signed URLs, and each view is logged.
 - **Admin review:** at `/admin/verification`. Approval is a **manual document review**: no face or liveness provider is integrated, and the UI never says "identity verified".
 - **Self-registration:** `/register` is off unless `SELF_SIGNUP_ENABLED=1`, which is an owner decision (it changes §3/§4 and Terms §2). New and existing emails get the same answer, and accounts start `pending_verification`.
+
+## 20. Follow-up gap closure (branch only, 2026-11-03)
+
+Not deployed. **Migrations 0032 (rewritten) and 0033–0037 are not applied anywhere.**
+Details: `docs/ACCOUNT_ACTIVATION_FLOW.md`, `docs/IDENTITY_DOCUMENT_SECURITY.md`, `docs/IMPLEMENTATION_TEST_REPORT.md`, `docs/PRODUCTION_READINESS_REPORT.md`.
+
+- **Account creation (supersedes §19's self-registration):**
+  - The sequence is now Get Started → application (`access_requests` + a `verification_cases` row, `profile_id` NULL) → reviewer approval → a one-time activation link → the account is created.
+  - `/register` and `/auth/confirm` are removed, and nothing calls `signUp`.
+  - Tokens: 32 random bytes; only their SHA-256 is stored (`application_tokens`). A resume link lasts 14 days and lives in an httpOnly cookie. An activation link lasts 48 hours, is single-use, and is claim → checkpoint → complete, so a crash is recoverable.
+  - Supabase Auth's public sign-up must be **off** (owner configuration).
+- **Reviewers:** only admins listed in `verification_reviewers` can see or decide cases. The table is empty by default.
+- **Camera-only identity capture:** a creator needs a selfie, ID front and ID back, captured through `CameraCapture` (getUserMedia → canvas JPEG). There is no file input or gallery, and no fallback. The server rejects non-JPEG and EXIF-bearing images, and the database requires `capture_method = 'camera'`.
+  - This is **not** liveness or face matching.
+  - The Permissions-Policy header now allows the camera only on the capture pages, and the microphone same-origin for G (it was blocked before).
+- **Retention:** `VERIFICATION_RETENTION_DAYS` (unset means never purged). The purge route is not scheduled.
+- **Taxonomy (0033):** `taxonomy_terms` is the source of truth, managed at `/admin/taxonomy`.
+  - It is seeded with the existing ids, plus genres as parents of the games.
+  - Triggers check every id written to profiles and briefs. Deactivating a term never breaks stored data, and a term in use cannot be deleted.
+- **Representative scopes (0034):** a link grants nothing until the company grants a scope at `/team`.
+  - Grantable: `company.view`, `company.edit`, `discovery.view`, `briefs.view`.
+  - Financial or contractual scopes are refused pending an owner decision.
+  - Enforced in RLS, in `creator_directory()` and on the server.
+- **Analytics (0035):** the 50 most recent YouTube uploads are stored for 29 days, giving top content and cadence. A window the sample does not cover reads "not enough data". Engagement and median reach still use the newest 10.
+- **Relay lifecycle (0036):** queued → processing → sent / retryable / permanent, with backoff, a Resend idempotency key per message, and `/admin/relays`.
+- **Official news (0037):** YouTube Official Blog RSS and the Steam news API (developer posts only). Headlines and links only.
+  - Refresh is manual at `/admin/news`; the cron is off and unscheduled.
+  - Headlines appear on the Content plan and in G's DATA.
+- **G:** replies in the language the message is written in, labels recommendations, and gives each metric's source and last update.
+- **Social audit:** `docs/SOCIAL_INTEGRATIONS_AND_SYNC_AUDIT.md`.
+  - Instagram's pinned Graph v19.0 expired on 2026-05-21, so Instagram stays disabled.
+  - Kick now has an official API, which makes §7.3's "no official API" outdated.
