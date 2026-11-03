@@ -23,7 +23,9 @@ const PAGES = [
   ["/preview/content", "content-board"],
   ["/preview/content?view=calendar", "content-calendar"],
   ["/preview/verification", "verification"],
-  ["/register", "register"],
+  ["/preview/apply", "apply"],
+  ["/preview/activate", "activate"],
+  ["/get-started", "get-started"],
 ];
 let pass = 0, fail = 0;
 const check = (ok, label) => { if (ok) pass++; else fail++; console.log(`${ok ? "PASS" : "FAIL"} ${label}`); };
@@ -125,12 +127,15 @@ check(await confirmBox.isVisible(), "saving a G draft asks for confirmation");
 await confirmBox.getByRole("button", { name: "Save", exact: true }).click();
 await page.getByText("This is a preview. Nothing can be saved here.").first().waitFor();
 check(true, "preview refuses the save instead of pretending it worked");
-// Verification: required documents are listed, the drop zone is keyboard
-// reachable, and submitting asks first and needs the consent box.
+// Verification: required documents are listed, a creator's identity images
+// are camera-only (no drop zone, no file picker), and submitting asks first
+// and needs the consent box.
 await page.goto(BASE + "/preview/verification", { waitUntil: "networkidle" });
-check(await page.getByText("Required: ID card (front) or Passport").count() === 1, "missing required document is named");
-check(await page.getByRole("button", { name: "Drag a file here, or choose one" }).count() === 1, "drop zone is a keyboard-reachable control");
-check(await page.getByText("Please upload a clearer photo").count() === 1, "the team's request is shown");
+check(await page.getByText(/Required: .*Live photo of you.*ID card \(front\)/).count() === 1, "missing required images are named");
+check(await page.getByRole("button", { name: "Drag a file here, or choose one" }).count() === 0, "no drop zone for identity images");
+check(await page.locator('input[type="file"]').count() === 0, "no file picker for identity images");
+check(await page.locator("[data-camera-slot]").count() === 3, "three camera capture slots");
+check(await page.getByText("Please retake the photo of the front").count() === 1, "the team's request is shown");
 check(await page.getByText("not a biometric identity check").count() === 0, "no approval wording before approval");
 await page.getByRole("button", { name: "Submit for review" }).click();
 check(await page.getByRole("dialog", { name: "Submit for review?" }).count() === 0, "submit is blocked until the consent box is ticked");
@@ -138,10 +143,19 @@ await page.getByLabel(/I confirm these details/).check();
 await page.getByRole("button", { name: "Submit for review" }).click();
 check(await page.getByRole("dialog", { name: "Submit for review?" }).isVisible(), "submitting asks for confirmation");
 await page.keyboard.press("Escape");
-// Self-registration is off by default and points to the application form.
+// Self-registration no longer exists: /register lands on Get Started.
 await page.goto(BASE + "/register?journey=company", { waitUntil: "networkidle" });
-check(await page.getByText("Online registration isn't open yet").count() === 1, "registration is off unless enabled");
-check((await page.getByRole("link", { name: "Apply instead" }).getAttribute("href")) === "/get-started/company", "apply link keeps the journey");
+check(new URL(page.url()).pathname === "/get-started", "/register redirects to Get Started (no account before approval)");
+// Media Kit content performance (0035): source and sync time shown, hidden likes never 0%,
+// uncovered windows say "Not enough data", other platforms explain why there is nothing.
+await page.goto(BASE + "/preview/media-kit", { waitUntil: "networkidle" });
+const panel = page.locator("[data-content-panel]").first();
+check(await panel.isVisible(), "content performance panel renders for YouTube");
+check((await panel.innerText()).includes("YouTube Data API"), "panel names its source");
+check((await panel.innerText()).includes("likes hidden"), "hidden likes are shown as hidden");
+check(!(await panel.innerText()).includes("0% engagement"), "hidden likes are never shown as 0%");
+check((await panel.innerText()).includes("Not enough data"), "an uncovered 90-day window is not guessed");
+check(await page.getByText(/Not available for (Twitch|Kick|Instagram)/).count() >= 1, "non-YouTube platforms explain why there is no per-post data");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
