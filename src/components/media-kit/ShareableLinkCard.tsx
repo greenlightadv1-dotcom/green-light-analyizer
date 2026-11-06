@@ -29,10 +29,10 @@ export function ShareableLinkCard({ slug }: { slug: string | null }) {
             </code>
             <CopyButton value={shareableProfileUrl(slug)} />
           </div>
-          <p className="mt-2 text-xs text-fg/40">{t("mediaKit.shareableLinkNote")}</p>
+          <p className="mt-2 text-xs text-fg-muted">{t("mediaKit.shareableLinkNote")}</p>
         </>
       ) : (
-        <p className="mt-2 text-xs text-fg/40">{t("mediaKit.shareableLinkPending")}</p>
+        <p className="mt-2 text-xs text-fg-muted">{t("mediaKit.shareableLinkPending")}</p>
       )}
     </GlassPanel>
   );

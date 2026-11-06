@@ -54,7 +54,7 @@ export function NicheDetector({
               {currentTags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-md border border-fg/10 bg-fg/5 px-1.5 py-0.5 text-[10px] text-fg/50"
+                  className="rounded-md border border-fg/10 bg-fg/5 px-1.5 py-0.5 text-[10px] text-fg-muted"
                 >
                   {tag}
                 </span>
@@ -63,7 +63,7 @@ export function NicheDetector({
           ) : null}
         </div>
       ) : (
-        <p className="mt-2 text-xs text-fg/40">{t("mediaKit.notDetectedYet")}</p>
+        <p className="mt-2 text-xs text-fg-muted">{t("mediaKit.notDetectedYet")}</p>
       )}
 
       <form action={formAction} className="mt-3">
@@ -73,7 +73,7 @@ export function NicheDetector({
 
       {state.error ? (
         <div className="mt-2.5">
-          <Alert>{state.error}</Alert>
+          <Alert>{t(state.error)}</Alert>
         </div>
       ) : null}
       {state.result ? (
@@ -82,7 +82,7 @@ export function NicheDetector({
         </p>
       ) : null}
 
-      <p className="mt-2.5 text-[11px] leading-relaxed text-fg/30">
+      <p className="mt-2.5 text-[11px] leading-relaxed text-fg-muted">
         {t("mediaKit.nicheFooterNote")}
       </p>
     </div>

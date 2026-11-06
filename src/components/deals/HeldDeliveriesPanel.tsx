@@ -82,7 +82,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
 
       {open ? (
         <div id={listId} className="mt-4 border-t border-fg/8 pt-4">
-          <p className="text-xs leading-relaxed text-fg/50">{t("inbox.heldIntro")}</p>
+          <p className="text-xs leading-relaxed text-fg-muted">{t("inbox.heldIntro")}</p>
 
           <ul className="mt-4 space-y-2">
             {held.items.map((item) => (
@@ -93,10 +93,10 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-fg/85">
                     {item.subject || (
-                      <span className="text-fg/40">{t("inbox.heldNoSubject")}</span>
+                      <span className="text-fg-muted">{t("inbox.heldNoSubject")}</span>
                     )}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-fg/40">
+                  <p className="mt-0.5 truncate text-xs text-fg-muted">
                     {item.sender} · {formatDate(item.receivedAt)}
                   </p>
                   {item.subjectRedacted ? (
@@ -105,7 +105,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
                     </p>
                   ) : null}
                 </div>
-                <span className="shrink-0 rounded-full border border-fg/12 px-2.5 py-0.5 text-[11px] text-fg/55">
+                <span className="shrink-0 rounded-full border border-fg/12 px-2.5 py-0.5 text-[11px] text-fg-muted">
                   {t(REASON_KEYS[item.reason])}
                 </span>
               </li>
@@ -113,7 +113,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
           </ul>
 
           {held.truncated ? (
-            <p className="mt-3 text-[11px] text-fg/35">
+            <p className="mt-3 text-[11px] text-fg-muted">
               {t("inbox.heldTruncated", { count })}
             </p>
           ) : null}

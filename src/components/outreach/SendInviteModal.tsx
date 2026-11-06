@@ -248,13 +248,13 @@ export function SendInviteModal() {
                   <h2 id={titleId} className="text-base font-semibold text-fg">
                     {t("outreach.modalTitle")}
                   </h2>
-                  <p className="mt-0.5 text-xs text-fg/40">{t("outreach.modalDescription")}</p>
+                  <p className="mt-0.5 text-xs text-fg-muted">{t("outreach.modalDescription")}</p>
                 </div>
                 <button
                   type="button"
                   onClick={close}
                   aria-label={t("common.close")}
-                  className="shrink-0 rounded-lg p-1.5 text-fg/45 transition hover:bg-fg/10 hover:text-fg"
+                  className="shrink-0 rounded-lg p-1.5 text-fg-muted transition hover:bg-fg/10 hover:text-fg"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4" aria-hidden>
                     <path d="M6 6l12 12M18 6L6 18" />

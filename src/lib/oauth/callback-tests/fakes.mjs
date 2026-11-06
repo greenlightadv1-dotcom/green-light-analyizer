@@ -6,6 +6,9 @@
 
 export const PROFILE_ID = "creator-1";
 
+/** The session requireProfile() returns; a test may swap it per case. */
+export const DEFAULT_PROFILE = { id: PROFILE_ID, role: "creator", subscription_plan: "Pro" };
+
 /**
  * @type {{
  *   saved: unknown[],
@@ -14,9 +17,18 @@ export const PROFILE_ID = "creator-1";
  *   deleted: { creatorId: string, platform: string }[],
  *   connection: Record<string, unknown> | null,
  *   stateValid: boolean,
+ *   profile: Record<string, unknown>,
  * }}
  */
-export const state = { saved: [], upserts: [], updates: [], deleted: [], connection: null, stateValid: true };
+export const state = {
+  saved: [],
+  upserts: [],
+  updates: [],
+  deleted: [],
+  connection: null,
+  stateValid: true,
+  profile: DEFAULT_PROFILE,
+};
 
 export function reset() {
   state.saved = [];
@@ -25,16 +37,20 @@ export function reset() {
   state.deleted = [];
   state.connection = null;
   state.stateValid = true;
+  state.profile = DEFAULT_PROFILE;
 }
 
 // @/lib/auth
 export async function requireProfile() {
-  return { id: PROFILE_ID, role: "creator", subscription_plan: "Pro" };
+  return state.profile;
 }
 
 // @/lib/oauth/state
 export function verifyOAuthState() {
   return state.stateValid;
+}
+export function signOAuthState(profileId) {
+  return `signed-state-for-${profileId}`;
 }
 
 // @/lib/oauth/tokens

@@ -30,7 +30,7 @@ export function CountryShareList({
       </div>
 
       {!shares?.length ? (
-        <p className="mt-2.5 text-xs leading-relaxed text-fg/40">
+        <p className="mt-2.5 text-xs leading-relaxed text-fg-muted">
           {emptyHint}
         </p>
       ) : (

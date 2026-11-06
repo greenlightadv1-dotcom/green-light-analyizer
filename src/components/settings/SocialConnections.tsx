@@ -15,7 +15,8 @@ import {
   verificationAvailability,
 } from "@/lib/media-kit/platforms";
 import { REAL_OAUTH_PLATFORMS } from "@/lib/oauth/platforms";
-import type { OAuthPlatform, SubscriptionPlan } from "@/lib/types/database";
+import type { OAuthPlatform } from "@/lib/types/database";
+import { IntegrationStatusBadge } from "@/components/media-kit/IntegrationStatusBadge";
 
 const ICON_CLASSNAMES: Record<OAuthPlatform, string> = {
   youtube: "bg-[#FF0000]/10 text-[#FF0000]",
@@ -47,7 +48,7 @@ function StatusBadge({ connected }: { connected: boolean }) {
       {t("common.connected")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-fg/5 px-2.5 py-1 text-[11px] font-medium text-fg/45">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-fg/5 px-2.5 py-1 text-[11px] font-medium text-fg-muted">
       <span className="h-1.5 w-1.5 rounded-full bg-fg/25" aria-hidden />
       {t("common.notConnected")}
     </span>
@@ -77,18 +78,16 @@ function SyncButton({ demo }: { demo: boolean }) {
 function ConnectionRow({
   platform,
   connected,
-  plan,
   configured,
   demo,
 }: {
   platform: OAuthPlatform;
   connected: boolean;
-  plan: SubscriptionPlan;
   configured: boolean;
   demo: boolean;
 }) {
   const { t } = useTranslation();
-  const availability = verificationAvailability(platform, plan);
+  const availability = verificationAvailability(platform);
   const support = VERIFICATION_SUPPORT[platform];
   const [syncState, syncAction] = useActionState<SyncVerifiedGeoState, FormData>(
     syncVerifiedGeo,
@@ -109,6 +108,9 @@ function ConnectionRow({
             {PLATFORM_LABELS[platform]}
           </span>
           <StatusBadge connected={connected} />
+          {!connected && availability === "in-development" ? (
+            <IntegrationStatusBadge status="in_development" />
+          ) : null}
         </div>
 
         {/*
@@ -138,7 +140,7 @@ function ConnectionRow({
 
       {connected ? (
         <div className="mt-3 border-t border-fg/8 pt-3">
-          <p className="text-xs leading-relaxed text-fg/55">
+          <p className="text-xs leading-relaxed text-fg-muted">
             {t("mediaKit.syncingFromSource", { source: support.source })}
           </p>
 
@@ -152,7 +154,7 @@ function ConnectionRow({
               <input type="hidden" name="platform" value={platform} />
               <button
                 type={demo ? "button" : "submit"}
-                className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
+                className="text-xs text-fg-muted underline underline-offset-4 transition hover:text-fg/80"
               >
                 {t("common.disconnect")}
               </button>
@@ -161,7 +163,7 @@ function ConnectionRow({
 
           {syncState.error ? (
             <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">
-              {syncState.error}
+              {t(syncState.error)}
             </p>
           ) : null}
           {syncState.synced ? (
@@ -170,13 +172,13 @@ function ConnectionRow({
             </p>
           ) : null}
 
-          <p className="mt-2 text-[11px] leading-relaxed text-fg/30">
+          <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
             {t("mediaKit.disconnectClearsNote")}
           </p>
         </div>
-      ) : availability === "needs-upgrade" ? (
-        <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg/45">
-          {t("mediaKit.includedProElite", { source: support.source })}
+      ) : availability === "in-development" ? (
+        <p className="mt-3 border-t border-fg/8 pt-3 text-xs leading-relaxed text-fg-muted">
+          {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       ) : !configured ? (
         <p className="mt-3 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
@@ -201,12 +203,10 @@ function ConnectionRow({
  */
 export function SocialConnections({
   connections = {},
-  plan = "Starter",
   configured = {},
   demo = false,
 }: {
   connections?: Partial<Record<OAuthPlatform, boolean>>;
-  plan?: SubscriptionPlan;
   /** Whether each platform's OAuth app is actually registered on this env. */
   configured?: Partial<Record<OAuthPlatform, boolean>>;
   /** /preview renders the shell with no session — nothing may navigate or post. */
@@ -217,7 +217,7 @@ export function SocialConnections({
   return (
     <GlassPanel as="section" className="p-6">
       <h2 className="text-sm font-semibold text-fg">{t("settings.socialTitle")}</h2>
-      <p className="mt-1.5 text-xs leading-relaxed text-fg/50">
+      <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
         {t("settings.socialNote")}
       </p>
 
@@ -227,14 +227,13 @@ export function SocialConnections({
             key={platform}
             platform={platform}
             connected={connections[platform] === true}
-            plan={plan}
             configured={configured[platform] === true}
             demo={demo}
           />
         ))}
       </ul>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-fg/30">
+      <p className="mt-4 text-[11px] leading-relaxed text-fg-muted">
         {t("settings.socialManageNote")}
       </p>
     </GlassPanel>

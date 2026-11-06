@@ -29,7 +29,7 @@ export function OAuthPlaceholderCard() {
         </span>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-fg/40">
+      <p className="mt-2 text-xs leading-relaxed text-fg-muted">
         {t("mediaKit.morePlatformsBody")}
       </p>
 
@@ -37,7 +37,7 @@ export function OAuthPlaceholderCard() {
         {OAUTH_PLACEHOLDER_PLATFORMS.map((platform) => (
           <li
             key={platform}
-            className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/45"
+            className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg-muted"
           >
             {OAUTH_PLACEHOLDER_LABELS[platform]}
           </li>

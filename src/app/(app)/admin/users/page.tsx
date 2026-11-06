@@ -3,8 +3,11 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { CreateUserForm } from "./CreateUserForm";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { roleForJourney } from "@/lib/access-requests";
+import { CreateUserForm, type CreateUserPrefill } from "./CreateUserForm";
 import { setBan, updateProfile } from "./actions";
+import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 
 export const metadata: Metadata = { title: "Accounts" };
 
@@ -28,8 +31,40 @@ const unbanButtonClass =
  * the gap where an account was frozen at whatever was set on creation, with
  * no way to apply a plan upgrade confirmed via Discord (§4.3).
  */
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ request?: string }>;
+}) {
   const admin = await requireRole("admin");
+
+  // ?request=<id>: prefill from a pending Get Started application. Read with
+  // the service role (access_requests has no client policies), after the
+  // admin check above.
+  const { request: requestId } = await searchParams;
+  let prefill: CreateUserPrefill | null = null;
+  if (requestId && /^[0-9a-f-]{36}$/i.test(requestId)) {
+    const { data: req } = await createAdminClient()
+      .from("access_requests")
+      .select("id, journey, full_name, email, company_name, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (req && req.status === "pending") {
+      const role = roleForJourney(req.journey);
+      prefill = {
+        requestId: req.id,
+        // A company account is named after the company; a creator or a
+        // representative after the person.
+        full_name: req.journey === "company" && req.company_name ? req.company_name : req.full_name,
+        email: req.email,
+        role,
+        note:
+          req.journey === "company_representative"
+            ? `representative of ${req.company_name ?? "a company"} — link them under Applications after creating`
+            : req.journey,
+      };
+    }
+  }
 
   const supabase = await createClient();
   const { data: profiles } = await supabase
@@ -49,7 +84,7 @@ export default async function AdminUsersPage() {
 
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <CreateUserForm />
+          <CreateUserForm prefill={prefill} />
         </div>
 
         <GlassPanel className="overflow-hidden lg:col-span-3">
@@ -61,7 +96,7 @@ export default async function AdminUsersPage() {
                     <span className="block truncate text-sm text-fg">
                       {p.full_name}
                     </span>
-                    <span className="block truncate text-xs text-fg/40">
+                    <span className="block truncate text-xs text-fg-muted">
                       {p.primary_email}
                     </span>
                   </div>
@@ -90,10 +125,10 @@ export default async function AdminUsersPage() {
                 </div>
 
                 {p.id === admin.id ? (
-                  <p className="mt-2 text-xs text-fg/30">This is you.</p>
+                  <p className="mt-2 text-xs text-fg-muted">This is you.</p>
                 ) : (
                   <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-fg/45 transition select-none hover:text-fg/80">
+                    <summary className="cursor-pointer text-xs text-fg-muted transition select-none hover:text-fg/80">
                       Manage
                     </summary>
 
@@ -105,8 +140,8 @@ export default async function AdminUsersPage() {
                         <input type="hidden" name="profile_id" value={p.id} />
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
-                            Plan
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
+                            Legacy plan (no effect on access)
                           </label>
                           <select
                             name="subscription_plan"
@@ -120,7 +155,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Region
                           </label>
                           <select
@@ -136,7 +171,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Role
                           </label>
                           <select
@@ -151,7 +186,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Renew / extend
                           </label>
                           <select
@@ -168,7 +203,7 @@ export default async function AdminUsersPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                          <label className="block text-[10px] tracking-wide text-fg-muted uppercase">
                             Custom days
                           </label>
                           <input
@@ -185,7 +220,7 @@ export default async function AdminUsersPage() {
                         </button>
                       </form>
 
-                      <p className="text-[11px] leading-relaxed text-fg/35">
+                      <p className="text-[11px] leading-relaxed text-fg-muted">
                         Changing role does not move this account&apos;s
                         existing deals or media kits — use this to correct a
                         miscreated account, not to reassign an active one.
@@ -197,51 +232,53 @@ export default async function AdminUsersPage() {
 
                       <div className="border-t border-fg/8 pt-3.5">
                         {p.banned_at ? (
-                          <form
-                            action={setBan}
-                            className="flex flex-wrap items-center gap-3"
-                          >
-                            <input
-                              type="hidden"
-                              name="profile_id"
-                              value={p.id}
-                            />
-                            <input type="hidden" name="action" value="unban" />
-                            <p className="min-w-0 flex-1 text-xs text-fg/50">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <p className="min-w-0 flex-1 text-xs text-fg-muted">
                               Banned{" "}
                               {new Date(p.banned_at).toLocaleDateString()} —{" "}
                               {p.banned_reason}
                             </p>
-                            <button type="submit" className={unbanButtonClass}>
-                              Unban
-                            </button>
-                          </form>
+                            <ConfirmActionForm
+                              action={setBan}
+                              hidden={{ profile_id: p.id, action: "unban" }}
+                              trigger={{ labelKey: "admin.users.unbanTrigger" }}
+                              triggerClassName={unbanButtonClass}
+                              titleKey="admin.users.unbanTitle"
+                              bodyKey="admin.users.unbanBody"
+                              confirmKey="admin.users.unbanConfirm"
+                              successKey="admin.users.unbanDone"
+                              className="flex flex-wrap items-center gap-2"
+                            />
+                          </div>
                         ) : (
-                          <form
+                          <ConfirmActionForm
                             action={setBan}
+                            hidden={{ profile_id: p.id, action: "ban" }}
+                            trigger={{ labelKey: "admin.users.banTrigger" }}
+                            triggerClassName={banButtonClass}
+                            titleKey="admin.users.banTitle"
+                            bodyKey="admin.users.banBody"
+                            confirmKey="admin.users.banConfirm"
+                            successKey="admin.users.banDone"
+                            tone="danger"
                             className="flex flex-wrap items-end gap-3"
                           >
-                            <input
-                              type="hidden"
-                              name="profile_id"
-                              value={p.id}
-                            />
-                            <input type="hidden" name="action" value="ban" />
                             <div className="min-w-[220px] flex-1 space-y-1">
-                              <label className="block text-[10px] tracking-wide text-fg/40 uppercase">
+                              <label
+                                htmlFor={`ban-reason-${p.id}`}
+                                className="block text-[10px] tracking-wide text-fg-muted uppercase"
+                              >
                                 Ban reason
                               </label>
                               <input
+                                id={`ban-reason-${p.id}`}
                                 name="reason"
                                 required
                                 placeholder="e.g. confirmed fraud, Discord report"
                                 className={inputClass}
                               />
                             </div>
-                            <button type="submit" className={banButtonClass}>
-                              Ban
-                            </button>
-                          </form>
+                          </ConfirmActionForm>
                         )}
                       </div>
                     </div>
@@ -250,7 +287,7 @@ export default async function AdminUsersPage() {
               </li>
             ))}
             {!profiles?.length ? (
-              <li className="px-5 py-8 text-sm text-fg/40">
+              <li className="px-5 py-8 text-sm text-fg-muted">
                 No accounts yet.
               </li>
             ) : null}

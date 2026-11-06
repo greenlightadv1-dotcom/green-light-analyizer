@@ -3,10 +3,15 @@
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { CountryShareList } from "@/components/media-kit/CountryShareList";
 import { CreatorProfileCard } from "@/components/media-kit/CreatorProfileCard";
+import { ClassificationForm } from "@/components/onboarding/ClassificationForm";
+import { DocumentsUpload } from "@/components/uploads/DocumentsUpload";
 import { PlatformCard } from "@/components/media-kit/PlatformCard";
 import { ShareableLinkCard } from "@/components/media-kit/ShareableLinkCard";
 import { VerificationPanel } from "@/components/media-kit/VerificationPanel";
 import { YoutubeSyncPanel } from "@/components/media-kit/YoutubeSyncPanel";
+import { ContentPerformancePanel } from "@/components/media-kit/ContentPerformancePanel";
+import type { KitVideo } from "@/lib/media-kit/queries";
+import type { MediaKitSnapshot } from "@/lib/types/database";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { Alert } from "@/components/ui/Alert";
@@ -15,34 +20,40 @@ import { useTranslation } from "@/components/LocaleProvider";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 import { kitByPlatform, type MediaKit } from "@/lib/media-kit/helpers";
 import {
+  MAX_CONNECTIONS,
   PLATFORMS,
   PLATFORM_LABELS,
-  canVerifyAudience,
   canAddConnection,
-  maxConnections,
 } from "@/lib/media-kit/platforms";
 import type { Profile } from "@/lib/auth";
-import type { CountryShare, Platform, SubscriptionPlan } from "@/lib/types/database";
+import type { CountryShare, Platform } from "@/lib/types/database";
 import { isVerifiedGeoFresh } from "@/lib/oauth/youtube-freshness";
 
 /** Media kit (§7), presentation only. Shared with /preview. */
 export function MediaKitView({
   profile,
   kits,
-  plan,
+  snapshots = [],
+  videos = [],
   oauthConnected = null,
   oauthError = null,
+  demo = false,
 }: {
   profile: Profile;
   kits: MediaKit[];
-  plan: SubscriptionPlan;
+  /** The creator's own growth snapshots (0025); empty means no growth to show. */
+  snapshots?: MediaKitSnapshot[];
+  /** Recent YouTube uploads from the last sync (0035). */
+  videos?: KitVideo[];
+  /** Preview: the classification form and document upload are inert. */
+  demo?: boolean;
   /** Set right after a successful /api/oauth/[platform]/callback redirect. */
   oauthConnected?: string | null;
   oauthError?: string | null;
 }) {
   const { t } = useTranslation();
   const byPlatform = kitByPlatform(kits);
-  const limit = maxConnections(plan);
+  const limit = MAX_CONNECTIONS;
   const verifiedCount = kits.filter((k) => isVerifiedGeoFresh(k)).length;
 
   return (
@@ -78,38 +89,56 @@ export function MediaKitView({
         <ShareableLinkCard slug={profile.shareable_slug} />
       </div>
 
+      {/* Feature 3: the controlled classification Discovery and G filter on. */}
+      <GlassPanel as="section" className="mb-4 p-5 sm:p-6">
+        <h2 className="text-sm font-semibold text-fg">{t("onboarding.step.classification.title")}</h2>
+        <p className="mt-1 mb-4 text-sm text-fg/60">{t("onboarding.step.classification.body")}</p>
+        <ClassificationForm
+          demo={demo}
+          initial={{
+            categories: profile.creator_categories ?? [],
+            games: profile.creator_games ?? [],
+            tags: profile.creator_tags ?? [],
+            formats: profile.content_formats ?? [],
+          }}
+        />
+        <details className="mt-6 border-t border-fg/10 pt-4">
+          <summary className="cursor-pointer text-sm font-semibold text-fg">{t("onboarding.documentsTitle")}</summary>
+          <p className="mt-1 mb-4 text-sm text-fg/60">{t("onboarding.documentsBody")}</p>
+          <DocumentsUpload demo={demo} />
+        </details>
+      </GlassPanel>
+
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.platforms")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
-            {kits.length} <span className="text-sm text-fg/35">/ {limit}</span>
+            {kits.length} <span className="text-sm text-fg-muted">/ {limit}</span>
           </p>
-          <p className="mt-2 text-xs text-fg/40">
-            {t("mediaKit.planLabel", { plan })}{" "}
-            {canAddConnection(plan, kits.length)
+          <p className="mt-2 text-xs text-fg-muted">
+            {t("mediaKit.planLabel")}{" "}
+            {canAddConnection(kits.length)
               ? t("mediaKit.canConnectMore")
-              : t("mediaKit.upgradeForMore")}
+              : t("mediaKit.allConnectionsUsed")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.verifiedAudiences")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
             {verifiedCount}
           </p>
-          <p className="mt-2 text-xs text-fg/40">
-            {canVerifyAudience(plan)
-              ? t("mediaKit.verifiedIncluded")
-              : t("mediaKit.verifiedProFeature")}
+          <p className="mt-2 text-xs text-fg-muted">
+            {t("mediaKit.verifiedIncluded")}
           </p>
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg/45 uppercase">
+          <p className="text-xs tracking-wide text-fg-muted uppercase">
             {t("mediaKit.pricingImpact")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-fg/60">
@@ -124,7 +153,7 @@ export function MediaKitView({
         {PLATFORMS.map((platform) => {
           const kit = byPlatform.get(platform) ?? null;
           const isNew = !kit;
-          const blocked = isNew && !canAddConnection(plan, kits.length);
+          const blocked = isNew && !canAddConnection(kits.length);
 
           return (
             <div key={platform} className="space-y-3">
@@ -133,7 +162,6 @@ export function MediaKitView({
                 kit={kit}
                 locked={blocked}
                 lockReason={t("mediaKit.lockReason", {
-                  plan,
                   limit,
                   platform: PLATFORM_LABELS[platform],
                 })}
@@ -164,13 +192,17 @@ export function MediaKitView({
 
                   <VerificationPanel
                     platform={platform}
-                    plan={plan}
                     connected={kit.analytics_oauth_connected === true}
                   />
 
                   {platform === "youtube" ? (
-                    <YoutubeSyncPanel kit={kit} />
-                  ) : null}
+                    <>
+                      <YoutubeSyncPanel kit={kit} snapshots={snapshots.filter((s) => s.media_kit_id === kit.id)} />
+                      <ContentPerformancePanel videos={videos.filter((v) => v.media_kit_id === kit.id)} complete={kit.recent_videos_complete === true} />
+                    </>
+                  ) : (
+                    <ContentPerformancePanel unavailablePlatform={platform} videos={[]} complete={false} />
+                  )}
 
                   {platform === "instagram" &&
                   kit.analytics_oauth_connected === true ? (
@@ -189,7 +221,7 @@ export function MediaKitView({
         stored. Flagged rather than silently widened — adding a platform is a
         product decision.
       */}
-      <p className="mt-6 text-xs leading-relaxed text-fg/30">
+      <p className="mt-6 text-xs leading-relaxed text-fg-muted">
         {t("mediaKit.tiktokNote")}
       </p>
 

@@ -68,7 +68,6 @@ export function InboxView({
       {chats.length === 0 ? (
         <EmptyState
           title={t("inbox.noRoomsTitle")}
-          spec="§5, §6.2"
           body={t("inbox.noRoomsBody")}
         />
       ) : (
@@ -103,7 +102,7 @@ export function InboxView({
             })}
 
             {spamCount > 0 ? (
-              <label className="ms-auto flex items-center gap-1.5 text-xs text-fg/50">
+              <label className="ms-auto flex items-center gap-1.5 text-xs text-fg-muted">
                 <input
                   type="checkbox"
                   checked={hideSpam}
@@ -137,7 +136,7 @@ export function InboxView({
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-0.5 text-xs text-fg/40">
+                    <p className="mt-0.5 text-xs text-fg-muted">
                       {chat.sponsorship_type?.replace(/_/g, " ") ?? t("inbox.unspecifiedDeliverable")}
                       {chat.target_countries?.length
                         ? ` · ${t("inbox.targeting", { countries: chat.target_countries.join(", ") })}`
@@ -155,7 +154,7 @@ export function InboxView({
             ))}
 
             {visible.length === 0 ? (
-              <p className="py-8 text-center text-sm text-fg/40">{t("inbox.noneMatchFilter")}</p>
+              <p className="py-8 text-center text-sm text-fg-muted">{t("inbox.noneMatchFilter")}</p>
             ) : null}
           </div>
         </>

@@ -54,20 +54,20 @@ export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
         {hasStats ? (
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.followers")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.followers")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.subscriber_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-fg/45">{t("mediaKit.posts")}</dt>
+              <dt className="text-xs text-fg-muted">{t("mediaKit.posts")}</dt>
               <dd className="text-sm text-fg tabular-nums">
                 {kit.media_count?.toLocaleString("en-US") ?? "—"}
               </dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-2 text-xs leading-relaxed text-fg/40">
+          <p className="mt-2 text-xs leading-relaxed text-fg-muted">
             {t("mediaKit.notSyncedYet")}
           </p>
         )}
@@ -78,7 +78,7 @@ export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
 
         {state.error ? (
           <div className="mt-2.5">
-            <Alert>{state.error}</Alert>
+            <Alert>{t(state.error)}</Alert>
           </div>
         ) : null}
         {state.synced ? (

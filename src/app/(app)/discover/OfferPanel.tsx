@@ -108,7 +108,7 @@ export function OfferPanel({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-xs text-fg/40 hover:text-fg/70"
+          className="text-xs text-fg-muted hover:text-fg/70"
         >
           Cancel
         </button>
@@ -194,18 +194,18 @@ export function OfferPanel({
 
           <p className="text-lg font-semibold text-fg tabular-nums">
             ${r.recommended_price_usd.toLocaleString("en-US")}{" "}
-            <span className="text-xs font-normal text-fg/45">
+            <span className="text-xs font-normal text-fg-muted">
               fair range ${r.price_range_usd.low.toLocaleString("en-US")}–$
               {r.price_range_usd.high.toLocaleString("en-US")}
             </span>
           </p>
 
-          <p className="text-xs leading-relaxed text-fg/55">
+          <p className="text-xs leading-relaxed text-fg-muted">
             {r.reasoning}
           </p>
 
           {r.engine === "heuristic" ? (
-            <p className="text-[11px] leading-relaxed text-fg/35">
+            <p className="text-[11px] leading-relaxed text-fg-muted">
               Rule-based estimate — the AI engine could not be reached, so
               this is arithmetic on reach and category rather than an AI
               reading of the offer.

@@ -83,7 +83,7 @@ export function DealRoom({
     <GlassPanel className="flex h-[calc(100vh-16rem)] min-h-96 flex-col overflow-hidden">
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-fg/35">
+          <p className="py-10 text-center text-sm text-fg-muted">
             {t("inbox.noMessagesYet")}
           </p>
         ) : (
@@ -120,7 +120,7 @@ export function DealRoom({
                   </p>
                   <div className="mt-1 flex items-center gap-2">
                     <span
-                      className={`text-[10px] ${system ? "text-white/35" : "text-fg/35"}`}
+                      className={`text-[10px] ${system ? "text-white/35" : "text-fg-muted"}`}
                     >
                       {formatTime(message.created_at)}
                     </span>

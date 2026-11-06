@@ -79,7 +79,7 @@ export function DirectReplyPanel({
   return (
     <GlassPanel className="p-5">
       <h2 className="text-sm font-semibold text-fg">{t("inbox.directReply")}</h2>
-      <p className="mt-1.5 text-xs leading-relaxed text-fg/45">
+      <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
         {t("inbox.directReplyIntro", { sender: senderEmail })}
       </p>
 
@@ -110,7 +110,7 @@ export function DirectReplyPanel({
 
         {state.error ? (
           <p role="alert" className="text-xs text-red-700 dark:text-red-300">
-            {state.error}
+            {t(state.error)}
           </p>
         ) : null}
 
@@ -123,7 +123,7 @@ export function DirectReplyPanel({
           </p>
         ) : null}
 
-        <p className="text-[11px] leading-relaxed text-fg/30">
+        <p className="text-[11px] leading-relaxed text-fg-muted">
           {t("inbox.directReplyFrom")}
         </p>
       </form>

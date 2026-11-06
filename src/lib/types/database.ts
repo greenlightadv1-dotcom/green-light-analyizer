@@ -51,6 +51,45 @@ export type CreatorDirectoryEntry = {
   verified_top_countries: CountryShare[] | null;
   audience_verified: boolean;
   platforms: Platform[] | null;
+  /** Added by migration 0024; absent until it is applied. */
+  avatar_url?: string | null;
+  country?: string | null;
+  creator_categories?: string[] | null;
+  creator_games?: string[] | null;
+  content_formats?: string[] | null;
+  /** Self-reported starting rate (0017). */
+  base_rate_usd?: number | null;
+  verified_geo_synced_at?: string | null;
+  stats_synced_at?: string | null;
+  /** Public profile slug; the /p/<slug> page is public by design. */
+  shareable_slug?: string | null;
+};
+
+/** A Get Started application (migration 0024). Service-role only. */
+export type AccessRequest = {
+  id: string;
+  journey: "creator" | "company" | "company_representative";
+  full_name: string;
+  email: string;
+  company_name: string | null;
+  website: string | null;
+  primary_platform: string | null;
+  channel_handle: string | null;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  created_profile_id: string | null;
+};
+
+/** A company account's link to another account acting for it (0024). */
+export type CompanyMember = {
+  member_id: string;
+  company_id: string;
+  member_role: "owner" | "representative";
+  created_at: string;
+  created_by: string | null;
 };
 
 /**
@@ -107,6 +146,8 @@ type Profile = {
   /** Non-null = permanently banned (§6, §12). Only service_role writes it. */
   banned_at: string | null;
   banned_reason: string | null;
+  /** 0032: 'active' | 'pending_verification' | 'rejected'. Absent before 0032 = active. Server-written only. */
+  account_status?: AccountStatus;
   created_at: string | null;
   /** Creator-profile layer (migration 0017) — additive to §7, not a replacement. */
   bio: string | null;
@@ -120,6 +161,18 @@ type Profile = {
   shareable_slug: string | null;
   whatsapp_number: string | null;
   whatsapp_notifications_enabled: boolean;
+  /**
+   * Creator taxonomy and company details (migration 0024, local until
+   * applied). Optional because a database without 0024 does not return them;
+   * every reader treats a missing value as empty.
+   */
+  creator_categories?: string[] | null;
+  creator_games?: string[] | null;
+  content_formats?: string[] | null;
+  /** Sports, interests and specializations (0033). */
+  creator_tags?: string[] | null;
+  company_website?: string | null;
+  company_industry?: string | null;
 };
 
 /** §5.3 inbound-delivery trail. provider_message_id is the idempotency key. */
@@ -185,6 +238,11 @@ type MediaKit = {
   channel_view_count: number | null;
   /** Video count (YouTube) or post count (Instagram) (migration 0016). */
   media_count: number | null;
+  /** 0031: median views of the most recent YouTube uploads (synced), and its sample size. */
+  recent_median_views?: number | null;
+  /** The last sync returned the whole upload list (0035). */
+  recent_videos_complete?: boolean | null;
+  recent_views_sample?: number | null;
   /** AI-generated, supplementary to content_category (migration 0016). */
   content_tags: string[] | null;
 };
@@ -224,6 +282,12 @@ type Message = {
   /** Set once the message reached the company as platform email (§6). */
   relayed_at: string | null;
   relay_error: string | null;
+  /** Relay lifecycle (0036). Absent before it is applied. */
+  relay_status?: "queued" | "processing" | "sent" | "failed_retryable" | "failed_permanent" | null;
+  relay_attempts?: number;
+  relay_next_attempt_at?: string | null;
+  relay_claimed_at?: string | null;
+  relay_provider_id?: string | null;
   created_at: string | null;
 };
 
@@ -283,6 +347,223 @@ type OAuthConnection = {
 };
 
 /** Columns with a database default (or that are nullable) are optional on insert. */
+/** Dated platform-stats measurement for growth (0025). Server-written only. */
+export type MediaKitSnapshot = {
+  id: number;
+  media_kit_id: string;
+  creator_id: string;
+  platform: Platform;
+  source: "youtube_data_api" | "instagram_graph_api";
+  captured_on: string;
+  captured_at: string;
+  subscriber_count: number | null;
+  channel_view_count: number | null;
+  media_count: number | null;
+};
+
+
+/* ---- Collaboration lifecycle (migration 0026). Server-written only. ---- */
+export type BriefStatus = "draft" | "published" | "archived";
+export type InvitationStatus = "pending" | "changes_requested" | "accepted" | "declined" | "withdrawn";
+export type CollaborationStatus = "negotiating" | "active" | "completed" | "cancelled";
+export type DeliverableStatus = "pending" | "submitted" | "revision_requested" | "approved";
+
+export type Brief = {
+  id: string;
+  company_id: string;
+  title: string;
+  description: string;
+  sponsorship_type: SponsorshipType | null;
+  platforms: string[];
+  target_countries: string[];
+  categories: string[];
+  deliverables_summary: string | null;
+  budget_min_usd: number | null;
+  budget_max_usd: number | null;
+  start_date: string | null;
+  due_date: string | null;
+  status: BriefStatus;
+  published_at: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Invitation = {
+  id: string;
+  brief_id: string;
+  company_id: string;
+  creator_id: string;
+  message: string;
+  proposed_amount_usd: number | null;
+  status: InvitationStatus;
+  response_note: string | null;
+  responded_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Collaboration = {
+  id: string;
+  invitation_id: string;
+  brief_id: string;
+  company_id: string;
+  creator_id: string;
+  deal_chat_id: string | null;
+  status: CollaborationStatus;
+  proposed_amount_usd: number | null;
+  proposed_terms: string | null;
+  proposed_by: string | null;
+  company_confirmed_at: string | null;
+  creator_confirmed_at: string | null;
+  agreed_amount_usd: number | null;
+  agreed_terms: string | null;
+  agreed_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  cancel_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Deliverable = {
+  id: string;
+  collaboration_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: DeliverableStatus;
+  submission_url: string | null;
+  submission_note: string | null;
+  submitted_at: string | null;
+  review_note: string | null;
+  reviewed_at: string | null;
+  approved_at: string | null;
+  revision_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CollaborationEvent = {
+  id: number;
+  invitation_id: string | null;
+  collaboration_id: string | null;
+  deliverable_id: string | null;
+  actor_id: string | null;
+  event_type: string;
+  detail: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AccountStatus = "pending_verification" | "active" | "rejected";
+export type VerificationKind = "creator_kyc" | "company_kyb" | "representative";
+export type VerificationStatus = "draft" | "submitted" | "under_review" | "needs_info" | "approved" | "rejected";
+export type VerificationDocType = "selfie" | "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other";
+export type VerificationCase = {
+  id: string;
+  /** Null while the case belongs to an application with no account yet (0032). */
+  profile_id: string | null;
+  access_request_id: string | null;
+  kind: VerificationKind;
+  status: VerificationStatus;
+  details: Record<string, string>;
+  company_profile_id: string | null;
+  method: "manual_document_review" | "provider" | null;
+  provider_ref: string | null;
+  info_request: string | null;
+  decision_reason: string | null;
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type VerificationDocument = {
+  id: string;
+  case_id: string;
+  doc_type: VerificationDocType;
+  storage_path: string;
+  mime: string;
+  size_bytes: number;
+  capture_method: "camera" | "upload";
+  uploaded_at: string;
+  removed_at: string | null;
+};
+export type VerificationEvent = { id: number; case_id: string; actor_id: string | null; event: string; detail: Record<string, unknown>; created_at: string };
+
+export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status" | "messages";
+
+export type AppNotification = {
+  id: string;
+  recipient_id: string;
+  /** Null for message notifications (0030). */
+  event_id: number | null;
+  /** Deal room, for message notifications (0030). */
+  chat_id: string | null;
+  kind: string;
+  category: NotificationCategory;
+  brief_id: string | null;
+  invitation_id: string | null;
+  collaboration_id: string | null;
+  actor_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type NotificationPreferences = {
+  profile_id: string;
+  muted_categories: NotificationCategory[];
+  updated_at: string;
+};
+
+export type Shortlist = { id: string; company_id: string; name: string; created_at: string; updated_at: string };
+export type ShortlistEntry = { shortlist_id: string; creator_id: string; note: string | null; added_at: string };
+export type PortfolioPlatform = "youtube" | "twitch" | "kick" | "instagram" | "tiktok" | "x" | "other";
+export type PortfolioItem = {
+  id: string;
+  creator_id: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  platform: PortfolioPlatform | null;
+  brand_name: string | null;
+  brand_name_public: boolean;
+  published_on: string | null;
+  is_public: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+export type PublicProfileSettings = {
+  profile_id: string;
+  show_bio: boolean;
+  show_location: boolean;
+  show_social_links: boolean;
+  show_rate: boolean;
+  show_platforms: boolean;
+  show_portfolio: boolean;
+  updated_at: string;
+};
+export type PublicPortfolioItem = Pick<PortfolioItem, "title" | "description" | "url" | "platform" | "brand_name" | "published_on">;
+
+export type ContentKind = "idea" | "script" | "hook" | "title" | "description";
+export type ContentStatus = "idea" | "drafting" | "ready" | "scheduled" | "published" | "archived";
+export type ContentItem = {
+  id: string;
+  creator_id: string;
+  kind: ContentKind;
+  title: string;
+  body: string | null;
+  status: ContentStatus;
+  platform: PortfolioPlatform | null;
+  planned_for: string | null;
+  tags: string[];
+  collaboration_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 type Table<Row, Insert, Update = Partial<Insert>> = {
@@ -331,6 +612,27 @@ export type Database = {
         Message,
         Optional<Message, Exclude<keyof Message, "message_text">>
       >;
+      access_requests: Table<
+        AccessRequest,
+        Optional<
+          AccessRequest,
+          | "id"
+          | "company_name"
+          | "website"
+          | "primary_platform"
+          | "channel_handle"
+          | "message"
+          | "status"
+          | "created_at"
+          | "reviewed_at"
+          | "reviewed_by"
+          | "created_profile_id"
+        >
+      >;
+      company_members: Table<
+        CompanyMember,
+        Optional<CompanyMember, "created_at" | "created_by">
+      >;
       inbound_emails: Table<
         InboundEmail,
         Optional<
@@ -348,6 +650,40 @@ export type Database = {
           >
         >
       >;
+      media_kit_snapshots: Table<
+        MediaKitSnapshot,
+        Optional<
+          MediaKitSnapshot,
+          Exclude<keyof MediaKitSnapshot, "media_kit_id" | "creator_id" | "platform" | "source">
+        >
+      >;
+      briefs: Table<Brief, Optional<Brief, Exclude<keyof Brief, "company_id" | "title" | "description">>>;
+      invitations: Table<Invitation, Optional<Invitation, Exclude<keyof Invitation, "brief_id" | "company_id" | "creator_id" | "message">>>;
+      collaborations: Table<Collaboration, Optional<Collaboration, Exclude<keyof Collaboration, "invitation_id" | "brief_id" | "company_id" | "creator_id">>>;
+      deliverables: Table<Deliverable, Optional<Deliverable, Exclude<keyof Deliverable, "collaboration_id" | "title">>>;
+      collaboration_events: Table<CollaborationEvent, Optional<CollaborationEvent, Exclude<keyof CollaborationEvent, "event_type">>>;
+      notifications: Table<AppNotification, Optional<AppNotification, Exclude<keyof AppNotification, "recipient_id" | "kind" | "category">>>;
+      shortlists: Table<Shortlist, Optional<Shortlist, Exclude<keyof Shortlist, "company_id" | "name">>>;
+      shortlist_entries: Table<ShortlistEntry, Optional<ShortlistEntry, Exclude<keyof ShortlistEntry, "shortlist_id" | "creator_id">>>;
+      portfolio_items: Table<PortfolioItem, Optional<PortfolioItem, Exclude<keyof PortfolioItem, "creator_id" | "title">>>;
+      public_profile_settings: Table<PublicProfileSettings, Optional<PublicProfileSettings, Exclude<keyof PublicProfileSettings, "profile_id">>>;
+      content_items: Table<ContentItem, Optional<ContentItem, Exclude<keyof ContentItem, "creator_id" | "kind" | "title">>>;
+      verification_cases: Table<VerificationCase, Optional<VerificationCase, Exclude<keyof VerificationCase, "kind">>>;
+      verification_documents: Table<VerificationDocument, Optional<VerificationDocument, "id" | "uploaded_at" | "removed_at" | "capture_method">>;
+      taxonomy_terms: Table<import("../taxonomy").TaxonomyTerm & { created_at: string; updated_at: string; updated_by: string | null }, Partial<import("../taxonomy").TaxonomyTerm & { updated_by: string | null }> & { id: string; kind: import("../taxonomy").TermKind; label_en: string; label_ar: string }>;
+      media_kit_videos: Table<
+        { id: number; media_kit_id: string; creator_id: string; platform: "youtube"; video_id: string; title: string | null; published_at: string | null; view_count: number | null; like_count: number | null; comment_count: number | null; synced_at: string },
+        { media_kit_id: string; creator_id: string; platform?: "youtube"; video_id: string; title?: string | null; published_at?: string | null; view_count?: number | null; like_count?: number | null; comment_count?: number | null; synced_at?: string }
+      >;
+      news_items: Table<
+        { id: number; source_id: string; external_id: string; title: string; url: string; published_at: string; retrieved_at: string; tags: string[] },
+        { source_id: string; external_id: string; title: string; url: string; published_at: string; retrieved_at?: string; tags?: string[] }
+      >;
+      company_member_scopes: Table<{ member_id: string; company_id: string; scope: string; granted_by: string | null; granted_at: string }, { member_id: string; company_id: string; scope: string; granted_by?: string | null }>;
+      company_permission_events: Table<{ id: number; company_id: string; member_id: string; actor_id: string | null; scope: string; action: "grant" | "revoke" | "cleared_on_relink"; created_at: string }, never>;
+      verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;
+      verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
+      notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
         Optional<AdminAction, Exclude<keyof AdminAction, "action">>
@@ -379,6 +715,43 @@ export type Database = {
         Args: { p_slug: string };
         Returns: CreatorPublicProfile[];
       };
+      verification_transition: {
+        Args: { p_actor: string | null; p_case: string; p_action: string; p_note?: string | null; p_company?: string | null };
+        Returns: string;
+      };
+      /* 0032 one-time tokens: service_role only. Each raises 'activation:<code>' on refusal. */
+      application_token_issue: { Args: { p_request: string; p_purpose: "resume" | "activation"; p_hash: string; p_ttl_seconds: number; p_actor: string | null }; Returns: string };
+      application_token_lookup: { Args: { p_hash: string; p_purpose: "resume" | "activation" }; Returns: { access_request_id: string; state: "valid" | "expired" | "used" | "revoked"; expires_at: string }[] };
+      activation_claim: {
+        Args: { p_hash: string };
+        Returns: { access_request_id: string; email: string; full_name: string; journey: "creator" | "company" | "company_representative"; company_name: string | null; website: string | null; claimed_user_id: string | null }[];
+      };
+      activation_checkpoint: { Args: { p_hash: string; p_user: string }; Returns: undefined };
+      activation_release: { Args: { p_hash: string }; Returns: undefined };
+      relay_claim: { Args: { p_message: string }; Returns: boolean };
+      relay_record: { Args: { p_message: string; p_ok: boolean; p_provider_id: string | null; p_error: string | null; p_permanent: boolean }; Returns: string };
+      relay_requeue: { Args: { p_message: string }; Returns: boolean };
+      company_set_scope: { Args: { p_actor: string; p_member: string; p_scope: string; p_grant: boolean }; Returns: undefined };
+      taxonomy_usage: { Args: { p_id: string }; Returns: number };
+      taxonomy_delete: { Args: { p_id: string }; Returns: undefined };
+      activation_complete: { Args: { p_hash: string; p_user: string; p_alias: string | null }; Returns: string };
+      creator_public_portfolio: {
+        Args: { p_slug: string };
+        Returns: PublicPortfolioItem[];
+      };
+      /* 0026 transitions: service_role only. Each raises 'collab:<code>' on refusal. */
+      collab_create_invitation: { Args: { p_company: string; p_brief: string; p_creator: string; p_message: string; p_amount: number | null }; Returns: string };
+      collab_withdraw_invitation: { Args: { p_company: string; p_invitation: string }; Returns: undefined };
+      collab_revise_invitation: { Args: { p_company: string; p_invitation: string; p_message: string; p_amount: number | null }; Returns: undefined };
+      collab_respond_invitation: { Args: { p_creator: string; p_invitation: string; p_response: string; p_note: string | null }; Returns: string | null };
+      collab_propose_terms: { Args: { p_actor: string; p_collab: string; p_amount: number; p_terms: string }; Returns: undefined };
+      collab_confirm_terms: { Args: { p_actor: string; p_collab: string }; Returns: string };
+      collab_add_deliverable: { Args: { p_company: string; p_collab: string; p_title: string; p_description: string | null; p_due: string | null }; Returns: string };
+      collab_remove_deliverable: { Args: { p_company: string; p_deliverable: string }; Returns: undefined };
+      collab_submit_deliverable: { Args: { p_creator: string; p_deliverable: string; p_url: string | null; p_note: string | null }; Returns: undefined };
+      collab_review_deliverable: { Args: { p_company: string; p_deliverable: string; p_decision: string; p_note: string | null }; Returns: undefined };
+      collab_complete: { Args: { p_company: string; p_collab: string }; Returns: undefined };
+      collab_cancel: { Args: { p_actor: string; p_collab: string; p_reason: string }; Returns: undefined };
       /** service_role-only counter (migration 0019) — see lib/rate-limit.ts. */
       consume_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };

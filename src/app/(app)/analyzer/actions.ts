@@ -224,7 +224,7 @@ export async function createDealFromAnalysis(
 
   if (error || !chat) {
     log.error("analyzer_create.deal_insert_failed", { creator_id: profile.id, error });
-    return { error: "The deal room could not be opened. Try again in a moment." };
+    return { error: "actionErrors.dealRoomNotCreated" };
   }
 
   notifyNewDeal(

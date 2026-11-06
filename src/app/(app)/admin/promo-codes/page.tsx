@@ -3,12 +3,15 @@ import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { GenerateCodeForm } from "./GenerateCodeForm";
 
 export const metadata: Metadata = { title: "Promo codes" };
 
 /**
- * Admin promo/trial code management.
+ * Admin promo/trial code history — read-only since the unified Creator Plan.
+ *
+ * Codes targeted Pro or Elite, which no longer grant anything, so generation
+ * and redemption are both refused on the server (actions.ts here and
+ * pricing/actions.ts). The rows are kept and listed for the audit trail.
  *
  * promo_codes carries no RLS policy for `authenticated` at all (migration
  * 0013) — a code is a bearer credential, so even this admin-only read goes
@@ -29,15 +32,11 @@ export default async function PromoCodesPage() {
     <>
       <SectionHeader
         title="Promo codes"
-        description="Single-use trial codes a creator redeems in Settings to activate Pro or Elite for a fixed number of days."
+        description="Retired. Every creator is on the same Creator Plan, so codes are no longer generated or redeemed. Past codes are kept here as history."
       />
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-2">
-          <GenerateCodeForm />
-        </div>
-
-        <GlassPanel className="overflow-hidden lg:col-span-3">
+      <div>
+        <GlassPanel className="overflow-hidden">
           <ul className="divide-y divide-fg/5">
             {(codes ?? []).map((c) => (
               <li
@@ -48,21 +47,21 @@ export default async function PromoCodesPage() {
                   {c.code}
                 </span>
                 <span className="text-xs text-fg/60">
-                  {c.target_plan} · {c.duration_days}d
+                  {c.target_plan} (legacy) · {c.duration_days}d
                 </span>
-                <span className="text-xs text-fg/40">
+                <span className="text-xs text-fg-muted">
                   code valid until{" "}
                   {new Date(c.expires_at).toLocaleDateString()}
                 </span>
                 {c.is_used ? (
-                  <span className="text-xs text-fg/40">Redeemed</span>
+                  <span className="text-xs text-fg-muted">Redeemed</span>
                 ) : (
                   <span className="text-xs text-brand-green">Unused</span>
                 )}
               </li>
             ))}
             {!codes?.length ? (
-              <li className="px-5 py-8 text-sm text-fg/40">
+              <li className="px-5 py-8 text-sm text-fg-muted">
                 No codes yet.
               </li>
             ) : null}

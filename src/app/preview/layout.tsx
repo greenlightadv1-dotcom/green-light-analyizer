@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { mockProfile } from "@/lib/preview/mock";
+import { GAssistant } from "@/components/g/GAssistant";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 /**
@@ -41,16 +42,19 @@ export default function PreviewLayout({
   return (
     <div className="mx-auto flex w-full max-w-[1680px] gap-5 p-4 lg:gap-6 lg:p-6 2xl:p-8">
       <Sidebar role={mockProfile.role} basePath="/preview" />
-      <div className="min-w-0 flex-1">
+      {/* pb-24: the last content can always scroll clear of the fixed G launcher. */}
+      <div className="min-w-0 flex-1 pb-24">
         <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
           <strong className="font-semibold">Interface preview.</strong> Every
           name, figure and message on these screens is invented, and nothing is
           saved. The real product is admin-gated and holds no data yet.
         </div>
 
-        <TopBar profile={mockProfile} demo />
+        <TopBar profile={mockProfile} basePath="/preview" demo />
         <PageTransition>{children}</PageTransition>
       </div>
+      {/* Preview has no session: G renders, but answers with a preview notice. */}
+      <GAssistant userId="preview" role={mockProfile.role} demo basePath="/preview" />
     </div>
   );
 }
