@@ -110,3 +110,12 @@ The local harness (`scripts/local-migrations-test.sh`) applies 0001–0037 to a 
 5. Apply to production during a quiet window. Back up first (Supabase PITR, or a dump).
 6. Set the approved environment variables (see `PRODUCTION_READINESS_REPORT.md`).
 7. Deploy.
+
+## Update 2026-11-06: findings from the isolated Supabase validation
+
+See `ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
+
+- **Apply each file with `psql --single-transaction -v ON_ERROR_STOP=1 -f <file>`, or in the SQL Editor. Do not use `supabase db push`.** Production's migration history uses timestamp versions; the repository files are `0001`–`0037`.
+- **Backups:**
+  - Dump the data with `-x storage.buckets_vectors -x storage.vector_indexes`, or the restore fails.
+  - Restore with `scripts/rehearsal/pre-restore.sql` first. Otherwise a fresh project's default privileges give `anon` and `authenticated` ALL on every restored table.

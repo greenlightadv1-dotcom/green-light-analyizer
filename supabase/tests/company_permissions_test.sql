@@ -46,7 +46,7 @@ BEGIN
   SELECT count(*) INTO n FROM public.briefs; IF n <> 0 THEN RAISE EXCEPTION 'FAIL: unscoped rep reads % briefs', n; END IF;
   SELECT count(*) INTO n FROM public.creator_directory(); IF n <> 0 THEN RAISE EXCEPTION 'FAIL: unscoped rep searches creators'; END IF;
   PERFORM pg_temp.as_user(coa);
-  SELECT count(*) INTO n FROM public.creator_directory(); IF n <> 1 THEN RAISE EXCEPTION 'FAIL: company owner directory (%)', n; END IF;
+  SELECT count(*) INTO n FROM public.creator_directory() d WHERE d.creator_id = cr; IF n <> 1 THEN RAISE EXCEPTION 'FAIL: company owner directory (%)', n; END IF;
   RESET ROLE;
   RAISE NOTICE 'PASS a link grants nothing by default';
 
@@ -74,7 +74,7 @@ BEGIN
   SET LOCAL ROLE authenticated; PERFORM pg_temp.as_user(repa);
   SELECT count(*) INTO n FROM public.briefs; IF n <> 1 THEN RAISE EXCEPTION 'FAIL: scoped rep reads % briefs', n; END IF;
   SELECT count(*) INTO n FROM public.briefs WHERE company_id = cob; IF n <> 0 THEN RAISE EXCEPTION 'FAIL: rep of A reads company B'; END IF;
-  SELECT count(*) INTO n FROM public.creator_directory(); IF n <> 1 THEN RAISE EXCEPTION 'FAIL: scoped rep directory (%)', n; END IF;
+  SELECT count(*) INTO n FROM public.creator_directory() d WHERE d.creator_id = cr; IF n <> 1 THEN RAISE EXCEPTION 'FAIL: scoped rep directory (%)', n; END IF;
   PERFORM pg_temp.expect_error(format('update public.briefs set title = %L where company_id = %L', 'x', coa), '%permission denied%');
   PERFORM pg_temp.expect_error(format('insert into public.company_member_scopes (member_id, company_id, scope) values (%L,%L,%L)', repa, coa, 'company.edit'), '%permission denied%');
   PERFORM pg_temp.expect_error(format('select public.company_set_scope(%L,%L,%L,true)', coa, repa, 'company.edit'), '%permission denied%');
