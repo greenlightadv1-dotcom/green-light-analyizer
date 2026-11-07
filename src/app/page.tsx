@@ -5,8 +5,8 @@ import { LandingView } from "@/components/landing/LandingView";
 /**
  * Public marketing landing page — reachable without a session (proxy.ts /
  * session.ts treat "/" as a public path). There is still no self-signup
- * anywhere in the product (§4): the "Request Access" CTA routes to Discord,
- * same as every other plan/account-creation flow.
+ * anywhere in the product (§4): the "Get started" CTA opens an application
+ * (/get-started) that an admin reviews before creating the account.
  *
  * A signed-in visitor never actually sees this component — the proxy's
  * route guard bounces them to /dashboard (or /set-password) before the

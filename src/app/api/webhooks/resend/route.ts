@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { previewWritesBlocked } from "@/lib/preview-guard";
 import { processInboundEmail } from "@/lib/email/intake";
 import { normalizeInboundEmail } from "@/lib/email/parse";
 import { verifyWebhookSignature } from "@/lib/email/verify";
@@ -37,6 +38,8 @@ export const maxDuration = 60;
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  // A Vercel preview never processes deliveries (lib/preview-guard.ts).
+  if (previewWritesBlocked()) return NextResponse.json({ error: "preview_read_only" }, { status: 503 });
   const deadlineAt = intakeDeadline(Date.now());
   const secret = process.env.RESEND_INBOUND_WEBHOOK_SECRET;
 

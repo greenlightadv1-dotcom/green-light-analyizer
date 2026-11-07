@@ -42,3 +42,6 @@ next-env.d.ts
 
 # ...but the template belongs in the repo.
 !.env.example
+
+# Supabase CLI local state
+supabase/.temp/

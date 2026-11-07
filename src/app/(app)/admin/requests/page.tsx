@@ -1,0 +1,156 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { SectionHeader } from "@/components/dashboard/SectionHeader";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { requireRole } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { LinkRepresentativeForm } from "./LinkRepresentativeForm";
+import { rejectRequest, unlinkRepresentative } from "./actions";
+import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
+
+export const metadata: Metadata = { title: "Applications" };
+
+/**
+ * Get Started applications (features 1–2). Admin-only; read with the service
+ * role because access_requests has no client policies. "Create account"
+ * opens /admin/users prefilled from the application — the admin still
+ * creates the account, so the product stays admin-gated. Admins never sign
+ * in as the applicant.
+ */
+export default async function AdminRequestsPage() {
+  await requireRole("admin");
+  const service = createAdminClient();
+  const [{ data: requests, error }, { data: links }] = await Promise.all([
+    service
+      .from("access_requests")
+      .select("id, journey, full_name, email, company_name, website, primary_platform, channel_handle, message, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    service.from("company_members").select("member_id, company_id, member_role, created_at").limit(100),
+  ]);
+  // Applications opened since 0032 carry a verification case: they are decided
+  // under Verification and become accounts only through the activation link.
+  const reqIds = (requests ?? []).map((r) => r.id);
+  const { data: caseRows } = reqIds.length
+    ? await service.from("verification_cases").select("id, access_request_id, status").in("access_request_id", reqIds)
+    : { data: [] as { id: string; access_request_id: string | null; status: string }[] };
+  const caseOf = (id: string) => caseRows?.find((c) => c.access_request_id === id) ?? null;
+
+  const ids = [...new Set((links ?? []).flatMap((l) => [l.member_id, l.company_id]))];
+  const { data: names } = ids.length
+    ? await service.from("profiles").select("id, full_name, primary_email").in("id", ids)
+    : { data: [] as { id: string; full_name: string; primary_email: string }[] };
+  const name = (id: string) => {
+    const p = names?.find((n) => n.id === id);
+    return p ? `${p.full_name} (${p.primary_email})` : id;
+  };
+
+  const pending = (requests ?? []).filter((r) => r.status === "pending");
+  const reviewed = (requests ?? []).filter((r) => r.status !== "pending");
+
+  return (
+    <>
+      <SectionHeader title="Applications" description="Applications from the public Get Started page. New applications are decided under Verification and become accounts only when the applicant uses the emailed activation link. Older applications without a verification case can still be turned into an account here." />
+
+      {error ? (
+        <GlassPanel className="mb-4 p-5 text-sm text-fg/70">
+          Applications are not available on this database yet. Ask the developer to apply the latest database update.
+        </GlassPanel>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <GlassPanel className="overflow-hidden lg:col-span-2">
+          <h2 className="border-b border-fg/5 px-5 py-3 text-sm font-semibold text-fg">Pending ({pending.length})</h2>
+          {pending.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-fg-muted">No pending applications.</p>
+          ) : (
+            <ul className="divide-y divide-fg/5">
+              {pending.map((r) => (
+                <li key={r.id} className="space-y-2 px-5 py-4 text-sm">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="font-medium text-fg">{r.full_name}</span>
+                    <span className="text-xs text-fg-muted" dir="ltr">{r.email}</span>
+                    <span className="rounded-full border border-fg/15 px-2 py-0.5 text-[11px] text-fg/60">{r.journey.replace(/_/g, " ")}</span>
+                    <span className="text-xs text-fg-muted">{new Date(r.created_at).toISOString().slice(0, 10)}</span>
+                  </div>
+                  <dl className="grid gap-x-4 gap-y-0.5 text-xs text-fg/60 sm:grid-cols-2">
+                    {r.company_name ? <div><dt className="inline text-fg-muted">Company: </dt><dd className="inline">{r.company_name}</dd></div> : null}
+                    {r.website ? <div><dt className="inline text-fg-muted">Website: </dt><dd className="inline" dir="ltr">{r.website}</dd></div> : null}
+                    {r.primary_platform ? <div><dt className="inline text-fg-muted">Platform: </dt><dd className="inline">{r.primary_platform}</dd></div> : null}
+                    {r.channel_handle ? <div><dt className="inline text-fg-muted">Channel: </dt><dd className="inline" dir="ltr">{r.channel_handle}</dd></div> : null}
+                  </dl>
+                  {r.message ? <p className="text-xs whitespace-pre-wrap text-fg/60">{r.message}</p> : null}
+                  <div className="flex gap-2 pt-1">
+                    {caseOf(r.id) ? (
+                      <Link href={`/admin/verification/${caseOf(r.id)!.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                        Verification: {caseOf(r.id)!.status.replace(/_/g, " ")}
+                      </Link>
+                    ) : (
+                      <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                        Create account
+                      </Link>
+                    )}
+                    <ConfirmActionForm
+                      action={rejectRequest}
+                      hidden={{ request_id: r.id }}
+                      trigger={{ labelKey: "admin.requests.rejectTrigger" }}
+                      triggerClassName="h-9 rounded-chip border border-danger/30 bg-danger/10 px-3 text-xs font-medium text-danger hover:bg-danger/20 focus-visible:focus-ring"
+                      titleKey="admin.requests.rejectTitle"
+                      bodyKey="admin.requests.rejectBody"
+                      confirmKey="admin.requests.rejectConfirm"
+                      successKey="admin.requests.rejectDone"
+                      tone="danger"
+                      className="flex flex-wrap items-center gap-2"
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {reviewed.length ? (
+            <details className="border-t border-fg/5 px-5 py-3 text-xs text-fg-muted">
+              <summary className="cursor-pointer">Reviewed ({reviewed.length})</summary>
+              <ul className="mt-2 space-y-1">
+                {reviewed.map((r) => (
+                  <li key={r.id}>
+                    {r.status} · {r.full_name} · <span dir="ltr">{r.email}</span> · {r.journey.replace(/_/g, " ")}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </GlassPanel>
+
+        <GlassPanel className="p-5">
+          <h2 className="text-sm font-semibold text-fg">Company representatives</h2>
+          <p className="mt-1 mb-4 text-xs leading-relaxed text-fg-muted">
+            Create the representative as a company account first, then link it to the company it acts for. A link shows the representative who they represent; it does not share the company&apos;s deals.
+          </p>
+          <LinkRepresentativeForm />
+          {(links ?? []).length ? (
+            <ul className="mt-5 space-y-2 border-t border-fg/5 pt-4 text-xs text-fg/65">
+              {(links ?? []).map((l) => (
+                <li key={l.member_id} className="flex items-start justify-between gap-2">
+                  <span>
+                    {name(l.member_id)} → {name(l.company_id)}
+                  </span>
+                  <ConfirmActionForm
+                    action={unlinkRepresentative}
+                    hidden={{ member_id: l.member_id }}
+                    trigger={{ labelKey: "admin.requests.unlinkTrigger" }}
+                    triggerClassName="text-fg-muted underline hover:text-fg focus-visible:focus-ring"
+                    titleKey="admin.requests.unlinkTitle"
+                    bodyKey="admin.requests.unlinkBody"
+                    confirmKey="admin.requests.unlinkConfirm"
+                    successKey="admin.requests.unlinkDone"
+                    className="flex flex-col items-end gap-1"
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </GlassPanel>
+      </div>
+    </>
+  );
+}

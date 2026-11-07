@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireProfile } from "@/lib/auth";
+import { canUseCreatorFeatures } from "@/lib/access";
 import {
   isOAuthPlaceholderPlatform,
   isRealOAuthPlatform,
@@ -12,8 +13,9 @@ import * as instagram from "@/lib/oauth/instagram";
 /**
  * OAuth entry point.
  *
- * youtube/instagram get real logic (§7.3): re-checks the caller is signed in
- * and that their plan actually includes verified geography, signs a CSRF
+ * youtube/instagram get real logic (§7.3): re-checks the caller is signed in,
+ * is a creator (or admin), and that the platform's integration is
+ * operational (media-kit/platforms.ts INTEGRATION_STATUS), signs a CSRF
  * state, and redirects to the provider's real authorization URL — or a 501
  * if the client ID isn't configured yet, which is expected until the app is
  * registered (see the oauth-connectors design doc).
@@ -31,13 +33,22 @@ export async function GET(
   if (isRealOAuthPlatform(platform)) {
     const profile = await requireProfile();
 
-    const availability = verificationAvailability(
-      platform,
-      profile.subscription_plan ?? "Starter",
-    );
-    if (availability !== "available") {
+    // Creator-only, on the server. Under the unified Creator Plan the stored
+    // plan no longer decides this, so the role must — otherwise a company
+    // account could start a verified-geography connection (lib/access.ts).
+    if (!canUseCreatorFeatures(profile.role)) {
       return NextResponse.json(
-        { error: "Verified audience geography is not available on your plan." },
+        { error: "Verified audience geography is only available to creator accounts." },
+        { status: 403 },
+      );
+    }
+
+    // Every creator is eligible; the platform's integration has to be
+    // operational. Instagram is in development, so it is refused here rather
+    // than sent to a provider flow that cannot complete.
+    if (verificationAvailability(platform) !== "available") {
+      return NextResponse.json(
+        { error: `${platform} verified audience geography is still in development.` },
         { status: 403 },
       );
     }

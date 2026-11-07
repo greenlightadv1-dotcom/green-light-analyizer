@@ -5,13 +5,19 @@ import { SendInviteModal } from "@/components/outreach/SendInviteModal";
 import { ThemeMenu } from "@/components/ui/ThemeMenu";
 import { LanguageMenu } from "@/components/ui/LanguageMenu";
 import { useTranslation } from "@/components/LocaleProvider";
+import { signOutG } from "@/components/g/events";
 import type { Profile } from "@/lib/auth";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { MobileNav } from "./MobileNav";
 
 export function TopBar({
   profile,
+  basePath = "",
   demo = false,
 }: {
   profile: Profile;
+  /** Link prefix for the mobile menu; the UI preview passes "/preview". */
+  basePath?: string;
   /** UI preview: render the bar without a working sign-out. */
   demo?: boolean;
 }) {
@@ -19,7 +25,8 @@ export function TopBar({
 
   return (
     <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
-      <div className="lg:hidden">
+      <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
+        <MobileNav role={profile.role} basePath={basePath} />
         <ThemedLogo size={30} />
       </div>
 
@@ -27,19 +34,21 @@ export function TopBar({
         <p className="truncate text-sm font-medium text-fg">
           {profile.full_name}
         </p>
-        <p className="text-xs text-fg/45 capitalize">
-          {profile.role} · {profile.subscription_plan ?? "Starter"}
+        <p className="text-xs text-fg-muted capitalize">
+          {profile.role}
         </p>
       </div>
 
       <div className="flex items-center gap-2">
         {profile.role === "admin" ? <SendInviteModal /> : null}
+        {profile.role !== "admin" ? <NotificationBell basePath={basePath} demoCount={demo ? 2 : undefined} /> : null}
         <LanguageMenu />
         <ThemeMenu />
 
-        <form action={demo ? undefined : "/auth/signout"} method="post">
+        <form action={demo ? undefined : "/auth/signout"} method="post" onSubmit={signOutG}>
           <button
             type={demo ? "button" : "submit"}
+            onClick={demo ? signOutG : undefined}
             className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
           >
             {t("topbar.signOut")}

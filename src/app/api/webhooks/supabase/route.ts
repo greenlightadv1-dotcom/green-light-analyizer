@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { previewWritesBlocked } from "@/lib/preview-guard";
 import { NextResponse } from "next/server";
 import { sendDiscordLog, type DiscordLogStatus } from "@/lib/discord/logger";
 import { log } from "@/lib/log";
@@ -69,6 +70,8 @@ function normalizePayload(payload: unknown): SupabasePayload | null {
 }
 
 export async function POST(request: Request) {
+  // A Vercel preview never processes deliveries (lib/preview-guard.ts).
+  if (previewWritesBlocked()) return NextResponse.json({ error: "preview_read_only" }, { status: 503 });
   const secret = process.env.SUPABASE_WEBHOOK_SECRET;
 
   if (!secret) {

@@ -37,7 +37,7 @@ export function RiskBadge({
   if (!risk) {
     return (
       <span
-        className={`inline-flex items-center rounded-full border border-fg/10 bg-fg/5 px-2.5 py-0.5 text-xs text-fg/40 ${className}`}
+        className={`inline-flex items-center rounded-full border border-fg/10 bg-fg/5 px-2.5 py-0.5 text-xs text-fg-muted ${className}`}
       >
         {t("badges.notEvaluated")}
       </span>

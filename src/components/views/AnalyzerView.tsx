@@ -53,34 +53,34 @@ export function AnalyzerView({
             {kit ? (
               <dl className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">{t("analyzer.platform")}</dt>
+                  <dt className="text-xs text-fg-muted">{t("analyzer.platform")}</dt>
                   <dd className="text-fg capitalize">{kit.platform}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">{t("analyzer.averageViews")}</dt>
+                  <dt className="text-xs text-fg-muted">{t("analyzer.averageViews")}</dt>
                   <dd className="text-fg tabular-nums">
                     {kit.avg_views?.toLocaleString("en-US") ?? "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">{t("analyzer.engagement")}</dt>
+                  <dt className="text-xs text-fg-muted">{t("analyzer.engagement")}</dt>
                   <dd className="text-fg tabular-nums">
                     {kit.engagement_rate !== null ? `${kit.engagement_rate}%` : "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-xs text-fg/45">{t("analyzer.category")}</dt>
+                  <dt className="text-xs text-fg-muted">{t("analyzer.category")}</dt>
                   <dd className="text-fg">{kit.content_category ?? "—"}</dd>
                 </div>
               </dl>
             ) : (
-              <p className="mt-3 text-xs leading-relaxed text-fg/45">
+              <p className="mt-3 text-xs leading-relaxed text-fg-muted">
                 {t("analyzer.noKitNote")}
               </p>
             )}
 
             {!audienceVerified ? (
-              <p className="mt-4 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-fg/40">
+              <p className="mt-4 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-fg-muted">
                 {t("analyzer.unverifiedCapNote")}
               </p>
             ) : null}

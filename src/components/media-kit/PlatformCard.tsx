@@ -64,7 +64,7 @@ export function PlatformCard({
         <h2 className="text-sm font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-fg/40">
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
           {lockReason}
         </p>
       </GlassPanel>
@@ -81,7 +81,7 @@ export function PlatformCard({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="text-xs text-fg/45 transition hover:text-fg/80"
+          className="text-xs text-fg-muted transition hover:text-fg/80"
         >
           {open ? t("common.close") : kit ? t("common.edit") : t("common.add")}
         </button>
@@ -172,13 +172,13 @@ export function PlatformCard({
                 placeholder={"EG 40\nSA 25\nAE 15"}
                 className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
               />
-              <p className="text-xs text-fg/45">
+              <p className="text-xs text-fg-muted">
                 {t("mediaKit.countriesHint")}
               </p>
             </div>
           )}
 
-          {state.error ? <Alert>{state.error}</Alert> : null}
+          {state.error ? <Alert>{t(state.error)}</Alert> : null}
           {saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
           <SaveButton label={kit ? t("mediaKit.saveChanges") : t("mediaKit.addPlatform")} />

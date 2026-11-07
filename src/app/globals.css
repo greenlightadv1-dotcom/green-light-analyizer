@@ -53,10 +53,75 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   --radius-glass: 20px;
+
+  /* -------------------------------------------------------------------------
+     Semantic tokens (Phase 1 design system). New and touched UI uses these
+     instead of ad-hoc opacities such as text-fg/45. Each one is derived from
+     --color-fg, so it flips with the theme without a dark: pair.
+
+     Text, strongest to weakest. fg-muted is the floor for readable body copy:
+     64% of ink on the light glass surface is about 4.6:1 (WCAG AA). fg-subtle
+     is for placeholders, separators and decoration only, never sentences.
+  ------------------------------------------------------------------------- */
+  --color-fg-secondary: color-mix(in srgb, var(--color-fg) 78%, transparent);
+  --color-fg-muted: color-mix(in srgb, var(--color-fg) 64%, transparent);
+  --color-fg-subtle: color-mix(in srgb, var(--color-fg) 45%, transparent);
+
+  /* Hairlines and quiet fills. */
+  --color-line: color-mix(in srgb, var(--color-fg) 10%, transparent);
+  --color-line-strong: color-mix(in srgb, var(--color-fg) 18%, transparent);
+  --color-surface-muted: color-mix(in srgb, var(--color-fg) 5%, transparent);
+  --color-surface-hover: color-mix(in srgb, var(--color-fg) 9%, transparent);
+
+  /* State text colours. Light values are dark enough for AA on the light
+     shell (brand green itself is about 1.6:1 on white, so it is never used
+     for success text in light mode); :root.dark swaps in lighter values. */
+  --color-success: #2f7a0c;
+  --color-warning: #92400e;
+  --color-danger: #b91c1c;
+  --color-info: #293e61;
+
+  /* Radii: controls (buttons, inputs), chips (badges, tags), cards (= glass). */
+  --radius-chip: 0.5rem;
+  --radius-control: 0.75rem;
+  --radius-card: 20px;
+
+  /* Elevation for overlays (dialogs, sheets); panels keep the glass shadow. */
+  --shadow-overlay: 0 30px 80px -20px rgba(10, 13, 20, 0.55);
 }
 
 :root.dark {
   --color-fg: #ffffff;
+  --color-success: #62e823;
+  --color-warning: #fcd34d;
+  --color-danger: #fca5a5;
+  --color-info: #a5c4f3;
+}
+
+/* Keyboard focus, shared by every Phase 1 component. */
+@utility focus-ring {
+  outline: 2px solid var(--color-brand-green);
+  outline-offset: 2px;
+}
+
+/* Native <dialog> (Dialog / ConfirmDialog). The element is the panel; the
+   backdrop dims the page. Open state comes from showModal(), which also
+   makes the rest of the page inert and handles Escape. */
+.gl-dialog::backdrop {
+  background: rgba(10, 13, 20, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.gl-dialog[open] {
+  animation: g-panel-in 0.18s ease-out;
+}
+
+/* Skeleton placeholder. Reduced motion (below) flattens the pulse. */
+@keyframes gl-pulse {
+  50% { opacity: 0.45; }
+}
+.gl-skeleton {
+  animation: gl-pulse 1.6s ease-in-out infinite;
 }
 
 :root {
@@ -171,4 +236,53 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * G — wake, listening, thinking and speaking states, and the panel entrance.
+ * Transform/opacity only, so they stay cheap on mobile. The reduced-motion
+ * block above already flattens every animation for people who ask for that;
+ * the states stay readable without motion (text status + colour).
+ */
+@keyframes g-wake {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(98, 232, 35, 0.7); }
+  35% { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(98, 232, 35, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(98, 232, 35, 0); }
+}
+@keyframes g-ring {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes g-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes g-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@keyframes g-panel-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes g-blink {
+  50% { opacity: 0.35; }
+}
+.g-wake { animation: g-wake 0.9s ease-out 2; }
+.g-ring { animation: g-ring 1.4s ease-out infinite; }
+.g-spin { animation: g-spin 1.1s linear infinite; }
+.g-bar { animation: g-bar 0.8s ease-in-out infinite; transform-origin: bottom; }
+.g-panel-in { animation: g-panel-in 0.22s ease-out; }
+.g-blink { animation: g-blink 1.6s ease-in-out infinite; }
+
+/* Print (Media Kit PDF v1 via the browser's "Save as PDF"): plain white page,
+   dark text, no glass blur or shadows, which print engines render poorly. */
+@media print {
+  :root, :root.dark { --color-fg: #231f20; color-scheme: light; }
+  body, :root.dark body { background: #ffffff !important; background-image: none !important; }
+  .glass-panel, .glass-panel-solid, :root.dark .glass-panel, :root.dark .glass-panel-solid {
+    background: #ffffff !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    border-color: #d4d4d8 !important;
+  }
+  .gl-skeleton { animation: none; }
 }

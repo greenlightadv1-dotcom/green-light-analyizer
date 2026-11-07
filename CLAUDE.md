@@ -11,8 +11,10 @@
 
 Green Light is a closed, admin-vetted marketplace (`Admin-Gated Sponsorship
 Marketplace`) that connects content **Creators** with **Companies/Sponsors**
-for paid sponsorship deals. The platform takes a **5–15% commission** on every
-deal, settled through an internal escrow flow.
+for paid sponsorship deals. The platform takes a **10% commission** on every
+deal, the same for every creator, settled through an internal escrow flow
+(effective 31 October 2026; the earlier 5–15% plan-based range is retired, see
+§8's update).
 
 ### Core value propositions (design every feature around these)
 1. **Kill screenshot fraud** — creators are verified via official platform
@@ -583,6 +585,17 @@ and refresh handling. There is no direct platform fee for the API calls
 themselves. Keep these connections **optional** and gated to paid tiers so
 an MVP launch never blocks on Google/Meta review turnaround.
 
+> **Update — no longer a paid feature (unified Creator Plan, 2026-10-31).**
+> The table's "recommended for Pro/Elite" and "same tier gating" and the
+> paragraph's "gated to paid tiers" are historical. There are no paid tiers:
+> verified audience geography is available to **every creator**, decided by
+> the platform's real integration state, never by a plan (§8's update,
+> `INTEGRATION_STATUS` in `src/lib/media-kit/platforms.ts`). Today that means
+> YouTube only. Instagram is *in development*: both the OAuth start route and
+> the callback refuse it, so a state issued for YouTube cannot complete an
+> Instagram connection. The connections stay optional, and companies are
+> refused by role (`src/lib/access.ts`).
+
 ### 7.4 What the AI evaluation function should now receive
 ```
 {
@@ -646,6 +659,62 @@ rating on a high-value deal.
 
 Companies browse/access creators for free — commission is charged on the
 deal, not on company seats.
+
+> **Update — one unified Creator Plan (owner decision, 2026-10-31).** The
+> table above is superseded and kept only as history. Starter, Pro and Elite
+> are retired: every creator has the same access to the creator features,
+> Company Access stays free, and the commission is a single **10%** on each
+> completed deal, still settled manually (§12). No subscription price is
+> listed, because none has been set; do not invent one. Several old claims were
+> never built (a monthly analysis quota, "unlimited" analysis, Twitch/Kick
+> live, a fraud-detector tier, multi-account management, PDF export), and
+> they are gone from the copy rather than implemented.
+>
+> - **Source of truth.** `src/lib/plans.ts` holds the plan (commission and
+>   implemented-feature keys). `INTEGRATION_STATUS` in
+>   `src/lib/media-kit/platforms.ts` holds each platform's real state:
+>   YouTube *available*, Instagram *in development* (no Connect; the OAuth
+>   start route answers 403), Twitch/Kick *manual* (self-reported only),
+>   TikTok/X *planned*. Pricing, the Media Kit and Settings all render from it.
+> - **Authorization moved from plan to role.** Every company was stored as
+>   Starter, so the old plan checks were what kept companies out of the Media
+>   Kit and verified-geography OAuth. `src/lib/access.ts`
+>   (`canUseCreatorFeatures`: creator or admin) now decides it on the server:
+>   the Media Kit page (`requireCreatorFeatures`), every Media Kit server
+>   action, and both OAuth routes. The connection ceiling is four platforms for
+>   every creator (the schema's platform set), not unlimited.
+> - **Stored data untouched.** `profiles.subscription_plan`, its CHECK
+>   constraint, `subscription_expires_at` and `promo_codes` are unchanged, with
+>   no migration. Nothing reads the plan to decide access. `requireProfile`
+>   no longer rewrites an expired plan to Starter, the expiry banner is gone,
+>   and promo codes are retired: generation and redemption both refuse on the
+>   server, while past codes stay listed read-only in `/admin/promo-codes`.
+> - **Abuse limits unchanged.** `ai_analyze_offer` is still 12/hour and
+>   50/day. The Pricing page calls these fair-use limits, never "unlimited".
+>   No monthly quota exists.
+> - **Support.** Email (`SUPPORT_EMAIL`), a Discord ticket
+>   (`DISCORD_INVITE_URL`) and WhatsApp (`WHATSAPP_URL`), every day
+>   10:00–22:00 in the `Africa/Cairo` IANA zone (`src/lib/support.ts`; Egypt
+>   observes DST, so never a fixed offset). This is not 24/7 and replies are
+>   not instant.
+>   Creators (and admins) also get a **Support & Help** page (`/support`,
+>   nav item after Pricing): one card per channel, built from
+>   `SUPPORT_CHANNELS` in the same file, behind `requireCreatorFeatures`.
+>   Discord opens the server invite; there is no in-app ticketing.
+> - This supersedes the §4 update's plan cards and promo-code form, and the
+>   Terms §6/§7 were rewritten to match (`LEGAL_LAST_UPDATED` 31 October 2026).
+> - **Effective date (owner decision, 2026-10-31).** The 10% rate takes effect
+>   immediately on `COMMISSION_EFFECTIVE_DATE` (`src/lib/plans.ts`, 31 October
+>   2026), with no 30-day notice. It covers every deal agreed on or after that
+>   date, including the deals open but not agreed on it (six, all `new`, all on
+>   the owner's test accounts; none were `agreed` or `paid`). A deal agreed, or
+>   commission earned, before the date keeps its old rate. Terms §6 states the
+>   date, and §14 names this as the one exception to its 30-day notice while
+>   keeping that notice for every future material change and keeping its
+>   no-retroactivity sentence. The date must equal the day this revision is
+>   published; move it, and `LEGAL_LAST_UPDATED`, if publication slips. The
+>   wording is for legal review before it is deployed. Nothing computes or
+>   stores commission; settlement stays manual.
 
 ---
 
@@ -1029,6 +1098,12 @@ loses or corrupts deal data, breaks a core flow (§4 onboarding, §5 intake,
 Everything else goes on the post-launch list. Ask before treating anything
 else as a blocker.
 
+> **Approved exception (2026-10-31).** The owner approved one limited
+> exception to the freeze: the unified Creator Plan and its 10% commission,
+> accurate pricing and legal copy, the role-based authorization that change
+> requires, the support channels and published hours, and their tests and
+> docs (see §8's update). It does not cover unrelated feature work.
+
 **Definition of Done ("Launch Ready")** — all of these must be true:
 1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,
    `lint`, `build`), and the production deployment of that commit is READY.
@@ -1061,9 +1136,31 @@ else as a blocker.
    they do. It is not a §6 violation (that rule protects the creator), but it
    does give both sides a way around the platform.
 
-> **Update — production at `24db05b`, migration 0023 applied, cron not yet
+> **Update — production at `5580a78` (2026-10-31).** `main` was fast-forwarded
+> from `24db05b` to `5580a78`. Vercel production deployment
+> `dpl_mBdwmQuq6HS8n32i7aRMYPWMKTfy` is READY on `www.greenlightadvs.com` and
+> `greenlightadvs.com`. Its only code change over `24db05b` is the
+> `platform_sync` rate limit; the rest is documentation. No migration, data or
+> environment change went with it. The previous production deployment,
+> `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` (`24db05b`), stays available for rollback.
+>
+> Read-only smoke tests passed after the deploy:
+> - `/` returns 200, and `greenlightadvs.com` lands on `www`;
+> - `/privacy` and `/terms` return 200 with the YouTube/Google disclosures;
+> - `/api/cron/youtube-data-freshness` returns 401 JSON, not a login
+>   redirect;
+> - a signed-out `/dashboard` redirects to `/login?next=%2Fdashboard`.
+>
+> Not verified:
+> - **Runtime logs.** They stayed inaccessible: the Vercel API answers 403 to
+>   both runtime-log calls, even with the team id.
+> - **CI run 136 on `main`** (`5580a78`) was still pending when the
+>   deployment was verified. It completed with `success` afterwards.
+> - Nothing signed-in was exercised.
+>
+> **Earlier — production at `24db05b`, migration 0023 applied, cron not yet
 > active (2026-10-30).** `main` was fast-forwarded to `24db05b` and Vercel
-> production deployment `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` is READY on
+> production deployment `dpl_4yETVdehG6tWLNyybpBSfu2idZuw` was READY on
 > `www.greenlightadvs.com`. Migration `0023_verified_geo_synced_at` was applied
 > to the live project **before** that deploy (migration history version
 > `20261030171145`). It only adds two nullable timestamp columns to
@@ -1071,7 +1168,8 @@ else as a blocker.
 > changed, and every migration in `supabase/migrations/` (0001–0023) is now
 > applied.
 >
-> **`CRON_SECRET` is not set in Vercel Production.** `vercel.json` registers
+> **`CRON_SECRET` is not set in Vercel Production** (still true at `5580a78`).
+> `vercel.json` registers
 > the daily `/api/cron/youtube-data-freshness` job (03:17 UTC), but without
 > the secret the route answers 401 to every call. That was checked on
 > production after the deploy. So the YouTube freshness cleanup is
@@ -1092,6 +1190,106 @@ service, company-side new-message notifications, and the §11 roadmap.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
+## 17. Marketplace features and G (not yet deployed, 2026-10-31)
+
+Owner-approved development pass: eight features and the G assistant. **None of
+it is deployed yet.** Migration 0024 **was applied to the live project by the
+owner** through the Supabase SQL Editor, and its verification checks
+(`docs/handoff/migration-0024/0024_verify.sql`) passed. This was confirmed by
+the owner on 2026-10-31 and not independently re-checked from this repository.
+A SQL Editor run is not recorded in Supabase's migration history, unlike
+0022/0023, but 0024 is idempotent if a later `supabase db push` reruns it.
+The code still tolerates a database without 0024. In that case Get Started
+says applications aren't open, onboarding saves only what the old schema
+holds, and the uploads and representatives features answer "unavailable".
+
+- **Get Started** (`/get-started`, public): Creator, Company and Company
+  Representative journeys. It replaces the Discord "Request access" link.
+  - It is still admin-gated (§4, Terms §2). An application lands in
+    `access_requests` (service role, honeypot, hashed-IP rate limit
+    `access_request`).
+  - An admin creates the account from `/admin/requests` →
+    `/admin/users?request=<id>`. `createUser` marks the application approved,
+    by compare-and-set on `status='pending'`.
+  - No visitor ever creates an auth user. True self-signup would need a Terms
+    change and is an owner decision.
+- **Representatives**: the `company_members` link table, written by admins
+  only. A representative is a normal `company` account; there is no new role.
+  The link shows them who they represent and grants no access to that
+  company's deals.
+- **Onboarding** (`/onboarding`): the checklist is computed from real data
+  (`src/lib/onboarding.ts`), so it is never stored and never drifts.
+  - A company cannot send a Discover offer until its details are complete.
+  - The company description refuses contact details using the §6.1 masker.
+- **Taxonomy** (`src/lib/taxonomy.ts`): a controlled list of categories, games
+  and formats, with assumptions documented in the file.
+  - Stored in `profiles.creator_categories/creator_games/content_formats`.
+  - These columns are **not** client-writable. Server actions validate first.
+- **Uploads**: `/api/uploads/avatar` (public `avatars` bucket, 2 MB) and
+  `/api/uploads/documents` (private `creator-documents`, 5 MB, 60-second
+  signed links).
+  - The file type is decided by magic bytes, never by name or declared type.
+  - Paths are `<owner uuid>/<file>`, and there are no client storage policies.
+- **Discovery**: filtering, sorting and pagination happen on the server
+  (`src/lib/discovery.ts`), over the `creator_directory()` RPC. 0024 extends
+  it with classification and freshness. Verified geography is returned only
+  when under 30 days old, and the RPC returns no contact or intake columns.
+- **G** (`/api/g`, `src/lib/g/*`, `src/components/g/*`): mounted site-wide.
+  - **Data scope.** G reads only the caller's own data through RLS (never the
+    service role). Companies also get the directory RPC. Admins get
+    navigation help only.
+  - **Prompt-injection defence.** Untrusted text sits in fenced blocks and is
+    masked.
+  - **Actions** are allow-listed navigation only. Parameters must come from the
+    caller's own deal and creator ids.
+  - **Fallback.** NVIDIA via `chatJson`; on failure G shows rules-only cards.
+  - **Limits and storage.** Rate limit `g_chat`. The conversation is kept in
+    sessionStorage per user and role.
+  - **Voice** is browser Web Speech: explicit mic start, stop/interrupt and
+    mute, with text fallback. Green Light stores no audio, but the browser's
+    speech service may process it, and the UI says so. Voice has **not** been
+    tested with real audio.
+  - **Not streaming.** Replies arrive whole, after a loading state.
+  - **Grounding (API readiness pass).** Every figure in an AI reply must match a
+    figure in G's DATA or in the user's own words (`ungroundedFigures`,
+    `src/lib/g/conversation.ts`). Otherwise the reply is discarded and the
+    rule-computed cards answer, so G cannot state an invented metric or
+    price.
+  - **Voice fixes from the same pass:**
+    - `abort()`'s spec-mandated `aborted` error no longer turns Stop or a
+      completed turn into "Voice stopped unexpectedly".
+    - Muting while speaking can no longer silence every later reply.
+    - The mic stays available while G speaks, so you can interrupt it.
+    - Listening gives up after 15s (headless Chromium's engine never fires an
+      event), and speaking has a length-based timeout.
+  - **"Hey G" wake phrases (opt-in, off by default).** Supported phrases:
+    "Hey G", "Hello G", "أهلًا G", "أهلاً يا G", "يا G". They are matched in
+    `src/lib/g/wake.ts`, only at the start of an utterance and as whole words.
+    - **Turning it on.** The panel's switch shows a consent card: the mic is
+      required, the browser's speech service may process audio externally,
+      nothing is stored, how to turn it off, and the limits. It then calls
+      `getUserMedia`.
+    - **Persistence.** The opt-in lives in sessionStorage for this tab and
+      user (`wakeKey`). After a navigation or refresh it resumes only while
+      `permissions.query` reports the mic as granted; otherwise it waits for
+      Resume. A new session starts off.
+    - **While on.** A red indicator with "Turn off" is always visible. The
+      listener (`useWakeWord`) pauses while the tab is hidden or G is in a
+      voice turn. Sign-out (`signOutG`) stops it and clears every `gl:g:`
+      key.
+    - **On a match.** G opens with a wake animation and a chime (the chime
+      only when spoken replies are on). It then listens for the question. A
+      question said in the same breath is sent without the phrase. A 4s
+      cooldown stops the same phrase from re-triggering.
+    - **Privacy and language.** Background speech is never stored, logged or
+      sent. Which language is recognised follows the site language.
+  - **Voice tests.** `scripts/g-voice-e2e.mjs` drives the real panel in
+    Chromium with a spec-faithful fake recognizer: 18 checks. Real-microphone,
+    Edge, Safari and Firefox testing still needs a person.
+- Tests: `src/lib/g/*.test.ts`, `taxonomy`, `discovery`, `onboarding-uploads`
+  and `marketplace-guards` (source-level authorization and isolation guards),
+  plus rate-limit coverage entries.
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
@@ -1099,3 +1297,137 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## 18. Growth history, design system and release docs (branch only, 2026-11-02)
+
+Not deployed. Status, evidence and blockers live in `docs/RELEASE/`:
+- `MASTER_IMPLEMENTATION_AUDIT.md`
+- `MISSING_FEATURES_MATRIX.md`
+- `IMPLEMENTATION_REPORT.md`
+- `DATABASE_MIGRATION_PLAN.md`
+- `PRODUCTION_RELEASE_CHECKLIST.md`
+- `PENDING_OWNER_DECISIONS.md`
+- `ROLLBACK_PLAN.md`
+
+- **Migration 0025 `media_kit_snapshots`** (not applied anywhere):
+  - **Writes:** one row per media kit per UTC day, written only by the server after a successful YouTube stats sync.
+  - **Reads:** owner or admin only.
+  - **Growth:** shown only from two real snapshots on different days (`lib/media-kit/growth.ts`).
+  - **Retention:** snapshots are deleted at 29 days, on each sync and by the daily freshness job. YouTube API policy III.E.4 forbids keeping Non-Authorized Data longer than 30 days, so longer history is an owner decision.
+- **Design system:** `src/components/ui/` and `src/lib/ui/`, with semantic tokens in `globals.css` and `DESIGN.md`.
+  - Consequential actions use `ConfirmDialog` / `ConfirmActionForm`, and success is shown only after the server confirms.
+  - Server-action errors are dictionary keys, translated on the client.
+- **Media Kit PDF v1:** the browser's print dialog, from the public profile. No PDF service.
+- **Local migration test:** `bash scripts/local-migrations-test.sh` applies 0001–0025 to a throwaway Postgres and runs `supabase/tests` and `supabase/verify`.
+- **Still pending the owner:** the legal dates and operator details, `CRON_SECRET`, and the durable admin audit design (not written; it takes the next free migration number, 0033 or later, since 0026–0032 are used in §19).
+
+## 19. Collaboration lifecycle (branch only, 2026-11-02)
+
+Not deployed. **Migration 0026 is not applied anywhere.**
+
+- **Tables:** `briefs`, `invitations`, `collaborations`, `deliverables` and the append-only `collaboration_events`.
+- **Access:**
+  - `authenticated` has SELECT only, under RLS: parties and admins; creators also see published briefs.
+  - Every write goes through a `collab_*` SECURITY DEFINER function, executable by `service_role` only. It locks the row and refuses with `collab:<code>`, which `lib/collab/rules.ts` maps to a dictionary key.
+- **Server actions** (`src/app/(app)/collaborations/actions.ts`) take the actor from the session, never from the form. They also validate input, mask free text with the §6.1 masker (logging violations) and apply the `collab_write` rate limit.
+- **Flow:**
+  - A company publishes a brief and invites creators. Publishing needs complete company details.
+  - The creator accepts, declines or requests changes. Accepting opens a deal room (`deal_chats`, `negotiating`).
+  - Both sides confirm the same terms; the terms are then frozen and the room goes `agreed`. `paid` stays admin-only (§12).
+  - Deliverables are submitted (https link or note), approved or sent back for revision. The company completes once every deliverable is approved.
+- **Commission:** no money moves and no commission is computed. The UI states that the 10% commission is settled manually.
+- **Owner decisions still open (PENDING_OWNER_DECISIONS item 9):** representatives have no access to a company's briefs or collaborations, and there are no reviews.
+- **Pages:**
+  - `/briefs` (company);
+  - `/opportunities` (creator);
+  - `/collaborations` (both sides; admins read-only);
+  - previews under `/preview/…`.
+- **Tests:**
+  - `supabase/tests/collaboration_lifecycle_test.sql`;
+  - `src/lib/collab/*.test.ts`;
+  - `scripts/collab-ui-e2e.mjs`.
+
+**Notifications (migration 0027, not applied).**
+- **Creation:** a trigger on `collaboration_events` writes one `notifications` row per party except the actor, unless that person muted the category in `notification_preferences`.
+- **Contents:** ids and the event kind only; wording is rendered at read time.
+- **Reads:** recipients only, under RLS.
+- **Writes:** the server marks rows read (`read_at` is the only column `service_role` may update) and saves preferences, always scoped to the session's id. Nobody but the trigger inserts.
+- **UI:** the bell in `TopBar` (creators and companies) and `/notifications`.
+- **Delivery:** in-app only; no email or push.
+
+**Shortlists, portfolio and public-profile sections (migration 0028, not applied).**
+- **Shortlists:** company-private (owner-only RLS; creators and admins cannot read them). Saved from Discover's selected-creator panel and managed at `/shortlists`.
+- **Portfolio:** `/portfolio`, creator-owned.
+  - Items are private by default.
+  - A brand is named publicly only with `brand_name_public`, the creator's recorded consent. The wording is pending the owner (PENDING_OWNER_DECISIONS item 10).
+  - Portfolio text goes through the §6.1 mask.
+- **Section visibility:** `public_profile_settings` toggles what `/p/<slug>` shows.
+  - `creator_public_profile()` keeps 0017's columns and returns NULL for a hidden section.
+  - `creator_public_portfolio()` returns public items only, when the section is on.
+  - With no settings row, the public page is unchanged and the portfolio is off.
+- **Writes:** service role, scoped to the session's id, rate-limited (`shortlist_write`, `portfolio_write`).
+
+**Content planning (migration 0029, not applied).**
+- `/content` (creators): private ideas and drafts (script, hook, title, description) with a status board and a month calendar.
+- `content_items` is owner-only under RLS, with no admin read. Writes go through the server, scoped to the session's id and rate-limited (`content_write`).
+- A trigger refuses a collaboration the creator is not party to, a scheduled item without a date, and more than 500 items.
+
+**G across collaborations and content (no migration).**
+- **Context:** G's context (`collabContext`, caller's own client, RLS) adds briefs, invitations, collaborations with a computed next step (`lib/g/collab.ts`), and the creator's content plan.
+- **Proposals:** G may prepare at most 2 per reply:
+  - `content_draft` (creator);
+  - `invitation` (company: own published brief, directory creator, not yet invited);
+  - `message_draft` (either party, own collaboration).
+- **Server filtering:** `allowedProposals` scopes the ids and masks the text, and a proposal with an ungrounded figure is dropped.
+- **Execution:** the UI (`components/g/GProposals.tsx`) shows each proposal as an editable form behind `ConfirmActionForm`. Confirming calls the ordinary server action (`saveContentItem` / `inviteCreator`), and a message draft is only copied. G itself never executes anything.
+
+**Email forwarding fixes (diagnosed in `docs/EMAIL_FORWARDING_DIAGNOSTIC.md`).**
+- **Role mailboxes:** mail to the root-domain role mailboxes (`support@`, `privacy@`, `security@`, `legal@`, `deals@`) used to be rejected by the intake and reach nobody.
+  - `src/lib/email/role-mailbox.ts` now forwards it to `ROLE_MAILBOX_FORWARD_TO`, an operator inbox that is not yet set in production. No room is created.
+  - Without that variable, the mail is recorded and logged as `inbound.role_mailbox_unrouted`.
+- **New messages:** migration 0030 (not applied) notifies the other party of a new message in an in-app room. Email rooms keep the email relay.
+- **Relay outcome:** the relay's outcome write is now checked (`relay.outcome_not_recorded`).
+
+**Analyzer fixes (`docs/AI_ANALYZER_ROOT_CAUSE_REPORT.md`).**
+- **Hidden like counts:** they no longer count as zero likes in engagement.
+- **Synced reach:** the YouTube sync keeps the median views of the recent uploads (migration 0031, not applied). These columns are server-only and cleared at 29 days with the other synced stats. The assessment shows them as synced; pricing does not use them yet (owner decision 12).
+- **API failures:** YouTube API failures during a sync are logged.
+
+**Verification and self-registration (migration 0032, not applied; `docs/CREATOR_KYC_SPEC.md`, `COMPANY_KYB_SPEC.md`, `COMPANY_REPRESENTATIVES_PERMISSIONS.md`).**
+- **Account status:** `profiles.account_status` defaults to `active`. A `pending_verification` or `rejected` account is confined to `/verification`: `requireProfile` redirects it there, and `loadApiSession` answers 403.
+- **Cases:** cases (`creator_kyc`, `company_kyb`, `representative`) move through `verification_transition()`. That function is service-role only; it locks the row, checks the actor and state, writes the history, and activates or links on approval.
+- **Documents:** they live in the private `verification-docs` bucket. Uploads go only to the caller's own editable case, and the type is decided by magic bytes. Admins view documents through 5-minute signed URLs, and each view is logged.
+- **Admin review:** at `/admin/verification`. Approval is a **manual document review**: no face or liveness provider is integrated, and the UI never says "identity verified".
+- **Self-registration:** `/register` is off unless `SELF_SIGNUP_ENABLED=1`, which is an owner decision (it changes §3/§4 and Terms §2). New and existing emails get the same answer, and accounts start `pending_verification`.
+
+## 20. Follow-up gap closure (branch only, 2026-11-03)
+
+Not deployed. **Migrations 0032 (rewritten) and 0033–0037 are not applied anywhere.**
+Details: `docs/ACCOUNT_ACTIVATION_FLOW.md`, `docs/IDENTITY_DOCUMENT_SECURITY.md`, `docs/IMPLEMENTATION_TEST_REPORT.md`, `docs/PRODUCTION_READINESS_REPORT.md`.
+
+- **Account creation (supersedes §19's self-registration):**
+  - The sequence is now Get Started → application (`access_requests` + a `verification_cases` row, `profile_id` NULL) → reviewer approval → a one-time activation link → the account is created.
+  - `/register` and `/auth/confirm` are removed, and nothing calls `signUp`.
+  - Tokens: 32 random bytes; only their SHA-256 is stored (`application_tokens`). A resume link lasts 14 days and lives in an httpOnly cookie. An activation link lasts 48 hours, is single-use, and is claim → checkpoint → complete, so a crash is recoverable.
+  - Supabase Auth's public sign-up must be **off** (owner configuration).
+- **Reviewers:** only admins listed in `verification_reviewers` can see or decide cases. The table is empty by default.
+- **Camera-only identity capture:** a creator needs a selfie, ID front and ID back, captured through `CameraCapture` (getUserMedia → canvas JPEG). There is no file input or gallery, and no fallback. The server rejects non-JPEG and EXIF-bearing images, and the database requires `capture_method = 'camera'`.
+  - This is **not** liveness or face matching.
+  - The Permissions-Policy header now allows the camera only on the capture pages, and the microphone same-origin for G (it was blocked before).
+- **Retention:** `VERIFICATION_RETENTION_DAYS` (unset means never purged). The purge route is not scheduled.
+- **Taxonomy (0033):** `taxonomy_terms` is the source of truth, managed at `/admin/taxonomy`.
+  - It is seeded with the existing ids, plus genres as parents of the games.
+  - Triggers check every id written to profiles and briefs. Deactivating a term never breaks stored data, and a term in use cannot be deleted.
+- **Representative scopes (0034):** a link grants nothing until the company grants a scope at `/team`.
+  - Grantable: `company.view`, `company.edit`, `discovery.view`, `briefs.view`.
+  - Financial or contractual scopes are refused pending an owner decision.
+  - Enforced in RLS, in `creator_directory()` and on the server.
+- **Analytics (0035):** the 50 most recent YouTube uploads are stored for 29 days, giving top content and cadence. A window the sample does not cover reads "not enough data". Engagement and median reach still use the newest 10.
+- **Relay lifecycle (0036):** queued → processing → sent / retryable / permanent, with backoff, a Resend idempotency key per message, and `/admin/relays`.
+- **Official news (0037):** YouTube Official Blog RSS and the Steam news API (developer posts only). Headlines and links only.
+  - Refresh is manual at `/admin/news`; the cron is off and unscheduled.
+  - Headlines appear on the Content plan and in G's DATA.
+- **G:** replies in the language the message is written in, labels recommendations, and gives each metric's source and last update.
+- **Social audit:** `docs/SOCIAL_INTEGRATIONS_AND_SYNC_AUDIT.md`.
+  - Instagram's pinned Graph v19.0 expired on 2026-05-21, so Instagram stays disabled.
+  - Kick now has an official API, which makes §7.3's "no official API" outdated.

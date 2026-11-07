@@ -27,6 +27,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     // Listed so the URLs a Google or Meta reviewer is given are discoverable
     // and demonstrably part of the site, not orphan pages.
+    // The public application page that replaced the external access link.
+    {
+      url: `${base}/get-started`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
     {
       url: `${base}/terms`,
       lastModified: new Date(),

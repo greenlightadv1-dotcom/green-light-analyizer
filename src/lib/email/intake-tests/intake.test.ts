@@ -312,3 +312,37 @@ test("a real offer from another sender with a look-alike subject is still a deal
   assert.equal(outcome.status, "processed");
   assert.equal(db.deal_chats.length, 1);
 });
+
+// Role mailboxes (support@, privacy@ …): diagnosed in docs/EMAIL_FORWARDING_DIAGNOSTIC.md.
+const roleMeta = () => meta({ to: ["support@greenlightadvs.com"], received_for: [], subject: "Need help" });
+
+test("mail to support@ is forwarded to the operator inbox, with no deal room", async () => {
+  const sent: { to: string; subject: string; text: string; replyTo: string }[] = [];
+  const out = await processInboundEmail(roleMeta(), {
+    fetchContent: content({ text: "Please help with my account." }),
+    forwardTo: "ops@operator.example",
+    sendForward: async (m) => (sent.push(m), { ok: true }),
+  });
+  assert.equal(out.status, "processed");
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].to, "ops@operator.example");
+  assert.equal(sent[0].replyTo, SENDER);
+  assert.match(sent[0].subject, /^\[support\] /);
+  assert.match(sent[0].text, /Please help with my account\./);
+  assert.equal(db.deal_chats.length, 0);
+  assert.equal(inbound().status, "processed");
+});
+
+test("without an operator inbox, role mail is recorded and logged, never silently dropped", async () => {
+  const out = await processInboundEmail(roleMeta(), { fetchContent: content(), forwardTo: null, sendForward: async () => assert.fail("must not send") });
+  assert.equal(out.status, "rejected");
+  assert.match(String(inbound().detail), /ROLE_MAILBOX_FORWARD_TO is not set/);
+  assert.ok(logs.some((l) => l.includes("inbound.role_mailbox_unrouted")));
+  assert.equal(fetchCalls, 0);
+});
+
+test("a failed forward is recorded as an error", async () => {
+  const out = await processInboundEmail(roleMeta(), { fetchContent: content(), forwardTo: "ops@operator.example", sendForward: async () => ({ ok: false, error: "Resend returned 403" }) });
+  assert.equal(out.status, "rejected");
+  assert.ok(logs.some((l) => l.includes("inbound.role_mailbox_forward_failed")));
+});

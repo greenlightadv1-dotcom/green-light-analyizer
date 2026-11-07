@@ -1,6 +1,7 @@
 import type { Profile } from "@/lib/auth";
 import type { DealChat, Message } from "@/lib/deals/queries";
 import type { MediaKit } from "@/lib/media-kit/queries";
+import type { MediaKitSnapshot } from "@/lib/types/database";
 
 /**
  * Mock dataset for the UI preview at /preview.
@@ -17,7 +18,8 @@ import type { MediaKit } from "@/lib/media-kit/queries";
  *     side by side
  *   - a green, a yellow and a red rating, including one the §7.4 cap pulled
  *     down from green
- *   - a Starter plan at its §8 connection limit, so the locked card renders
+ *   - an old stored plan value (Starter), which under the unified Creator
+ *     Plan no longer limits anything — the preview shows the same access
  */
 
 const now = Date.now();
@@ -50,6 +52,9 @@ export const mockProfile: Profile = {
   shareable_slug: "amirkhaled",
   whatsapp_number: null,
   whatsapp_notifications_enabled: false,
+  creator_categories: ["gaming", "tech"],
+  creator_games: ["valorant", "ea_fc"],
+  content_formats: ["live_stream", "long_video"],
 };
 
 export const mockAdminProfile: Profile = {
@@ -315,3 +320,34 @@ export const mockKits: MediaKit[] = [
     content_tags: null,
   },
 ];
+
+/**
+ * Two invented growth snapshots for the preview's YouTube kit, 8 days apart,
+ * so the Media Kit's growth summary renders. Real snapshots are written only
+ * by the YouTube stats sync (migration 0025).
+ */
+const dayAgo = (days: number) => new Date(now - days * 86_400_000).toISOString().slice(0, 10);
+export const mockSnapshots: MediaKitSnapshot[] = [
+  {
+    id: 2, media_kit_id: "00000000-0000-4000-8000-00000000cc01", creator_id: mockProfile.id, platform: "youtube",
+    source: "youtube_data_api", captured_on: dayAgo(0), captured_at: ago(180),
+    subscriber_count: 212_000, channel_view_count: 18_400_000, media_count: 340,
+  },
+  {
+    id: 1, media_kit_id: "00000000-0000-4000-8000-00000000cc01", creator_id: mockProfile.id, platform: "youtube",
+    source: "youtube_data_api", captured_on: dayAgo(8), captured_at: ago(8 * 1440),
+    subscriber_count: 208_500, channel_view_count: 18_050_000, media_count: 337,
+  },
+];
+
+/** Demo uploads for the content-performance panel (0035). One has likes hidden, to show "hidden" not 0. */
+export const mockKitVideos = Array.from({ length: 12 }, (_, i) => ({
+  media_kit_id: "00000000-0000-4000-8000-00000000cc01",
+  video_id: `demoVid${String(i).padStart(4, "0")}`,
+  title: `Demo upload ${i + 1}`,
+  published_at: new Date(Date.UTC(2026, 9, 31) - i * 4 * 86_400_000).toISOString(),
+  view_count: 12000 - i * 700 + (i === 3 ? 30000 : 0),
+  like_count: i === 3 ? null : 400 - i * 20,
+  comment_count: 40 - i,
+  synced_at: "2026-11-01T09:00:00Z",
+}));

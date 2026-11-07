@@ -64,6 +64,10 @@ function contentSecurityPolicy(): string {
   ].join("; ");
 }
 
+const PERMISSIONS_POLICY = (camera: "()" | "(self)") =>
+  `camera=${camera}, microphone=(self), geolocation=(), payment=(), usb=()`;
+const CAMERA_PATHS = ["/apply", "/apply/:path*", "/verification", "/verification/:path*", "/preview/apply", "/preview/verification"];
+
 const nextConfig: NextConfig = {
   // Next advertises itself in an X-Powered-By header on every response. It
   // tells an attacker which framework and therefore which CVE list to work
@@ -98,15 +102,25 @@ const nextConfig: NextConfig = {
           // Redundant with frame-ancestors for modern browsers, kept for old ones.
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // Nothing in this product uses these; deny them rather than inherit
-          // whatever a future embedded script decides to ask for.
+          // Same-origin only, never an embedded or third-party frame:
+          //   - microphone: G's voice input and the opt-in "Hey G" phrase
+          //     (getUserMedia / Web Speech), started only by the person.
+          //   - camera: denied here and allowed only on the identity-capture
+          //     pages below.
+          // Everything else is denied rather than inherited by a future script.
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+            value: PERMISSIONS_POLICY("()"),
           },
           { key: "X-DNS-Prefetch-Control", value: "on" },
         ],
       },
+      // Live Camera Capture of identity images (docs/CREATOR_KYC_SPEC.md). A
+      // later matching rule overrides the header above for these paths only.
+      ...CAMERA_PATHS.map((source) => ({
+        source,
+        headers: [{ key: "Permissions-Policy", value: PERMISSIONS_POLICY("(self)") }],
+      })),
     ];
   },
 };

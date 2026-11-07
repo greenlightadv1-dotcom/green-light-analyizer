@@ -94,11 +94,14 @@ test("cron auth requires the exact bearer secret, and refuses when none is set",
 
 // --- public YouTube stats (API-key sync) -----------------------------------------
 
-test("public stats clearing touches only the three sync-only columns", () => {
+test("public stats clearing touches only the sync-only columns", () => {
   assert.deepEqual(clearedYouTubeStats(), {
     subscriber_count: null,
     channel_view_count: null,
     media_count: null,
+    // 0031: synced recent-upload views follow the same 29-day retention.
+    recent_median_views: null,
+    recent_views_sample: null,
     youtube_stats_synced_at: null,
   });
   // engagement_rate is written by both the form and the sync, so it is never cleared;

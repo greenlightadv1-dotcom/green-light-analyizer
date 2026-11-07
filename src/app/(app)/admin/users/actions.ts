@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
+import { log } from "@/lib/log";
 import { generateInboundAlias } from "@/lib/alias";
 import { extendExpiry } from "@/lib/subscription";
 import { requireRole } from "@/lib/auth";
@@ -20,6 +22,7 @@ export type CreateUserState = {
 };
 
 const ROLES: Role[] = ["creator", "company", "admin"];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REGIONS: Region[] = ["MENA", "International"];
 const PLANS: SubscriptionPlan[] = ["Starter", "Pro", "Elite"];
 /** Monthly / Quarterly / Yearly, per the admin renewal UI. "custom"/"none" are handled separately. */
@@ -43,7 +46,13 @@ export async function createUser(
   _prev: CreateUserState,
   formData: FormData,
 ): Promise<CreateUserState> {
-  await requireRole("admin");
+  const reviewer = await requireRole("admin");
+
+  // Optional: the Get Started application this account is created from. Only
+  // a still-pending row is used; its website is the one field carried over
+  // that the form itself does not show.
+  const requestIdRaw = String(formData.get("request_id") ?? "");
+  const requestId = UUID.test(requestIdRaw) ? requestIdRaw : null;
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -63,6 +72,29 @@ export async function createUser(
   }
 
   const admin = createAdminClient();
+  let fromRequest: { website: string | null } | null = null;
+  if (requestId) {
+    const { data: req } = await admin
+      .from("access_requests")
+      .select("website, status")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!req || req.status !== "pending") {
+      return { error: "That application is no longer pending.", created: null };
+    }
+    // An application with a verification case is approved by a reviewer and
+    // becomes an account only through its one-time activation link
+    // (docs/ACCOUNT_ACTIVATION_FLOW.md). It may not be turned into an account
+    // here, around that review.
+    const { count: cases } = await admin
+      .from("verification_cases")
+      .select("id", { count: "exact", head: true })
+      .eq("access_request_id", requestId);
+    if ((cases ?? 0) > 0) {
+      return { error: "This application goes through verification. Review it under Verification; the applicant creates the account from the approval email.", created: null };
+    }
+    fromRequest = { website: role === "company" ? req.website : null };
+  }
   const tempPassword = temporaryPassword();
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -96,6 +128,7 @@ export async function createUser(
     inbound_alias: inboundAlias,
     primary_email: email,
     must_change_password: true,
+    ...(fromRequest?.website ? { company_website: fromRequest.website } : {}),
   });
 
   if (profileError) {
@@ -105,6 +138,21 @@ export async function createUser(
       error: `Account rolled back — profile could not be created: ${profileError.message}`,
       created: null,
     };
+  }
+
+  if (requestId) {
+    // Compare-and-set on status so two admins cannot both approve one row.
+    await admin
+      .from("access_requests")
+      .update({
+        status: "approved",
+        reviewed_by: reviewer.id,
+        reviewed_at: new Date().toISOString(),
+        created_profile_id: data.user.id,
+      })
+      .eq("id", requestId)
+      .eq("status", "pending");
+    revalidatePath("/admin/requests");
   }
 
   revalidatePath("/admin/users");
@@ -257,48 +305,65 @@ export async function updateProfile(formData: FormData): Promise<void> {
  * be reversed: an admin's own mistaken ban should not require a database
  * edit to undo.
  */
-export async function setBan(formData: FormData): Promise<void> {
+export async function setBan(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const admin = await requireRole("admin");
 
   const targetId = String(formData.get("profile_id") ?? "");
   const action = String(formData.get("action") ?? "");
-  if (!targetId || targetId === admin.id) return;
-  if (action !== "ban" && action !== "unban") return;
+  if (!targetId) return fail("ui.errors.invalid");
+  if (targetId === admin.id) return fail("admin.users.errors.self");
+  if (action !== "ban" && action !== "unban") return fail("ui.errors.invalid");
 
   const service = createAdminClient();
 
   if (action === "ban") {
     const reason = String(formData.get("reason") ?? "").trim();
-    if (!reason) return;
+    if (!reason) return fail("admin.users.errors.reason");
 
-    const { error } = await service
+    const { data, error } = await service
       .from("profiles")
       .update({ banned_at: new Date().toISOString(), banned_reason: reason })
-      .eq("id", targetId);
-    if (error) return;
+      .eq("id", targetId)
+      .select("id");
+    if (error) {
+      log.error("admin.ban_failed", { profile_id: targetId, error });
+      return fail("admin.users.errors.failed");
+    }
+    if (!data?.length) return fail("ui.errors.notFound");
 
-    await service.from("admin_actions").insert({
+    const { error: auditError } = await service.from("admin_actions").insert({
       admin_id: admin.id,
       target_profile_id: targetId,
       action: "ban",
       old_value: null,
       new_value: reason,
     });
+    if (auditError) log.error("admin.audit_failed", { action: "ban", profile_id: targetId, error: auditError });
   } else {
-    const { error } = await service
+    const { data, error } = await service
       .from("profiles")
       .update({ banned_at: null, banned_reason: null })
-      .eq("id", targetId);
-    if (error) return;
+      .eq("id", targetId)
+      .select("id");
+    if (error) {
+      log.error("admin.unban_failed", { profile_id: targetId, error });
+      return fail("admin.users.errors.failed");
+    }
+    if (!data?.length) return fail("ui.errors.notFound");
 
-    await service.from("admin_actions").insert({
+    const { error: auditError } = await service.from("admin_actions").insert({
       admin_id: admin.id,
       target_profile_id: targetId,
       action: "unban",
       old_value: null,
       new_value: null,
     });
+    if (auditError) log.error("admin.audit_failed", { action: "unban", profile_id: targetId, error: auditError });
   }
 
   revalidatePath("/admin/users");
+  return OK;
 }

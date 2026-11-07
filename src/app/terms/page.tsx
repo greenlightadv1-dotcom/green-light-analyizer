@@ -11,6 +11,7 @@ import {
   RETENTION,
   SUPPORT_EMAIL,
 } from "@/lib/constants/legal";
+import { CREATOR_COMMISSION } from "@/lib/plans";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
 
 export const metadata: Metadata = {
@@ -148,9 +149,29 @@ export default function TermsPage() {
 
       <h2>6. Commission</h2>
       <p>
-        Green Light charges a commission on each completed deal. The rate
-        depends on the account&apos;s plan and is shown on the pricing page
-        inside the product at the time the deal is made.
+        Green Light charges a commission of {CREATOR_COMMISSION} on each
+        completed deal. Every creator is on the same Creator Plan, so the rate
+        is the same for every creator account and is also shown on the pricing
+        page inside the product. The Starter, Pro and Elite plans no longer
+        exist. The rates previously tied to them (15%, 8–10% and 5%) apply
+        only to a deal agreed before the date below.
+      </p>
+      <p>
+        {/*
+          Historical record, written out literally on purpose (W1): this
+          sentence and §14's exception describe the one-time 31 October 2026
+          change. They must not follow CREATOR_COMMISSION or
+          COMMISSION_EFFECTIVE_DATE, or a future rate change would silently
+          inherit "no notice period". pricing-copy.test.ts enforces this.
+        */}
+        <strong>
+          This rate takes effect on 31 October 2026, with no notice period.
+        </strong>{" "}
+        It applies to every deal agreed on or after that date, including a
+        deal that was opened before that date but had not been agreed by it.
+        It does not change the commission on a deal agreed, or a commission
+        earned, before that date: those keep the rate that applied when the
+        deal was agreed.
       </p>
       <p>
         Commission is charged on the deal, not on company seats: companies
@@ -166,20 +187,21 @@ export default function TermsPage() {
         — not by either party directly.
       </p>
 
-      <h2>7. Subscriptions and promotional codes</h2>
+      <h2>7. The Creator Plan and promotional codes</h2>
       <p>
-        Plans, upgrades, downgrades and payment confirmation are handled by our
-        team over our{" "}
+        There is one plan for creators, the Creator Plan, and every creator
+        account has the same access to the product&apos;s creator features.
+        Company access is free. Questions about your account and payment
+        confirmation are handled by our team over our{" "}
         <a href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer">
           Discord support server
         </a>
-        , not through a checkout in the product. Prices are shown on the pricing
-        page and vary by region.
+        , not through a checkout in the product.
       </p>
       <p>
-        Promotional codes are single-use, expire, and apply to the account that
-        redeems them. We may withdraw or refuse a code that appears to have been
-        obtained or used improperly.
+        Promotional codes are no longer issued or redeemed. Codes issued before
+        the Creator Plan referred to plans that no longer exist and give no
+        additional access.
       </p>
 
       <h2>8. Keeping contact details on the platform</h2>
@@ -265,7 +287,7 @@ export default function TermsPage() {
       </p>
       <p>
         We may change, suspend or withdraw features. Where a change materially
-        reduces what your plan provides, we will tell you.
+        reduces what the Creator Plan provides, we will tell you.
       </p>
 
       <h2>12. Suspension and closure</h2>
@@ -348,8 +370,17 @@ export default function TermsPage() {
         Green Light after the effective date means you accept the updated terms.
       </p>
       <p>
+        {/* Historical, literal on purpose (W1): see the note in clause 6. */}
+        One change is an exception to that notice period: the single 10%
+        commission in clause 6 took effect on 31 October 2026, the date this
+        revision was published, without advance notice. Every future change that materially affects your rights
+        or obligations, including any later change to the commission, is given
+        the full notice described above.
+      </p>
+      <p>
         A change never applies retroactively to a deal already agreed, or to a
-        commission already earned, under the previous version.
+        commission already earned, under the previous version. That includes
+        the commission change in clause 6.
       </p>
 
       <h2>15. Governing law and disputes</h2>

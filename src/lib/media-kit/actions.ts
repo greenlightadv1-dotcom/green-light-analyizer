@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
+import { CREATOR_ONLY_ERROR, canUseCreatorFeatures } from "@/lib/access";
 import { toHandle } from "@/lib/alias";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,7 +19,8 @@ import { detectNiche as detectNicheWithAi } from "@/lib/ai/niche";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import type { CountryShare, Database, Platform, SocialLinks } from "@/lib/types/database";
 import { parseCountryShares } from "./countries";
-import { PLATFORMS, canAddConnection } from "./platforms";
+import { cutoffDay } from "./growth";
+import { MAX_CONNECTIONS, PLATFORMS, canAddConnection } from "./platforms";
 import { isRealOAuthPlatform } from "@/lib/oauth/platforms";
 
 export type MediaKitState = {
@@ -48,6 +50,8 @@ export async function saveMediaKit(
   formData: FormData,
 ): Promise<MediaKitState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, savedPlatform: null };
 
   const platform = String(formData.get("platform") ?? "") as Platform;
   if (!PLATFORMS.includes(platform)) {
@@ -68,20 +72,20 @@ export async function saveMediaKit(
 
   const supabase = await createClient();
 
-  // §8 connection limit. Editing an existing kit is always allowed — the limit
+  // Connection ceiling. Editing an existing kit is always allowed — the limit
   // is on how many platforms are connected, not on correcting data already
-  // entered, so a downgrade never strands a creator with uneditable rows.
+  // entered.
   const { data: existing } = await supabase
     .from("media_kits")
     .select("id, platform")
     .eq("creator_id", profile.id);
 
   const isNew = !existing?.some((k) => k.platform === platform);
-  const plan = profile.subscription_plan ?? "Starter";
-
-  if (isNew && !canAddConnection(plan, existing?.length ?? 0)) {
+  // One ceiling for every creator, whatever plan value is stored: the
+  // platforms the schema supports (platforms.ts).
+  if (isNew && !canAddConnection(existing?.length ?? 0)) {
     return {
-      error: `The ${plan} plan covers ${existing?.length ?? 0} platform connections. Upgrade over Discord to add more.`,
+      error: `The Creator Plan covers ${MAX_CONNECTIONS} platform connections, and they are all in use.`,
       savedPlatform: null,
     };
   }
@@ -104,7 +108,10 @@ export async function saveMediaKit(
   );
 
   if (error) {
-    return { error: "Those details could not be saved.", savedPlatform: null };
+    return {
+      error: "actionErrors.notSaved",
+      savedPlatform: null,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -133,6 +140,8 @@ export async function saveMediaKit(
  */
 export async function disconnectAnalytics(formData: FormData): Promise<void> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return;
 
   const platform = String(formData.get("platform") ?? "") as Platform;
   if (!PLATFORMS.includes(platform)) return;
@@ -176,6 +185,8 @@ export async function syncVerifiedGeo(
   formData: FormData,
 ): Promise<SyncVerifiedGeoState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const platform = String(formData.get("platform") ?? "");
   if (!isRealOAuthPlatform(platform)) {
@@ -244,7 +255,10 @@ export async function syncVerifiedGeo(
       connection.external_account_id,
     );
     if (!countries) {
-      return { error: "Could not reach Instagram — try again shortly.", synced: false };
+      return {
+      error: "actionErrors.instagramNoResponse",
+      synced: false,
+    };
     }
     verified = { verified_top_countries: countries, audience_verified: true };
   }
@@ -261,7 +275,10 @@ export async function syncVerifiedGeo(
     .eq("platform", platform);
 
   if (error) {
-    return { error: "Fetched but could not save.", synced: false };
+    return {
+      error: "actionErrors.geoFetchedNotSaved",
+      synced: false,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -297,6 +314,8 @@ export async function syncYoutubeStats(
   formData: FormData,
 ): Promise<SyncYoutubeState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const mediaKitId = String(formData.get("media_kit_id") ?? "");
   if (!mediaKitId) return { error: "Missing media kit.", synced: false };
@@ -330,7 +349,7 @@ export async function syncYoutubeStats(
   if (!stats) {
     return {
       error:
-        "Could not reach YouTube — check the handle, and that YOUTUBE_API_KEY is configured.",
+        "actionErrors.youtubeNotReached",
       synced: false,
     };
   }
@@ -346,6 +365,10 @@ export async function syncYoutubeStats(
       // one recent video with views) — a temporary computation failure
       // should never silently blank out a value the creator already set.
       ...(stats.engagementRate !== null && { engagement_rate: stats.engagementRate }),
+      // Synced reach (0031): the median views of the recent uploads. Kept
+      // apart from the creator-typed avg_views, and cleared with the stats above.
+      recent_median_views: stats.recentViews?.median ?? null,
+      recent_views_sample: stats.recentViews?.sample ?? null,
       last_synced_at: new Date().toISOString(),
       // The freshness clock for the three stats above (0023): refreshed or
       // deleted within 30 days by the youtube-data-freshness cron.
@@ -354,8 +377,62 @@ export async function syncYoutubeStats(
     .eq("id", mediaKitId);
 
   if (error) {
-    return { error: "Fetched from YouTube but could not save.", synced: false };
+    return {
+      error: "actionErrors.youtubeStatsNotSaved",
+      synced: false,
+    };
   }
+
+  // Recent uploads (0035): replaced on every sync, so the stored set is
+  // always the last one the API returned. Only written when the upload list
+  // could be read; a partial failure keeps the previous set rather than
+  // blanking it. Non-Authorized Data: the freshness job deletes rows older
+  // than 29 days. A failure here is logged and never fails the sync.
+  if (stats.videos) {
+    const syncedAt = new Date().toISOString();
+    const { error: delErr } = await service.from("media_kit_videos").delete().eq("media_kit_id", mediaKitId);
+    if (delErr && delErr.code !== "42P01" && delErr.code !== "PGRST205") log.error("youtube.videos_replace_failed", { code: delErr.code });
+    if (!delErr && stats.videos.length) {
+      const { error: insErr } = await service.from("media_kit_videos").insert(
+        stats.videos.map((v) => ({ ...v, media_kit_id: mediaKitId, creator_id: profile.id, platform: "youtube" as const, synced_at: syncedAt })),
+      );
+      if (insErr) log.error("youtube.videos_insert_failed", { code: insErr.code });
+    }
+    if (!delErr) {
+      await service.from("media_kits").update({ recent_videos_complete: stats.videosComplete }).eq("id", mediaKitId).then(({ error: e }) => {
+        if (e && e.code !== "42703" && e.code !== "PGRST204") log.warn("youtube.videos_complete_flag_failed", { code: e.code });
+      });
+    }
+  }
+
+  // Growth history (0025): one dated snapshot per kit per UTC day, written
+  // only after the stats themselves were saved. These are YouTube
+  // Non-Authorized Data, which may not be stored for more than 30 days, so
+  // this kit's snapshots older than 29 days are deleted here as well as by
+  // the daily freshness job. A failure here is logged and does not undo or
+  // fail the sync the creator just completed.
+  const today = new Date().toISOString().slice(0, 10);
+  const { error: snapshotError } = await service.from("media_kit_snapshots").upsert(
+    {
+      media_kit_id: kit.id,
+      creator_id: profile.id,
+      platform: "youtube",
+      source: "youtube_data_api",
+      captured_on: today,
+      captured_at: new Date().toISOString(),
+      subscriber_count: stats.subscriberCount,
+      channel_view_count: stats.viewCount,
+      media_count: stats.videoCount,
+    },
+    { onConflict: "media_kit_id,captured_on" },
+  );
+  if (snapshotError) log.error("media_kit_snapshot.write_failed", { media_kit_id: kit.id, error: snapshotError });
+  const { error: pruneError } = await service
+    .from("media_kit_snapshots")
+    .delete()
+    .eq("media_kit_id", kit.id)
+    .lt("captured_on", cutoffDay(new Date()));
+  if (pruneError) log.error("media_kit_snapshot.prune_failed", { media_kit_id: kit.id, error: pruneError });
 
   revalidatePath("/media-kit");
   revalidatePath("/analyzer");
@@ -378,6 +455,8 @@ export async function syncInstagramStats(
   _formData: FormData,
 ): Promise<SyncInstagramState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, synced: false };
 
   const limit = await consumeRateLimit("platform_sync", profile.id);
   if (!limit.allowed) return { error: limit.message, synced: false };
@@ -407,7 +486,10 @@ export async function syncInstagramStats(
     connection.external_account_id,
   );
   if (!metrics) {
-    return { error: "Could not reach Instagram — try again shortly.", synced: false };
+    return {
+      error: "actionErrors.instagramNoResponse",
+      synced: false,
+    };
   }
 
   const { error } = await service
@@ -421,7 +503,10 @@ export async function syncInstagramStats(
     .eq("platform", "instagram");
 
   if (error) {
-    return { error: "Fetched from Instagram but could not save.", synced: false };
+    return {
+      error: "actionErrors.instagramStatsNotSaved",
+      synced: false,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -448,6 +533,8 @@ export async function detectNiche(
   formData: FormData,
 ): Promise<DetectNicheState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, result: null };
 
   const mediaKitId = String(formData.get("media_kit_id") ?? "");
   if (!mediaKitId) return { error: "Missing media kit.", result: null };
@@ -479,7 +566,7 @@ export async function detectNiche(
     const videos = await fetchYoutubeRecentVideos(kit.platform_handle);
     if (!videos) {
       return {
-        error: "Could not fetch recent videos — check the handle and YOUTUBE_API_KEY.",
+        error: "actionErrors.youtubeVideosUnreadable",
         result: null,
       };
     }
@@ -504,7 +591,10 @@ export async function detectNiche(
       connection.external_account_id,
     );
     if (!posts) {
-      return { error: "Could not fetch recent posts — try again shortly.", result: null };
+      return {
+        error: "actionErrors.instagramPostsUnreadable",
+        result: null,
+      };
     }
     items = posts.map((p) => p.caption);
   } else {
@@ -517,7 +607,7 @@ export async function detectNiche(
   const niche = await detectNicheWithAi(items);
   if (!niche) {
     return {
-      error: "Could not detect a niche — check that NVIDIA_API_KEY is configured.",
+      error: "actionErrors.nicheUnavailable",
       result: null,
     };
   }
@@ -529,7 +619,10 @@ export async function detectNiche(
     .eq("id", mediaKitId);
 
   if (error) {
-    return { error: "Detected but could not save.", result: null };
+    return {
+      error: "actionErrors.nicheNotSaved",
+      result: null,
+    };
   }
 
   revalidatePath("/media-kit");
@@ -584,24 +677,15 @@ export async function saveCreatorProfile(
   formData: FormData,
 ): Promise<CreatorProfileState> {
   const profile = await requireProfile();
+  // Creator-only on the server, not just hidden in the nav (lib/access.ts).
+  if (!canUseCreatorFeatures(profile.role)) return { error: CREATOR_ONLY_ERROR, saved: false };
 
   const bio = String(formData.get("bio") ?? "").trim().slice(0, 1000) || null;
-  const avatarUrl = String(formData.get("avatar_url") ?? "").trim() || null;
   const country = String(formData.get("country") ?? "").trim().slice(0, 100) || null;
   const primaryLanguage = String(formData.get("primary_language") ?? "").trim().slice(0, 100) || null;
   const baseRateRaw = String(formData.get("base_rate_usd") ?? "").trim();
   const baseRateUsd = baseRateRaw ? Number(baseRateRaw) : null;
 
-  if (avatarUrl) {
-    try {
-      const url = new URL(avatarUrl);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        return { error: "Avatar must be an http(s) link.", saved: false };
-      }
-    } catch {
-      return { error: "Avatar must be a valid link.", saved: false };
-    }
-  }
   if (baseRateUsd !== null && (!Number.isFinite(baseRateUsd) || baseRateUsd < 0)) {
     return { error: "Base rate must be a non-negative, whole number.", saved: false };
   }
@@ -620,7 +704,9 @@ export async function saveCreatorProfile(
     .from("profiles")
     .update({
       bio,
-      avatar_url: avatarUrl,
+      // avatar_url is no longer a typed link: it is set only by the upload
+      // route (/api/uploads/avatar), which stores the file in the caller's
+      // own folder and writes the URL itself.
       country,
       primary_language: primaryLanguage,
       base_rate_usd: baseRateUsd,
@@ -630,7 +716,10 @@ export async function saveCreatorProfile(
     .eq("id", profile.id);
 
   if (error) {
-    return { error: "Those details could not be saved.", saved: false };
+    return {
+      error: "actionErrors.notSaved",
+      saved: false,
+    };
   }
 
   revalidatePath("/media-kit");

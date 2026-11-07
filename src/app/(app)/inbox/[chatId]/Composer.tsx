@@ -149,7 +149,7 @@ export function Composer({
           <div className="flex flex-wrap items-end gap-2">
             <GenerateDraftButton />
             {isCreator && !demo ? (
-              <label className="flex items-center gap-1.5 text-[11px] text-fg/50">
+              <label className="flex items-center gap-1.5 text-[11px] text-fg-muted">
                 {t("inbox.privateMinimum")}
                 <input
                   type="text"
@@ -164,7 +164,7 @@ export function Composer({
             ) : null}
           </div>
           {isCreator && !demo ? (
-            <p id={`${chatId}-minimum-note`} className="mt-1 text-[11px] text-fg/35">
+            <p id={`${chatId}-minimum-note`} className="mt-1 text-[11px] text-fg-muted">
               {t("inbox.privateMinimumNote")}
             </p>
           ) : null}
@@ -185,10 +185,10 @@ export function Composer({
               applies to audience data.
             */}
             {!demo && draftState.source === "template" ? (
-              <p className="mt-1.5 text-[11px] text-fg/35">{t("inbox.draftFromTemplate")}</p>
+              <p className="mt-1.5 text-[11px] text-fg-muted">{t("inbox.draftFromTemplate")}</p>
             ) : null}
             {!demo && draftState.analysis ? (
-              <div className="mt-2 space-y-1.5 border-t border-brand-green/15 pt-2 text-[11px] text-fg/55">
+              <div className="mt-2 space-y-1.5 border-t border-brand-green/15 pt-2 text-[11px] text-fg-muted">
                 <p>
                   <span className="font-medium text-fg/75">{t("inbox.negotiationStage")}:</span>{" "}
                   {t(STAGE_KEYS[draftState.analysis.stage])}
@@ -216,7 +216,7 @@ export function Composer({
                   {draftState.analysis.factors.map((f) => (
                     <li key={f.label} className="rounded-full border border-fg/10 px-2 py-0.5">
                       {f.label}: {f.value}{" "}
-                      <span className="text-fg/35">({t(PROVENANCE_KEYS[f.provenance])})</span>
+                      <span className="text-fg-muted">({t(PROVENANCE_KEYS[f.provenance])})</span>
                     </li>
                   ))}
                 </ul>
@@ -233,7 +233,7 @@ export function Composer({
                   </ul>
                 ) : null}
                 {draftState.analysis.minimumApplied ? <p>{t("inbox.minimumApplied")}</p> : null}
-                <p className="text-fg/40">{t("inbox.draftOnly")}</p>
+                <p className="text-fg-muted">{t("inbox.draftOnly")}</p>
               </div>
             ) : null}
             <div className="mt-2 flex items-center gap-2">
@@ -277,7 +277,7 @@ export function Composer({
 
         {state.error ? (
         <p role="alert" className="text-xs text-red-700 dark:text-red-300">
-          {state.error}
+          {t(state.error)}
         </p>
       ) : null}
 
@@ -308,7 +308,7 @@ export function Composer({
         </p>
       ) : null}
 
-      <p className="text-[11px] text-fg/30">
+      <p className="text-[11px] text-fg-muted">
         {t("inbox.maskingFooterNote")}
       </p>
       </form>
