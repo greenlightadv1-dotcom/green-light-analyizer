@@ -9,6 +9,7 @@ import { relayIdempotencyKey } from "@/lib/email/relay-lifecycle";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { generateCompanyProfile } from "@/lib/ai/company-intel";
 import type { CompanyProfile } from "@/lib/ai/company-intel-types";
+import { normalizeSecurityCheck } from "@/lib/deals/intel-shape";
 import { buildReplyTemplate } from "@/lib/deals/reply-template";
 import { isFreeEmailDomain } from "@/lib/deals/company-intelligence";
 import { extractDomain } from "@/lib/security/check";
@@ -378,7 +379,8 @@ export async function analyzeCompany(
     return { error: "This offer came from a verified company account.", profile: null };
   }
 
-  const domain = chat.security_check?.domain ?? extractDomain(chat.sender_email);
+  const security = normalizeSecurityCheck(chat.security_check);
+  const domain = security?.domain ?? extractDomain(chat.sender_email);
   if (!domain) return { error: "This sender has no usable domain.", profile: null };
 
   const limit = await consumeRateLimit("ai_company_intel", profile.id);
@@ -390,7 +392,7 @@ export async function analyzeCompany(
 
   const result = await generateCompanyProfile({
     domain,
-    security: chat.security_check,
+    security,
     isFreeEmail: isFreeEmailDomain(domain),
     offerText: incoming?.message_text ?? "",
   });

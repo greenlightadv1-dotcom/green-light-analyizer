@@ -183,6 +183,7 @@ const es: Dictionary = {
     askGMessage: "Explica este análisis de la oferta y qué debo hacer ahora: riesgo {risk}, precio recomendado {price} $. Razonamiento: {reasoning}",
   },
   inbox: {
+    panelUnavailable: "No se pudo mostrar este panel. La conversación no se ve afectada.",
     title: "Bandeja de deals",
     description: "Cada oferta de patrocinio se convierte aquí en una sala de chat — enmascarada, valorada y calificada.",
     noRoomsTitle: "Aún no hay salas de deal",

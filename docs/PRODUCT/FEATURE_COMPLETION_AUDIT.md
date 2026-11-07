@@ -100,7 +100,7 @@
 | Feature | Status | Evidence | Files | Gap |
 |---|---|---|---|---|
 | Deal rooms, masked chat, violation log | COMPLETE | ISO, Production (earlier) | `inbox/[chatId]`, `lib/mask.ts` | — |
-| Deal room resilience | **BROKEN (edge case)** | ISO | `DealRoomView.tsx` (`security_check.reasons.length`) | A `security_check` without `reasons` crashes the whole room. All 5 production rows are well-formed today (checked), but nothing enforces the shape. |
+| Deal room resilience | COMPLETE (P0-1, 2026-11-07) | UNIT (`intel-shape.test.ts`, 8 tests), ISO (`dealroom-malformed.mjs`: 8/8 rooms incl. `{}` and wrong-type rows; flow4 10/10) | `lib/deals/intel-shape.ts`, `CompanyIntelligencePanel.tsx`, `ui/PanelBoundary.tsx` | Malformed `security_check`/`company_profile` now hide a field or the brief; the chat always renders, and an error boundary contains any other panel failure |
 | Relay lifecycle (retry, idempotency, admin view) | COMPLETE | ISO, SQL | 0036, `lib/email/relay-*` | The retry cron is not scheduled (launch prep) |
 | Deal status (`new` → … → `paid`; admin-only `paid`) | COMPLETE | Production (earlier), UNIT | `updateDealStatus` | Settlement is manual by design |
 | In-app notifications (collaboration events, new messages) | COMPLETE (in-app) | SQL, ISO (page loads) | 0027, 0030 | **In-app only.** No email to a company or creator who is not signed in; WhatsApp exists for new creator deals only. |

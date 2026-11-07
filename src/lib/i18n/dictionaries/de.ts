@@ -183,6 +183,7 @@ const de: Dictionary = {
     askGMessage: "Erkläre diese Angebotsanalyse und was ich als Nächstes tun sollte: Risiko {risk}, empfohlener Preis {price} $. Begründung: {reasoning}",
   },
   inbox: {
+    panelUnavailable: "Dieses Feld konnte nicht angezeigt werden. Die Unterhaltung ist davon nicht betroffen.",
     title: "Deal-Posteingang",
     description: "Jedes Sponsoring-Angebot wird hier zu einem Chatraum — maskiert, bepreist und risikobewertet.",
     noRoomsTitle: "Noch keine Deal-Räume",

@@ -6,6 +6,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import { analyzeCompany, type CompanyIntelState } from "@/app/(app)/inbox/[chatId]/actions";
 import type { CompanyProfile } from "@/lib/ai/company-intel-types";
+import { normalizeCompanyProfile, normalizeSecurityCheck } from "@/lib/deals/intel-shape";
 import type { DealChat } from "@/lib/deals/queries";
 import type { OwnDomainHistory } from "@/lib/deals/company-intelligence";
 
@@ -163,10 +164,12 @@ export function CompanyIntelligencePanel({
     );
   }
 
-  const security = chat.security_check;
+  // Both columns are jsonb: read them through the normalizer so a malformed
+  // row hides a field instead of crashing the room (lib/deals/intel-shape.ts).
+  const security = normalizeSecurityCheck(chat.security_check);
   // The freshly generated one wins over the cached column: after a re-run the
   // creator is looking at what they just asked for, not the previous answer.
-  const profile = intelState.profile ?? chat.company_profile;
+  const profile = normalizeCompanyProfile(intelState.profile ?? chat.company_profile);
 
   return (
     <GlassPanel className="p-5">

@@ -8,6 +8,7 @@ import { RiskBadge } from "@/components/deals/RiskBadge";
 import { SourceBadge } from "@/components/deals/SourceBadge";
 import { StatusBadge } from "@/components/deals/StatusBadge";
 import { GlassPanel } from "@/components/ui/GlassPanel";
+import { PanelBoundary } from "@/components/ui/PanelBoundary";
 import { DealRoom } from "@/app/(app)/inbox/[chatId]/DealRoom";
 import { StatusControl } from "@/app/(app)/inbox/[chatId]/StatusControl";
 import { useTranslation } from "@/components/LocaleProvider";
@@ -143,7 +144,9 @@ export function DealRoomView({
             demo={demo}
           />
 
-          <CompanyIntelligencePanel chat={chat} domainHistory={domainHistory} demo={demo} />
+          <PanelBoundary fallback={<GlassPanel className="p-5"><p className="text-xs text-fg-muted">{t("inbox.panelUnavailable")}</p></GlassPanel>}>
+            <CompanyIntelligencePanel chat={chat} domainHistory={domainHistory} demo={demo} />
+          </PanelBoundary>
 
           {directReplyBody ? (
             <DirectReplyPanel

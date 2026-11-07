@@ -27,7 +27,7 @@ for (const [role, [email, paths]] of Object.entries(pages)) {
   const bad = res.filter(([, r]) => r.status >= 400 || r.broken || r.url.includes("/login") || new URL(r.url).pathname === "/verification");
   ok(`existing ${role}: ${paths.length} pages load (no redirect to /verification, no error page)`, bad.length === 0, bad.map(([p, r]) => `${p} ${r.status} ${r.url} ${r.why || ""}`).join("; ") || paths.join(" "));
   if (role === "company") {
-    const dir = await visit(p, "/discover");
+    await visit(p, "/discover");
     const names = (await p.textContent("body")).match(/Name [0-9a-f]{6}/g) || [];
     ok("company Discover lists the existing creators", new Set(names).size >= 1, `${new Set(names).size} creator card(s)`);
   }

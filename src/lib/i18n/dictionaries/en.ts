@@ -195,6 +195,7 @@ const en = {
     askGMessage: "Explain this offer analysis and what I should do next: risk {risk}, recommended price ${price}. Reasoning: {reasoning}",
   },
   inbox: {
+    panelUnavailable: "This panel could not be shown. The conversation is unaffected.",
     title: "Deal inbox",
     description: "Every sponsorship offer becomes a chat room here — masked, priced and risk-rated.",
     noRoomsTitle: "No deal rooms yet",
