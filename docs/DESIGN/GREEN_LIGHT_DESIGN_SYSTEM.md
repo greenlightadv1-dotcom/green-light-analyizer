@@ -26,12 +26,12 @@ Glassmorphism, blur, glow orbs and mesh gradients are gone.
 | `fg-secondary` / `fg-muted` / `fg-subtle` | `#2F3833` / `#59645E` / `#8A948E` | lighter equivalents | text hierarchy. `fg-muted` is the lowest level for body copy; `fg-subtle` is decoration only |
 | `line` / `line-strong` | `#E4E2D9` / `#D2CFC3` | 9% / 16% white | hairlines, input borders |
 | `brand-green` | `#62E823` | same | primary buttons, highlights, the lime card, focus ring. **Never text on a light surface** (1.6:1) |
-| `accent` | `#2B7A0B` | `#62E823` | green **text and icons**. This replaced every `text-brand-green` on a theme-reactive surface |
+| `accent` | `#276F0A` | `#62E823` | green **text and icons**. This replaced every `text-brand-green` on a theme-reactive surface |
 | `lime-soft` | `#E9FBDC` | lime at 12% | tints |
 | `forest` / `forest-strong` / `forest-soft` | `#0F3B2C` / `#0A2A1F` / `#DCE9E2` | `forest-soft` → `#16302A` | secondary buttons, the active nav pill, dark feature cards, code wells |
 | `navy`, `navy-dark` | aliases of forest | — | legacy names, kept so older markup adopts the new palette |
 | `ink` | `#0E1210` | same | text on lime, in both themes |
-| `success` / `warning` / `danger` / `info` | `#1F7A3A` / `#8A5300` / `#B42318` / forest | light tints | status. Raw Tailwind `red-/amber-/sky-/emerald-` utilities were codemodded onto these |
+| `success` / `warning` / `danger` / `info` | `#19692F` / `#8A5300` / `#B42318` / forest | light tints | status. Raw Tailwind `red-/amber-/sky-/emerald-` utilities were codemodded onto these |
 
 The logo hexes (`#62E823`, and the navy inside the icon files) are unchanged. The icon is never recoloured (§2.3).
 

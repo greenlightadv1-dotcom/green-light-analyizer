@@ -41,7 +41,7 @@
 
   /* Readable green for text and icons on light surfaces (lime text on white
      is ~1.6:1); in dark mode it becomes the lime itself. */
-  --color-accent: #2b7a0b;
+  --color-accent: #276f0a;
 
   --color-canvas: #f4f3ee;
   --color-surface: #ffffff;
