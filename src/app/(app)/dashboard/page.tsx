@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminDashboardView } from "@/components/views/AdminDashboardView";
 import { CompanyDashboardView } from "@/components/views/CompanyDashboardView";
 import { DashboardView } from "@/components/views/DashboardView";
 import { requireProfile } from "@/lib/auth";
@@ -18,6 +19,10 @@ export default async function DashboardPage() {
     const chats = await listDealChats();
     return <CompanyDashboardView profile={profile} chats={chats} />;
   }
+
+  // An admin has no alias, media kit or deals of their own: the admin home
+  // links to the pages where admin work happens instead.
+  if (profile.role === "admin") return <AdminDashboardView />;
 
   const [chats, kits] = await Promise.all([
     listDealChats(),

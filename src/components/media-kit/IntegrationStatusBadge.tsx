@@ -4,7 +4,7 @@ import { useTranslation } from "@/components/LocaleProvider";
 import type { IntegrationStatus } from "@/lib/media-kit/platforms";
 
 const TONE: Record<IntegrationStatus, string> = {
-  available: "border-brand-green/30 bg-brand-green/10 text-accent",
+  available: "border-success/30 bg-success/10 text-success",
   in_development: "border-warning/30 bg-warning/10 text-warning",
   manual: "border-fg/10 bg-fg/5 text-fg-muted",
   planned: "border-fg/10 bg-fg/5 text-fg-muted",

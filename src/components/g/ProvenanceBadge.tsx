@@ -4,7 +4,7 @@ import { useTranslation } from "@/components/LocaleProvider";
 import type { Provenance } from "@/lib/g/provenance";
 
 const TONE: Record<Provenance, string> = {
-  verified: "border-brand-green/30 bg-brand-green/10 text-accent",
+  verified: "border-success/30 bg-success/10 text-success",
   synced: "border-info/30 bg-info/10 text-info",
   self_reported: "border-warning/30 bg-warning/10 text-warning",
   stale: "border-warning/30 bg-warning/10 text-warning",

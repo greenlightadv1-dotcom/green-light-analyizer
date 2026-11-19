@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Role } from "@/lib/types/database";
-import { isActivePath, navItemsForRole } from "./nav";
+import { isActivePath, navSectionsForRole, sectionLabelKey } from "./nav";
 
 /**
  * The role-filtered link list, shared by the desktop Sidebar and the mobile
- * drawer so both always show exactly the same links (nav.ts).
+ * drawer so both always show exactly the same links (nav.ts). Sections are
+ * plain headings over the list: nothing is collapsed or nested, so every
+ * destination is visible and one click away.
  */
 export function NavLinks({
   role,
@@ -25,24 +27,37 @@ export function NavLinks({
   const { t } = useTranslation();
 
   return (
-    <nav className="flex flex-col gap-1">
-      {navItemsForRole(role).map((item) => {
-        const href = `${basePath}${item.href}`;
-        const active = isActivePath(pathname, href);
+    <nav className="flex flex-col gap-4">
+      {navSectionsForRole(role).map(({ section, items }) => {
+        const heading = sectionLabelKey(section, role);
         return (
-          <Link
-            key={item.href}
-            href={href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={`flex items-center rounded-full px-4 py-2.5 text-sm transition-colors focus-visible:focus-ring ${
-              active
-                ? "bg-forest font-semibold text-white dark:bg-brand-green dark:text-ink"
-                : "text-fg-muted hover:bg-surface-hover hover:text-fg"
-            }`}
-          >
-            {t(item.labelKey)}
-          </Link>
+          <div key={section} role="group" aria-label={heading ? t(heading) : undefined}>
+            {heading ? (
+              <p className="mb-1 px-4 text-xs font-semibold text-fg-subtle">{t(heading)}</p>
+            ) : null}
+            <ul className="flex flex-col gap-0.5">
+              {items.map((item) => {
+                const href = `${basePath}${item.href}`;
+                const active = isActivePath(pathname, href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={href}
+                      onClick={onNavigate}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex items-center rounded-full px-4 py-2 text-sm transition-colors focus-visible:focus-ring ${
+                        active
+                          ? "bg-forest font-semibold text-white dark:bg-brand-green dark:text-ink"
+                          : "text-fg-secondary hover:bg-surface-hover hover:text-fg"
+                      }`}
+                    >
+                      {t(item.labelKey)}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         );
       })}
     </nav>

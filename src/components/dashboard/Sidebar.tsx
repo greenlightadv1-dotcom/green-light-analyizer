@@ -14,8 +14,8 @@ export function Sidebar({
   basePath?: string;
 }) {
   return (
-    <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-64 shrink-0 flex-col p-4 lg:flex">
-      <Link href={`${basePath}/dashboard`} className="mb-8 block rounded-full px-3 pt-2 focus-visible:focus-ring">
+    <aside className="glass-panel-solid sticky top-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 flex-col overflow-y-auto p-3 lg:flex">
+      <Link href={`${basePath}/dashboard`} className="mb-5 block w-fit rounded-full px-3 pt-2 focus-visible:focus-ring">
         <ThemedLogo size={34} />
       </Link>
 

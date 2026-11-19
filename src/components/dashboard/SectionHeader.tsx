@@ -2,8 +2,11 @@ export function SectionHeader({
   title,
   description,
   action,
+  compact = false,
 }: {
   title: string;
+  /** Smaller title, for long data-driven titles such as a sender's address. */
+  compact?: boolean;
   description?: string;
   action?: React.ReactNode;
 }) {
@@ -12,7 +15,7 @@ export function SectionHeader({
       {/* min-w-0 + overflow-wrap: a long unbroken title (a sender's email in
           the deal room) wraps instead of widening the page on phones. */}
       <div className="min-w-0">
-        <h1 className="text-3xl font-bold [overflow-wrap:anywhere] text-fg sm:text-4xl">
+        <h1 className={`${compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"} font-bold [overflow-wrap:anywhere] text-fg`}>
           {title}
         </h1>
         {description ? (

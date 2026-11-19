@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { NAV, isActivePath, navItemsForRole } from "./nav.ts";
+import { MOBILE_TABS, NAV, isActivePath, navItemsForRole, navSectionsForRole, sectionLabelKey } from "./nav.ts";
 
 /** Mobile navigation: one link list, filtered by role, shared by Sidebar and drawer. */
 
@@ -13,7 +13,7 @@ test("creator sees exactly the creator links, in order", () => {
 });
 
 test("company sees exactly the company links, in order", () => {
-  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/shortlists", "/team", "/collaborations", "/pricing", "/settings"]);
+  assert.deepEqual(hrefs("company"), ["/dashboard", "/onboarding", "/inbox", "/discover", "/briefs", "/shortlists", "/collaborations", "/team", "/pricing", "/settings"]);
 });
 
 test("admin sees every link but the party-only pages, including the admin pages", () => {
@@ -61,7 +61,7 @@ test("Sidebar and the mobile drawer both render the shared list, and nothing els
     assert.match(source, /<NavLinks\b/, `${file} must render NavLinks`);
     assert.ok(!/roles:\s*\[/.test(source), `${file} must not define its own role list`);
   }
-  assert.match(read("./NavLinks.tsx"), /navItemsForRole\(role\)/);
+  assert.match(read("./NavLinks.tsx"), /navSectionsForRole\(role\)/);
 });
 
 test("each layout gives the desktop Sidebar and the mobile menu the same role and link prefix", () => {
@@ -84,4 +84,38 @@ test("for every role, the drawer and the Sidebar list the same authorized links"
     for (const item of items) assert.ok(item.roles.includes(role), `${item.href} leaked to ${role}`);
     assert.deepEqual(items, NAV.filter((i) => i.roles.includes(role)));
   }
+});
+
+test("sections regroup the same links: nothing added, dropped or duplicated, every heading translated", () => {
+  for (const role of ["creator", "company", "admin"] as const) {
+    const grouped = navSectionsForRole(role).flatMap((g) => g.items.map((i) => i.href));
+    assert.deepEqual([...grouped].sort(), [...hrefs(role)].sort(), role);
+    assert.equal(new Set(grouped).size, grouped.length, role);
+  }
+  const keys = new Set<string>();
+  for (const role of ["creator", "company", "admin"] as const) {
+    for (const g of navSectionsForRole(role)) {
+      const k = sectionLabelKey(g.section, role);
+      if (k) keys.add(k.split(".")[1]);
+    }
+    for (const tab of MOBILE_TABS[role]) keys.add(tab.labelKey.split(".")[1]);
+  }
+  keys.add("tabMore");
+  keys.add("tabG");
+  for (const locale of ["en", "ar", "fr", "es", "de"]) {
+    const dict = readFileSync(new URL(`../../lib/i18n/dictionaries/${locale}.ts`, import.meta.url), "utf8");
+    for (const key of keys) assert.match(dict, new RegExp(`\\n    ${key}: `), `${locale} lacks nav.${key}`);
+  }
+});
+
+test("the phone tab bar only links to pages the role can already see", () => {
+  for (const role of ["creator", "company", "admin"] as const) {
+    for (const tab of MOBILE_TABS[role]) assert.ok(hrefs(role).includes(tab.href), `${role}: ${tab.href}`);
+  }
+});
+
+test("admins see the admin pages under one Administration heading", () => {
+  const admin = navSectionsForRole("admin").find((g) => g.section === "admin");
+  assert.ok(admin && admin.items.every((i) => i.href.startsWith("/admin/")));
+  assert.equal(navSectionsForRole("creator").some((g) => g.section === "admin"), false);
 });

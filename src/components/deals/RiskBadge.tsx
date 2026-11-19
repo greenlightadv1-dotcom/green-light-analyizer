@@ -12,7 +12,7 @@ import type { AiEvaluation } from "@/lib/types/database";
  * visible, so it is shown rather than quietly applied.
  */
 const STYLES: Record<AiEvaluation, string> = {
-  green: "border-brand-green/30 bg-brand-green/10 text-accent",
+  green: "border-success/30 bg-success/10 text-success",
   yellow: "border-warning/30 bg-warning/10 text-warning",
   red: "border-danger/30 bg-danger/10 text-danger",
 };

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
-import { RiskBadge } from "@/components/deals/RiskBadge";
-import { StatusBadge } from "@/components/deals/StatusBadge";
+import { DealList } from "@/components/dashboard/DealList";
+import { CREATOR_ACTIONS, QuickActions } from "@/components/dashboard/QuickActions";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { CREATOR_COMMISSION } from "@/lib/plans";
@@ -61,12 +61,14 @@ export function DashboardView({
         </Link>
       ) : null}
 
+      <QuickActions actions={CREATOR_ACTIONS} />
+
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="surface-lime flex flex-col p-6">
+        <div className="surface-lime flex flex-col p-5 sm:p-6">
           <p className="text-sm font-semibold text-ink/75">
             {t("dashboard.openDeals")}
           </p>
-          <p className="mt-2 text-5xl font-bold text-ink tabular-nums">
+          <p className="mt-2 text-4xl font-bold text-ink tabular-nums sm:text-5xl">
             {openDeals}
           </p>
           <p className="mt-auto pt-4 text-xs font-medium text-ink/70">
@@ -98,41 +100,7 @@ export function DashboardView({
               body={t("dashboard.noDealsYetBody")}
             />
           ) : (
-            <GlassPanel className="overflow-hidden">
-              <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
-                <h2 className="text-base font-semibold text-fg">
-                  {t("dashboard.recentDeals")}
-                </h2>
-                <Link
-                  href="/inbox"
-                  className="text-xs text-fg-muted transition hover:text-fg/80"
-                >
-                  {t("dashboard.viewAll", { count: chats.length })}
-                </Link>
-              </div>
-
-              <ul className="divide-y divide-fg/5">
-                {recent.map((chat) => (
-                  <li key={chat.id}>
-                    <Link
-                      href={`/inbox/${chat.id}`}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3 transition hover:bg-fg/4 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-green"
-                    >
-                      <span className="min-w-0 flex-1 truncate text-sm text-fg">
-                        {chat.sender_email}
-                      </span>
-                      <span className="text-sm text-fg/70 tabular-nums">
-                        {chat.offered_amount === null
-                          ? "—"
-                          : `$${Number(chat.offered_amount).toLocaleString("en-US")}`}
-                      </span>
-                      <StatusBadge status={chat.deal_status} />
-                      <RiskBadge risk={chat.ai_evaluation} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </GlassPanel>
+            <DealList chats={recent} total={chats.length} title={(c) => ({ text: c.sender_email, ltr: true })} />
           )}
         </div>
 

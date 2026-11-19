@@ -62,6 +62,7 @@ export function DealRoomView({
       <div className="flex flex-wrap items-center gap-2">
         <SectionHeader
           title={chat.sender_email}
+          compact
           description={t("inbox.contactStrippedNote")}
         />
       </div>
@@ -69,8 +70,12 @@ export function DealRoomView({
         <SourceBadge companyId={chat.company_id} />
       </div>
 
+      {/* On phones the deal summary comes first, so the offer, the Co-Pilot
+          rating and the status are visible without scrolling past the chat.
+          From lg the chat spans the left two columns and the panels stack on
+          the right, as before. */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="order-2 min-w-0 lg:order-none lg:col-span-2 lg:row-span-2">
           <DealRoom
             chatId={chatId}
             initialMessages={messages}
@@ -80,8 +85,7 @@ export function DealRoomView({
           />
         </div>
 
-        <div className="space-y-4">
-          <GlassPanel className="p-5">
+        <GlassPanel className="order-1 h-fit p-5 lg:order-none lg:col-start-3">
             <h2 className="text-base font-semibold text-fg">{t("inbox.deal")}</h2>
             <dl className="mt-4 space-y-3.5 text-sm">
               <div className="flex items-center justify-between gap-3">
@@ -135,8 +139,9 @@ export function DealRoomView({
                 </dd>
               </div>
             </dl>
-          </GlassPanel>
+        </GlassPanel>
 
+        <div className="order-3 space-y-4 lg:order-none lg:col-start-3">
           <StatusControl
             chatId={chatId}
             current={chat.deal_status ?? "new"}

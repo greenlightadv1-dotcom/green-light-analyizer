@@ -234,7 +234,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
   useEffect(() => {
     const onEvent = (e: Event) => {
       const detail = (e as CustomEvent<GEventDetail>).detail;
-      if (!detail) return;
+      if (!detail || detail.type === "signout") return;
       if (detail.type === "ask") {
         setDraft(detail.text);
         setTimeout(() => inputRef.current?.focus(), 0);
@@ -276,18 +276,18 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
 
   if (!state.open) {
     return (
-      <div className="fixed end-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 sm:end-6 sm:bottom-6" data-testid="g-launcher">
+      <div className="fixed end-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 lg:end-6 lg:bottom-6" data-testid="g-launcher">
         <WakeIndicator status={wake.status} enabled={wake.enabled} onOff={wake.disable} onResume={() => void wake.enable()} />
         <button
           type="button"
           onClick={() => update((s) => ({ ...s, open: true }))}
           aria-label={t("g.open")}
-          className="flex items-center gap-2 rounded-full bg-forest p-1.5 text-sm font-semibold text-white shadow-overlay transition hover:-translate-y-0.5 hover:bg-forest-strong focus-visible:focus-ring sm:pe-5 dark:bg-forest-strong dark:ring-1 dark:ring-line-strong"
+          className="hidden items-center gap-2 rounded-full bg-forest p-1.5 pe-5 text-sm font-semibold text-white shadow-overlay transition hover:-translate-y-0.5 hover:bg-forest-strong focus-visible:focus-ring lg:flex dark:bg-forest-strong dark:ring-1 dark:ring-line-strong"
         >
           <GMark size={34} state={markState} />
-          {/* Icon-only on phones so the launcher covers less of the page; the
-              button keeps its accessible name from aria-label either way. */}
-          <span aria-hidden className="hidden sm:inline">{t("g.askG")}</span>
+          {/* Below lg, G opens from the tab bar's "Ask G" instead, so no
+              floating button covers the page on phones and tablets. */}
+          <span aria-hidden>{t("g.askG")}</span>
         </button>
       </div>
     );

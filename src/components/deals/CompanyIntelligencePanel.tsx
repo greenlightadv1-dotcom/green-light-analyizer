@@ -32,7 +32,7 @@ import type { OwnDomainHistory } from "@/lib/deals/company-intelligence";
  * quietly blend an opinion into a measurement.
  */
 function trustScoreClass(score: number): string {
-  if (score >= 80) return "border-brand-green/30 bg-brand-green/10 text-accent";
+  if (score >= 80) return "border-success/30 bg-success/10 text-success";
   if (score >= 50) return "border-warning/30 bg-warning/10 text-warning";
   return "border-danger/30 bg-danger/10 text-danger";
 }

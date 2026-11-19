@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Browser check for the mobile navigation drawer, against a running build with
+ * Browser check for the phone tab bar and its "More" drawer, against a running build with
  * the UI preview on (no database needed):
  *
  *   NEXT_PUBLIC_ENABLE_UI_PREVIEW=1 npm run build && npm run start -- -p 3668 &
@@ -40,7 +40,7 @@ try {
     assert.ok(sidebarLinks.length >= 5, `sidebar links: ${sidebarLinks}`);
   });
   await check("desktop: no mobile menu button", async () => {
-    assert.equal(await desktop.getByRole("button", { name: "Open menu" }).isVisible(), false);
+    assert.equal(await desktop.getByRole("button", { name: "More", exact: true }).isVisible(), false);
   });
   await shot(desktop, "4-desktop-sidebar.png");
   await desktop.close();
@@ -49,7 +49,7 @@ try {
   const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
   const page = await ctx.newPage();
   await page.goto(PAGE, { waitUntil: "networkidle" });
-  const menu = page.getByRole("button", { name: "Open menu" });
+  const menu = page.getByRole("button", { name: "More", exact: true });
   const dialog = page.getByRole("dialog");
 
   await check("phone: Sidebar hidden, menu button visible, drawer closed", async () => {
@@ -95,7 +95,7 @@ try {
     await page.keyboard.press("Escape");
     assert.equal(await dialog.count(), 0);
     assert.equal(await menu.getAttribute("aria-expanded"), "false");
-    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Open menu");
+    assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), "More");
     assert.equal(await page.evaluate(() => document.body.style.overflow), "");
   });
 
@@ -131,11 +131,11 @@ try {
   });
   const ar = await rtl.newPage();
   await ar.goto(PAGE, { waitUntil: "networkidle" });
-  await check("RTL: document is dir=rtl and the menu button is labelled in Arabic", async () => {
+  await check("RTL: document is dir=rtl and the More tab is labelled in Arabic", async () => {
     assert.equal(await ar.evaluate(() => document.documentElement.dir), "rtl");
-    assert.ok(await ar.getByRole("button", { name: "فتح القائمة" }).isVisible());
+    assert.ok(await ar.getByRole("button", { name: "المزيد", exact: true }).isVisible());
   });
-  await ar.getByRole("button", { name: "فتح القائمة" }).click();
+  await ar.getByRole("button", { name: "المزيد", exact: true }).click();
   await check("RTL: drawer opens from the right edge, with the same links", async () => {
     const d = ar.getByRole("dialog");
     await d.waitFor();
@@ -146,10 +146,10 @@ try {
     const { sw, cw } = await ar.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
     assert.ok(sw <= cw);
   });
-  await check("dark theme: the drawer is opaque navy, readable over the page", async () => {
+  await check("dark theme: the drawer is the opaque dark surface, readable over the page", async () => {
     assert.ok(await ar.evaluate(() => document.documentElement.classList.contains("dark")));
     const bg = await ar.getByRole("dialog").evaluate((el) => getComputedStyle(el).backgroundColor);
-    assert.match(bg, /^rgb\(31, 46, 71\)$/, bg); // navy-dark #1F2E47, fully opaque
+    assert.match(bg, /^rgb\(18, 26, 22\)$/, bg); // surface #121A16 (dark), fully opaque
   });
   await shot(ar, "3-mobile-rtl-open.png");
   await rtl.close();
@@ -159,37 +159,32 @@ try {
   await light.addInitScript(() => localStorage.setItem("theme", "light"));
   const lp = await light.newPage();
   await lp.goto(PAGE, { waitUntil: "networkidle" });
-  const lmenu = lp.getByRole("button", { name: "Open menu" });
+  const lmenu = lp.getByRole("button", { name: "More", exact: true });
   await check("light theme: the drawer is opaque white", async () => {
     await lmenu.click();
     const bg = await lp.getByRole("dialog").evaluate((el) => getComputedStyle(el).backgroundColor);
     assert.equal(bg, "rgb(255, 255, 255)");
   });
   await shot(lp, "5-mobile-light-open-390.png");
-  await check("the open drawer covers G's floating button (no overlap or stray taps)", async () => {
-    const hit = await lp.evaluate(() => {
-      const g = document.querySelector('button[aria-label^="Open G"]');
-      if (!g) return "no G button";
-      const r = g.getBoundingClientRect();
-      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-      return top?.closest('[data-testid="mobile-nav"]') ? "drawer" : top?.outerHTML.slice(0, 80);
-    });
-    assert.equal(hit, "drawer");
+  await check("the open drawer sits above the tab bar", async () => {
+    const z = await lp.locator('[data-testid="mobile-nav"]').evaluate((el) => Number(getComputedStyle(el).zIndex));
+    const bar = await lp.locator('[data-testid="mobile-tabbar"]').evaluate((el) => Number(getComputedStyle(el).zIndex));
+    assert.ok(z > bar, `drawer z ${z} must be above the tab bar z ${bar}`);
     await lp.keyboard.press("Escape");
   });
-  await check("after G's panel is closed with Escape, the menu opens above G's floating button", async () => {
-    // In /preview the yellow preview banner pushes the TopBar under G's
-    // 88dvh bottom sheet on phones; the sheet has its own close and Escape.
-    await lp.locator('button[aria-label^="Open G"]').click();
+  await check("phones: no floating G button; the tab bar's Ask G opens G, and Escape closes it", async () => {
+    assert.equal(await lp.locator('button[aria-label^="Open G"]').isVisible(), false);
+    await lp.getByRole("button", { name: "Ask G", exact: true }).click();
     await lp.locator("section[role=dialog]").waitFor();
     await lp.keyboard.press("Escape");
     await lp.waitForTimeout(150);
-    await lmenu.click();
-    const nav = lp.locator('[data-testid="mobile-nav"]');
-    await nav.waitFor();
-    const z = await nav.evaluate((el) => Number(getComputedStyle(el).zIndex));
-    assert.ok(z > 40, `drawer z-index ${z} must be above G (z-40)`);
-    await lp.keyboard.press("Escape");
+    assert.equal(await lp.locator("section[role=dialog]").count(), 0);
+  });
+  await check("the tab bar marks the current page and fits the screen", async () => {
+    const current = await lp.locator('[data-testid="mobile-tabbar"] a[aria-current="page"]').getAttribute("href");
+    assert.equal(current, "/preview/dashboard");
+    const box = await lp.locator('[data-testid="mobile-tabbar"]').boundingBox();
+    assert.ok(box && box.x === 0 && Math.round(box.width) === 390 && Math.round(box.y + box.height) === 844, JSON.stringify(box));
   });
   await light.close();
 

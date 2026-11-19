@@ -132,10 +132,15 @@ test("ConfirmActionForm shows success only on ok, and errors inside the dialog",
   assert.match(dialog, /dismissible=\{!pending\}/);
 });
 
-test("the G launcher clears content on phones and respects the safe area", () => {
+test("G stays reachable on phones without covering content, and respects the safe area", () => {
   const g = read("components/g/GAssistant.tsx");
-  assert.match(g, /bottom-\[max\(1rem,env\(safe-area-inset-bottom\)\)\]/);
-  assert.match(g, /hidden sm:inline">\{t\("g\.askG"\)\}/);
+  // Below lg the floating button is hidden; the tab bar's "Ask G" opens G.
+  assert.match(g, /className="hidden items-center[^"]*lg:flex/);
+  // Wake-word indicators sit above the tab bar, clear of the safe area.
+  assert.match(g, /bottom-\[calc\(4\.75rem\+env\(safe-area-inset-bottom\)\)\]/);
+  const tabs = read("components/dashboard/MobileNav.tsx");
+  assert.match(tabs, /pb-\[env\(safe-area-inset-bottom\)\] lg:hidden/);
+  assert.match(tabs, /emitG\(\{ type: "open" \}\)/);
   for (const p of ["app/(app)/layout.tsx", "app/preview/layout.tsx"]) {
     assert.match(read(p), /min-w-0 flex-1 pb-24/, p);
   }

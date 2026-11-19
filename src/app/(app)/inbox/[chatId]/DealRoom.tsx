@@ -80,7 +80,7 @@ export function DealRoom({
   }, [messages.length]);
 
   return (
-    <GlassPanel className="flex h-[calc(100vh-16rem)] min-h-96 flex-col overflow-hidden">
+    <GlassPanel className="flex h-[70dvh] min-h-80 flex-col overflow-hidden lg:h-[calc(100vh-16rem)] lg:min-h-96">
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-fg-muted">

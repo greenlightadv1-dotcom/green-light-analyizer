@@ -278,8 +278,8 @@ export function SendInviteModal() {
                     aria-pressed={type === option}
                     className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition ${
                       type === option
-                        ? "border-brand-green/30 bg-brand-green/10 text-accent"
-                        : "border-fg/10 bg-fg/5 text-fg/60 hover:bg-fg/10 hover:text-fg"
+                        ? "border-forest bg-forest text-white dark:border-brand-green dark:bg-brand-green dark:text-ink"
+                        : "border-line-strong bg-surface text-fg-secondary hover:bg-surface-hover hover:text-fg"
                     }`}
                   >
                     {t(option === "creator_outreach" ? "outreach.typeCreatorOutreach" : "outreach.typeSystemNotification")}

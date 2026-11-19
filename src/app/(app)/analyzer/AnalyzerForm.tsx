@@ -80,7 +80,7 @@ const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
 
 function trustScoreClass(score: number): string {
   if (score >= 80) {
-    return "border-brand-green/30 bg-brand-green/10 text-accent";
+    return "border-success/30 bg-success/10 text-success";
   }
   if (score >= 50) {
     return "border-warning/30 bg-warning/10 text-warning";
