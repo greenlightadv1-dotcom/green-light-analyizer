@@ -6,7 +6,7 @@
 |---|---|---|
 | KYC/KYB for admin-created accounts | `all_except_admin`: every account except admin accounts must pass KYC/KYB | Not yet implemented; next sprint item that touches verification |
 | Public profile photo | An upload is allowed. It stays separate from private KYC identity photos and documents. | Matches the current behaviour (avatar upload ≠ camera-only identity capture) |
-| Identity-document retention | 12 months | Not yet configured. `VERIFICATION_RETENTION_DAYS` and the purge schedule are launch configuration, and the legal text needs the period. |
+| Identity-document retention | 12 months | Implemented (0040): fixed at 365 days in code and the database, scheduled daily. Runs once `CRON_SECRET` is set in production. The legal text still needs the period. |
 | Portfolio visibility | Manual selection by the creator for each item | Matches the current behaviour (each portfolio item is private until the creator marks it public). The consent wording for naming a brand stays as built until legal review. |
 
 Only items that need the owner. Nothing here has been changed or invented.
@@ -122,6 +122,21 @@ The sync now stores the median views of a YouTube channel's recent uploads (migr
 - **Review-time promise:** the copy no longer says "within 24 hours". Restore a time only with a staffed process and production email.
 - **Re-application after rejection:** allowed, and shown as a duplicate signal. Confirm, or set a cool-off.
 - **Internal reviewer notes:** every note reaches the applicant. A private note needs a schema change.
-- **Retention:** `VERIFICATION_RETENTION_DAYS=365` and scheduling the purge route (irreversible deletion).
+- **Retention:** done in 0040 (365 days, scheduled). Production needs `CRON_SECRET` (§15).
 - **Privacy Policy:** a sentence on the public photo, the WhatsApp number and duplicate signals. Not changed.
 - **Public photo EXIF:** not stripped, the same as existing avatars.
+
+## 15. Decided 2026-11-19 and implemented (migration 0040), with what is still open
+
+- **Implemented:**
+  - no account before approval;
+  - internal and applicant-facing notes kept separate;
+  - reapplication, with enhanced review for fraud;
+  - public photo metadata stripped;
+  - 12-month retention.
+- **Still needed from the owner:**
+  - set `CRON_SECRET` in production. The retention purge, like the YouTube cleanup, does not run without it;
+  - legal confirmation of the 12-month period, and whether evidence from fraud-flagged cases should be kept longer. Today every case follows the same 365 days;
+  - whether enhanced review should also follow a person who reapplies with a **different** email. Today that is the reviewer's judgement from the duplicate signals; the database rule links by email only;
+  - whether enhanced approvals need a **second** reviewer. Today the approving reviewer's written justification is required, and one reviewer may both flag and approve;
+  - the Privacy Policy wording on the 12-month period and metadata removal. Not changed.

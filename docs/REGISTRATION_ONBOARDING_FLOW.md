@@ -148,14 +148,77 @@ Added:
 
   These are part of the deferred testing phase.
 
+## Update 2026-11-19: notes, reapplication, photo metadata, retention (migration 0040, isolated stack only)
+
+Owner decisions applied:
+- no account before approval (unchanged);
+- separate internal and applicant-facing notes;
+- reapplication after rejection, with enhanced review for fraud;
+- EXIF/GPS removal from public photos;
+- 12-month retention.
+
+### Reviewer notes, two kinds
+
+| | Applicant-facing | Internal |
+|---|---|---|
+| Stored in | `verification_cases.info_request` / `decision_reason` (unchanged) | `verification_notes` (new table) |
+| Who reads it | The applicant (their own case, RLS) and reviewers | Reviewers only, through RLS. The case's subject never, even if they are a reviewer |
+| Written by | `verification_transition()` | `verification_add_note()` / `verification_flag()`: service-role only; each checks the reviewer allowlist and refuses self-review |
+| Email | Yes (decision, information request) | Never |
+| History (`verification_events`, readable by the applicant) | Events as before | **No event at all**, so not even the existence of a note leaks |
+| Direct writes | n/a | No INSERT, UPDATE or DELETE for anyone, the service role included (append-only) |
+
+The reviewer page reads notes with the reviewer's own session, so RLS applies, and labels each field "shown to the applicant" or "reviewers only". Every decision form has an optional internal-note field, written before the decision.
+
+### Reapplication and enhanced review
+
+- **Ordinary rejection:**
+  - an applicant without an account starts a new application. The rejected one stays read-only, with a "Start a new application" link;
+  - a rejected **account** can open a new case at `/verification` (`verification_reapply()`). The account moves from `rejected` to `pending_verification`, still confined, and becomes `active` only when a reviewer approves the new case;
+  - the old case and its history are kept;
+  - the one-open-case-per-kind rule now ignores rejected cases.
+- **Missing information:** the existing "more information needed" workflow, unchanged.
+- **Suspected fraud, identity forgery or impersonation:**
+  - a reviewer flags the case (`verification_flags`, reviewers only), and an explanation is required, stored as an internal note;
+  - the flag changes nothing by itself: no status change, no ban, nothing sent to the applicant;
+  - approving the flagged case, or any later case from the same email, is refused by the database (`verification:enhanced_review_note_required`) until the approving reviewer writes an internal justification note after the flag. The flag's own explanation does not count;
+  - the queue and the case page mark these cases "enhanced review";
+  - rejecting or requesting information needs nothing extra.
+
+### Public photo metadata
+
+- **What is stripped:** `lib/image-metadata.ts` removes EXIF (including GPS, make, model and dates), XMP, IPTC, comments, PNG text and time chunks, and data after the image end, losslessly. Pixels are copied byte for byte.
+- **Orientation:** a rotated JPEG keeps only a minimal orientation tag, so photos are not shown sideways.
+- **Where it applies:** every public avatar upload (`storeUpload("avatar")`), which includes the copy made at activation from the private `profile_photo`. A file it cannot parse is refused, never published as-is.
+- **What is untouched:** the original stays in the private verification bucket for the reviewer, and identity and company documents are never altered.
+- **Verified with an independent reader:** `scripts/isolated-validation/exif-strip-check.py` (Pillow, real JPEG, PNG and WebP; GPS gone, pixels identical), and through the real avatar route on the isolated stack.
+
+### Retention
+
+See `IDENTITY_DOCUMENT_SECURITY.md`, *Retention: 12 months*. In short:
+- the database refuses to purge before 365 days;
+- a daily scheduled job (needs `CRON_SECRET`) deletes due files, audits each purge without its contents, and records and retries failures.
+
+### Evidence
+
+| Check | Result |
+|---|---|
+| `scripts/local-migrations-test.sh` | **96 / 96**, including `supabase/tests/review_notes_flags_retention_test.sql` and `0040_verify.sql` |
+| Unit tests | **799 + 19 + 33**, including `image-metadata`, `purge`, `retention` and `notes-separation` (applicant code never touches notes or flags; internal notes never reach email, logs or history) |
+| `scripts/isolated-validation/review-retention-check.mjs` | **3 / 3** against the real isolated services: real storage purge (366 days deleted, 300 kept, early purge refused, audited once, unauthorized calls refused); notes and flags through the real PostgREST (subject and company read nothing, reviewer reads, direct inserts and RPCs refused); a GPS JPEG through the real avatar route published without GPS (confirmed again with Pillow on the exact public bytes) |
+| `exif-strip-check.py` | **4 / 4** |
+| `registration-smoke.mjs` | **9 / 9** (no regression) |
+
+The isolated run also found and fixed a real bug: the purge looked for decided cases by `updated_at` instead of `reviewed_at`, so a case touched after its decision would never have been purged.
+
 ## Owner decisions
 
 1. **Terms §2 and accounts before approval.** The Terms say every account is created by the team after review, so applicants have no password before approval and track their status by emailed link. If applicants must sign in with a password *before* approval, Terms §2 must change first (separate approval).
 2. **Existing active accounts:** whether to require verification of accounts created before this change (none are flipped today).
 3. **Review-time commitment:** whether to promise a time (for example, "an email within 24 hours"), which needs a staffed process and working Resend in production.
-4. **Re-application after rejection:** allowed today (a new Get Started), shown to the reviewer as a duplicate signal. Confirm, or set a cool-off.
-5. **Internal reviewer notes:** none exist; every note reaches the applicant. Decide if a private note field is wanted (a schema change).
-6. **12-month retention:** `VERIFICATION_RETENTION_DAYS=365` must be set and the purge route scheduled (it deletes irreversibly). Nothing claims legal compliance.
+4. ~~Re-application after rejection~~: decided and implemented (0040). Enhanced review is linked by email only: a flagged person reapplying with a different email is caught only by the reviewer-visible duplicate signals (phone, name and date of birth, registration or tax number), not by the database rule.
+5. ~~Internal reviewer notes~~: done (0040).
+6. **12-month retention:** decided and implemented (0040). It runs in production only once `CRON_SECRET` is set. Legal review should confirm the period, including whether evidence from fraud-flagged cases may need longer. Nothing claims legal compliance.
 7. **Privacy Policy:** the public photo, the WhatsApp number and duplicate signals may need a sentence. Not changed without approval.
 8. **Kick handles** have no `social_links` slot, so a Kick creator's handle stays private after activation.
-9. **EXIF on the public photo:** it is not stripped, the same as existing avatar uploads. Decide whether to re-encode public images.
+9. ~~EXIF on the public photo~~: stripped (0040). Images are not re-encoded, so this is metadata removal, not a malware scan.

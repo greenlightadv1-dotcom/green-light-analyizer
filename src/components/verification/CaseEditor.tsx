@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/components/LocaleProvider";
@@ -422,6 +423,9 @@ function StatusPanel({ c, application }: { c: CaseView; application: boolean }) 
         </div>
       ) : null}
       {c.status === "rejected" ? <p className="text-xs text-fg-muted">{t("verification.wizard.rejectedHelp")}</p> : null}
+      {c.status === "rejected" && application ? (
+        <p className="text-sm"><Link href="/get-started" className="text-accent underline">{t("verification.wizard.startNew")}</Link></p>
+      ) : null}
     </div>
   );
 }

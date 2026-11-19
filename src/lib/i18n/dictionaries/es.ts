@@ -1928,6 +1928,7 @@ const es: Dictionary = {
       rate_limited: "Demasiados cambios en poco tiempo. Espera un poco e inténtalo de nuevo.",
       consent: "Marca la casilla de confirmación para enviar.",
       email_unverified: "Verifica primero tu correo: abre el enlace que te enviamos.",
+      enhanced_review_note_required: "Nuestro equipo debe completar una revisión adicional antes de aprobar.",
     },
     wizard: {
       progress: "Progreso de la solicitud",
@@ -1953,7 +1954,7 @@ const es: Dictionary = {
       needsInfoHint: "Actualiza lo que se pide y vuelve a enviar tu solicitud desde el último paso. Tu historial anterior se conserva.",
       stillMissing: "Aún falta:",
       reason: "Motivo indicado por nuestro equipo:",
-      rejectedHelp: "Si crees que es un error, contacta con soporte. Esta solicitud ya no se puede modificar.",
+      rejectedHelp: "Si crees que es un error, contacta con soporte. Esta solicitud ya no se puede modificar, pero puedes empezar una nueva.",
       step: {
         personal: "Datos personales",
         public: "Perfil público",
@@ -2005,6 +2006,7 @@ const es: Dictionary = {
         approved_account: "Aprobada tras una revisión manual de tus documentos. Tu cuenta está lista.",
         rejected: "Tu solicitud no fue aprobada.",
       },
+      startNew: "Empezar una nueva solicitud",
     },
     hint: {
       phone: "Tu número de WhatsApp con el prefijo del país, por ejemplo +20 101 234 5678. No se verifica por SMS.",
@@ -2027,6 +2029,7 @@ const es: Dictionary = {
         x: "X",
       },
     },
+    reapplyHint: "Tu verificación anterior no fue aprobada. Puedes volver a solicitarla: nuestro equipo revisará la nueva solicitud desde el principio y tu cuenta seguirá restringida hasta que se apruebe.",
   },
   apply: {
     title: "Tu solicitud",
@@ -2353,6 +2356,12 @@ const es: Dictionary = {
     resendActivation: "Send a new activation link",
     resendTitle: "Send a new activation link?",
     resendBody: "The applicant is emailed a new one-time link. Any earlier link stops working.",
+    addInternalNote: "Add internal note",
+    addInternalNoteTitle: "Add an internal note?",
+    addInternalNoteBody: "Only verification reviewers can read it. It is never shown or sent to the applicant.",
+    flag: "Flag for enhanced review",
+    flagTitle: "Flag this case for enhanced review?",
+    flagBody: "The case keeps its status and the applicant is not told. Approving this case, or any later case from the same email, will require an internal justification note.",
   },
 };
 

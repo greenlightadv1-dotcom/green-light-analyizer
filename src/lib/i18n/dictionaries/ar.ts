@@ -1920,6 +1920,7 @@ const ar: Dictionary = {
       rate_limited: "تغييرات كثيرة في وقت قصير. انتظر قليلًا ثم حاول مجددًا.",
       consent: "حدّد مربع التأكيد للإرسال.",
       email_unverified: "تحقق من بريدك الإلكتروني أولًا: افتح الرابط الذي أرسلناه إليك.",
+      enhanced_review_note_required: "يحتاج فريقنا إلى إكمال مراجعة إضافية قبل الموافقة.",
     },
     wizard: {
       progress: "تقدّم الطلب",
@@ -1945,7 +1946,7 @@ const ar: Dictionary = {
       needsInfoHint: "حدِّث ما طُلب منك، ثم أرسل طلبك للمراجعة مجددًا من الخطوة الأخيرة. يبقى سجلّك السابق محفوظًا.",
       stillMissing: "ما زال ناقصًا:",
       reason: "السبب الذي ذكره فريقنا:",
-      rejectedHelp: "إذا كنت ترى أن هذا خطأ، تواصل مع الدعم. لا يمكن تعديل هذا الطلب.",
+      rejectedHelp: "إذا كنت ترى أن هذا خطأ، تواصل مع الدعم. لا يمكن تعديل هذا الطلب، لكن يمكنك بدء طلب جديد.",
       step: {
         personal: "البيانات الشخصية",
         public: "الملف العام",
@@ -1997,6 +1998,7 @@ const ar: Dictionary = {
         approved_account: "تمت الموافقة بعد مراجعة يدوية لمستنداتك. حسابك جاهز للاستخدام.",
         rejected: "لم تتم الموافقة على طلبك.",
       },
+      startNew: "ابدأ طلبًا جديدًا",
     },
     hint: {
       phone: "رقم واتساب الخاص بك مع رمز الدولة، مثل ‎+20 101 234 5678. لا يتم التحقق منه برسالة نصية.",
@@ -2019,6 +2021,7 @@ const ar: Dictionary = {
         x: "X",
       },
     },
+    reapplyHint: "لم تتم الموافقة على التحقق السابق. يمكنك التقديم مجددًا: سيراجع فريقنا الطلب الجديد من البداية، ويبقى حسابك مقيّدًا حتى تتم الموافقة عليه.",
   },
   apply: {
     title: "طلبك",
@@ -2345,6 +2348,12 @@ const ar: Dictionary = {
     resendActivation: "Send a new activation link",
     resendTitle: "Send a new activation link?",
     resendBody: "The applicant is emailed a new one-time link. Any earlier link stops working.",
+    addInternalNote: "Add internal note",
+    addInternalNoteTitle: "Add an internal note?",
+    addInternalNoteBody: "Only verification reviewers can read it. It is never shown or sent to the applicant.",
+    flag: "Flag for enhanced review",
+    flagTitle: "Flag this case for enhanced review?",
+    flagBody: "The case keeps its status and the applicant is not told. Approving this case, or any later case from the same email, will require an internal justification note.",
   },
 };
 

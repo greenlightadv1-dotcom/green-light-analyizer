@@ -100,13 +100,6 @@ export function readConfigReport(): ConfigReport {
         "Scheduled official-news refresh is off. Admins can still refresh by hand at /admin/news. Turning it on also needs CRON_SECRET and a schedule for /api/cron/news-refresh.",
     },
     {
-      name: "VERIFICATION_RETENTION_DAYS",
-      set: Boolean(process.env.VERIFICATION_RETENTION_DAYS),
-      required: false,
-      impact:
-        "No retention period is set, so identity and company documents are kept until a case is deleted. The period is an owner and legal decision; the purge job stays off until it is set.",
-    },
-    {
       name: "RESEND_FROM_ADDRESS",
       set: Boolean(process.env.RESEND_FROM_ADDRESS),
       required: false,
@@ -157,12 +150,12 @@ export function readConfigReport(): ConfigReport {
     {
       name: "CRON_SECRET",
       set: Boolean(process.env.CRON_SECRET),
-      // Required once YouTube OAuth is configured: without it the daily job
-      // that deletes stale or revoked YouTube data refuses to run, and the
-      // privacy policy's 30-day statement stops being true.
-      required: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
+      // Required: without it the scheduled jobs refuse to run. That includes
+      // the 12-month identity-document purge (0040), and, once YouTube OAuth
+      // is configured, the 30-day YouTube data cleanup.
+      required: true,
       impact:
-        "The daily YouTube data cleanup (/api/cron/youtube-data-freshness) refuses every call, so verified geography and public stats older than 30 days and data for revoked tokens are not deleted. Must be 16+ characters.",
+        "Every scheduled job refuses its calls: identity and company documents older than the 12-month retention period are not deleted (/api/cron/verification-retention), and the daily YouTube data cleanup (/api/cron/youtube-data-freshness) does not run. Must be 16+ characters.",
     },
     {
       name: "META_APP_ID",

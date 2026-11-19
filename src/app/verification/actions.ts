@@ -24,8 +24,21 @@ export async function startVerification(_prev: ActionResult | null, fd: FormData
   if (!kindsForRole(profile.role).includes(kind)) return fail("verification.errors.not_allowed");
   if (!(await consumeRateLimit("verification_write", profile.id)).allowed) return fail("verification.errors.rate_limited");
   const admin = createAdminClient();
-  const { data: existing } = await admin.from("verification_cases").select("id").eq("profile_id", profile.id).eq("kind", kind).maybeSingle();
-  if (existing) return OK;
+  const { data: mine } = await admin.from("verification_cases").select("id, kind, status").eq("profile_id", profile.id);
+  if ((mine ?? []).some((c) => c.kind === kind && c.status !== "rejected")) return OK;
+  if (profile.account_status === "rejected") {
+    // Reapplication after a rejection (0040): a new case, and the account goes
+    // back to pending_verification. It becomes active again only when a
+    // reviewer approves the new case; nothing here reactivates it.
+    const { error } = await admin.rpc("verification_reapply", { p_profile: profile.id, p_kind: kind });
+    if (error) {
+      const key = verificationErrorKey(error.message);
+      if (key === "ui.errors.generic") log.error("verification.reapply_failed", { error });
+      return fail(key);
+    }
+    revalidatePath("/verification");
+    return OK;
+  }
   const { data, error } = await admin.from("verification_cases").insert({ profile_id: profile.id, kind }).select("id").single();
   if (error || !data) {
     log.error("verification.start_failed", { error });

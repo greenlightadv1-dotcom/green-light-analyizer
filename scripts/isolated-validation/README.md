@@ -42,3 +42,7 @@ Registration and verification (`registration-smoke.mjs`, migration 0039 applied 
 - run it with `APP_URL=http://localhost:3200`, because the emailed link redirects to the app's own origin and the cookie must match;
 - 9 checks: Get Started; the unverified submit refused; the link verifies the email; step saves merge; the public photo is image-only; review gating and submit; the reviewer's trust checks and rejection with a reason; the rejected applicant reads the reason through a new link; a representative needs ID images;
 - for the run it grants `ux-admin` the reviewer role, and removes the grant and its rows afterwards.
+
+Reviewer notes, reapplication, photo metadata and retention (migration 0040 applied to the isolated stack):
+- `review-retention-check.mjs` needs `CRON_SECRET` in the app's environment (a throwaway test value in the scratch env file, never a real secret) and `FIXTURE`, a JPEG carrying GPS. Run it with `APP_URL=http://localhost:3200`. Checks: real-storage purge and its 365-day guard; notes and flags through the real PostgREST; GPS removed through the real avatar route. 3/3.
+- `exif-strip-check.py` reads real JPEG, PNG and WebP files back with Pillow; run it with a Python that has Pillow (the system one here is broken, so use a venv). 4/4.

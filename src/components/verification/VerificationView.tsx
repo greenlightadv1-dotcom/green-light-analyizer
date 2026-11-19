@@ -30,10 +30,13 @@ export function VerificationView({
 }) {
   const { t } = useTranslation();
   const [startState, start, starting] = useActionState<ActionResult | null, FormData>(startVerification, null);
-  const startable = kinds.filter((k) => !cases.some((c) => c.kind === k));
+  const open = cases.filter((c) => c.status !== "rejected");
+  // A rejected account may apply again (0040), once nothing else is open.
+  const reapply = accountStatus === "rejected" && !open.length;
+  const startable = reapply ? kinds : kinds.filter((k) => !cases.some((c) => c.kind === k));
   // A company account is either the company or a representative of one: once
   // one of the two is started, the other is not offered.
-  const offer = kinds.includes("company_kyb") && cases.length ? [] : startable;
+  const offer = !reapply && kinds.includes("company_kyb") && cases.length ? [] : startable;
   return (
     <>
       <SectionHeader title={t("verification.title")} description={t("verification.intro")} />
@@ -45,6 +48,7 @@ export function VerificationView({
 
       {offer.length ? (
         <GlassPanel className="mb-4 flex flex-wrap gap-3 p-5">
+          {reapply ? <p className="basis-full text-sm text-fg-secondary">{t("verification.reapplyHint")}</p> : null}
           {offer.map((k) => (
             <form key={k} action={demo ? undefined : start}>
               <input type="hidden" name="kind" value={k} />

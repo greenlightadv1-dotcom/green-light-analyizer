@@ -102,7 +102,7 @@ Egypt's Personal Data Protection Law (No. 151 of 2020) treats biometric data as 
 
 ## Retention (owner and counsel to set)
 
-- A configurable purge job exists (`VERIFICATION_RETENTION_DAYS`, `/api/cron/verification-retention`). It is off until a period is set, and it is not scheduled.
+- Retention is 12 months (0040): `/api/cron/verification-retention` runs daily (needs `CRON_SECRET`), and the database refuses any purge before 365 days.
 - Until then documents stay until the case is deleted. See docs/IDENTITY_DOCUMENT_SECURITY.md.
 
 ## Rollout (needs owner approval)

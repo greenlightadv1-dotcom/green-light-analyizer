@@ -1469,3 +1469,18 @@ Not deployed. **Migration 0039 is applied to the isolated stack only.** Full des
   - admin-created creator and company accounts start `pending_verification`.
 - **No promised review time.** The "24 hours" copy was removed.
 - **Owner decisions:** PENDING_OWNER_DECISIONS §14.
+
+**Follow-up, same day (migration 0040, isolated stack only; owner decisions):**
+- **Notes:** internal reviewer notes live in `verification_notes`. Reviewers only, through RLS; the case's subject never; append-only; no history event and no email. Applicant-facing notes stay on the case (`info_request`, `decision_reason`).
+- **Enhanced review:**
+  - `verification_flags` covers suspected fraud, identity forgery and impersonation;
+  - a flag decides nothing;
+  - approving a flagged case, or a later case from the same email, needs an internal justification note written after the flag (enforced in the database).
+- **Reapplication:** a rejected applicant starts a new application. A rejected account reapplies through `verification_reapply()`: it becomes pending, never active, until a reviewer approves the new case.
+- **Photo metadata:** public avatars, including the activation copy, are stripped of EXIF, GPS, XMP, IPTC, comments and text chunks, losslessly, by `lib/image-metadata.ts`. A rotated JPEG keeps only its orientation tag. Private documents are untouched.
+- **Retention is 365 days:**
+  - enforced by the database (`retention:not_due`);
+  - purged daily by `/api/cron/verification-retention` (scheduled in `vercel.json`, needs `CRON_SECRET`);
+  - each purge is audited without contents, and failures are recorded and retried;
+  - `VERIFICATION_RETENTION_DAYS` is gone.
+- **Details:** `docs/REGISTRATION_ONBOARDING_FLOW.md` (update section) and PENDING_OWNER_DECISIONS §15.

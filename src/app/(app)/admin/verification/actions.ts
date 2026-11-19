@@ -25,6 +25,23 @@ import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACTIONS = ["start_review", "request_info", "approve", "reject"] as const;
+const FLAG_REASONS = ["suspected_fraud", "identity_forgery", "impersonation"] as const;
+
+/**
+ * Two kinds of reviewer text, never mixed (0040):
+ * - `note` (applicant-facing): stored on the case as info_request /
+ *   decision_reason, shown to the applicant and sent in their email.
+ * - `internal_note` (reviewers only): written ONLY through
+ *   verification_add_note() into verification_notes, which the applicant can
+ *   never read (RLS) and which is never emailed, logged or put in history.
+ */
+async function addInternal(actorId: string, caseId: string, body: string): Promise<string | null> {
+  const { error } = await createAdminClient().rpc("verification_add_note", { p_actor: actorId, p_case: caseId, p_body: body });
+  if (!error) return null;
+  const key = verificationErrorKey(error.message);
+  if (key === "ui.errors.generic") log.error("verification.note_failed", { error });
+  return key;
+}
 
 export async function reviewVerification(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
   const { admin, reviewer } = await requireReviewer();
@@ -34,6 +51,12 @@ export async function reviewVerification(_prev: ActionResult | null, fd: FormDat
   if (!UUID.test(caseId) || !ACTIONS.includes(action)) return fail("ui.errors.invalid");
   const note = String(fd.get("note") ?? "").trim().slice(0, 1000) || null;
   const company = String(fd.get("company_id") ?? "");
+  // Written first, so it can be the justification an enhanced-review approval needs.
+  const internal = String(fd.get("internal_note") ?? "").trim().slice(0, 2000);
+  if (internal) {
+    const noteError = await addInternal(admin.id, caseId, internal);
+    if (noteError) return fail(noteError);
+  }
   const service = createAdminClient();
   const { error } = await service.rpc("verification_transition", {
     p_actor: admin.id,
@@ -97,4 +120,45 @@ export async function viewVerificationDocument(_prev: ViewState | null, fd: Form
   }
   await service.from("verification_events").insert({ case_id: doc.case_id, actor_id: admin.id, event: "document_viewed", detail: { doc_type: doc.doc_type } });
   return { ok: true, url: data.signedUrl, errorKey: null };
+}
+
+/** Add an internal note (reviewers only; the applicant never sees it). */
+export async function addInternalNote(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return fail("adminVerification.notReviewer");
+  const caseId = String(fd.get("case_id") ?? "");
+  const body = String(fd.get("internal_note") ?? "").trim().slice(0, 2000);
+  if (!UUID.test(caseId)) return fail("ui.errors.invalid");
+  if (!body) return fail("verification.errors.note_required");
+  const key = await addInternal(admin.id, caseId, body);
+  if (key) return fail(key);
+  revalidatePath(`/admin/verification/${caseId}`);
+  return OK;
+}
+
+/**
+ * Flag a case for enhanced review (suspected fraud, identity forgery or
+ * impersonation). It decides nothing: the case keeps its status, the
+ * applicant is not told, and approving this case or any later case from the
+ * same email then needs an internal justification note (enforced in the
+ * database). The explanation is stored as an internal note.
+ */
+export async function flagForEnhancedReview(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return fail("adminVerification.notReviewer");
+  const caseId = String(fd.get("case_id") ?? "");
+  const reason = String(fd.get("reason") ?? "") as (typeof FLAG_REASONS)[number];
+  const body = String(fd.get("internal_note") ?? "").trim().slice(0, 2000);
+  if (!UUID.test(caseId) || !FLAG_REASONS.includes(reason)) return fail("ui.errors.invalid");
+  if (!body) return fail("verification.errors.note_required");
+  const { error } = await createAdminClient().rpc("verification_flag", { p_actor: admin.id, p_case: caseId, p_reason: reason, p_note: body });
+  if (error) {
+    const key = verificationErrorKey(error.message);
+    if (key === "ui.errors.generic") log.error("verification.flag_failed", { error });
+    return fail(key);
+  }
+  log.info("verification.flagged", { reason });
+  revalidatePath("/admin/verification");
+  revalidatePath(`/admin/verification/${caseId}`);
+  return OK;
 }

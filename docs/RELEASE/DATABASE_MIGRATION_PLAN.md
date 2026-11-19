@@ -160,3 +160,24 @@ See `ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
 - **Code without 0039:** opening a link tolerates the missing column. Submitting a creator application whose public photo upload was refused by the old CHECK fails. Deploy the code and 0039 together.
 - **Rollback:** in the migration header.
 - **Evidence:** `scripts/local-migrations-test.sh` **92 / 92**; `registration-smoke.mjs` 9 / 9.
+
+## Update 2026-11-19: 0040 `review_notes_flags_retention` (not applied anywhere but the isolated stack)
+
+- **What it does:**
+  - `verification_notes` and `verification_flags`, reviewer-only (RLS) and append-only;
+  - the functions `verification_add_note`, `verification_flag`, `verification_reapply`, `verification_purge_mark` / `_confirm` / `_failed`;
+  - the approval guard for enhanced review;
+  - `verification_cases_one_per_kind` now ignores rejected cases;
+  - `verification_documents.purged_at` / `purge_confirmed_at`, with a trigger enforcing 365 days;
+  - the event `document_purge_failed`.
+- **Order:** after 0039 (it replaces 0039's guard function and the event CHECK).
+- **Cost:**
+  - two new tables;
+  - two nullable columns;
+  - one index dropped and rebuilt on `verification_cases` (small);
+  - one CHECK replaced;
+  - triggers and functions.
+- **Apply:** `psql --single-transaction -v ON_ERROR_STOP=1 -f supabase/migrations/0040_review_notes_flags_retention.sql`, then `supabase/verify/0040_verify.sql`. Every row must say `ok`.
+- **With the code:** deploy them together. `vercel.json` schedules `/api/cron/verification-retention` daily. It deletes nothing without `CRON_SECRET`, and nothing younger than 365 days in any case.
+- **Rollback:** in the migration header.
+- **Evidence:** local suite 96 / 96; isolated `review-retention-check.mjs` 3 / 3.

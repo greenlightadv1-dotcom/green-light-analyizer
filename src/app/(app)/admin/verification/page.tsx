@@ -36,9 +36,18 @@ export default async function AdminVerificationPage() {
     .limit(200);
   const names = await displayNames((cases ?? []).map((c) => c.profile_id).filter((x): x is string => !!x));
   const reqIds = (cases ?? []).map((c) => c.access_request_id).filter((x): x is string => !!x);
-  const { data: reqs } = reqIds.length ? await createAdminClient().from("access_requests").select("id, full_name").in("id", reqIds) : { data: [] };
+  const { data: reqs } = reqIds.length ? await createAdminClient().from("access_requests").select("id, full_name, email").in("id", reqIds) : { data: [] };
   const who = (c: { profile_id: string | null; access_request_id: string | null }) =>
     c.profile_id ? names.get(c.profile_id) ?? "—" : `${reqs?.find((r) => r.id === c.access_request_id)?.full_name ?? "—"} (application, no account yet)`;
+  // Enhanced review (0040): read under RLS, reviewers only.
+  // A later case from a flagged person (same email) is marked too.
+  const { data: flagRows } = await supabase.from("verification_flags").select("case_id, subject_email");
+  const flaggedEmails = new Set((flagRows ?? []).map((f) => f.subject_email));
+  const profileIds = (cases ?? []).map((c) => c.profile_id).filter((x): x is string => !!x);
+  const { data: emails } = profileIds.length && flaggedEmails.size ? await createAdminClient().from("profiles").select("id, primary_email").in("id", profileIds) : { data: [] };
+  const emailOf = (c: { profile_id: string | null; access_request_id: string | null }) =>
+    (reqs?.find((r) => r.id === c.access_request_id)?.email ?? emails?.find((p) => p.id === c.profile_id)?.primary_email ?? "").toLowerCase();
+  const flagged = new Set((cases ?? []).filter((c) => (flagRows ?? []).some((f) => f.case_id === c.id) || flaggedEmails.has(emailOf(c))).map((c) => c.id));
   const open = (cases ?? []).filter((c) => c.status === "submitted" || c.status === "under_review");
   const rest = (cases ?? []).filter((c) => !open.includes(c));
   const row = (c: NonNullable<typeof cases>[number]) => (
@@ -47,6 +56,7 @@ export default async function AdminVerificationPage() {
         <span>
           <span className="font-medium text-fg">{who(c)}</span>
           <span className="text-fg-muted"> · {KIND[c.kind]} · {c.submitted_at ? `submitted ${utcStamp(c.submitted_at)}` : "not submitted"}</span>
+          {flagged.has(c.id) ? <span className="ms-2 rounded-chip border border-danger/40 bg-danger/10 px-2 py-0.5 text-xs text-danger">enhanced review</span> : null}
         </span>
         <StatusBadge tone={VERIFICATION_TONE[c.status]}>{c.status.replace(/_/g, " ")}</StatusBadge>
       </Link>

@@ -24,7 +24,7 @@
 | `RESEND_API_KEY` and a verified sender | Resume links, activation links and decision emails. Without them nobody can apply. |
 | `CRON_SECRET` (16+ characters) | YouTube 29-day cleanup and any scheduled job |
 | `ROLE_MAILBOX_FORWARD_TO` | An operator inbox for support@, privacy@ and the other role mailboxes |
-| `VERIFICATION_RETENTION_DAYS` | Only after the legal decision |
+| ~~`VERIFICATION_RETENTION_DAYS`~~ | Removed in 0040: retention is fixed at 365 days; the purge needs `CRON_SECRET` |
 | `NEWS_MONITORING_ENABLED=1` | Only after approval |
 | `NEXT_PUBLIC_ENABLE_UI_PREVIEW` | Must stay unset |
 

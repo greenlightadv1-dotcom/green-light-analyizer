@@ -282,7 +282,7 @@ export function missingFields(kind: VerificationKind, details: Record<string, st
   return FIELDS[kind].filter((f) => f.required && !details?.[f.key]?.trim()).map((f) => f.key);
 }
 
-const KNOWN = new Set(["not_found", "invalid_state", "documents_missing", "email_unverified", "note_required", "not_allowed", "company_required", "invalid_input"]);
+const KNOWN = new Set(["not_found", "invalid_state", "documents_missing", "email_unverified", "enhanced_review_note_required", "note_required", "not_allowed", "company_required", "invalid_input"]);
 export function verificationErrorKey(message: string | null | undefined): string {
   const m = /verification:([a-z_]+)/.exec(message ?? "");
   return m && KNOWN.has(m[1]) ? `verification.errors.${m[1]}` : "ui.errors.generic";

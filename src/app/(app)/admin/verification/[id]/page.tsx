@@ -14,7 +14,7 @@ import { utcStamp } from "@/lib/ui/format";
 import { FIELDS, missingDocuments, missingFields } from "@/lib/verification/rules";
 import { duplicateKeys } from "@/lib/verification/duplicates";
 import { VERIFICATION_TONE } from "@/lib/verification/display";
-import { resendActivation, reviewVerification } from "../actions";
+import { addInternalNote, flagForEnhancedReview, resendActivation, reviewVerification } from "../actions";
 
 export const metadata: Metadata = { title: "Verification case" };
 
@@ -71,6 +71,19 @@ export default async function AdminVerificationCase({ params }: { params: Promis
     ? await service.from("access_requests").select("id, status, created_at").ilike("email", subjectEmail).neq("id", c.access_request_id ?? "00000000-0000-0000-0000-000000000000").limit(10)
     : { data: [] };
   const signals = dupes.filter((d) => d.cases.length);
+
+  // Internal notes and enhanced-review flags (0040), read under RLS with the
+  // reviewer's own session: the database returns them only to reviewers, and
+  // never to the subject of the case.
+  const flagEmail = subjectEmail?.toLowerCase() ?? null;
+  const [{ data: internalNotes }, { data: flags }] = await Promise.all([
+    supabase.from("verification_notes").select("id, author_id, body, kind, created_at").eq("case_id", id).order("id"),
+    flagEmail
+      ? supabase.from("verification_flags").select("id, case_id, reason, raised_by, raised_at").or(`case_id.eq.${id},subject_email.eq.${flagEmail}`).order("raised_at")
+      : supabase.from("verification_flags").select("id, case_id, reason, raised_by, raised_at").eq("case_id", id),
+  ]);
+  const noteNames = await displayNames([...(internalNotes ?? []).map((n) => n.author_id), ...(flags ?? []).map((f) => f.raised_by)]);
+  const enhanced = (flags ?? []).length > 0;
   const stillMissing = {
     fields: missingFields(c.kind, details),
     docs: missingDocuments(c.kind, (docs ?? []).map((d) => d.doc_type), { application: !!c.access_request_id && !c.profile_id }),
@@ -127,6 +140,53 @@ export default async function AdminVerificationCase({ params }: { params: Promis
               <p className="text-xs text-fg-muted">No other case shares this phone number{c.kind === "creator_kyc" ? ", name and date of birth" : c.kind === "company_kyb" ? ", registration or tax number" : ""}, and no other application uses this email.</p>
             )}
           </GlassPanel>
+          {enhanced ? (
+            <GlassPanel className="space-y-2 border-danger/40 bg-danger/5 p-5 text-sm">
+              <h2 className="text-sm font-semibold text-fg">Enhanced review required</h2>
+              <ul className="list-disc space-y-1 ps-4 text-fg-secondary">
+                {(flags ?? []).map((f) => (
+                  <li key={f.id}>
+                    {f.reason.replace(/_/g, " ")} · {f.case_id === id ? "this case" : <Link className="underline" href={`/admin/verification/${f.case_id}`}>an earlier case from the same email</Link>} · {f.raised_by ? noteNames.get(f.raised_by) ?? "—" : "—"} · {utcStamp(f.raised_at)}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-fg-muted">A flag decides nothing and the applicant is not told. To approve, write an internal note justifying the decision first (or in the approval form). Rejecting or requesting information needs no extra step.</p>
+            </GlassPanel>
+          ) : null}
+          <GlassPanel className="overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-4">
+              <h2 className="text-base font-semibold text-fg">Internal notes</h2>
+              <span className="rounded-chip border border-line px-2 py-0.5 text-xs text-fg-muted">Reviewers only · never shown or sent to the applicant</span>
+            </div>
+            {(internalNotes ?? []).length ? (
+              <ol className="divide-y divide-line text-sm">
+                {(internalNotes ?? []).map((n) => (
+                  <li key={n.id} className="space-y-1 px-5 py-3">
+                    <p className="text-xs text-fg-muted">{n.author_id ? noteNames.get(n.author_id) ?? "—" : "—"} · {utcStamp(n.created_at)}{n.kind === "flag_reason" ? " · flag explanation" : ""}</p>
+                    <p dir="auto" className="whitespace-pre-wrap [overflow-wrap:anywhere] text-fg">{n.body}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="px-5 py-3 text-sm text-fg-muted">No internal notes yet.</p>
+            )}
+            <div className="space-y-4 border-t border-line px-5 py-4">
+              <ConfirmActionForm action={addInternalNote} hidden={{ case_id: c.id }} trigger={{ labelKey: "adminVerification.addInternalNote" }} triggerClassName={`${btn} border border-line bg-surface-muted text-fg`} titleKey="adminVerification.addInternalNoteTitle" bodyKey="adminVerification.addInternalNoteBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" className="space-y-2">
+                <textarea name="internal_note" required rows={2} maxLength={2000} placeholder="Internal note (reviewers only)" className={field} />
+              </ConfirmActionForm>
+              <ConfirmActionForm action={flagForEnhancedReview} hidden={{ case_id: c.id }} trigger={{ labelKey: "adminVerification.flag" }} triggerClassName={`${btn} border border-danger/40 bg-danger/10 text-danger`} titleKey="adminVerification.flagTitle" bodyKey="adminVerification.flagBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" tone="danger" className="space-y-2">
+                <label className="block text-xs text-fg-muted">Reason
+                  <select name="reason" required defaultValue="" className={`${field} mt-1`}>
+                    <option value="" disabled className="bg-surface text-fg">Choose</option>
+                    <option value="suspected_fraud" className="bg-surface text-fg">Suspected fraud</option>
+                    <option value="identity_forgery" className="bg-surface text-fg">Identity forgery</option>
+                    <option value="impersonation" className="bg-surface text-fg">Impersonation</option>
+                  </select>
+                </label>
+                <textarea name="internal_note" required rows={2} maxLength={2000} placeholder="What you observed (internal, reviewers only)" className={field} />
+              </ConfirmActionForm>
+            </div>
+          </GlassPanel>
           <GlassPanel className="overflow-hidden">
             <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">Documents ({docs?.length ?? 0})</h2>
             <ul className="divide-y divide-line">
@@ -174,12 +234,15 @@ export default async function AdminVerificationCase({ params }: { params: Promis
                   </label>
                 ) : null}
                 <textarea name="note" rows={2} maxLength={1000} placeholder="Note to the applicant (optional, shown to them)" className={field} />
+                <textarea name="internal_note" rows={2} maxLength={2000} required={enhanced} placeholder={enhanced ? "Internal justification (required: this case is under enhanced review)" : "Internal note (optional, reviewers only)"} className={field} />
               </ConfirmActionForm>
               <ConfirmActionForm action={reviewVerification} hidden={{ case_id: c.id, action: "request_info" }} trigger={{ labelKey: "adminVerification.requestInfo" }} triggerClassName={`${btn} border border-warning/40 bg-warning/10 text-warning`} titleKey="adminVerification.requestInfoTitle" bodyKey="adminVerification.requestInfoBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" className="space-y-2">
                 <textarea name="note" required rows={2} maxLength={1000} placeholder="Exactly what is needed (shown to the applicant)" className={field} />
+                <textarea name="internal_note" rows={2} maxLength={2000} placeholder="Internal note (optional, reviewers only)" className={field} />
               </ConfirmActionForm>
               <ConfirmActionForm action={reviewVerification} hidden={{ case_id: c.id, action: "reject" }} trigger={{ labelKey: "adminVerification.reject" }} triggerClassName={`${btn} border border-danger/40 bg-danger/10 text-danger`} titleKey="adminVerification.rejectTitle" bodyKey="adminVerification.rejectBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" tone="danger" className="space-y-2">
-                <textarea name="note" required rows={2} maxLength={1000} placeholder="Reason (shown and sent to the applicant; no internal notes)" className={field} />
+                <textarea name="note" required rows={2} maxLength={1000} placeholder="Reason (shown and sent to the applicant)" className={field} />
+                <textarea name="internal_note" rows={2} maxLength={2000} placeholder="Internal note (optional, reviewers only)" className={field} />
               </ConfirmActionForm>
             </>
           ) : null}

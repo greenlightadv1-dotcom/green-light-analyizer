@@ -1940,6 +1940,7 @@ const en = {
       rate_limited: "Too many changes in a short time. Wait a little and try again.",
       consent: "Tick the confirmation box to submit.",
       email_unverified: "Verify your email address first: open the link we emailed you.",
+      enhanced_review_note_required: "Our team needs to complete an additional review before approving this.",
     },
     wizard: {
       progress: "Application progress",
@@ -1965,7 +1966,7 @@ const en = {
       needsInfoHint: "Update what's asked, then send your application for review again from the last step. Your earlier history is kept.",
       stillMissing: "Still missing:",
       reason: "Reason given by our team:",
-      rejectedHelp: "If you think this is a mistake, contact support. You can't change this application.",
+      rejectedHelp: "If you think this is a mistake, contact support. This application can't be changed, but you can start a new one.",
       step: {
         personal: "Personal details",
         public: "Public profile",
@@ -2017,6 +2018,7 @@ const en = {
         approved_account: "Approved after a manual review of your documents. Your account is ready to use.",
         rejected: "Your application was not approved.",
       },
+      startNew: "Start a new application",
     },
     hint: {
       phone: "Your WhatsApp number, with the country code, such as +20 101 234 5678. Not verified by SMS.",
@@ -2039,6 +2041,7 @@ const en = {
         x: "X",
       },
     },
+    reapplyHint: "Your earlier verification was not approved. You can apply again: our team will review the new application from the start, and your account stays restricted until it is approved.",
   },
   apply: {
     title: "Your application",
@@ -2365,6 +2368,12 @@ const en = {
     resendActivation: "Send a new activation link",
     resendTitle: "Send a new activation link?",
     resendBody: "The applicant is emailed a new one-time link. Any earlier link stops working.",
+    addInternalNote: "Add internal note",
+    addInternalNoteTitle: "Add an internal note?",
+    addInternalNoteBody: "Only verification reviewers can read it. It is never shown or sent to the applicant.",
+    flag: "Flag for enhanced review",
+    flagTitle: "Flag this case for enhanced review?",
+    flagBody: "The case keeps its status and the applicant is not told. Approving this case, or any later case from the same email, will require an internal justification note.",
   },
 };
 

@@ -493,7 +493,15 @@ export type VerificationDocument = {
   capture_method: "camera" | "upload";
   uploaded_at: string;
   removed_at: string | null;
+  /** 0040: marked purged under the 365-day retention rule, and when the stored file was confirmed deleted. */
+  purged_at?: string | null;
+  purge_confirmed_at?: string | null;
 };
+/** 0040: internal reviewer notes. Reviewers only (RLS); never the case's subject. */
+export type VerificationNote = { id: number; case_id: string; author_id: string | null; body: string; kind: "note" | "flag_reason"; created_at: string };
+export type VerificationFlagReason = "suspected_fraud" | "identity_forgery" | "impersonation";
+/** 0040: enhanced-review flags. Reviewers only (RLS). */
+export type VerificationFlag = { id: number; case_id: string; subject_email: string; reason: VerificationFlagReason; raised_by: string | null; raised_at: string };
 export type VerificationEvent = { id: number; case_id: string; actor_id: string | null; event: string; detail: Record<string, unknown>; created_at: string };
 
 export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status" | "messages";
@@ -687,6 +695,8 @@ export type Database = {
       company_permission_events: Table<{ id: number; company_id: string; member_id: string; actor_id: string | null; scope: string; action: "grant" | "revoke" | "cleared_on_relink"; created_at: string }, never>;
       verification_reviewers: Table<{ admin_id: string; granted_by: string | null; granted_at: string }, { admin_id: string; granted_by?: string | null; granted_at?: string }>;
       verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
+      verification_notes: Table<VerificationNote, never>;
+      verification_flags: Table<VerificationFlag, never>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
@@ -724,6 +734,12 @@ export type Database = {
         Returns: string;
       };
       /* 0032 one-time tokens: service_role only. Each raises 'activation:<code>' on refusal. */
+      verification_add_note: { Args: { p_actor: string; p_case: string; p_body: string }; Returns: number };
+      verification_flag: { Args: { p_actor: string; p_case: string; p_reason: VerificationFlagReason; p_note: string }; Returns: number };
+      verification_reapply: { Args: { p_profile: string; p_kind: VerificationKind }; Returns: string };
+      verification_purge_mark: { Args: { p_doc: string }; Returns: string };
+      verification_purge_confirm: { Args: { p_doc: string }; Returns: undefined };
+      verification_purge_failed: { Args: { p_doc: string; p_code: string }; Returns: undefined };
       application_token_issue: { Args: { p_request: string; p_purpose: "resume" | "activation"; p_hash: string; p_ttl_seconds: number; p_actor: string | null }; Returns: string };
       application_token_lookup: { Args: { p_hash: string; p_purpose: "resume" | "activation" }; Returns: { access_request_id: string; state: "valid" | "expired" | "used" | "revoked"; expires_at: string }[] };
       activation_claim: {
