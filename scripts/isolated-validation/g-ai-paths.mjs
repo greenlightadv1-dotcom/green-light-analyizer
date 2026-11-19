@@ -135,9 +135,10 @@ try {
   assert.ok(draft, "brief draft prepared");
   assert.deepEqual([draft.platforms, draft.categories, draft.target_countries, draft.budget_max_usd], [["youtube"], ["gaming"], ["EG"], 3000]);
   const layla = r.body.cards.recommendations.items.find((i) => i.full_name === "Layla Hassan");
-  const invited = sql("select count(*) from invitations i join profiles p on p.id=i.creator_id where p.primary_email='ux-creator@example.invalid' and i.status <> 'withdrawn'");
-  if (invited !== "0") assert.ok(layla.invitedTo.includes("Ramadan launch"), "already-invited marker");
-  ok(`company, AI down: a draft brief from its own words${invited !== "0" ? ", and Layla marked as already invited" : ""}`);
+  const invitedTitles = sql("select coalesce(string_agg(b.title, '|' order by b.title), '') from invitations i join briefs b on b.id=i.brief_id join profiles p on p.id=i.creator_id where p.primary_email='ux-creator@example.invalid' and i.company_id=(select id from profiles where primary_email='ux-company@example.invalid') and i.status <> 'withdrawn'");
+  const invited = invitedTitles ? invitedTitles.split("|") : [];
+  assert.deepEqual([...(layla?.invitedTo ?? [])].sort(), [...invited].sort(), "already-invited marker equals the database");
+  ok(`company, AI down: a draft brief from its own words; Layla's already-invited marker equals the database (${invited.length} brief(s))`);
 
   r = await creator.ask("Which opportunities fit me?");
   const opp = r.body.cards.opportunities.items.find((o) => o.title === "Ramadan launch");
