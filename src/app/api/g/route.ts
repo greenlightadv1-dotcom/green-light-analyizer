@@ -6,7 +6,7 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import { G_ACTIONS, allowedActions, type GAction, type GActionId } from "@/lib/g/actions";
 import { collabContext, companyContext, creatorContext, loadGSession, type CollabGData } from "@/lib/g/context";
 import { briefFromText } from "@/lib/g/brief-text";
-import { allowedProposals, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
+import { allowedProposals, matchOpportunities, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
 import { fallbackProposals, type FallbackInput } from "@/lib/g/fallback";
 import {
   buildPrompt,
@@ -118,6 +118,21 @@ export async function POST(request: Request) {
       scope = { ...scope, dealIds: ctx.dealIds, collaborationIds: collab.collaborationIds };
       proposalScope = { ...proposalScope, collaborationIds: collab.collaborationIds };
       if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: collab.invitations };
+      // Published briefs matched to this creator's own categories, connected
+      // platforms and top audience countries (verified or self-reported, as
+      // the kit states). Only briefs the creator can already read (RLS).
+      const opportunities = intents.includes("collab")
+        ? matchOpportunities(
+            {
+              categories: profile.creator_categories ?? [],
+              platforms: (ctx.assessment.platforms ?? []).map((p) => p.platform),
+              countries: (ctx.assessment.platforms ?? []).flatMap((p) => p.geography.shares.slice(0, 3).map((c) => c.country)),
+            },
+            collab.briefs,
+            new Set(collab.invitations.map((i) => i.brief_id)),
+          )
+        : [];
+      if (intents.includes("collab")) cards.opportunities = { items: opportunities, published: collab.briefs.length };
       if (intents.includes("content") && collab.content) cards.content = collab.content;
       if (intents.includes("assessment") || intents.includes("help")) cards.assessment = ctx.assessment;
       if (intents.includes("deals")) cards.deals = { summary: ctx.assessment.deals, recent: ctx.recentDeals };
@@ -132,6 +147,7 @@ export async function POST(request: Request) {
         assessment: ctx.assessment,
         deals: { summary: ctx.assessment.deals, recent: ctx.recentDeals },
         ...(wantsCollab ? collabData(collab) : {}),
+        ...(opportunities.length ? { opportunities } : {}),
         ...(news.length ? { officialNews: news } : {}),
       };
       defaults = intents.includes("content")
@@ -153,11 +169,22 @@ export async function POST(request: Request) {
       if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: [], briefs: collab.briefs };
       if (intents.includes("recommend") || intents.includes("brief") || intents.includes("help")) {
         cards.brief = { value: ctx.brief, missing: ctx.briefMissing, understood: fromText.understood };
-        cards.recommendations = { directorySize: ctx.directorySize, items: ctx.recommendations };
+        // Who is already invited, and to which of this company's briefs, so a
+        // recommendation never reads as "new" when an invitation exists.
+        cards.recommendations = {
+          directorySize: ctx.directorySize,
+          items: ctx.recommendations.map((r) => ({ ...r, invitedTo: collab.invitedTitlesByCreator.get(r.creator_id) ?? [] })),
+        };
       }
       if (intents.includes("compare")) cards.comparison = ctx.comparison;
       if (intents.includes("deals")) cards.deals = { recent: ctx.recentDeals };
-      fallback = { briefs: collab.briefs, recommendations: ctx.recommendations, collaborations: collab.collaborations };
+      fallback = {
+        briefs: collab.briefs,
+        recommendations: ctx.recommendations,
+        collaborations: collab.collaborations,
+        brief: { categories: ctx.brief.categories, platforms: ctx.brief.platforms, countries: ctx.brief.countries, maxBudgetUsd: ctx.brief.maxBudgetUsd },
+        message: maskTurns([{ role: "user", text: req.message }])[0].text,
+      };
       modelData = {
         intents,
         brief: ctx.brief,
@@ -166,6 +193,7 @@ export async function POST(request: Request) {
         recommendations: ctx.recommendations,
         comparison: ctx.comparison,
         recentDeals: ctx.recentDeals,
+        alreadyInvited: Object.fromEntries(collab.invitedTitlesByCreator),
         ...(wantsCollab ? collabData(collab) : {}),
       };
       defaults = intents.includes("collab") ? [{ action: "open_collaborations" }, { action: "open_briefs" }] : [{ action: "open_discover" }];

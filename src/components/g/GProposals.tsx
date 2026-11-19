@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useTranslation } from "@/components/LocaleProvider";
 import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { inviteCreator } from "@/app/(app)/collaborations/actions";
+import { createBriefDraft, inviteCreator } from "@/app/(app)/collaborations/actions";
 import { saveContentItem } from "@/app/(app)/content/actions";
-import type { CollabSummary, GProposal, InvitationSummary } from "@/lib/g/collab";
+import type { CollabSummary, GProposal, InvitationSummary, OpportunityMatch } from "@/lib/g/collab";
 import { day, usd } from "@/lib/collab/display";
 
 /**
@@ -128,6 +128,49 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
       </div>
     );
   }
+  if (p.type === "brief_draft") {
+    const criteria = [
+      ...p.platforms.map((x) => x),
+      ...p.categories.map((x) => x.replace(/_/g, " ")),
+      ...p.target_countries,
+    ];
+    return (
+      <div className={frame}>
+        {head}
+        <ConfirmActionForm
+          action={demo ? async () => ({ ok: false, errorKey: "g.proposal.demo" }) : createBriefDraft}
+          hidden={{}}
+          trigger={{ labelKey: "g.proposal.saveBriefDraft" }}
+          triggerClassName={btn}
+          titleKey="g.proposal.briefTitle"
+          bodyKey="g.proposal.briefBody"
+          confirmKey="g.proposal.briefConfirm"
+          successKey="g.proposal.briefSaved"
+          className="space-y-2"
+        >
+          {p.platforms.map((x) => <input key={`p-${x}`} type="hidden" name="platforms" value={x} />)}
+          {p.categories.map((x) => <input key={`c-${x}`} type="hidden" name="categories" value={x} />)}
+          <input type="hidden" name="target_countries" value={p.target_countries.join(",")} />
+          <label className="block text-fg-muted">{t("collab.briefs.fieldTitle")}
+            <input name="title" required minLength={3} maxLength={120} defaultValue={p.title} dir="auto" className={`${field} mt-1`} />
+          </label>
+          <label className="block text-fg-muted">{t("collab.briefs.fieldDescription")}
+            <textarea name="description" required minLength={10} maxLength={5000} rows={4} defaultValue={p.description} dir="auto" className={`${field} mt-1`} />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block text-fg-muted">{t("collab.briefs.fieldBudgetMin")}
+              <input name="budget_min_usd" type="number" min={0} defaultValue={p.budget_min_usd ?? ""} dir="ltr" className={`${field} mt-1`} />
+            </label>
+            <label className="block text-fg-muted">{t("collab.briefs.fieldBudgetMax")}
+              <input name="budget_max_usd" type="number" min={0} defaultValue={p.budget_max_usd ?? ""} dir="ltr" className={`${field} mt-1`} />
+            </label>
+          </div>
+          {criteria.length ? <p className="text-fg-secondary">{t("g.proposal.briefCriteria", { list: criteria.join(", ") })}</p> : null}
+        </ConfirmActionForm>
+        <p className="text-fg-muted">{t("g.proposal.briefHint")}</p>
+      </div>
+    );
+  }
   return (
     <div className={frame}>
       {head}
@@ -145,6 +188,45 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
       >
         <textarea name="message" aria-label={t("collab.invite.message")} required rows={4} maxLength={2000} defaultValue={p.message} dir="auto" className={field} />
       </ConfirmActionForm>
+    </div>
+  );
+}
+
+export function OpportunitiesCard({
+  data,
+  basePath = "",
+}: {
+  data: { items: OpportunityMatch[]; published: number };
+  basePath?: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-2 rounded-2xl border border-line bg-surface-soft p-3.5 text-xs">
+      <p className="font-semibold text-fg">{t("g.opp.title")}</p>
+      <p className="text-fg-muted">{t("g.opp.basis", { count: data.published })}</p>
+      {data.items.length === 0 ? <p className="text-fg-muted">{t("g.opp.none")}</p> : null}
+      <ul className="space-y-2">
+        {data.items.map((o) => (
+          <li key={o.brief_id} className="rounded-xl border border-line bg-surface p-2.5">
+            <p dir="auto" className="font-semibold text-fg">{o.title || "—"}</p>
+            <ul className="mt-1 space-y-0.5 text-fg-secondary">
+              {o.matched.map((m) => (
+                <li key={m.kind}>✓ {t(`g.opp.match.${m.kind}`, { values: m.values.map((v) => v.replace(/_/g, " ")).join(", ") })}</li>
+              ))}
+              {o.unmatched.map((k) => (
+                <li key={k} className="text-fg-muted">✗ {t(`g.opp.miss.${k}`)}</li>
+              ))}
+            </ul>
+            {o.budget_min_usd !== null || o.budget_max_usd !== null ? (
+              <p className="mt-1 text-fg-muted">
+                {t("g.opp.budget", { range: [o.budget_min_usd, o.budget_max_usd].filter((v) => v !== null).map((v) => usd(v as number)).join(" – ") })}
+              </p>
+            ) : null}
+            {o.invited ? <p className="mt-1 font-medium text-accent">{t("g.opp.invited")}</p> : null}
+          </li>
+        ))}
+      </ul>
+      <Link href={`${basePath}/opportunities`} className={btn}>{t("g.action.open_opportunities")} →</Link>
     </div>
   );
 }

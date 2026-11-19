@@ -67,7 +67,7 @@ export function countDeliverables(ds: { status: DeliverableStatus }[]): Record<D
   return out;
 }
 
-export type InvitationSummary = { id: string; title: string; status: InvitationStatus; proposed_amount_usd: number | null };
+export type InvitationSummary = { id: string; brief_id: string; title: string; status: InvitationStatus; proposed_amount_usd: number | null };
 
 // ---------------------------------------------------------------------------
 // Prepared actions (proposals)
@@ -76,7 +76,22 @@ export type InvitationSummary = { id: string; title: string; status: InvitationS
 export type GProposal =
   | { type: "content_draft"; kind: ContentKind; title: string; body: string }
   | { type: "invitation"; brief_id: string; creator_id: string; message: string; creator_name?: string }
-  | { type: "message_draft"; collaboration_id: string; text: string };
+  | { type: "message_draft"; collaboration_id: string; text: string }
+  /**
+   * A campaign brief G filled in for a company. Confirming saves it as a
+   * DRAFT through the ordinary brief action (validation, masking, rate
+   * limit); it is never published or sent to anyone from G.
+   */
+  | {
+      type: "brief_draft";
+      title: string;
+      description: string;
+      platforms: string[];
+      categories: string[];
+      target_countries: string[];
+      budget_min_usd: number | null;
+      budget_max_usd: number | null;
+    };
 
 export type ProposalScope = {
   role: Role;
@@ -118,6 +133,26 @@ export function allowedProposals(candidates: unknown, scope: ProposalScope): GPr
       if (brief && creator && message && scope.publishedBriefIds.has(brief) && scope.creatorIds.has(creator) && !scope.invited.has(`${brief}:${creator}`)) {
         out.push({ type: "invitation", brief_id: brief, creator_id: creator, message });
       }
+    } else if (r.type === "brief_draft" && scope.role === "company") {
+      const title = clean(r.title, 120);
+      const description = clean(r.description, 5000);
+      const short = (v: unknown, max: number) =>
+        Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string" && /^[a-z0-9_-]{1,40}$/i.test(x)))].slice(0, max) : [];
+      const money = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 10_000_000 ? Math.round(v) : null);
+      const min = money(r.budget_min_usd);
+      const max = money(r.budget_max_usd);
+      if (title && title.length >= 3 && description && description.length >= 10) {
+        out.push({
+          type: "brief_draft",
+          title,
+          description,
+          platforms: short(r.platforms, 6),
+          categories: short(r.categories, 10),
+          target_countries: short(r.target_countries, 20).map((c) => c.toUpperCase()).filter((c) => /^[A-Z]{2}$/.test(c)),
+          budget_min_usd: min !== null && max !== null && min > max ? null : min,
+          budget_max_usd: max,
+        });
+      }
     } else if (r.type === "message_draft") {
       const id = typeof r.collaboration_id === "string" && UUID.test(r.collaboration_id) ? r.collaboration_id : null;
       const text = clean(r.text, 2000);
@@ -130,10 +165,87 @@ export function allowedProposals(candidates: unknown, scope: ProposalScope): GPr
 
 /** The text of a proposal, for the grounding check (no invented figures). */
 export function proposalText(p: GProposal): string {
-  return p.type === "content_draft" ? `${p.title}\n${p.body}` : p.type === "invitation" ? p.message : p.text;
+  if (p.type === "content_draft") return `${p.title}\n${p.body}`;
+  if (p.type === "invitation") return p.message;
+  if (p.type === "brief_draft") return [p.title, p.description, p.budget_min_usd ?? "", p.budget_max_usd ?? ""].join("\n");
+  return p.text;
 }
 
 /** Which proposal types the prompt may offer this role. */
 export function proposalTypesFor(role: Role): GProposal["type"][] {
-  return role === "creator" ? ["content_draft", "message_draft"] : role === "company" ? ["invitation", "message_draft"] : [];
+  return role === "creator" ? ["content_draft", "message_draft"] : role === "company" ? ["invitation", "message_draft", "brief_draft"] : [];
+}
+
+// ---------------------------------------------------------------------------
+// Opportunities for a creator: published briefs matched to their own profile
+// ---------------------------------------------------------------------------
+
+export type OpportunityBrief = {
+  id: string;
+  title: string;
+  platforms: string[] | null;
+  categories: string[] | null;
+  target_countries: string[] | null;
+  budget_min_usd: number | null;
+  budget_max_usd: number | null;
+  due_date: string | null;
+};
+
+export type OpportunityMatch = {
+  brief_id: string;
+  title: string;
+  /** Criteria the brief states and this creator meets, from the creator's own data. */
+  matched: { kind: "category" | "platform" | "country"; values: string[] }[];
+  /** Criteria the brief states that the creator's data does not show. */
+  unmatched: ("category" | "platform" | "country")[];
+  budget_min_usd: number | null;
+  budget_max_usd: number | null;
+  due_date: string | null;
+  invited: boolean;
+};
+
+/**
+ * Which published briefs fit this creator, and why, using only what the
+ * creator's own profile and media kits state (categories, connected
+ * platforms, top audience countries). A brief that states a criterion the
+ * creator does not meet is still listed with that criterion unmet; a brief
+ * that matches nothing is left out. Ordered by how many stated criteria
+ * match. Budgets and dates are the sponsor's own figures. Pure.
+ */
+export function matchOpportunities(
+  creator: { categories: readonly string[]; platforms: readonly string[]; countries: readonly string[] },
+  briefs: readonly OpportunityBrief[],
+  invitedBriefIds: ReadonlySet<string>,
+  max = 5,
+): OpportunityMatch[] {
+  const lower = (xs: readonly string[] | null | undefined) => (xs ?? []).map((x) => x.toLowerCase());
+  const mine = { category: lower(creator.categories), platform: lower(creator.platforms), country: lower(creator.countries) };
+  const out: (OpportunityMatch & { score: number })[] = [];
+  for (const b of briefs) {
+    const stated = { category: lower(b.categories), platform: lower(b.platforms), country: lower(b.target_countries) };
+    const matched: OpportunityMatch["matched"] = [];
+    const unmatched: OpportunityMatch["unmatched"] = [];
+    for (const kind of ["category", "platform", "country"] as const) {
+      if (!stated[kind].length) continue;
+      const hit = stated[kind].filter((v) => mine[kind].includes(v));
+      if (hit.length) matched.push({ kind, values: hit.map((v) => (kind === "country" ? v.toUpperCase() : v)) });
+      else unmatched.push(kind);
+    }
+    if (!matched.length) continue;
+    out.push({
+      brief_id: b.id,
+      title: b.title,
+      matched,
+      unmatched,
+      budget_min_usd: b.budget_min_usd,
+      budget_max_usd: b.budget_max_usd,
+      due_date: b.due_date,
+      invited: invitedBriefIds.has(b.id),
+      score: matched.length * 10 - unmatched.length,
+    });
+  }
+  return out
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max)
+    .map(({ score: _score, ...m }) => m);
 }

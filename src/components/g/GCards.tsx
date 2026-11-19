@@ -164,7 +164,7 @@ export function RecommendationsCard({
   rec,
   onCompare,
 }: {
-  rec: { directorySize: number; items: Recommendation[] };
+  rec: { directorySize: number; items: (Recommendation & { invitedTo?: string[] })[] };
   onCompare: (id: string, name: string) => void;
 }) {
   const { t } = useTranslation();
@@ -182,6 +182,9 @@ export function RecommendationsCard({
               {r.stated ? t("g.card.meets", { met: r.met, stated: r.stated }) : t("g.card.noRequirements")}
             </span>
           </div>
+          {r.invitedTo?.length ? (
+            <p className="mt-1 text-[11px] font-medium text-accent">{t("g.card.alreadyInvited", { briefs: r.invitedTo.join(", ") })}</p>
+          ) : null}
           <ul className="mt-1 space-y-0.5">
             {r.requirements.map((q) => (
               <li key={q.requirement} className="flex items-center justify-between gap-2 text-[11px]">

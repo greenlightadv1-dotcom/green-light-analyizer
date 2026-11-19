@@ -66,3 +66,50 @@ test("proposals execute only through the ordinary server actions, after a confir
   assert.match(route, /allowedProposals\(result\.value\.proposals, proposalScope\)/);
   assert.match(route, /ungroundedFigures\(proposalText\(p\)/);
 });
+
+// --- brief_draft proposals and opportunity matching --------------------------
+import { matchOpportunities, proposalText as briefText } from "./collab.ts";
+
+const companyScope = { role: "company" as const, publishedBriefIds: new Set<string>(), creatorIds: new Set<string>(), invited: new Set<string>(), collaborationIds: new Set<string>() };
+const draft = { type: "brief_draft", title: "Spring launch", description: "Gaming creators in Egypt for our launch", platforms: ["youtube", "bad id!"], categories: ["gaming"], target_countries: ["eg", "Egypt", "SA"], budget_min_usd: 500, budget_max_usd: 2000 };
+
+test("a brief draft is company-only, cleaned, and never carries invalid ids", () => {
+  const [p] = allowedProposals([draft], companyScope);
+  assert.ok(p && p.type === "brief_draft");
+  if (p.type !== "brief_draft") return;
+  assert.deepEqual(p.platforms, ["youtube"]);
+  assert.deepEqual(p.target_countries, ["EG", "SA"]);
+  assert.equal(p.budget_max_usd, 2000);
+  assert.deepEqual(allowedProposals([draft], { ...companyScope, role: "creator" }), []);
+  assert.deepEqual(allowedProposals([{ ...draft, title: "x" }], companyScope), [], "too-short title");
+  assert.deepEqual(allowedProposals([{ ...draft, description: "short" }], companyScope), [], "too-short description");
+  const [q] = allowedProposals([{ ...draft, budget_min_usd: 5000, budget_max_usd: 100 }], companyScope);
+  assert.ok(q.type === "brief_draft" && q.budget_min_usd === null, "a min above the max is dropped, not swapped");
+  const [m] = allowedProposals([{ ...draft, description: "Call me on 01012345678 about the launch" }], companyScope);
+  assert.ok(m.type === "brief_draft" && !m.description.includes("01012345678"), "contact details are masked");
+  assert.match(briefText(p), /2000/, "budgets go through the grounding check");
+  assert.ok(proposalTypesFor("company").includes("brief_draft"));
+  assert.ok(!proposalTypesFor("creator").includes("brief_draft"));
+});
+
+const brief = (id: string, over: Record<string, unknown> = {}) => ({ id, title: id, platforms: null, categories: null, target_countries: null, budget_min_usd: null, budget_max_usd: null, due_date: null, ...over });
+
+test("opportunities: only briefs that match something, best first, with the reasons and the gaps", () => {
+  const me = { categories: ["gaming", "tech"], platforms: ["youtube"], countries: ["EG", "SA"] };
+  const out = matchOpportunities(me, [
+    brief("none", { categories: ["beauty"] }),
+    brief("one", { categories: ["gaming"], platforms: ["tiktok"] }),
+    brief("three", { categories: ["tech"], platforms: ["youtube"], target_countries: ["eg"] }),
+    brief("unstated"),
+  ], new Set(["three"]));
+  assert.deepEqual(out.map((o) => o.brief_id), ["three", "one"]);
+  assert.deepEqual(out[0].matched.map((m) => m.kind), ["category", "platform", "country"]);
+  assert.deepEqual(out[0].matched[2].values, ["EG"]);
+  assert.equal(out[0].invited, true);
+  assert.deepEqual(out[1].unmatched, ["platform"]);
+  assert.equal(out[1].invited, false);
+});
+
+test("opportunities: a creator with no profile data matches nothing rather than everything", () => {
+  assert.deepEqual(matchOpportunities({ categories: [], platforms: [], countries: [] }, [brief("a", { categories: ["gaming"] })], new Set()), []);
+});

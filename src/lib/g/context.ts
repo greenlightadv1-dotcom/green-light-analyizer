@@ -110,12 +110,14 @@ export async function companyContext(
 export type CollabGData = {
   collaborations: CollabSummary[];
   invitations: InvitationSummary[];
-  briefs: { id: string; title: string; status: string; sponsorship_type: string | null; platforms: string[]; budget_min_usd: number | null; budget_max_usd: number | null; due_date: string | null }[];
+  briefs: { id: string; title: string; status: string; sponsorship_type: string | null; platforms: string[]; categories: string[] | null; target_countries: string[] | null; budget_min_usd: number | null; budget_max_usd: number | null; due_date: string | null }[];
   content: { counts: Record<string, number>; upcoming: { id: string; kind: string; title: string; planned_for: string; status: string }[] } | null;
   briefIds: Set<string>;
   publishedBriefIds: Set<string>;
   collaborationIds: Set<string>;
   invited: Set<string>;
+  /** Company: for each creator it invited, the titles of those briefs (its own invitations, RLS). */
+  invitedTitlesByCreator: Map<string, string[]>;
 };
 
 export async function collabContext(profile: Profile): Promise<CollabGData> {
@@ -126,8 +128,8 @@ export async function collabContext(profile: Profile): Promise<CollabGData> {
     supabase.from("collaborations").select("id, brief_id, status, proposed_terms, company_confirmed_at, creator_confirmed_at, agreed_amount_usd").eq(column, profile.id).order("updated_at", { ascending: false }).limit(20),
     supabase.from("invitations").select("id, brief_id, creator_id, status, proposed_amount_usd").eq(column, profile.id).order("updated_at", { ascending: false }).limit(50),
     side === "company"
-      ? supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, budget_min_usd, budget_max_usd, due_date").eq("company_id", profile.id).order("updated_at", { ascending: false }).limit(20)
-      : supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, budget_min_usd, budget_max_usd, due_date").eq("status", "published").order("published_at", { ascending: false }).limit(10),
+      ? supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, categories, target_countries, budget_min_usd, budget_max_usd, due_date").eq("company_id", profile.id).order("updated_at", { ascending: false }).limit(20)
+      : supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, categories, target_countries, budget_min_usd, budget_max_usd, due_date").eq("status", "published").order("published_at", { ascending: false }).limit(10),
   ]);
   const ids = (collabs ?? []).map((c) => c.id);
   const { data: dels } = ids.length
@@ -166,12 +168,17 @@ export async function collabContext(profile: Profile): Promise<CollabGData> {
         next: nextStep(side, c, ds),
       };
     }),
-    invitations: (invites ?? []).map((i) => ({ id: i.id, title: title.get(i.brief_id) ?? "", status: i.status, proposed_amount_usd: i.proposed_amount_usd })),
+    invitations: (invites ?? []).map((i) => ({ id: i.id, brief_id: i.brief_id, title: title.get(i.brief_id) ?? "", status: i.status, proposed_amount_usd: i.proposed_amount_usd })),
     briefs,
     content,
     briefIds: new Set(side === "company" ? briefs.map((b) => b.id) : []),
     publishedBriefIds: new Set(side === "company" ? briefs.filter((b) => b.status === "published").map((b) => b.id) : []),
     collaborationIds: new Set(ids),
     invited: new Set((invites ?? []).map((i) => `${i.brief_id}:${i.creator_id}`)),
+    invitedTitlesByCreator: (invites ?? []).reduce((m, i) => {
+      if (side !== "company" || i.status === "withdrawn") return m;
+      m.set(i.creator_id, [...(m.get(i.creator_id) ?? []), title.get(i.brief_id) ?? ""].filter(Boolean));
+      return m;
+    }, new Map<string, string[]>()),
   };
 }

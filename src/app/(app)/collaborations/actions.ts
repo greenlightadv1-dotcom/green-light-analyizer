@@ -117,6 +117,18 @@ export async function saveBrief(_prev: BriefFormState | null, fd: FormData): Pro
 }
 
 /** Publish a draft. Requires complete company details, like a Discover offer. */
+/**
+ * G's prepared brief (lib/g/collab.ts `brief_draft`), after the company
+ * confirmed it. Always creates a NEW draft: any brief_id in the form is
+ * ignored, so a prepared brief can never overwrite or publish an existing
+ * one. Same role check, validation, masking and rate limit as saveBrief.
+ */
+export async function createBriefDraft(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
+  fd.delete("brief_id");
+  const r = await saveBrief(null, fd);
+  return r.ok ? OK : fail(r.errorKey ?? "ui.errors.generic");
+}
+
 export async function publishBrief(_prev: ActionResult | null, fd: FormData): Promise<ActionResult> {
   const profile = await requireRole("company");
   const briefId = id(fd, "brief_id");

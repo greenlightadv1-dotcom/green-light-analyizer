@@ -88,3 +88,26 @@ test("the G route uses these only when the AI engine did not answer", () => {
   const route = readFileSync(new URL("../../app/api/g/route.ts", import.meta.url), "utf8");
   assert.match(route, /if \(engine === "rules"\)[\s\S]*?fallbackProposals\(/);
 });
+
+test("a company describing a campaign gets a draft brief built from its own words, never published", () => {
+  const input = company({
+    intents: ["brief", "recommend"],
+    briefs: [],
+    message: "We need gaming creators on YouTube in Egypt, budget up to 3000",
+    brief: { categories: ["gaming"], platforms: ["youtube"], countries: ["EG"], maxBudgetUsd: 3000 },
+  });
+  const [p] = fallbackProposals(input);
+  assert.ok(p && p.type === "brief_draft");
+  if (p.type !== "brief_draft") return;
+  assert.equal(p.description, "We need gaming creators on YouTube in Egypt, budget up to 3000");
+  assert.deepEqual([p.platforms, p.categories, p.target_countries, p.budget_max_usd], [["youtube"], ["gaming"], ["EG"], 3000]);
+  assert.equal(p.title, "Campaign brief (draft from G)");
+  assert.match(fallbackProposals({ ...input, locale: "ar" })[0].type === "brief_draft" ? (fallbackProposals({ ...input, locale: "ar" })[0] as { title: string }).title : "", /موجز/);
+});
+
+test("no brief draft without stated criteria, for a creator, or for a one-word message", () => {
+  const base = company({ intents: ["brief"], briefs: [], message: "Help me write a brief please", brief: { categories: [], platforms: [], countries: [], maxBudgetUsd: null } });
+  assert.deepEqual(fallbackProposals(base), []);
+  assert.deepEqual(fallbackProposals({ ...base, role: "creator", brief: { categories: ["gaming"], platforms: [], countries: [], maxBudgetUsd: null } }), []);
+  assert.deepEqual(fallbackProposals({ ...base, message: "brief", brief: { categories: ["gaming"], platforms: [], countries: [], maxBudgetUsd: null } }), []);
+});

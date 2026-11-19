@@ -11,7 +11,7 @@ import { useVoice } from "@/components/g/useVoice";
 import { useWakeWord, type WakeStatus } from "@/components/g/useWakeWord";
 import { WAKE_PHRASES } from "@/lib/g/wake";
 import { actionHref } from "@/lib/g/actions";
-import { CollaborationsCard, ContentCard, ProposalCard } from "@/components/g/GProposals";
+import { CollaborationsCard, ContentCard, OpportunitiesCard, ProposalCard } from "@/components/g/GProposals";
 import type { CreatorAssessment, DealSummary } from "@/lib/g/assessment";
 import type { Brief, ComparisonRow, Recommendation } from "@/lib/g/recommend";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -390,6 +390,9 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   {m.cards?.deals ? <DealsCard deals={m.cards.deals as { summary?: CreatorAssessment["deals"]; recent: DealSummary[] }} /> : null}
                   {m.cards?.collaborations ? (
                     <CollaborationsCard basePath={basePath} data={m.cards.collaborations as Parameters<typeof CollaborationsCard>[0]["data"]} />
+                  ) : null}
+                  {m.cards?.opportunities ? (
+                    <OpportunitiesCard basePath={basePath} data={m.cards.opportunities as Parameters<typeof OpportunitiesCard>[0]["data"]} />
                   ) : null}
                   {m.cards?.content ? <ContentCard data={m.cards.content as Parameters<typeof ContentCard>[0]["data"]} /> : null}
                   {m.proposals?.map((p, i) => (
