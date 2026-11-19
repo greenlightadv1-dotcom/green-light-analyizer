@@ -723,6 +723,7 @@ const es: Dictionary = {
       profile_base_rate: "Define tu tarifa base.",
     },
     card: {
+      compareNeedTwo: "Primero añade al menos dos creadores a la comparación (seleccionados: {count}). Usa «Añadir a la comparación» en una recomendación o en Descubrir.",
       alreadyInvited: "Ya invitado a: {briefs}",
       assessment: "Evaluación del canal",
       profileComplete: "Perfil",

@@ -119,3 +119,22 @@ See `ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
 - **Backups:**
   - Dump the data with `-x storage.buckets_vectors -x storage.vector_indexes`, or the restore fails.
   - Restore with `scripts/rehearsal/pre-restore.sql` first. Otherwise a fresh project's default privileges give `anon` and `authenticated` ALL on every restored table.
+
+## Update 2026-11-19: 0038 `brief_request_key` (not applied anywhere but the isolated stack)
+
+- **What it does:**
+  - adds a nullable `briefs.request_key uuid`;
+  - adds a partial unique index `briefs_company_request_key_uidx` on `(company_id, request_key) WHERE request_key IS NOT NULL`.
+
+  `saveBrief` sends one key per creation (one per prepared G draft, set by the server; one per `/briefs/new` form instance). A retried, replayed or concurrent duplicate fails with 23505 and is answered with the brief that already exists. Separate briefs carry separate keys. Edits and pre-0038 rows (key NULL) are unaffected.
+- **Order:** after 0026 (it alters `briefs`). It has no dependency on 0027–0037.
+- **Cost:** a nullable column (no table rewrite) and an index over zero rows at apply time. `CREATE UNIQUE INDEX` holds a SHARE lock on `briefs` for milliseconds.
+- **Apply:** `psql --single-transaction -v ON_ERROR_STOP=1 -f supabase/migrations/0038_brief_request_key.sql`, then `supabase/verify/0038_verify.sql`. Every row must say `ok`.
+- **Code without 0038:** the app keeps working. A PostgREST `PGRST204` or Postgres `42703` on the key makes `saveBrief` insert without it and log `brief.request_key_unavailable`. Creation works, without the duplicate protection, until the migration is applied. This was tested on the isolated stack by rolling 0038 back.
+- **Rollback:** `drop index if exists public.briefs_company_request_key_uidx; alter table public.briefs drop column if exists request_key;`
+- **Evidence:**
+  - `scripts/local-migrations-test.sh` applies 0001–0038: **87 / 87 passed**, including `supabase/tests/brief_request_key_test.sql` and `0038_verify.sql`.
+  - `scripts/isolated-validation/g-actions.mjs` checks 9, 10 and 12:
+    - the same request replayed once and 5× concurrently leaves one draft;
+    - a fresh key creates exactly one new brief;
+    - `/briefs/new` with a double click and 3 concurrent replays creates one brief.

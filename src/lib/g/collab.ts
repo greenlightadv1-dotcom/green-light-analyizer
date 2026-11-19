@@ -91,6 +91,12 @@ export type GProposal =
       target_countries: string[];
       budget_min_usd: number | null;
       budget_max_usd: number | null;
+      /**
+       * Idempotency key (0038), assigned by the server route after filtering,
+       * never taken from the model. The same prepared draft always carries the
+       * same key, so saving it twice creates one brief.
+       */
+      request_key?: string;
     };
 
 export type ProposalScope = {

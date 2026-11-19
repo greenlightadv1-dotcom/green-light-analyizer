@@ -57,6 +57,60 @@
 
 1. **Live NVIDIA.** `integrate.api.nvidia.com` is refused by this sandbox's egress proxy, and the production key exists only in Vercel, which was not touched. Every AI path was exercised against the fake; the real model's wording, Arabic quality and latency were not observed. **Owner:** run `node scripts/check-nvidia.mjs` with the key, or allow the host and provide a key for an isolated run.
 2. **Real microphones, Safari, Firefox and mobile push-to-talk with real audio.** The voice suites use a spec-faithful fake recognizer in Chromium. A person has to test these.
-3. **Brief drafts are not idempotent on the server.** The UI prevents a second save, but a deliberate replay of the request outside the UI creates a second draft, as the positive control shows. Invitations are protected by a unique constraint. A per-proposal idempotency key needs a schema change. **Owner decision.**
+3. **~~Brief drafts are not idempotent on the server.~~** Closed in the second pass by migration 0038 (owner-approved). See below.
 4. **Creative text without the AI.** Hooks, titles, descriptions and scripts are only produced when the model answers. Without it, G offers only ideas built from stored official headlines, by design: it does not invent creative content or trends.
-5. **Compare and deliverable review.** The logic and cards exist and are unit-tested (`compareCreators`, the collaborations card with next step), but they were not driven end to end with a seeded collaboration in this pass.
+5. **~~Compare and deliverable review not driven end to end.~~** Closed in the second pass: `g-collab-compare.mjs`, 12/12.
+
+## Second pass (2026-11-19): idempotency, comparison, deliverable review
+
+### Brief idempotency (migration 0038, owner-approved, isolated stack only)
+
+**Design:**
+- A nullable `briefs.request_key` plus a partial unique index on `(company_id, request_key)`.
+- `saveBrief` inserts with the key. A duplicate (23505) is answered with the existing brief's id, so a retry looks like success and creates nothing.
+- **Where keys come from:**
+  - G's `/api/g` route assigns a prepared draft's key server-side (`randomUUID()`); a key the model or the request supplies is dropped by `allowedProposals`.
+  - `/briefs/new` generates one key per form instance.
+- **What stays possible:** separate briefs (new keys), edits, other companies' keys, and pre-0038 rows.
+- **Without the migration:** the app still works. The insert falls back to no key and logs `brief.request_key_unavailable`, which was tested by rolling 0038 back on the isolated stack.
+
+**Evidence:**
+- `local-migrations-test.sh` 87/87, including `brief_request_key_test.sql` and `0038_verify.sql`.
+- `g-actions.mjs` 13/13, of which:
+  - same request replayed once and 5× concurrently → one draft;
+  - a fresh key sent 3× concurrently → exactly one new brief (positive control);
+  - `/briefs/new` with a double click and 3 concurrent replays → one brief.
+
+**Production:** not applied. The steps are in `docs/RELEASE/DATABASE_MIGRATION_PLAN.md` (Update 2026-11-19).
+
+### Comparison and deliverable review: `g-collab-compare.mjs`, 12/12
+
+A collaboration is seeded through the app's own SECURITY DEFINER functions: published brief → invitation → accept → terms → both confirm → two deliverables → creator submits both. The suite then checks:
+- **Company G:** "review the submitted work", the agreed $1,500 and 2 submitted, all equal to the database.
+- **Creator G:** "waiting for the company's review", plus a copy-only check-in draft with no form.
+- **Review page:**
+  - Cancel changes nothing;
+  - Confirm approves exactly one deliverable;
+  - the company's review request replayed by the creator against the other deliverable changes nothing;
+  - the company's own replay approves it (positive control).
+- **After both approvals:** the next step reads "mark it completed".
+- **Comparison:**
+  - with fewer than two selected, an explicit "add at least two" empty state (new);
+  - two directory creators side by side, with Layla's views and engagement equal to the database and provenance badges;
+  - a foreign id ignored;
+  - a creator asking to compare gets no directory data.
+
+### Final regression on one fresh production build
+
+| Suite | Result |
+|---|---|
+| g-workflows / g-ai-paths / g-actions / g-collab-compare | 9/9, 12/12, 13/13, 12/12 |
+| g-voice-e2e / g-wake-e2e (simulated speech) | 18/18, 31/31 |
+| mobile-nav-e2e / phase1-ui-e2e | 19/19, 204/204 |
+| Unit tests | 781 + 19 + 33 |
+| Local migrations 0001–0038 | 87/87 |
+
+### Still owner-run
+
+- **Live NVIDIA:** `docs/G/NVIDIA_LIVE_CHECK.md` (2 data-free calls with `check-nvidia.mjs`, then optionally 4 G questions with `g-ai-live.mjs`).
+- **Real-microphone voice:** `docs/G/VOICE_MANUAL_TEST_CHECKLIST.md` (Chrome desktop, Safari, Firefox and mobile; Firefox has no speech recognition, so the mic must be absent there).

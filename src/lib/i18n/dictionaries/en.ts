@@ -735,6 +735,7 @@ const en = {
       profile_base_rate: "Set your base rate.",
     },
     card: {
+      compareNeedTwo: "Add at least two creators to the comparison first (selected: {count}). Use “Add to comparison” on a recommendation or in Discover.",
       alreadyInvited: "Already invited to: {briefs}",
       assessment: "Channel assessment",
       profileComplete: "Profile",

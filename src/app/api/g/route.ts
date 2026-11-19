@@ -1,4 +1,5 @@
 import { newsFor, newsTagsFor } from "@/lib/news/queries";
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { AiUnavailableError, chatJson } from "@/lib/ai/chat";
 import { log } from "@/lib/log";
@@ -176,7 +177,12 @@ export async function POST(request: Request) {
           items: ctx.recommendations.map((r) => ({ ...r, invitedTo: collab.invitedTitlesByCreator.get(r.creator_id) ?? [] })),
         };
       }
-      if (intents.includes("compare")) cards.comparison = ctx.comparison;
+      if (intents.includes("compare")) {
+        // Fewer than two directory creators selected: say so, rather than
+        // answering with nothing. Ids outside the directory never count.
+        if (ctx.comparison && ctx.comparison.creators.length >= 2) cards.comparison = ctx.comparison;
+        else cards.comparisonNeeds = { selected: ctx.comparison?.creators.length ?? req.compare.filter((id) => ctx.creatorIds.has(id)).length };
+      }
       if (intents.includes("deals")) cards.deals = { recent: ctx.recentDeals };
       fallback = {
         briefs: collab.briefs,
@@ -262,6 +268,10 @@ export async function POST(request: Request) {
     proposals = fallbackProposals({ role: profile.role, locale: req.locale, intents, scope: proposalScope, ...fallback })
       .map((p) => (p.type === "invitation" ? { ...p, creator_name: creatorNames.get(p.creator_id) } : p));
   }
+
+  // A prepared brief gets its idempotency key here, on the server, so neither
+  // the model nor the request can choose or reuse one (0038).
+  proposals = proposals.map((p) => (p.type === "brief_draft" ? { ...p, request_key: randomUUID() } : p));
 
   return NextResponse.json({ engine, reply, intents, cards, actions, proposals });
 }

@@ -13,6 +13,8 @@
 //   hostile    actions and proposals pointing at ids outside the caller's scope
 //   500 | 429  that HTTP status
 //   slow       never answers; honours the request's abort signal
+//   live       pass NVIDIA calls through to the real endpoint (owner-run live
+//              check only; needs a real NVIDIA_API_KEY in the app's env)
 import { appendFileSync, readFileSync } from "node:fs";
 const OUTBOX = process.env.MOCK_OUTBOX;
 const realFetch = globalThis.fetch;
@@ -84,7 +86,7 @@ globalThis.fetch = async (input, init = {}) => {
     try { body = JSON.parse(body); } catch {}
     appendFileSync(OUTBOX, JSON.stringify({ at: new Date().toISOString(), host: url.hostname, path: url.pathname, idempotencyKey: Boolean(new Headers(init.headers || {}).get("idempotency-key")), ...(url.hostname === "integrate.api.nvidia.com" ? { mode: nvidiaMode() } : { body }) }) + "\n");
     if (url.hostname === "api.resend.com") return new Response(JSON.stringify({ id: "mock-" + Date.now() }), { status: 200, headers: { "content-type": "application/json" } });
-    if (url.hostname === "integrate.api.nvidia.com") return nvidia(body, init.signal);
+    if (url.hostname === "integrate.api.nvidia.com") return nvidiaMode() === "live" ? realFetch(input, init) : nvidia(body, init.signal);
     return new Response(JSON.stringify({ error: "mocked" }), { status: 503, headers: { "content-type": "application/json" } });
   }
   if (!["127.0.0.1", "localhost"].includes(url.hostname)) {

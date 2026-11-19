@@ -153,6 +153,7 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
           {p.platforms.map((x) => <input key={`p-${x}`} type="hidden" name="platforms" value={x} />)}
           {p.categories.map((x) => <input key={`c-${x}`} type="hidden" name="categories" value={x} />)}
           <input type="hidden" name="target_countries" value={p.target_countries.join(",")} />
+          {p.request_key ? <input type="hidden" name="request_key" value={p.request_key} /> : null}
           <label className="block text-fg-muted">{t("collab.briefs.fieldTitle")}
             <input name="title" required minLength={3} maxLength={120} defaultValue={p.title} dir="auto" className={`${field} mt-1`} />
           </label>

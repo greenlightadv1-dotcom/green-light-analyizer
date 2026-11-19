@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/components/LocaleProvider";
 import { saveBrief, type BriefFormState } from "@/app/(app)/collaborations/actions";
@@ -21,6 +21,10 @@ export function BriefForm({ brief }: { brief: Brief | null }) {
   const taxonomy = useTaxonomy();
   const router = useRouter();
   const [state, action, pending] = useActionState<BriefFormState | null, FormData>(saveBrief, null);
+  // One idempotency key per new-brief form (0038): a double submission or a
+  // retried request of this form creates one brief; opening the form again
+  // gives a new key, so a separate brief is still possible.
+  const [requestKey] = useState(() => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : ""));
 
   useEffect(() => {
     if (state?.ok && state.id && !brief) router.push(`/briefs/${state.id}`);
@@ -28,7 +32,7 @@ export function BriefForm({ brief }: { brief: Brief | null }) {
 
   return (
     <form action={action} className="space-y-4">
-      {brief ? <input type="hidden" name="brief_id" value={brief.id} /> : null}
+      {brief ? <input type="hidden" name="brief_id" value={brief.id} /> : requestKey ? <input type="hidden" name="request_key" value={requestKey} /> : null}
       <TextInput id="brief-title" name="title" labelKey="collab.briefs.fieldTitle" required minLength={LIMITS.title[0]} maxLength={LIMITS.title[1]} defaultValue={brief?.title ?? ""} />
       <TextArea id="brief-description" name="description" labelKey="collab.briefs.fieldDescription" hintKey="collab.briefs.contactNote" required minLength={LIMITS.description[0]} maxLength={LIMITS.description[1]} rows={6} defaultValue={brief?.description ?? ""} />
       <div className="grid gap-4 sm:grid-cols-2">

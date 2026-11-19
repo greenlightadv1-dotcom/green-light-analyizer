@@ -715,6 +715,7 @@ const ar: Dictionary = {
       profile_base_rate: "حدد سعرك الأساسي.",
     },
     card: {
+      compareNeedTwo: "أضف صانعَي محتوى على الأقل إلى المقارنة أولًا (المحدد: {count}). استخدم «أضف إلى المقارنة» من التوصيات أو من صفحة الاكتشاف.",
       alreadyInvited: "تمت دعوته بالفعل إلى: {briefs}",
       assessment: "تقييم القناة",
       profileComplete: "الملف الشخصي",

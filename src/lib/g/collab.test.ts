@@ -113,3 +113,12 @@ test("opportunities: only briefs that match something, best first, with the reas
 test("opportunities: a creator with no profile data matches nothing rather than everything", () => {
   assert.deepEqual(matchOpportunities({ categories: [], platforms: [], countries: [] }, [brief("a", { categories: ["gaming"] })], new Set()), []);
 });
+
+test("a brief draft's idempotency key never comes from the model: the filter drops it and the route assigns one", () => {
+  const [p] = allowedProposals([{ ...draft, request_key: "11111111-1111-4111-8111-111111111111" }], companyScope);
+  assert.ok(p.type === "brief_draft" && p.request_key === undefined);
+  const route = readFileSync(new URL("../../app/api/g/route.ts", import.meta.url), "utf8");
+  assert.match(route, /p\.type === "brief_draft" \? \{ \.\.\.p, request_key: randomUUID\(\) \}/);
+  const action = readFileSync(new URL("../../app/(app)/collaborations/actions.ts", import.meta.url), "utf8");
+  assert.match(action, /error\?\.code === "23505" && requestKey/, "a duplicate key is answered with the existing brief");
+});

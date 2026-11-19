@@ -387,6 +387,8 @@ export type Brief = {
   archived_at: string | null;
   created_at: string;
   updated_at: string;
+  /** 0038: idempotency key of the creating request; null before 0038 and for older rows. */
+  request_key?: string | null;
 };
 
 export type Invitation = {

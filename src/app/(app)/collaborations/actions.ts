@@ -103,11 +103,36 @@ export async function saveBrief(_prev: BriefFormState | null, fd: FormData): Pro
     return { ok: true, errorKey: null, id: briefId };
   }
 
-  const { data, error } = await admin
-    .from("briefs")
-    .insert({ ...row, company_id: profile.id, status: "draft" })
-    .select("id")
-    .single();
+  // Idempotency (0038): the client sends one request_key per creation (per
+  // prepared draft, per form instance). The partial unique index on
+  // (company_id, request_key) lets the database settle retries, replays and
+  // concurrent submissions: the first insert wins, a duplicate fails with
+  // 23505 and is answered with the brief that already exists.
+  const requestKey = id(fd, "request_key");
+  const insert = (withKey: boolean) =>
+    admin
+      .from("briefs")
+      .insert({ ...row, company_id: profile.id, status: "draft", ...(withKey && requestKey ? { request_key: requestKey } : {}) })
+      .select("id")
+      .single();
+  let { data, error } = await insert(true);
+  if (error?.code === "23505" && requestKey) {
+    const { data: existing } = await admin
+      .from("briefs")
+      .select("id")
+      .eq("company_id", profile.id)
+      .eq("request_key", requestKey)
+      .maybeSingle();
+    if (existing) {
+      log.info("brief.duplicate_request_ignored", { brief_id: existing.id });
+      return { ok: true, errorKey: null, id: existing.id };
+    }
+  }
+  if ((error?.code === "42703" || error?.code === "PGRST204") && requestKey) {
+    // 0038 not applied yet: create without the key (no idempotency until it is).
+    log.warn("brief.request_key_unavailable", { error });
+    ({ data, error } = await insert(false));
+  }
   if (error || !data) {
     log.error("brief.insert_failed", { error });
     return { ok: false, errorKey: "ui.errors.generic", id: null };

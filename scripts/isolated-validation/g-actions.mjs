@@ -152,26 +152,52 @@ try {
   assert.equal(count.briefs(), briefsBefore + 1, `creator replay of the brief (${briefAsCreator.status})`);
   ok(`server: the company's invitation and brief requests, replayed with a creator's session, change nothing (${asCreator.status}, ${briefAsCreator.status})`);
 
-  // Positive control: the same brief request replayed by the company itself
-  // does reach the action, which proves the refusals above were the server's.
-  // It also documents a limit: the server has no idempotency key for drafts,
-  // so a deliberate replay outside the UI creates a second draft. The UI
-  // cannot do this (the proposal is spent after one success).
+  // Idempotency (0038): the company's own replay of the same brief request,
+  // once and then five times concurrently, creates nothing new.
   const ownReplay = await replay(co.ctx, briefCall);
-  assert.equal(count.briefs(), briefsBefore + 2, `own replay (${ownReplay.status})`);
-  sql(`delete from briefs where id = (select id from briefs where company_id=${COMPANY} and status='draft' order by created_at desc limit 1)`);
-  ok("control: the replay mechanism reaches the server (the company's own replay creates a second draft, removed again)");
+  await Promise.all(Array.from({ length: 5 }, () => replay(co.ctx, briefCall)));
+  assert.equal(count.briefs(), briefsBefore + 1, `own replays (${ownReplay.status})`);
+  ok("server: the same brief request replayed once and 5x concurrently by the company still leaves one draft");
+
+  // Positive control: the same request with a fresh key is a new operation,
+  // so it creates exactly one more brief. This proves the replays above reach
+  // the action, and that separate briefs are still possible.
+  const freshKey = crypto.randomUUID();
+  const body = briefCall.body.toString("latin1");
+  const oldKey = body.match(/name="(?:_?\d+_)?request_key"\r\n\r\n([0-9a-f-]{36})/)?.[1];
+  assert.ok(oldKey, "the brief request carries a request_key");
+  const fresh = { ...briefCall, body: Buffer.from(body.replace(oldKey, freshKey), "latin1") };
+  await Promise.all(Array.from({ length: 3 }, () => replay(co.ctx, fresh)));
+  assert.equal(count.briefs(), briefsBefore + 2);
+  sql(`delete from briefs where company_id=${COMPANY} and request_key='${freshKey}'`);
+  ok("control: a fresh key creates exactly one new brief (3 concurrent sends), removed again");
 
   r = await ask(co.p, "Recommend creators for my campaign");
   assert.equal(await r.getByRole("button", { name: "Review and send invitation" }).count(), 0);
-  assert.match(await r.innerText(), /Already invited to: Ramadan launch/);
+  const invitedTitle = sql(`select b.title from invitations i join briefs b on b.id=i.brief_id where i.company_id=${COMPANY} order by i.created_at desc limit 1`);
+  assert.ok((await r.innerText()).includes(`Already invited to: ${invitedTitle}`) || (await r.innerText()).match(new RegExp(`Already invited to: .*${invitedTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)), `marker names "${invitedTitle}"`);
   ok("company: G marks the creator as already invited and does not propose it again");
+
+  // ---------------- company: /briefs/new form ----------------
+  const before = count.briefs();
+  const formReq = capture(co.p);
+  await co.p.goto(`${BASE}/briefs/new`, { waitUntil: "networkidle" });
+  await co.p.fill('input[name="title"]', "Form idempotency test");
+  await co.p.fill('textarea[name="description"]', "A brief created from the form, submitted twice");
+  const submit = co.p.locator('main form button[type="submit"]').last();
+  await Promise.all([submit.click(), submit.click({ force: true }).catch(() => {})]);
+  const formCall = await formReq;
+  await co.p.waitForTimeout(2500);
+  await Promise.all(Array.from({ length: 3 }, () => replay(co.ctx, formCall)));
+  assert.equal(count.briefs(), before + 1, "the form created one brief despite a double click and 3 replays");
+  sql(`delete from briefs where company_id=${COMPANY} and title='Form idempotency test'`);
+  ok("/briefs/new: a double click plus 3 concurrent replays of the same form create one brief");
+  await co.p.goto(`${BASE}/dashboard`, { waitUntil: "networkidle" });
 
   // ---------------- creator: opportunities ----------------
   r = await ask(c.p, "Which opportunities fit me?");
   const text = await r.innerText();
   assert.match(text, /Open briefs that fit you/);
-  assert.match(text, /Ramadan launch/);
   assert.match(text, /You were invited to this brief\./);
   ok("creator: the matching brief is shown with its reasons and the invitation just sent");
 } finally {

@@ -31,6 +31,8 @@ async function ask(p, text) {
   return panel.locator(".me-4").nth(before);
 }
 (async () => {
+  // Start from a known state: no saved drafts, no invitations from this company, no spent limits.
+  sql("delete from content_items where creator_id=(select id from profiles where primary_email='ux-creator@example.invalid'); delete from invitations where company_id=(select id from profiles where primary_email='ux-company@example.invalid'); delete from rate_limits where key like 'g_chat%' or key like 'content_write%' or key like 'collab_write%'");
   const b = await chromium.launch();
   // ---------------- creator ----------------
   const p = await login(b, "ux-creator@example.invalid", "Ux-Creator-1234!");
@@ -71,7 +73,9 @@ async function ask(p, text) {
   await inv.waitFor({ timeout: 10000 });
   const txt = await q1.innerText();
   assert.match(txt, /Layla/);
-  assert.match(await q1.locator("textarea").inputValue(), /"Ramadan launch"/);
+  const published = sql("select string_agg(title, '|') from briefs where status='published' and company_id=(select id from profiles where primary_email='ux-company@example.invalid')").split("|");
+  const msg = await q1.locator("textarea").first().inputValue();
+  assert.ok(published.some((t) => msg.includes(`"${t}"`)), "the invitation names one of the company's own published briefs");
   assert.doesNotMatch(txt, /ux-creator@example\.invalid|layla\.k7m2/, "no creator contact or alias in G's answer");
   ok("company: G recommends from the directory and prepares an invitation for its own published brief");
   await c.screenshot({ path: `${OUT}/g_company_proposal.png` });

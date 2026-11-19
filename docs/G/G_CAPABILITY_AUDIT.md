@@ -69,3 +69,21 @@ This table is the state *before* the G completion phase. Results after it are in
 3. **Creator:** match published briefs to the creator's profile, with the reasons.
 4. **Actions:** E2E proof that declining does nothing, that confirming runs exactly once, that repeats are refused, and that a role without the permission is refused by the server.
 5. **AI path:** E2E through `/api/g` against a scripted fake NVIDIA covering success (en/ar, history), invalid output, invented figures, errors, 429, timeout and the rate limit. A live NVIDIA call needs the owner (see the acceptance report).
+
+## Status after the completion phase (2026-11-19, second pass)
+
+| Capability | Before | Now | Evidence |
+|---|---|---|---|
+| Creator: find relevant opportunities | Missing | **E2E** | `matchOpportunities`; g-actions 13, g-ai-paths 11 |
+| Company: prepare a brief | Missing | **E2E** | `brief_draft`; g-actions 3, 4, 9, 10 |
+| Company: already-invited marker | Partial | **E2E** | g-actions 11, g-ai-paths 10 |
+| Company: compare creators | Impl | **E2E** | g-collab-compare 9–12: empty state, DB-equal figures with provenance, foreign id ignored, creator refused |
+| Deals and deliverables (both sides) | Impl | **E2E** | g-collab-compare 2, 3, 8: next step, amount and counts from the DB, before and after review |
+| Deliverable review confirmation and permissions | (not covered) | **E2E** | g-collab-compare 4–7 |
+| Prepare messages without sending | Impl | **E2E** | g-collab-compare 3: copy-only check-in, no form |
+| Decline / confirm-once / duplicates / server permissions | Impl | **E2E** | g-actions 1–12, with positive controls |
+| Brief creation idempotency (DB) | Missing | **E2E** on the isolated stack | Migration 0038 (not applied to production), SQL test, g-actions 9, 10, 12 |
+| AI success, invalid output, errors, timeout, rate limit, Arabic, history | Impl | **E2E against a scripted fake** | g-ai-paths 1–12 |
+| AI against the real NVIDIA model | Not verified | **Still not verified**, owner-run | `docs/G/NVIDIA_LIVE_CHECK.md`, `g-ai-live.mjs` |
+| Voice with real microphones and browsers | Not verified | **Still not verified**, manual | `docs/G/VOICE_MANUAL_TEST_CHECKLIST.md` |
+| Creative text without the AI | Partial (by design) | Unchanged | G does not invent hooks, scripts or trends without a model |

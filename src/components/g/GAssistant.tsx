@@ -392,6 +392,11 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   {m.cards?.comparison ? (
                     <ComparisonCard cmp={m.cards.comparison as { creators: { creator_id: string; full_name: string }[]; rows: ComparisonRow[] }} />
                   ) : null}
+                  {m.cards?.comparisonNeeds ? (
+                    <p className="rounded-2xl border border-line bg-surface-soft p-3.5 text-xs text-fg-secondary">
+                      {t("g.card.compareNeedTwo", { count: (m.cards.comparisonNeeds as { selected: number }).selected })}
+                    </p>
+                  ) : null}
                   {m.cards?.deals ? <DealsCard deals={m.cards.deals as { summary?: CreatorAssessment["deals"]; recent: DealSummary[] }} /> : null}
                   {m.cards?.collaborations ? (
                     <CollaborationsCard basePath={basePath} data={m.cards.collaborations as Parameters<typeof CollaborationsCard>[0]["data"]} />
