@@ -46,7 +46,7 @@ BEGIN
   INSERT INTO public.verification_reviewers (admin_id) VALUES (ad);
 
   -- An application: no auth user, no profile.
-  INSERT INTO public.access_requests (journey, full_name, email) VALUES ('creator', 'New Creator', 'New.Creator@t.local') RETURNING id INTO req;
+  INSERT INTO public.access_requests (email_verified_at, journey, full_name, email) VALUES (now(), 'creator', 'New Creator', 'New.Creator@t.local') RETURNING id INTO req;
   INSERT INTO public.verification_cases (access_request_id, kind, details) VALUES (req, 'creator_kyc', '{"legal_name":"New Creator"}') RETURNING id INTO kyc;
   PERFORM pg_temp.expect_error(format('insert into public.verification_cases (access_request_id, kind) values (%L, %L)', req, 'creator_kyc'), '%verification_cases_one_per_application%');
   PERFORM pg_temp.expect_error('insert into public.verification_cases (kind) values (''creator_kyc'')', '%verification_case_owner%');
@@ -70,7 +70,8 @@ BEGIN
            (kyc, 'id_back', kyc || '/' || gen_random_uuid() || '.jpg', 'image/jpeg', 1000, 'camera');
   PERFORM pg_temp.expect_error(format('select public.verification_transition(null,%L,%L)', kyc, 'submit'), 'verification:documents_missing%');
   INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes, capture_method)
-    VALUES (kyc, 'selfie', kyc || '/' || gen_random_uuid() || '.jpg', 'image/jpeg', 1000, 'camera');
+    VALUES (kyc, 'selfie', kyc || '/' || gen_random_uuid() || '.jpg', 'image/jpeg', 1000, 'camera'),
+           (kyc, 'profile_photo', kyc || '/' || gen_random_uuid() || '.png', 'image/png', 1000, 'upload');
   -- An account cannot submit someone else's application.
   PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', cr2, kyc, 'submit'), 'verification:not_found%');
   s := public.verification_transition(null, kyc, 'submit');
@@ -123,7 +124,7 @@ BEGIN
   RAISE NOTICE 'PASS one-time activation, replay refused';
 
   -- Expiry is enforced by the database clock.
-  INSERT INTO public.access_requests (journey, full_name, email, company_name) VALUES ('company', 'Co Applicant', 'co.applicant@t.local', 'Acme') RETURNING id INTO req_co;
+  INSERT INTO public.access_requests (email_verified_at, journey, full_name, email, company_name) VALUES (now(), 'company', 'Co Applicant', 'co.applicant@t.local', 'Acme') RETURNING id INTO req_co;
   INSERT INTO public.verification_cases (access_request_id, kind) VALUES (req_co, 'company_kyb') RETURNING id INTO kyb;
   INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes)
     VALUES (kyb, 'commercial_register', kyb || '/' || gen_random_uuid() || '.pdf', 'application/pdf', 1000),
@@ -144,10 +145,12 @@ BEGIN
   RAISE NOTICE 'PASS expiry enforced, KYB needs authorization evidence';
 
   -- Stale claim recovery: a claim older than 2 minutes that never completed may be retaken.
-  INSERT INTO public.access_requests (journey, full_name, email, company_name) VALUES ('company_representative', 'New Rep', 'new.rep@t.local', 'V Company') RETURNING id INTO req_rep;
+  INSERT INTO public.access_requests (email_verified_at, journey, full_name, email, company_name) VALUES (now(), 'company_representative', 'New Rep', 'new.rep@t.local', 'V Company') RETURNING id INTO req_rep;
   INSERT INTO public.verification_cases (access_request_id, kind) VALUES (req_rep, 'representative') RETURNING id INTO rep;
   INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes)
     VALUES (rep, 'authorization_letter', rep || '/' || gen_random_uuid() || '.pdf', 'application/pdf', 1000);
+  INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes, capture_method)
+    SELECT rep, d, rep || '/' || gen_random_uuid() || '.jpg', 'image/jpeg', 1000, 'camera' FROM unnest(array['selfie','id_front','id_back']) d;
   PERFORM public.verification_transition(null, rep, 'submit');
   PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L,null,null)', ad, rep, 'approve'), 'verification:company_required%');
   PERFORM public.verification_transition(ad, rep, 'approve', null, co);
@@ -167,10 +170,11 @@ BEGIN
   RAISE NOTICE 'PASS crash recovery and representative link';
 
   -- Rejection closes the application and revokes its links.
-  INSERT INTO public.access_requests (journey, full_name, email) VALUES ('creator', 'Rejected One', 'rej@t.local') RETURNING id INTO req;
+  INSERT INTO public.access_requests (email_verified_at, journey, full_name, email) VALUES (now(), 'creator', 'Rejected One', 'rej@t.local') RETURNING id INTO req;
   INSERT INTO public.verification_cases (access_request_id, kind) VALUES (req, 'creator_kyc') RETURNING id INTO kyc;
   INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes, capture_method)
     SELECT kyc, d, kyc || '/' || gen_random_uuid() || '.jpg', 'image/jpeg', 1000, 'camera' FROM unnest(array['selfie','id_front','id_back']) d;
+  INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes) VALUES (kyc, 'profile_photo', kyc || '/' || gen_random_uuid() || '.png', 'image/png', 1000);
   PERFORM public.application_token_issue(req, 'resume', repeat('7', 64), 3600, null);
   PERFORM public.verification_transition(null, kyc, 'submit');
   PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L,null)', ad, kyc, 'reject'), 'verification:note_required%');

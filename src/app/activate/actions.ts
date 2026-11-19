@@ -11,6 +11,7 @@ import { passwordProblems } from "@/lib/registration";
 import { runActivation } from "@/lib/verification/activate";
 import { activationErrorKey, hashToken, isTokenShape } from "@/lib/verification/tokens";
 import { clearApplicationCookie } from "@/lib/verification/application";
+import { carryOverPublicProfile } from "@/lib/verification/carry-over";
 
 export type ActivateState = { errorKey: string | null; problems?: string[] };
 
@@ -81,6 +82,8 @@ export async function activateAccount(_prev: ActivateState, fd: FormData): Promi
     return { errorKey: key };
   }
   log.info("activation.completed", { journey: result.journey });
+  // What the creator chose to make public (photo, main handle, categories); best effort.
+  if (result.journey === "creator") await carryOverPublicProfile(result.userId, result.requestId);
   await clearApplicationCookie();
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email: result.email, password });

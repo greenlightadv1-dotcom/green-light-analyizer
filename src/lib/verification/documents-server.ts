@@ -2,9 +2,9 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
-import { EXTENSION, sniffType } from "@/lib/uploads";
+import { EXTENSION, UPLOAD_RULES, sniffType } from "@/lib/uploads";
 import type { VerificationCase, VerificationDocType } from "@/lib/types/database";
-import { DOCUMENTS, EDITABLE, UPLOAD } from "./rules";
+import { DOCUMENTS, EDITABLE, IMAGE_ONLY, UPLOAD } from "./rules";
 import { checkCameraJpeg, isCameraDocType } from "./camera";
 
 /**
@@ -51,13 +51,17 @@ export async function storeDocument(
   const bytes = new Uint8Array(await file.arrayBuffer());
   const type = sniffType(bytes.subarray(0, 16));
   if (!type || !(UPLOAD.mimes as readonly string[]).includes(type)) return { status: 415, body: { error: "type" } };
+  // A public profile photo is a picture, never a PDF (the database refuses it too).
+  if (IMAGE_ONLY.includes(docType) && type === "application/pdf") return { status: 415, body: { error: "image_only" } };
+  // It becomes the public avatar at activation, so it must fit the avatar limit.
+  if (IMAGE_ONLY.includes(docType) && bytes.length > UPLOAD_RULES.avatar.maxBytes) return { status: 413, body: { error: "too_large" } };
   if (camera) {
     const check = checkCameraJpeg(bytes);
     if (!check.ok) return { status: 415, body: { error: check.error } };
   }
 
-  // A retake replaces the earlier image of the same kind.
-  if (camera) {
+  // A retake replaces the earlier image of the same kind (and a new public photo the earlier one).
+  if (camera || IMAGE_ONLY.includes(docType)) {
     const { data: earlier } = await service.from("verification_documents").select("id, storage_path").eq("case_id", caseRow.id).eq("doc_type", docType).is("removed_at", null);
     for (const d of earlier ?? []) {
       await service.from("verification_documents").update({ removed_at: new Date().toISOString() }).eq("id", d.id);

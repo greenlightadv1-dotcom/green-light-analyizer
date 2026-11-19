@@ -31,6 +31,9 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
       <div className="glass-panel p-6 text-center sm:p-8" role="status">
         <h2 className="text-lg font-semibold text-fg">{t("getStarted.submittedTitle")}</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg/60">{t("getStarted.submittedBody")}</p>
+        <p className="mt-3 text-xs text-fg-muted">
+          {t("getStarted.resendHint")} <Link href="/apply" className="text-accent underline">{t("getStarted.resendLink")}</Link>.
+        </p>
         <Link href="/" className="mt-5 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline">
           {t("getStarted.backHome")}
         </Link>

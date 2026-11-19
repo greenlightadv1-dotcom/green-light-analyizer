@@ -81,6 +81,8 @@ export type AccessRequest = {
   reviewed_at: string | null;
   reviewed_by: string | null;
   created_profile_id: string | null;
+  /** 0039: when the applicant first opened a valid emailed link. Absent before 0039. */
+  email_verified_at?: string | null;
 };
 
 /** A company account's link to another account acting for it (0024). */
@@ -461,7 +463,7 @@ export type CollaborationEvent = {
 export type AccountStatus = "pending_verification" | "active" | "rejected";
 export type VerificationKind = "creator_kyc" | "company_kyb" | "representative";
 export type VerificationStatus = "draft" | "submitted" | "under_review" | "needs_info" | "approved" | "rejected";
-export type VerificationDocType = "selfie" | "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other";
+export type VerificationDocType = "selfie" | "id_front" | "id_back" | "passport" | "commercial_register" | "tax_card" | "authorization_letter" | "other" | "profile_photo";
 export type VerificationCase = {
   id: string;
   /** Null while the case belongs to an application with no account yet (0032). */

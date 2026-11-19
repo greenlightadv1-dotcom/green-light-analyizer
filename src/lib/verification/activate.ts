@@ -42,7 +42,7 @@ export type ActivationDeps = {
 };
 
 export type ActivationResult =
-  | { ok: true; userId: string; email: string; journey: ClaimRow["journey"] }
+  | { ok: true; userId: string; email: string; journey: ClaimRow["journey"]; requestId: string }
   | { ok: false; code: string };
 
 export async function runActivation(deps: ActivationDeps, hash: string, password: string): Promise<ActivationResult> {
@@ -67,5 +67,5 @@ export async function runActivation(deps: ActivationDeps, hash: string, password
   const alias = row.journey === "creator" ? deps.alias(row.full_name) : null;
   const done = await deps.complete(hash, userId, alias);
   if (done.error) return { ok: false, code: done.error };
-  return { ok: true, userId, email: row.email, journey: row.journey };
+  return { ok: true, userId, email: row.email, journey: row.journey, requestId: row.access_request_id };
 }

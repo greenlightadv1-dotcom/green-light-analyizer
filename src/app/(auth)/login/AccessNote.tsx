@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslation } from "@/components/LocaleProvider";
 
 /**
@@ -10,8 +11,10 @@ import { useTranslation } from "@/components/LocaleProvider";
 export function AccessNote() {
   const { t } = useTranslation();
   return (
-    <p className="mt-7 border-t border-fg/8 pt-5 text-xs leading-relaxed text-fg-muted">
-      {t("login.accessNote")}
-    </p>
+    <div className="mt-7 space-y-2 border-t border-fg/8 pt-5 text-xs leading-relaxed text-fg-muted">
+      <p>{t("login.accessNote")}</p>
+      {/* Applicants have no account until approval: their status is read through an emailed link. */}
+      <p><Link href="/apply" className="text-accent underline">{t("login.applicationStatus")}</Link></p>
+    </div>
   );
 }

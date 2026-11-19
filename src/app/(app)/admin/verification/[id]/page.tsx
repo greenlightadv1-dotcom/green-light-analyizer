@@ -11,7 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { displayNames } from "@/lib/collab/queries";
 import { utcStamp } from "@/lib/ui/format";
-import { FIELDS } from "@/lib/verification/rules";
+import { FIELDS, missingDocuments, missingFields } from "@/lib/verification/rules";
+import { duplicateKeys } from "@/lib/verification/duplicates";
 import { VERIFICATION_TONE } from "@/lib/verification/display";
 import { resendActivation, reviewVerification } from "../actions";
 
@@ -43,7 +44,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
     ? await service.from("profiles").select("full_name, role, account_status, primary_email").eq("id", c.profile_id).single()
     : { data: null };
   const { data: application } = c.access_request_id
-    ? await service.from("access_requests").select("full_name, email, journey, company_name, website, primary_platform, channel_handle, status").eq("id", c.access_request_id).single()
+    ? await service.from("access_requests").select("full_name, email, journey, company_name, website, primary_platform, channel_handle, status, email_verified_at").eq("id", c.access_request_id).single()
     : { data: null };
   const subject = account
     ? { full_name: account.full_name, line: `account ${account.account_status ?? "active"} · ${account.primary_email}` }
@@ -55,6 +56,25 @@ export default async function AdminVerificationCase({ params }: { params: Promis
   const names = await displayNames([c.reviewed_by, ...(events ?? []).map((e) => e.actor_id)]);
   const open = c.status === "submitted" || c.status === "under_review";
   const details = (c.details ?? {}) as Record<string, string>;
+
+  // Duplicate-identity signals (reviewer-only): other cases holding the same
+  // identifying values, and other applications from the same address.
+  const keys = duplicateKeys(c.kind, details);
+  const dupes = await Promise.all(keys.map(async (k) => {
+    let q = service.from("verification_cases").select("id, kind, status").neq("id", c.id).limit(10);
+    for (const [field, value] of Object.entries(k.match)) q = q.eq(`details->>${field}`, value);
+    const { data } = await q;
+    return { label: k.label, cases: data ?? [] };
+  }));
+  const subjectEmail = account?.primary_email ?? application?.email ?? null;
+  const { data: sameEmail } = subjectEmail
+    ? await service.from("access_requests").select("id, status, created_at").ilike("email", subjectEmail).neq("id", c.access_request_id ?? "00000000-0000-0000-0000-000000000000").limit(10)
+    : { data: [] };
+  const signals = dupes.filter((d) => d.cases.length);
+  const stillMissing = {
+    fields: missingFields(c.kind, details),
+    docs: missingDocuments(c.kind, (docs ?? []).map((d) => d.doc_type), { application: !!c.access_request_id && !c.profile_id }),
+  };
 
   return (
     <>
@@ -73,7 +93,39 @@ export default async function AdminVerificationCase({ params }: { params: Promis
               ))}
             </dl>
             {c.info_request ? <p className="mt-3 text-xs text-warning">Information requested: {c.info_request}</p> : null}
-            {c.decision_reason ? <p className="mt-3 text-xs text-fg-muted">Decision note: {c.decision_reason}</p> : null}
+            {c.decision_reason ? <p className="mt-3 text-xs text-fg-muted">Decision note (shown to the applicant): {c.decision_reason}</p> : null}
+            {stillMissing.fields.length || stillMissing.docs.length ? (
+              <p className="mt-3 text-xs text-warning">Still missing: {[...stillMissing.fields, ...stillMissing.docs.map((set) => set.join(" or "))].map((x) => x.replace(/_/g, " ")).join(", ")}</p>
+            ) : null}
+          </GlassPanel>
+          <GlassPanel className="space-y-2 p-5 text-sm">
+            <h2 className="text-sm font-semibold text-fg">Trust checks</h2>
+            {application ? (
+              <p className={application.email_verified_at ? "text-success" : "text-warning"}>
+                {application.email_verified_at ? `Email verified ${utcStamp(application.email_verified_at)} (applicant opened the emailed link).` : "Email not verified: the applicant has not opened an emailed link. Submission is refused until they do."}
+              </p>
+            ) : (
+              <p className="text-fg-secondary">Existing account: the email is the account&apos;s sign-in address.</p>
+            )}
+            <p className="text-fg-secondary">WhatsApp number: collected for contact only. It has <strong>not</strong> been verified (no OTP or SMS in this phase).</p>
+            {c.kind === "representative" ? (
+              <p className="text-fg-secondary">The company name the applicant typed (&quot;<span dir="auto">{details.company_name || application?.company_name || "—"}</span>&quot;) grants nothing. Approval links this person only to the company account you choose below, after checking the authorization letter; the company then decides what they may see.</p>
+            ) : null}
+            {signals.length || (sameEmail ?? []).length ? (
+              <div className="rounded-control border border-warning/40 bg-warning/10 p-3 text-xs text-fg">
+                <p className="font-semibold">Possible duplicates (signals, not proof)</p>
+                <ul className="mt-1 list-disc space-y-1 ps-4">
+                  {signals.map((d) => (
+                    <li key={d.label}>
+                      Same {d.label.replace(/_/g, " ")} as: {d.cases.map((o, i) => <span key={o.id}>{i ? ", " : ""}<Link className="underline" href={`/admin/verification/${o.id}`}>{o.kind.replace(/_/g, " ")} ({o.status.replace(/_/g, " ")})</Link></span>)}
+                    </li>
+                  ))}
+                  {(sameEmail ?? []).length ? <li>{(sameEmail ?? []).length} other application(s) from the same email address ({(sameEmail ?? []).map((a) => a.status).join(", ")}).</li> : null}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-xs text-fg-muted">No other case shares this phone number{c.kind === "creator_kyc" ? ", name and date of birth" : c.kind === "company_kyb" ? ", registration or tax number" : ""}, and no other application uses this email.</p>
+            )}
           </GlassPanel>
           <GlassPanel className="overflow-hidden">
             <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">Documents ({docs?.length ?? 0})</h2>
@@ -121,13 +173,13 @@ export default async function AdminVerificationCase({ params }: { params: Promis
                     </select>
                   </label>
                 ) : null}
-                <textarea name="note" rows={2} maxLength={1000} placeholder="Note (optional)" className={field} />
+                <textarea name="note" rows={2} maxLength={1000} placeholder="Note to the applicant (optional, shown to them)" className={field} />
               </ConfirmActionForm>
               <ConfirmActionForm action={reviewVerification} hidden={{ case_id: c.id, action: "request_info" }} trigger={{ labelKey: "adminVerification.requestInfo" }} triggerClassName={`${btn} border border-warning/40 bg-warning/10 text-warning`} titleKey="adminVerification.requestInfoTitle" bodyKey="adminVerification.requestInfoBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" className="space-y-2">
-                <textarea name="note" required rows={2} maxLength={1000} placeholder="What is needed" className={field} />
+                <textarea name="note" required rows={2} maxLength={1000} placeholder="Exactly what is needed (shown to the applicant)" className={field} />
               </ConfirmActionForm>
               <ConfirmActionForm action={reviewVerification} hidden={{ case_id: c.id, action: "reject" }} trigger={{ labelKey: "adminVerification.reject" }} triggerClassName={`${btn} border border-danger/40 bg-danger/10 text-danger`} titleKey="adminVerification.rejectTitle" bodyKey="adminVerification.rejectBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" tone="danger" className="space-y-2">
-                <textarea name="note" required rows={2} maxLength={1000} placeholder="Reason (sent to the applicant)" className={field} />
+                <textarea name="note" required rows={2} maxLength={1000} placeholder="Reason (shown and sent to the applicant; no internal notes)" className={field} />
               </ConfirmActionForm>
             </>
           ) : null}

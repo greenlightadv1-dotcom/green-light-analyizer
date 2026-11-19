@@ -1442,3 +1442,30 @@ Details: `docs/ACCOUNT_ACTIVATION_FLOW.md`, `docs/IDENTITY_DOCUMENT_SECURITY.md`
 - **Social audit:** `docs/SOCIAL_INTEGRATIONS_AND_SYNC_AUDIT.md`.
   - Instagram's pinned Graph v19.0 expired on 2026-05-21, so Instagram stays disabled.
   - Kick now has an official API, which makes §7.3's "no official API" outdated.
+
+## 21. Registration, onboarding and trust verification (branch only, 2026-11-19)
+
+Not deployed. **Migration 0039 is applied to the isolated stack only.** Full description: `docs/REGISTRATION_ONBOARDING_FLOW.md`. It extends §19/§20 and builds no second system.
+
+- **Email verification is recorded and enforced.**
+  - Opening the emailed link sets `access_requests.email_verified_at` and writes an `email_verified` event.
+  - The trigger `verification_submit_guard` refuses submission without it (`verification:email_unverified`).
+  - No account exists before approval; Terms §2 is unchanged.
+- **Phone** is a WhatsApp contact number: validated, stored normalised, never verified (no OTP or SMS).
+- **Multi-step wizard** (`STEPS` in `lib/verification/rules.ts`, `CaseEditor`):
+  - a progress bar and one step at a time;
+  - each step saves only its own fields (`mergeDetails`);
+  - a review step that gates submission;
+  - a status panel for the other states, with the reviewer's reason shown on a rejection;
+  - a rejected applicant can get a read-only link.
+- **Creator:** main platform, handle, links and categories, plus a public `profile_photo` (an upload, image-only, ≤ 2 MB, separate from the camera identity images). At activation, `carry-over.ts` copies the photo, handle and categories to the profile.
+- **Representative:** now also needs camera selfie and ID images. A typed company name grants nothing (explicit reviewer approval, then company-granted scopes, §20).
+- **Company KYB:** adds business activity and the authorized representative's name, title and WhatsApp number.
+- **Admin:**
+  - trust checks: email verified, phone unverified;
+  - duplicate signals: same phone, name and date of birth, registration or tax number, or email;
+  - a "still missing" list;
+  - note labels say which notes the applicant sees;
+  - admin-created creator and company accounts start `pending_verification`.
+- **No promised review time.** The "24 hours" copy was removed.
+- **Owner decisions:** PENDING_OWNER_DECISIONS §14.

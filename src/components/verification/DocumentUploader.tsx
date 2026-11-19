@@ -3,7 +3,9 @@
 import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/components/LocaleProvider";
-import { UPLOAD } from "@/lib/verification/rules";
+import { IMAGE_ONLY, UPLOAD } from "@/lib/verification/rules";
+
+const PHOTO_MAX = 2 * 1024 * 1024;
 import type { VerificationDocType } from "@/lib/types/database";
 
 /**
@@ -19,6 +21,9 @@ export function DocumentUploader({ caseId, types, endpoint = "/api/verification/
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [docType, setDocType] = useState<VerificationDocType>(types[0]);
+  // A public profile photo is a picture (no PDF) within the avatar limit; the server checks both again.
+  const imageOnly = IMAGE_ONLY.includes(docType);
+  const accept = imageOnly ? UPLOAD.mimes.filter((m) => m !== "application/pdf") : UPLOAD.mimes;
   const [over, setOver] = useState(false);
   const [pct, setPct] = useState<number | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -26,8 +31,8 @@ export function DocumentUploader({ caseId, types, endpoint = "/api/verification/
   const send = (file: File) => {
     setMessage(null);
     if (file.size === 0) return setMessage({ ok: false, text: t("verification.uploadErrors.empty") });
-    if (file.size > UPLOAD.maxBytes) return setMessage({ ok: false, text: t("verification.uploadErrors.too_large") });
-    if (file.type && !(UPLOAD.mimes as readonly string[]).includes(file.type)) return setMessage({ ok: false, text: t("verification.uploadErrors.type") });
+    if (file.size > (imageOnly ? PHOTO_MAX : UPLOAD.maxBytes)) return setMessage({ ok: false, text: t(imageOnly ? "verification.uploadErrors.photo_too_large" : "verification.uploadErrors.too_large") });
+    if (file.type && !(accept as readonly string[]).includes(file.type)) return setMessage({ ok: false, text: t(imageOnly ? "verification.uploadErrors.image_only" : "verification.uploadErrors.type") });
     if (demo) return setMessage({ ok: false, text: t("g.proposal.demo") });
     const body = new FormData();
     body.set("case_id", caseId);
@@ -68,7 +73,7 @@ export function DocumentUploader({ caseId, types, endpoint = "/api/verification/
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-medium text-fg-secondary">
+      <label className={`${types.length > 1 ? "block" : "sr-only"} text-xs font-medium text-fg-secondary`}>
         {t("verification.docTypeLabel")}
         <select value={docType} onChange={(e) => setDocType(e.target.value as VerificationDocType)} className="mt-1 h-10 w-full rounded-control border border-line bg-surface-muted px-3 text-sm text-fg">
           {types.map((d) => (
@@ -89,7 +94,7 @@ export function DocumentUploader({ caseId, types, endpoint = "/api/verification/
       >
         <span className="text-fg">{t("verification.dropHere")}</span>
         <span className="mt-1 text-xs text-fg-muted">{t("verification.choose")}</span>
-        <input ref={input} type="file" accept={UPLOAD.mimes.join(",")} className="sr-only" tabIndex={-1} onChange={(e) => { const f = e.target.files?.[0]; if (f) send(f); e.target.value = ""; }} />
+        <input ref={input} type="file" accept={accept.join(",")} className="sr-only" tabIndex={-1} onChange={(e) => { const f = e.target.files?.[0]; if (f) send(f); e.target.value = ""; }} />
       </div>
       {pct !== null ? (
         <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-surface-muted">

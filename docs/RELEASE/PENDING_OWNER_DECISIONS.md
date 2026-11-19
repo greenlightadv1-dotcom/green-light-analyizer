@@ -114,3 +114,14 @@ The sync now stores the median views of a YouTube channel's recent uploads (migr
 - **Retention:** how long identity and company documents are kept after a decision, and the Privacy Policy text.
 - **Identity provider (D3/D4):** whether to integrate a face and liveness provider, which one, and with what legal basis. Until then, approval is a manual document review only.
 
+
+## 14. Registration and trust verification (migration 0039; docs/REGISTRATION_ONBOARDING_FLOW.md)
+
+- **Terms §2:** applicants have no password before approval and check their status by emailed link. Signing in with a password before approval needs Terms §2 changed first.
+- **Existing active accounts:** require verification for them or not. None are changed today. New admin-created creator and company accounts start `pending_verification`.
+- **Review-time promise:** the copy no longer says "within 24 hours". Restore a time only with a staffed process and production email.
+- **Re-application after rejection:** allowed, and shown as a duplicate signal. Confirm, or set a cool-off.
+- **Internal reviewer notes:** every note reaches the applicant. A private note needs a schema change.
+- **Retention:** `VERIFICATION_RETENTION_DAYS=365` and scheduling the purge route (irreversible deletion).
+- **Privacy Policy:** a sentence on the public photo, the WhatsApp number and duplicate signals. Not changed.
+- **Public photo EXIF:** not stripped, the same as existing avatars.

@@ -31,7 +31,7 @@ import {
 export const JOURNEY_KIND = { creator: "creator_kyc", company: "company_kyb", company_representative: "representative" } as const satisfies Record<AccessRequest["journey"], VerificationKind>;
 
 export type CurrentApplication = {
-  request: Pick<AccessRequest, "id" | "journey" | "full_name" | "email" | "company_name" | "website" | "status">;
+  request: Pick<AccessRequest, "id" | "journey" | "full_name" | "email" | "company_name" | "website" | "status" | "primary_platform" | "channel_handle" | "email_verified_at">;
   cases: VerificationCase[];
   documents: Pick<VerificationDocument, "id" | "case_id" | "doc_type" | "size_bytes" | "uploaded_at" | "capture_method">[];
   events: Pick<VerificationEvent, "id" | "case_id" | "event" | "created_at">[];
@@ -51,7 +51,7 @@ export async function currentApplication(): Promise<CurrentApplication | null> {
   if (!row || row.state !== "valid") return null;
   const { data: request } = await service
     .from("access_requests")
-    .select("id, journey, full_name, email, company_name, website, status")
+    .select("id, journey, full_name, email, company_name, website, status, primary_platform, channel_handle, email_verified_at")
     .eq("id", row.access_request_id)
     .maybeSingle();
   if (!request) return null;
@@ -75,6 +75,32 @@ export async function setApplicationCookie(raw: string): Promise<void> {
     path: "/",
     maxAge: RESUME_TTL_SECONDS,
   });
+}
+
+/**
+ * Record that the applicant controls the address: called when a valid
+ * emailed link is opened. Only the first opening is recorded (compare-and-set
+ * on a null timestamp), so replays add nothing. Returns false only on a
+ * database error; the applicant can then retry by opening the link again.
+ */
+export async function markEmailVerified(requestId: string): Promise<boolean> {
+  const service = createAdminClient();
+  const { data, error } = await service
+    .from("access_requests")
+    .update({ email_verified_at: new Date().toISOString() })
+    .eq("id", requestId)
+    .is("email_verified_at", null)
+    .select("id");
+  if (error) {
+    // 42703: the column is absent (0039 not applied). Nothing to record, and nothing enforces it either.
+    if (error.code !== "42703" && error.code !== "PGRST204") log.error("application.email_verify_failed", { error });
+    return error.code === "42703" || error.code === "PGRST204";
+  }
+  if (data?.length) {
+    const { data: cases } = await service.from("verification_cases").select("id").eq("access_request_id", requestId);
+    if (cases?.length) await service.from("verification_events").insert(cases.map((c) => ({ case_id: c.id, actor_id: null, event: "email_verified" })));
+  }
+  return true;
 }
 
 export async function clearApplicationCookie(): Promise<void> {

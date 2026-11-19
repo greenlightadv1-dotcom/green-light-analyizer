@@ -5,7 +5,7 @@ import { requireAnyStatusProfile } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/log";
-import { EDITABLE, kindsForRole, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
+import { EDITABLE, formDetails, kindsForRole, mergeDetails, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 import type { VerificationKind } from "@/lib/types/database";
 
@@ -42,10 +42,10 @@ export async function saveVerificationDetails(_prev: ActionResult | null, fd: Fo
   if (!UUID.test(caseId)) return fail("ui.errors.invalid");
   if (!(await consumeRateLimit("verification_write", profile.id)).allowed) return fail("verification.errors.rate_limited");
   const admin = createAdminClient();
-  const { data: row } = await admin.from("verification_cases").select("id, kind, status").eq("id", caseId).eq("profile_id", profile.id).maybeSingle();
+  const { data: row } = await admin.from("verification_cases").select("id, kind, status, details").eq("id", caseId).eq("profile_id", profile.id).maybeSingle();
   if (!row) return fail("verification.errors.not_found");
   if (!EDITABLE.includes(row.status)) return fail("verification.errors.invalid_state");
-  const parsed = parseDetails(row.kind, Object.fromEntries(fd.entries()), { requireAll: false });
+  const parsed = mergeDetails(row.kind, row.details ?? {}, formDetails(fd.entries()));
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
   const { error } = await admin
     .from("verification_cases")

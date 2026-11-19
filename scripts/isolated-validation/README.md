@@ -37,3 +37,8 @@ Accessibility (`a11y-axe.mjs`, `a11y-keyboard.mjs`):
 - zero axe WCAG 2.0/2.1 A and AA violations on 33 signed-in pages (creator, company and admin; desktop light and phone dark) and on 6 public pages (en light; ar dark on a phone);
 - the skip link is the first Tab stop and moves focus into `<main>`;
 - all 40 Tab stops checked on the dashboard show a visible focus style.
+
+Registration and verification (`registration-smoke.mjs`, migration 0039 applied to the isolated stack):
+- run it with `APP_URL=http://localhost:3200`, because the emailed link redirects to the app's own origin and the cookie must match;
+- 9 checks: Get Started; the unverified submit refused; the link verifies the email; step saves merge; the public photo is image-only; review gating and submit; the reviewer's trust checks and rejection with a reason; the rejected applicant reads the reason through a new link; a representative needs ID images;
+- for the run it grants `ux-admin` the reviewer role, and removes the grant and its rows afterwards.

@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/log";
 import { clientKey } from "@/lib/client-key";
-import { EDITABLE, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
+import { EDITABLE, formDetails, mergeDetails, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
 import { clearApplicationCookie, currentApplication, sendResumeLink } from "@/lib/verification/application";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
@@ -34,7 +34,8 @@ export async function saveApplicationDetails(_prev: ActionResult | null, fd: For
   if (!c) return fail("verification.errors.not_found");
   if (!EDITABLE.includes(c.status)) return fail("verification.errors.invalid_state");
   if (!(await consumeRateLimit("application_write", app.request.id)).allowed) return fail("verification.errors.rate_limited");
-  const parsed = parseDetails(c.kind, Object.fromEntries(fd.entries()), { requireAll: false });
+  // One step at a time: only the fields this step's form carries are validated and replaced.
+  const parsed = mergeDetails(c.kind, c.details ?? {}, formDetails(fd.entries()));
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
   const { error } = await createAdminClient()
     .from("verification_cases")
@@ -55,6 +56,8 @@ export async function submitApplication(_prev: ActionResult | null, fd: FormData
   const { app, c } = await ownCase(fd);
   if (!app) return fail("apply.errors.no_application");
   if (!c) return fail("verification.errors.not_found");
+  // The database refuses too (0039); this answers before any work is done.
+  if (!app.request.email_verified_at) return fail("verification.errors.email_unverified");
   if (fd.get("consent") !== "on") return fail("verification.errors.consent");
   if (!(await consumeRateLimit("application_write", app.request.id)).allowed) return fail("verification.errors.rate_limited");
   const parsed = parseDetails(c.kind, c.details ?? {}, { requireAll: true });
@@ -78,15 +81,26 @@ export async function leaveApplication(): Promise<void> {
 export type LinkState = { status: "idle" | "sent" | "invalid" | "rate_limited" };
 
 /**
- * Ask for a new link. The same answer whether or not an open application
- * exists for the address, so this cannot be used to learn who has applied.
+ * Ask for a new link. The same answer whether or not an application exists
+ * for the address, so this cannot be used to learn who has applied. A pending
+ * application gets a link to continue; failing that, the latest rejected one
+ * gets a link to read its decision (0039). Activated applications get nothing:
+ * their holder signs in.
  */
 export async function requestResumeLink(_prev: LinkState, fd: FormData): Promise<LinkState> {
   const email = String(fd.get("email") ?? "").trim().toLowerCase();
   if (!EMAIL.test(email) || email.length > 254) return { status: "invalid" };
   if (!(await consumeRateLimit("access_request", await clientKey())).allowed) return { status: "rate_limited" };
   const service = createAdminClient();
-  const { data } = await service.from("access_requests").select("id").eq("status", "pending").ilike("email", email).maybeSingle();
-  if (data) await sendResumeLink(data.id, email);
+  const { data: rows } = await service
+    .from("access_requests")
+    .select("id, status")
+    .in("status", ["pending", "rejected"])
+    .is("created_profile_id", null)
+    .ilike("email", email)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const target = rows?.find((r) => r.status === "pending") ?? rows?.[0];
+  if (target) await sendResumeLink(target.id, email);
   return { status: "sent" };
 }

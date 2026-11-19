@@ -28,7 +28,7 @@ export function ApplicationView({
   leave,
   demo = false,
 }: {
-  applicant: { full_name: string; email: string; journey: "creator" | "company" | "company_representative"; company_name: string | null };
+  applicant: { full_name: string; email: string; journey: "creator" | "company" | "company_representative"; company_name: string | null; emailVerified: boolean; rejected?: boolean };
   cases: CaseView[];
   documents: DocView[];
   events: EventView[];
@@ -39,19 +39,38 @@ export function ApplicationView({
 }) {
   const { t } = useTranslation();
   const approved = cases.length > 0 && cases.every((c) => c.status === "approved");
+  const rejected = applicant.rejected || cases.some((c) => c.status === "rejected");
+  const inReview = cases.some((c) => c.status === "submitted" || c.status === "under_review");
+  // The whole journey, computed from real state: nothing is shown done that is not.
+  const journey: { key: string; state: "done" | "current" | "todo" | "failed" }[] = [
+    { key: "type", state: "done" },
+    { key: "email", state: applicant.emailVerified ? "done" : "current" },
+    { key: "apply", state: inReview || approved || rejected ? "done" : applicant.emailVerified ? "current" : "todo" },
+    { key: "review", state: approved ? "done" : rejected ? "failed" : inReview ? "current" : "todo" },
+    { key: "account", state: approved ? "current" : "todo" },
+  ];
   return (
     <section className="mx-auto max-w-3xl space-y-4 px-4 pt-12 pb-20 sm:px-6">
       <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">{t("apply.title")}</h1>
-      <ol aria-label={t("apply.stepsLabel")} className="grid gap-2 text-xs sm:grid-cols-4">
-        {(["apply", "review", "email", "account"] as const).map((s, i) => (
-          <li key={s} className="rounded-control border border-line bg-surface-muted px-3 py-2 text-fg-secondary">
-            <span className="font-semibold text-fg">{i + 1}. </span>{t(`apply.steps.${s}`)}
+      <ol aria-label={t("apply.stepsLabel")} className="grid gap-2 text-xs sm:grid-cols-5">
+        {journey.map((s, i) => (
+          <li
+            key={s.key}
+            aria-current={s.state === "current" ? "step" : undefined}
+            className={`rounded-control border px-3 py-2 ${s.state === "done" ? "border-success/40 bg-success/10 text-fg" : s.state === "current" ? "border-brand-green bg-brand-green/10 font-semibold text-fg" : s.state === "failed" ? "border-danger/40 bg-danger/10 text-fg" : "border-line bg-surface-muted text-fg-muted"}`}
+          >
+            <span aria-hidden="true">{s.state === "done" ? "✓ " : s.state === "failed" ? "✕ " : `${i + 1}. `}</span>
+            {t(`apply.journeySteps.${s.key}`)}
+            <span className="sr-only"> ({t(`apply.journeyState.${s.state}`)})</span>
           </li>
         ))}
       </ol>
       <GlassPanel className="space-y-1 p-5 text-sm">
         <p className="text-fg"><span className="text-fg-muted">{t("apply.applicant")}: </span><span dir="auto">{applicant.full_name}</span></p>
-        <p className="text-fg"><span className="text-fg-muted">{t("apply.email")}: </span><span dir="ltr">{applicant.email}</span></p>
+        <p className="text-fg">
+          <span className="text-fg-muted">{t("apply.email")}: </span><span dir="ltr">{applicant.email}</span>{" "}
+          <span className={applicant.emailVerified ? "text-success" : "text-warning"}>· {t(applicant.emailVerified ? "apply.emailVerified" : "apply.emailUnverified")}</span>
+        </p>
         <p className="text-fg"><span className="text-fg-muted">{t("apply.journey")}: </span>{t(`getStarted.journey.${applicant.journey}.title`)}{applicant.company_name ? <> · <span dir="auto">{applicant.company_name}</span></> : null}</p>
         <p className="pt-2 text-xs text-fg-muted">{t("apply.noAccountYet")}</p>
       </GlassPanel>
@@ -66,6 +85,8 @@ export function ApplicationView({
           save={save}
           submit={submit}
           docEndpoint="/api/applications/documents"
+          application
+          emailVerified={applicant.emailVerified}
         />
       ))}
       <p className="text-xs leading-relaxed text-fg-muted">{t("verification.noFaceCheck")}</p>
@@ -86,7 +107,7 @@ export function ApplicationLinkRequest({
   reason,
   action,
 }: {
-  reason: "none" | "expired" | "invalid" | "rate_limited";
+  reason: "none" | "expired" | "invalid" | "rate_limited" | "unavailable";
   action: (prev: LinkState, fd: FormData) => Promise<LinkState>;
 }) {
   const { t } = useTranslation();

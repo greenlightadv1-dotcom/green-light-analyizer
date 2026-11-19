@@ -9,7 +9,7 @@ import { leaveApplication, requestResumeLink, saveApplicationDetails, submitAppl
 export const metadata: Metadata = { title: "Your application", referrer: "no-referrer", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
-const REASONS = ["expired", "invalid", "rate_limited"] as const;
+const REASONS = ["expired", "invalid", "rate_limited", "unavailable"] as const;
 
 /**
  * Public (session.ts PUBLIC_PATHS) but personal: the application shown is the
@@ -31,11 +31,11 @@ export default async function ApplyPage({ searchParams }: { searchParams: Promis
   // Never ask twice: what the application already holds pre-fills the case.
   const known = r.journey === "company"
     ? { full_name: r.company_name, company_website: r.website, company_name: r.company_name }
-    : { full_name: r.full_name, company_name: r.company_name };
+    : { full_name: r.full_name, company_name: r.company_name, company_website: r.website, primary_platform: r.primary_platform, channel_handle: r.channel_handle };
   return (
     <GetStartedShell>
       <ApplicationView
-        applicant={{ full_name: r.full_name, email: r.email, journey: r.journey, company_name: r.company_name }}
+        applicant={{ full_name: r.full_name, email: r.email, journey: r.journey, company_name: r.company_name, emailVerified: !!r.email_verified_at, rejected: r.status === "rejected" }}
         cases={app.cases.map((c) => ({ ...c, prefill: prefill(c.kind, c.details ?? {}, known) }))}
         documents={app.documents.map((d) => ({ id: d.id, case_id: d.case_id, doc_type: d.doc_type, size_bytes: d.size_bytes, uploaded_at: d.uploaded_at }))}
         events={app.events}

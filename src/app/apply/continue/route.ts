@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { hashToken, isTokenShape } from "@/lib/verification/tokens";
-import { setApplicationCookie } from "@/lib/verification/application";
+import { markEmailVerified, setApplicationCookie } from "@/lib/verification/application";
 import { clientKey } from "@/lib/client-key";
 
 /**
@@ -22,8 +22,11 @@ export async function GET(request: Request) {
   if (!isTokenShape(raw)) return to("/apply?link=invalid");
   if (!(await consumeRateLimit("activation", await clientKey())).allowed) return to("/apply?link=rate_limited");
   const { data } = await createAdminClient().rpc("application_token_lookup", { p_hash: hashToken(raw), p_purpose: "resume" });
-  const state = data?.[0]?.state;
+  const row = data?.[0];
+  const state = row?.state;
   if (state !== "valid") return to(`/apply?link=${state === "expired" ? "expired" : "invalid"}`);
+  // Opening the emailed link is the proof of control of the address.
+  if (!row || !(await markEmailVerified(row.access_request_id))) return to("/apply?link=unavailable");
   await setApplicationCookie(raw);
   return to("/apply");
 }

@@ -128,6 +128,10 @@ export async function createUser(
     inbound_alias: inboundAlias,
     primary_email: email,
     must_change_password: true,
+    // Every account except an admin is verified before it can use the
+    // platform (approved decision, docs/REGISTRATION_ONBOARDING_FLOW.md): a
+    // creator or company created here starts confined to /verification.
+    account_status: role === "admin" ? "active" : "pending_verification",
     ...(fromRequest?.website ? { company_website: fromRequest.website } : {}),
   });
 
@@ -138,6 +142,13 @@ export async function createUser(
       error: `Account rolled back — profile could not be created: ${profileError.message}`,
       created: null,
     };
+  }
+
+  if (role === "creator") {
+    // A creator has one kind of case; open it so the checklist is ready at first sign-in.
+    // A company account chooses on /verification whether it is the company or a representative.
+    const { data: opened } = await admin.from("verification_cases").insert({ profile_id: data.user.id, kind: "creator_kyc" }).select("id").single();
+    if (opened) await admin.from("verification_events").insert({ case_id: opened.id, actor_id: reviewer.id, event: "created" });
   }
 
   if (requestId) {

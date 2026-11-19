@@ -33,7 +33,7 @@ export default function PreviewApply() {
   return (
     <ApplicationView
       demo
-      applicant={{ full_name: "Amir Khaled (demo)", email: "amir.demo@example.com", journey: "creator", company_name: null }}
+      applicant={{ full_name: "Amir Khaled (demo)", email: "amir.demo@example.com", journey: "creator", company_name: null, emailVerified: true }}
       cases={[{ ...CASE, prefill: prefill("creator_kyc", CASE.details, { full_name: "Amir Khaled (demo)" }) }]}
       documents={[{ id: "00000000-0000-4000-8000-000000000611", case_id: CASE.id, doc_type: "id_front", size_bytes: 412000, uploaded_at: "2026-11-02T09:30:00Z" }]}
       events={[{ id: 1, case_id: CASE.id, event: "created", created_at: "2026-11-02T09:00:00Z" }]}

@@ -138,3 +138,25 @@ See `ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
     - the same request replayed once and 5× concurrently leaves one draft;
     - a fresh key creates exactly one new brief;
     - `/briefs/new` with a double click and 3 concurrent replays creates one brief.
+
+## Update 2026-11-19: 0039 `registration_trust` (not applied anywhere but the isolated stack)
+
+- **What it does:**
+  - `access_requests.email_verified_at`;
+  - document type `profile_photo`, image uploads only;
+  - event `email_verified`;
+  - trigger `verification_submit_guard` (verified email, representative ID images, creator application photo);
+  - resume links allowed for rejected applications (read-only).
+
+  Details: `docs/REGISTRATION_ONBOARDING_FLOW.md`.
+- **Order:** after 0032. No dependency on 0033–0038.
+- **Cost:**
+  - one nullable column;
+  - two CHECK constraints replaced (a validating scan of two small tables);
+  - one trigger;
+  - two function bodies replaced.
+- **Before applying in production:** an application that is still open (`draft` / `needs_info`) has `email_verified_at` NULL, because 0032 never recorded when a link was opened. It cannot be submitted until its holder opens an emailed link once more, which records the verification. No backfill is proposed: none would be truthful.
+- **Apply:** `psql --single-transaction -v ON_ERROR_STOP=1 -f supabase/migrations/0039_registration_trust.sql`, then `supabase/verify/0039_verify.sql`. Every row must say `ok`.
+- **Code without 0039:** opening a link tolerates the missing column. Submitting a creator application whose public photo upload was refused by the old CHECK fails. Deploy the code and 0039 together.
+- **Rollback:** in the migration header.
+- **Evidence:** `scripts/local-migrations-test.sh` **92 / 92**; `registration-smoke.mjs` 9 / 9.
