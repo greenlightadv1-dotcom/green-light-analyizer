@@ -44,6 +44,8 @@ export type RateLimitAction =
   | "verification_write"
   | "application_write"
   | "activation"
+  | "password_reset"
+  | "password_reset_client"
   | "team_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
@@ -160,6 +162,19 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   activation: [
     { limit: 20, windowSeconds: HOUR, label: "hour" },
     { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // "Forgot password" requests. password_reset is keyed by a hash of the
+  // submitted email (so one victim's inbox cannot be flooded) and
+  // password_reset_client by a hash of the client address (so one client
+  // cannot sweep many addresses). Both keys exist whether or not the email has
+  // an account, so hitting either limit reveals nothing.
+  password_reset: [
+    { limit: 5, windowSeconds: HOUR, label: "hour" },
+    { limit: 20, windowSeconds: DAY, label: "day" },
+  ],
+  password_reset_client: [
+    { limit: 30, windowSeconds: HOUR, label: "hour" },
+    { limit: 100, windowSeconds: DAY, label: "day" },
   ],
   // Representative scopes and company edits by a representative (0034).
   team_write: [

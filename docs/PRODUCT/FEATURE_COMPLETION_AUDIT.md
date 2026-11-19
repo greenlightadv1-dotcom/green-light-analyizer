@@ -1,5 +1,7 @@
 # Feature completion audit (2026-11-07)
 
+**Numbering note:** the sprint ran deal-room resilience as P0-1 and password reset as P0-2; the roadmap lists them the other way round. Item content is unchanged.
+
 **Inspected:** branch `claude/eager-gauss-dox9tq` at commit `e8d4349`, read from the code rather than from earlier reports. Clean tree, even with origin. PR #6: draft, unmerged.
 
 ## Executive summary
@@ -53,7 +55,7 @@
 | Admin review: reject, request info | PARTIAL | SQL, UNIT | `admin/verification/actions.ts` | Applicant emails and the resume-after-info path not run in ISO |
 | Reviewer allow-list | COMPLETE | ISO, SQL | 0032 `verification_reviewers` | Needs a production row (launch prep) |
 | Forced first-login password change | COMPLETE | Production (earlier), CODE | `(auth)/set-password` | — |
-| **Password reset ("forgot password")** | **PLANNED (missing)** | CODE: no `resetPasswordForEmail`, no recovery landing page | `(auth)/login` | **A locked-out user has no self-service path.** Supabase recovery itself works (ISO). |
+| Password reset ("forgot password") | COMPLETE (P0-2, 2026-11-19); launch configuration pending | UNIT (`lib/auth/recovery.test.ts`, 9 tests; rate-limit coverage), ISO (`flow-password-reset.mjs`, 39/39 with Mailpit) | `(auth)/forgot-password`, `auth/recovery`, `(auth)/reset-password`, `components/auth/*`, `lib/auth/recovery.ts`, `lib/supabase/session.ts` | Production needs redirect URL, custom SMTP and (recommended) the token_hash template: `docs/RELEASE/PASSWORD_RECOVERY_LAUNCH_CONFIG.md` |
 | Login with sign-up disabled | COMPLETE | ISO | — | The production Auth toggle is a launch-prep task |
 | Existing (pre-0032) accounts and KYC | BLOCKED | CODE | `lib/auth.ts` | Owner decision: must existing or admin-created accounts pass KYC? |
 | Account self-deletion and data export (PDPL) | PLANNED | CODE: none | — | Needs an owner and legal retention decision |

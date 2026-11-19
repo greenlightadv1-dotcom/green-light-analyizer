@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { log } from "@/lib/log";
+import { amrFromAccessToken, isRecoveryOnlySession, RESET_PASSWORD_PATH } from "@/lib/auth/recovery";
 
 /**
  * Routes reachable without a session. "/" is the public marketing landing
@@ -20,7 +21,7 @@ import { log } from "@/lib/log";
  * Google's OAuth verification and Meta's App Review fetch the privacy URL
  * without a session.
  */
-const PUBLIC_PATHS = ["/", "/login", "/auth", "/p", "/terms", "/privacy", "/get-started", "/register", "/apply", "/activate", "/api/applications"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/p", "/terms", "/privacy", "/get-started", "/register", "/apply", "/activate", "/api/applications", "/forgot-password", "/reset-password"];
 
 /** Where a user with a pending forced password change is pinned (§4.2). */
 export const SET_PASSWORD_PATH = "/set-password";
@@ -54,6 +55,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   let user: User | null;
+  let recoveryOnly = false;
   try {
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -80,6 +82,11 @@ export async function updateSession(request: NextRequest) {
     // getSession(), which trusts whatever is in the cookie.
     const result = await supabase.auth.getUser();
     user = result.data.user;
+    if (user) {
+      // The access token getUser() just verified; only its `amr` is read.
+      const { data: { session } } = await supabase.auth.getSession();
+      recoveryOnly = isRecoveryOnlySession(amrFromAccessToken(session?.access_token));
+    }
   } catch (error) {
     // A reachability problem (project paused, DNS, TLS, transient outage) is
     // not this request's fault to fail on. Let it through unauthenticated —
@@ -98,6 +105,21 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     // Preserve the intended destination so login can return the user to it.
     if (pathname !== "/") url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // A session opened by a recovery link (no password in its `amr`) reaches
+  // nothing but the reset page until a password is set: following an emailed
+  // link must never leave someone silently signed in to the product. The
+  // reset action then ends every session. Checked before the forced-change
+  // gate, which the reset also satisfies.
+  if (recoveryOnly) {
+    // On the reset page (or an /auth route) nothing else applies: the later
+    // gates would bounce a forced-change account to /set-password and back.
+    if (pathname === RESET_PASSWORD_PATH || pathname.startsWith("/auth/")) return response;
+    const url = request.nextUrl.clone();
+    url.pathname = RESET_PASSWORD_PATH;
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

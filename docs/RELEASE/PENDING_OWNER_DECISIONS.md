@@ -1,5 +1,14 @@
 # Pending owner decisions
 
+## Decided by the owner (recorded 2026-11-19)
+
+| Decision | Answer | Status in code |
+|---|---|---|
+| KYC/KYB for admin-created accounts | `all_except_admin`: every account except admin accounts must pass KYC/KYB | Not yet implemented; next sprint item that touches verification |
+| Public profile photo | An upload is allowed. It stays separate from private KYC identity photos and documents. | Matches the current behaviour (avatar upload ≠ camera-only identity capture) |
+| Identity-document retention | 12 months | Not yet configured. `VERIFICATION_RETENTION_DAYS` and the purge schedule are launch configuration, and the legal text needs the period. |
+| Portfolio visibility | Manual selection by the creator for each item | Matches the current behaviour (each portfolio item is private until the creator marks it public). The consent wording for naming a brand stays as built until legal review. |
+
 Only items that need the owner. Nothing here has been changed or invented.
 
 ## 1. Legal publication and commission effective dates (blocks release)

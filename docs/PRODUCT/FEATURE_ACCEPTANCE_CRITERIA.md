@@ -18,14 +18,17 @@ These criteria apply to the items in `ONE_MONTH_COMPLETION_ROADMAP.md`, by ID.
 
 ## P0
 
-**P0-1: Password reset**
+**P0-1: Password reset**: ACCEPTED 2026-11-19 (sprint item P0-2; evidence `scripts/isolated-validation/flow-password-reset.mjs`, 39/39). The owner's sprint brief replaced criterion 4: after a reset the person is NOT signed in.
 1. The login page shows "Forgot password?". It opens a form that accepts an email.
-2. Unknown and known emails get the same message and the same response time class. The request is rate-limited, and the limit is in `rate-limit-coverage.test.ts`.
+2. Unknown and known emails get the same message, with similar timing (measured 720–830 ms on both). The request is rate-limited per email (`password_reset`) and per client (`password_reset_client`), and both are in `rate-limit-coverage.test.ts`.
 3. A recovery email goes only to an existing account; in the isolated stack it is captured by Mailpit.
-4. The link lands on a page that sets a new password under the same rules as activation (10+ characters, mixed types). Afterwards the user is signed in and the old password fails.
-5. A used or expired link shows a neutral error and offers to send a new one.
-6. All copy is in all 5 dictionaries, with RTL correct.
-7. A source guard test: no `signUp` call, and no recovery path that creates an account.
+4. The link opens `/reset-password`, naming the masked account. The recovery session cannot reach any other page. The new password follows the activation rules. After saving, **every session of the account is revoked on every device**, and the person lands on `/login?reset=done` with a notice. The old password fails and the new one works. A pending forced first-login change is cleared.
+5. Expired, used, malformed, missing, wrong-type and other-browser links show a specific, neutral message and offer a new link. No provider text is shown, and no 500.
+6. All copy is in all 5 dictionaries, with RTL correct (checked in en, ar, fr, es, de).
+7. Source guard tests:
+   - no `signUp` or OTP sign-in anywhere in the journey;
+   - the callback redirects only to fixed paths;
+   - the reset action requires a recovery-only session.
 
 **P0-2: Deal room resilience**
 1. A deal whose `security_check` or `company_profile` is `{}`, null, or the wrong type renders the room, the chat and the composer. The intelligence panel hides or degrades.

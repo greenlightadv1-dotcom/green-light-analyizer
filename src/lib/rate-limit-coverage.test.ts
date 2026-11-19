@@ -45,6 +45,8 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/apply/actions.ts", "submitApplication", "application_write"],
   ["app/apply/actions.ts", "requestResumeLink", "access_request"],
   ["app/activate/actions.ts", "activateAccount", "activation"],
+  ["app/(auth)/forgot-password/actions.ts", "requestPasswordReset", "password_reset"],
+  ["app/(auth)/forgot-password/actions.ts", "requestPasswordReset", "password_reset_client"],
   ["app/apply/continue/route.ts", "GET", "activation"],
   ["app/api/applications/documents/route.ts", "POST", "upload"],
   ["app/api/verification/documents/route.ts", "POST", "upload"],

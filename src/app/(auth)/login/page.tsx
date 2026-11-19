@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ForgotPasswordLink, ResetDoneNotice } from "@/components/auth/LoginRecovery";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { AccessNote } from "./AccessNote";
 import { LoginForm } from "./LoginForm";
@@ -9,9 +10,9 @@ export const metadata: Metadata = { title: "Sign in" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, reset } = await searchParams;
 
   return (
     <GlassPanel className="p-7 sm:p-8">
@@ -20,7 +21,10 @@ export default async function LoginPage({
         Your Personal Business Manager.
       </p>
 
+      {reset === "done" ? <ResetDoneNotice /> : null}
+
       <LoginForm next={next} />
+      <ForgotPasswordLink />
 
       {/*
         §4.1 — admin-gated: there is no self-signup anywhere in this product,
