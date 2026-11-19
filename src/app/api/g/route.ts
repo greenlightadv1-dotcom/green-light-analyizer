@@ -7,6 +7,7 @@ import { G_ACTIONS, allowedActions, type GAction, type GActionId } from "@/lib/g
 import { collabContext, companyContext, creatorContext, loadGSession, type CollabGData } from "@/lib/g/context";
 import { briefFromText } from "@/lib/g/brief-text";
 import { allowedProposals, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
+import { fallbackProposals, type FallbackInput } from "@/lib/g/fallback";
 import {
   buildPrompt,
   detectIntents,
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
     collaborationIds: new Set(),
   };
   let creatorNames = new Map<string, string>();
+  let fallback: Omit<FallbackInput, "role" | "locale" | "intents" | "scope"> = {};
   const wantsCollab = intents.includes("collab") || intents.includes("content") || intents.includes("help");
   const collabData = (c: CollabGData) => ({
     collaborations: c.collaborations,
@@ -124,6 +126,7 @@ export async function POST(request: Request) {
       const news = intents.includes("content")
         ? await newsFor(newsTagsFor(profile, (ctx.assessment.platforms ?? []).map((p) => p.platform)), 5)
         : [];
+      fallback = { collaborations: collab.collaborations, news };
       modelData = {
         intents,
         assessment: ctx.assessment,
@@ -154,6 +157,7 @@ export async function POST(request: Request) {
       }
       if (intents.includes("compare")) cards.comparison = ctx.comparison;
       if (intents.includes("deals")) cards.deals = { recent: ctx.recentDeals };
+      fallback = { briefs: collab.briefs, recommendations: ctx.recommendations, collaborations: collab.collaborations };
       modelData = {
         intents,
         brief: ctx.brief,
@@ -222,6 +226,13 @@ export async function POST(request: Request) {
     }).map((p) => (p.type === "invitation" ? { ...p, creator_name: creatorNames.get(p.creator_id) } : p));
   } catch (error) {
     if (!(error instanceof AiUnavailableError)) log.warn("g.model_reply_rejected", { error });
+  }
+
+  // The AI engine did not answer: G still prepares what it can from the
+  // caller's own data, with fixed wording in their language (lib/g/fallback).
+  if (engine === "rules") {
+    proposals = fallbackProposals({ role: profile.role, locale: req.locale, intents, scope: proposalScope, ...fallback })
+      .map((p) => (p.type === "invitation" ? { ...p, creator_name: creatorNames.get(p.creator_id) } : p));
   }
 
   return NextResponse.json({ engine, reply, intents, cards, actions, proposals });

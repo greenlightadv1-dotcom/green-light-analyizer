@@ -20,9 +20,9 @@ import { day, usd } from "@/lib/collab/display";
  */
 
 const field =
-  "w-full rounded-lg border border-line bg-surface-muted px-2.5 py-1.5 text-xs text-fg focus:border-brand-green/50 focus:outline-none";
+  "w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-xs text-fg focus:border-forest focus:ring-2 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green";
 const btn =
-  "rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-accent hover:bg-brand-green/20 focus-visible:focus-ring";
+  "inline-flex items-center rounded-full bg-forest px-4 py-1.5 text-xs font-semibold text-white hover:bg-forest-strong focus-visible:focus-ring dark:bg-brand-green dark:text-ink";
 
 export function CollaborationsCard({
   data,
@@ -34,7 +34,7 @@ export function CollaborationsCard({
   const { t } = useTranslation();
   const pending = data.invitations.filter((i) => i.status === "pending");
   return (
-    <div className="space-y-2 rounded-xl border border-line bg-surface-muted p-3 text-xs">
+    <div className="space-y-2 rounded-2xl border border-line bg-surface-soft p-3.5 text-xs">
       <p className="font-semibold text-fg">{t("g.collab.title")}</p>
       {pending.length ? <p className="text-fg-secondary">{t("g.collab.pendingInvitations", { count: pending.length })}</p> : null}
       {data.briefs?.length ? (
@@ -64,7 +64,7 @@ export function ContentCard({ data }: { data: { counts: Record<string, number>; 
   const { t } = useTranslation();
   const statuses = ["idea", "drafting", "ready", "scheduled"];
   return (
-    <div className="space-y-2 rounded-xl border border-line bg-surface-muted p-3 text-xs">
+    <div className="space-y-2 rounded-2xl border border-line bg-surface-soft p-3.5 text-xs">
       <p className="font-semibold text-fg">{t("content.title")}</p>
       <p className="text-fg-secondary">{statuses.map((s) => `${t(`content.status.${s}`)}: ${data.counts[s] ?? 0}`).join(" · ")}</p>
       {data.upcoming.length ? (
@@ -84,11 +84,12 @@ export function ContentCard({ data }: { data: { counts: Record<string, number>; 
 
 export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal; basePath?: string; demo?: boolean }) {
   const { t } = useTranslation();
-  const frame = "space-y-2 rounded-xl border border-brand-green/30 bg-brand-green/5 p-3 text-xs";
+  const frame = "space-y-2.5 rounded-2xl border-2 border-brand-green/60 bg-surface p-3.5 text-xs";
   const head = (
-    <p className="font-semibold text-fg">
-      {t(`g.proposal.${p.type}`)} <span className="font-normal text-fg-muted">· {t("g.proposal.notYet")}</span>
-    </p>
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="rounded-full bg-lime-soft px-2.5 py-0.5 text-[11px] font-semibold text-accent">{t(`g.proposal.${p.type}`)}</span>
+      <span className="text-fg-muted">{t("g.proposal.notYet")}</span>
+    </div>
   );
   if (p.type === "message_draft") {
     return (

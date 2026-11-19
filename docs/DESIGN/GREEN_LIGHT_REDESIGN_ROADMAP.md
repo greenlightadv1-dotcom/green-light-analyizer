@@ -10,8 +10,8 @@ Each group is merged into the branch only after these pass: typecheck, lint, uni
 | 4 | Company surfaces (discover, briefs, shortlists, team) | Re-themed through the tokens. Per-page polish is ongoing |
 | 5 | Deal room, chat, shared panels | Re-themed through the tokens |
 | 6 | Admin | Re-themed through the tokens |
-| 7 | G: visual identity, and deterministic proposals when NVIDIA is unavailable | In progress |
-| 8 | Responsive and accessibility sweep (overflow check on every preview route, keyboard focus, RTL) | In progress |
+| 7 | G: forest/lime identity (launcher, header, bubbles, suggestion cards, proposal cards, composer), and deterministic proposals in 5 languages when NVIDIA is unavailable (`lib/g/fallback.ts`) | Done. End-to-end checks on the isolated stack are still to run |
+| 8 | Responsive and accessibility sweep | Overflow is 0 on all 18 preview routes at 390 px (ar) and 1440 px (en, dark). The keyboard and contrast audit is ongoing |
 
 "Re-themed through the tokens" means the page adopts the new palette, type, radii and surfaces with no per-file rewrite. The codemods made those changes:
 - state colours → semantic tokens;

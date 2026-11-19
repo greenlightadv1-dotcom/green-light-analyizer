@@ -11,7 +11,7 @@ import type { Metric } from "@/lib/g/provenance";
 import { gameTitle } from "@/lib/taxonomy";
 import type { Platform } from "@/lib/types/database";
 
-const BOX = "rounded-xl border border-fg/10 bg-fg/[0.03] p-3";
+const BOX = "rounded-2xl border border-line bg-surface-soft p-3.5";
 const H = "text-xs font-medium text-fg-muted";
 
 function useFmt() {

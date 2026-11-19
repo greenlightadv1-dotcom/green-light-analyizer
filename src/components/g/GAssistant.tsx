@@ -40,7 +40,7 @@ export function GMark({ size = 36, state = "idle" }: { size?: number; state?: GM
         <span className="g-spin absolute -inset-1 rounded-full border-2 border-transparent border-t-brand-green border-e-brand-green/50" />
       ) : null}
       <span
-        className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-green to-success font-bold text-ink shadow-[0_0_18px_rgba(98,232,35,0.45)] ${state === "wake" ? "g-wake" : ""}`}
+        className={`relative flex h-full w-full items-center justify-center rounded-full bg-brand-green font-extrabold text-ink ring-2 ring-white/80 dark:ring-ink ${state === "wake" ? "g-wake" : ""}`}
       >
         <span style={{ fontSize: size * 0.5 }}>G</span>
       </span>
@@ -84,9 +84,9 @@ const SUGGESTIONS: Record<Role, string[]> = {
 };
 
 const newId = () => Math.random().toString(36).slice(2, 10);
-const CHIP = "rounded-full border px-2.5 py-1 text-[11px] transition";
+const CHIP = "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:focus-ring";
 const chipClass = (on: boolean) =>
-  `${CHIP} ${on ? "border-brand-green/40 bg-brand-green/15 text-accent" : "border-fg/10 bg-fg/5 text-fg/60 hover:text-fg"}`;
+  `${CHIP} ${on ? "border-forest bg-forest text-white dark:border-brand-green dark:bg-brand-green dark:text-ink" : "border-line-strong bg-surface text-fg-secondary hover:bg-surface-hover hover:text-fg"}`;
 
 /**
  * G — the site-wide assistant (feature 7), mounted once in the app shell so it
@@ -282,7 +282,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           type="button"
           onClick={() => update((s) => ({ ...s, open: true }))}
           aria-label={t("g.open")}
-          className="flex items-center gap-2 rounded-full border border-brand-green/30 bg-surface p-1.5 text-sm font-semibold text-fg shadow-xl transition hover:-translate-y-0.5 focus-visible:focus-ring sm:pe-4"
+          className="flex items-center gap-2 rounded-full bg-forest p-1.5 text-sm font-semibold text-white shadow-overlay transition hover:-translate-y-0.5 hover:bg-forest-strong focus-visible:focus-ring sm:pe-5 dark:bg-forest-strong dark:ring-1 dark:ring-line-strong"
         >
           <GMark size={34} state={markState} />
           {/* Icon-only on phones so the launcher covers less of the page; the
@@ -301,15 +301,15 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col rounded-t-2xl border border-fg/10 bg-surface pb-[env(safe-area-inset-bottom)] shadow-2xl sm:inset-x-auto sm:pb-0 sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-2xl"
+      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col overflow-hidden rounded-t-[28px] border border-line bg-surface pb-[env(safe-area-inset-bottom)] shadow-overlay sm:inset-x-auto sm:pb-0 sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-card"
     >
-      <header className="flex items-center gap-3 border-b border-fg/10 px-4 py-3">
+      <header className="flex items-center gap-3 bg-forest px-4 py-3.5 text-white dark:bg-forest-strong">
         <GMark state={markState} />
         <div className="min-w-0 flex-1">
-          <h2 id={titleId} className="text-sm font-semibold text-fg">
+          <h2 id={titleId} className="text-base font-bold text-white">
             G
           </h2>
-          <p className="truncate text-[11px] text-fg-muted">{t(`g.subtitle.${role}`)}</p>
+          <p className="truncate text-xs text-white/70">{t(`g.subtitle.${role}`)}</p>
         </div>
         {voice.canSpeak ? (
           <button
@@ -323,12 +323,12 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
               update((s) => ({ ...s, speakReplies: !s.speakReplies }));
             }}
             aria-pressed={state.speakReplies}
-            className="rounded-lg px-2 py-1 text-[11px] text-fg/60 hover:bg-fg/5 hover:text-fg"
+            className="rounded-full px-3 py-1.5 text-xs font-medium text-white/80 ring-1 ring-white/20 hover:bg-white/10 hover:text-white focus-visible:focus-ring"
           >
             {state.speakReplies ? t("g.voice.repliesOn") : t("g.voice.repliesOff")}
           </button>
         ) : null}
-        <button type="button" onClick={close} aria-label={t("g.close")} className="rounded-lg p-1.5 text-fg/60 hover:bg-fg/5 hover:text-fg">
+        <button type="button" onClick={close} aria-label={t("g.close")} className="flex h-8 w-8 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white focus-visible:focus-ring">
           ✕
         </button>
       </header>
@@ -342,11 +342,17 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3" aria-live="polite">
         {state.messages.length === 0 ? (
           <div className="space-y-3">
-            <p className="text-sm leading-relaxed text-fg/75">{t(`g.welcome.${role}`)}</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-[15px] leading-relaxed text-fg-secondary">{t(`g.welcome.${role}`)}</p>
+            <div className="grid gap-2">
               {SUGGESTIONS[role].map((k) => (
-                <button key={k} type="button" onClick={() => void send(t(k))} className={chipClass(false)}>
-                  {t(k)}
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => void send(t(k))}
+                  className="group flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface-soft px-4 py-3 text-start text-sm font-medium text-fg transition-colors hover:border-forest/30 hover:bg-lime-soft focus-visible:focus-ring"
+                >
+                  <span>{t(k)}</span>
+                  <span aria-hidden className="text-accent transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5">→</span>
                 </button>
               ))}
             </div>
@@ -354,7 +360,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
         ) : null}
         {state.messages.map((m) =>
           m.role === "user" ? (
-            <div key={m.id} className="ms-8 rounded-2xl rounded-ee-sm bg-brand-green/15 px-3 py-2 text-sm whitespace-pre-wrap text-fg">
+            <div key={m.id} className="ms-10 rounded-[20px] rounded-ee-md bg-forest px-3.5 py-2.5 text-sm whitespace-pre-wrap text-white dark:bg-forest-soft dark:text-fg">
               {m.text}
             </div>
           ) : (
@@ -365,7 +371,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                 </p>
               ) : (
                 <>
-                  {m.text ? <p className="text-sm leading-relaxed whitespace-pre-wrap text-fg">{m.text}</p> : null}
+                  {m.text ? <p className="rounded-[20px] rounded-es-md bg-surface-soft px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">{m.text}</p> : null}
                   {m.engine === "rules" && !demo ? <p className="text-[11px] text-fg-muted">{t("g.rulesNotice")}</p> : null}
                   {m.engine === "ai" ? <p className="text-[10px] text-fg-muted">{t("g.aiNotice")}</p> : null}
                   {m.cards?.assessment ? <AssessmentCard a={m.cards.assessment as CreatorAssessment} /> : null}
@@ -400,7 +406,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                         <Link
                           key={`${a.action}-${a.param ?? ""}`}
                           href={`${basePath}${actionHref(a)}`}
-                          className="rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-accent hover:bg-brand-green/20"
+                          className="rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-semibold text-fg hover:bg-surface-hover focus-visible:focus-ring"
                         >
                           {t(`g.action.${a.action}`)} →
                         </Link>
@@ -421,7 +427,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       </div>
 
       {role === "company" ? (
-        <div className="border-t border-fg/10 px-4 py-2">
+        <div className="border-t border-line px-4 py-2">
           {state.compare.length ? (
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               <span className="text-[11px] text-fg-muted">{t("g.compareTray")}</span>
@@ -454,7 +460,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                 placeholder={t("g.brief.objective")}
                 aria-label={t("g.brief.objective")}
                 maxLength={300}
-                className="h-9 w-full rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
+                className="h-9 w-full rounded-control border border-line-strong bg-surface px-3 text-xs text-fg"
               />
               <div className="flex flex-wrap gap-1.5" aria-label={t("g.brief.categories")}>
                 {termsOf(taxonomy.snap, "category").map((x) => x.id).filter((c) => c !== "other").map((c) => (
@@ -484,7 +490,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   placeholder={t("g.brief.countries")}
                   aria-label={t("g.brief.countries")}
                   dir="ltr"
-                  className="h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
+                  className="h-9 rounded-control border border-line-strong bg-surface px-3 text-xs text-fg"
                 />
                 <input
                   type="number"
@@ -494,7 +500,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   placeholder={t("g.brief.budget")}
                   aria-label={t("g.brief.budget")}
                   dir="ltr"
-                  className="h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
+                  className="h-9 rounded-control border border-line-strong bg-surface px-3 text-xs text-fg"
                 />
                 <input
                   type="number"
@@ -504,7 +510,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   placeholder={t("g.brief.minViews")}
                   aria-label={t("g.brief.minViews")}
                   dir="ltr"
-                  className="h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
+                  className="h-9 rounded-control border border-line-strong bg-surface px-3 text-xs text-fg"
                 />
                 <input
                   value={brief.timeline ?? ""}
@@ -512,7 +518,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   placeholder={t("g.brief.timeline")}
                   aria-label={t("g.brief.timeline")}
                   maxLength={120}
-                  className="h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
+                  className="h-9 rounded-control border border-line-strong bg-surface px-3 text-xs text-fg"
                 />
               </div>
               <button type="button" onClick={() => void send(t("g.brief.findMessage"))} className="text-[11px] font-semibold text-accent underline underline-offset-4">
@@ -524,7 +530,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       ) : null}
 
       <form
-        className="border-t border-fg/10 px-3 py-3"
+        className="border-t border-line px-3 py-3"
         onSubmit={(e) => {
           e.preventDefault();
           void send(draft);
@@ -554,10 +560,10 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
             maxLength={1000}
             placeholder={t("g.placeholder")}
             aria-label={t("g.placeholder")}
-            className="min-h-[44px] flex-1 resize-none rounded-xl border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg placeholder:text-fg/35 focus:border-brand-green/50 focus:outline-none"
+            className="min-h-[44px] flex-1 resize-none rounded-[22px] border border-line-strong bg-surface px-4 py-2.5 text-sm text-fg placeholder:text-fg-subtle focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
           />
           {listening || speaking ? (
-            <button type="button" onClick={voice.stop} aria-label={t("g.voice.stop")} className="flex h-11 w-11 items-center justify-center rounded-xl border border-danger/40 bg-danger/10 text-danger">
+            <button type="button" onClick={voice.stop} aria-label={t("g.voice.stop")} className="flex h-11 w-11 items-center justify-center rounded-full border border-danger/40 bg-danger/10 text-danger focus-visible:focus-ring">
               ■
             </button>
           ) : null}
@@ -573,7 +579,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                 }}
                 disabled={busy}
                 aria-label={t("g.voice.start")}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-fg/10 bg-fg/5 text-fg/70 hover:text-fg disabled:opacity-50"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-surface text-fg-secondary hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:opacity-50"
               >
                 🎙
               </button>
@@ -582,7 +588,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="h-11 rounded-xl bg-brand-green px-4 text-sm font-semibold text-ink transition hover:brightness-110 disabled:opacity-50"
+            className="h-11 rounded-full bg-brand-green px-5 text-sm font-semibold text-ink transition-colors hover:bg-[#57d61d] focus-visible:focus-ring disabled:opacity-50"
           >
             {t("g.send")}
           </button>
@@ -644,7 +650,7 @@ function WakeSettings({
   const { t } = useTranslation();
   const phrases = Object.values(WAKE_PHRASES).join(" · ");
   return (
-    <div className="border-b border-fg/10 px-4 py-2 text-[11px]">
+    <div className="border-b border-line px-4 py-2 text-[11px]">
       {wake.enabled || wake.status === "needs_resume" ? (
         <div className="space-y-1">
           <WakeIndicator status={wake.status} enabled={wake.enabled} onOff={wake.disable} onResume={() => void wake.enable()} />
@@ -655,7 +661,7 @@ function WakeSettings({
           ) : null}
         </div>
       ) : consentOpen ? (
-        <div className="space-y-2 rounded-xl border border-fg/10 bg-fg/5 p-3" role="group" aria-labelledby="g-wake-consent-title">
+        <div className="space-y-2 rounded-2xl border border-line bg-surface-soft p-3" role="group" aria-labelledby="g-wake-consent-title">
           <p id="g-wake-consent-title" className="text-xs font-semibold text-fg">
             {t("g.wake.consentTitle")}
           </p>
@@ -676,11 +682,11 @@ function WakeSettings({
                 setConsentOpen(false);
                 void wake.enable();
               }}
-              className="rounded-lg bg-brand-green px-3 py-1.5 text-xs font-semibold text-ink"
+              className="rounded-full bg-brand-green px-4 py-1.5 text-xs font-semibold text-ink focus-visible:focus-ring"
             >
               {t("g.wake.allow")}
             </button>
-            <button type="button" onClick={() => setConsentOpen(false)} className="rounded-lg border border-fg/15 px-3 py-1.5 text-xs text-fg/70">
+            <button type="button" onClick={() => setConsentOpen(false)} className="rounded-full border border-line-strong px-4 py-1.5 text-xs font-medium text-fg-secondary focus-visible:focus-ring">
               {t("g.wake.cancel")}
             </button>
           </div>
