@@ -263,7 +263,12 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
   useEffect(() => {
     if (!state.open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      // Escape belongs to the topmost layer: while a confirmation dialog (a
+      // native modal <dialog>) is open, Escape cancels that dialog only and
+      // must not also close G, which would lose the proposal on screen.
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (document.querySelector("dialog[open]")) return;
+      close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

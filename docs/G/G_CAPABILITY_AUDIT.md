@@ -10,7 +10,7 @@ Baseline: `7af5d18` (2026-11-19).
 
 "E2E" here never means "the UI exists" or "a unit test passes".
 
-This table is the state *before* the G completion phase. The completion phase's results are recorded in `G_ACCEPTANCE_REPORT.md`.
+This table is the state *before* the G completion phase. Results after it are in `G_ACCEPTANCE_REPORT.md`: gaps 1–5 below are closed, apart from the live NVIDIA call.
 
 ## 1. Creator G
 

@@ -29,6 +29,7 @@ export function ConfirmActionForm({
   params,
   tone = "default",
   className = "",
+  once = false,
 }: {
   action: (prev: ActionResult | null, formData: FormData) => Promise<ActionResult>;
   hidden: Record<string, string>;
@@ -42,6 +43,12 @@ export function ConfirmActionForm({
   params?: Record<string, string | number>;
   tone?: "default" | "danger";
   className?: string;
+  /**
+   * One-shot: after the server confirms success, the form cannot be submitted
+   * again. For prepared actions (G's proposals), where pressing the button a
+   * second time would create a second record rather than redo the same one.
+   */
+  once?: boolean;
 }) {
   const { t } = useTranslation();
   const formRef = useRef<HTMLFormElement>(null);
@@ -49,10 +56,15 @@ export function ConfirmActionForm({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Set synchronously, so a second click on Confirm in the same frame (before
+  // `pending` re-renders) cannot start a second request.
+  const inFlight = useRef(false);
+  const locked = once && done;
 
   const confirm = () => {
     const form = formRef.current;
-    if (!form) return;
+    if (!form || inFlight.current || locked) return;
+    inFlight.current = true;
     const data = new FormData(form);
     setError(null);
     startTransition(async () => {
@@ -62,6 +74,7 @@ export function ConfirmActionForm({
       } catch {
         result = { ok: false, errorKey: "ui.errors.network" };
       }
+      inFlight.current = false;
       if (result.ok) {
         setOpen(false);
         setDone(true);
@@ -78,6 +91,7 @@ export function ConfirmActionForm({
         className={className}
         onSubmit={(e) => {
           e.preventDefault();
+          if (locked) return;
           setDone(false);
           setError(null);
           setOpen(true);
@@ -87,7 +101,7 @@ export function ConfirmActionForm({
           <input key={name} type="hidden" name={name} value={value} />
         ))}
         {children}
-        <button type="submit" className={triggerClassName}>
+        <button type="submit" className={triggerClassName} disabled={locked} aria-disabled={locked || undefined}>
           {t(trigger.labelKey, trigger.params)}
         </button>
         {error && !open ? (

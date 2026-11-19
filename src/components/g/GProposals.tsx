@@ -112,7 +112,8 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
           action={demo ? async () => ({ ok: false, errorKey: "g.proposal.demo" }) : saveContentItem}
           hidden={{ status: "drafting" }}
           trigger={{ labelKey: "g.proposal.saveDraft" }}
-          triggerClassName={btn}
+          triggerClassName={`${btn} disabled:cursor-default disabled:opacity-60`}
+          once
           titleKey="g.proposal.saveTitle"
           bodyKey="g.proposal.saveBody"
           confirmKey="g.proposal.saveConfirm"
@@ -141,7 +142,8 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
           action={demo ? async () => ({ ok: false, errorKey: "g.proposal.demo" }) : createBriefDraft}
           hidden={{}}
           trigger={{ labelKey: "g.proposal.saveBriefDraft" }}
-          triggerClassName={btn}
+          triggerClassName={`${btn} disabled:cursor-default disabled:opacity-60`}
+          once
           titleKey="g.proposal.briefTitle"
           bodyKey="g.proposal.briefBody"
           confirmKey="g.proposal.briefConfirm"
@@ -179,7 +181,8 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
         action={demo ? async () => ({ ok: false, errorKey: "g.proposal.demo" }) : inviteCreator}
         hidden={{ brief_id: p.brief_id, creator_id: p.creator_id }}
         trigger={{ labelKey: "g.proposal.sendInvitation" }}
-        triggerClassName={btn}
+        triggerClassName={`${btn} disabled:cursor-default disabled:opacity-60`}
+          once
         titleKey="g.proposal.inviteTitle"
         bodyKey="g.proposal.inviteBody"
         confirmKey="g.proposal.inviteConfirm"
