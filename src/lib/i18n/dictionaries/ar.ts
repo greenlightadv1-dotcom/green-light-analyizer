@@ -840,6 +840,8 @@ const ar: Dictionary = {
     },
   },
   discover: {
+    moreFilters: "مرشحات إضافية ({count} مفعّل)",
+    fewerFilters: "مرشحات أقل",
     title: "اكتشف صناع المحتوى",
     description: "ابحث بين صناع المحتوى على Green Light. كل رقم يوضح إن كان موثّقًا أو متزامنًا أو مُدخلًا ذاتيًا.",
     search: "بحث",

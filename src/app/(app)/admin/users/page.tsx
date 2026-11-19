@@ -12,9 +12,9 @@ import { ConfirmActionForm } from "@/components/ui/ConfirmActionForm";
 export const metadata: Metadata = { title: "Accounts" };
 
 const selectClass =
-  "h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-9 rounded-control border border-line-strong bg-surface px-2.5 text-xs text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 const inputClass =
-  "h-9 w-full rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-9 w-full rounded-control border border-line-strong bg-surface px-2.5 text-xs text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 const saveButtonClass =
   "h-9 shrink-0 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs font-medium text-accent transition hover:bg-brand-green/20";
 const banButtonClass =
@@ -132,7 +132,7 @@ export default async function AdminUsersPage({
                       Manage
                     </summary>
 
-                    <div className="mt-3 space-y-4 rounded-xl border border-fg/10 bg-fg/5 p-4">
+                    <div className="mt-3 space-y-4 rounded-2xl border border-line bg-surface-soft p-4">
                       <form
                         action={updateProfile}
                         className="flex flex-wrap items-end gap-3"

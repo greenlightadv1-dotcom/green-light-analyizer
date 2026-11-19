@@ -81,7 +81,7 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
               required
               defaultValue={v?.primary_platform ?? ""}
               aria-invalid={!!errors.primary_platform}
-              className="h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3 text-sm text-fg focus:border-brand-green/50 focus:outline-none"
+              className="h-11 w-full rounded-control border border-line-strong bg-surface px-3 text-sm text-fg focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
             >
               <option value="" disabled className="bg-surface text-fg">
                 {t("getStarted.choosePlatform")}
@@ -108,7 +108,7 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
           defaultValue={v?.message}
           rows={3}
           maxLength={1000}
-          className="w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg focus:border-brand-green/50 focus:outline-none"
+          className="w-full rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
         />
         <p className="text-xs text-fg-muted">{err("message") ?? t("getStarted.optional")}</p>
       </div>

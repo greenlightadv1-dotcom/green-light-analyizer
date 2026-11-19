@@ -14,7 +14,7 @@ import {
 } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 text-sm text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 
 const TYPES = [
   { value: "video_dedicated", label: "Dedicated video" },
@@ -174,7 +174,7 @@ export function OfferPanel({
             maxLength={20000}
             required
             placeholder="Describe the deliverable, timeline and anything else the creator needs…"
-            className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+            className="w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
           />
         </div>
 

@@ -848,6 +848,8 @@ const es: Dictionary = {
     },
   },
   discover: {
+    moreFilters: "Más filtros ({count} activos)",
+    fewerFilters: "Menos filtros",
     title: "Descubrir creadores",
     description: "Busca entre los creadores de Green Light. Cada número indica si está verificado, sincronizado o autodeclarado.",
     search: "Buscar",

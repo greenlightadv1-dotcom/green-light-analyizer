@@ -46,7 +46,7 @@ function AnalyzeButton({ hasProfile, demo }: { hasProfile: boolean; demo: boolea
       // form with no action navigates the page away.
       type={demo ? "button" : "submit"}
       disabled={pending}
-      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending
         ? t("inbox.analyzingCompany")

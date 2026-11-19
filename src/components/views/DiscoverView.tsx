@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Pagination } from "@/components/ui/Pagination";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
@@ -18,7 +19,7 @@ import { useTaxonomy } from "@/components/TaxonomyProvider";
 import type { CountryShare, CreatorDirectoryEntry, Platform } from "@/lib/types/database";
 
 const INPUT =
-  "h-10 w-full rounded-lg border border-fg/10 bg-fg/5 px-3 text-sm text-fg placeholder:text-fg/35 focus:border-brand-green/50 focus:outline-none";
+  "h-10 w-full rounded-control border border-line-strong bg-surface px-3 text-sm text-fg placeholder:text-fg-subtle focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green";
 
 function compact(n: number, locale: string) {
   return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n);
@@ -54,6 +55,7 @@ export function DiscoverView({
   shortlists?: { id: string; name: string; hasCreator: boolean }[] | null;
 }) {
   const { t, locale } = useTranslation();
+  const [showFilters, setShowFilters] = useState(false);
   const { snap, label } = useTaxonomy();
 
   const card = (c: DiscoverEntry, highlight = false) => {
@@ -158,6 +160,8 @@ export function DiscoverView({
     );
   };
 
+  const activeFilters = [query.category, query.game, query.platform, query.country, query.minViews, query.verifiedOnly ? "1" : null].filter(Boolean).length;
+
   return (
     <>
       <SectionHeader title={t("discover.title")} description={t("discover.description")} />
@@ -168,6 +172,29 @@ export function DiscoverView({
             <span>{t("discover.search")}</span>
             <input name="q" defaultValue={query.q} className={INPUT} placeholder={t("discover.searchPlaceholder")} />
           </label>
+          <label className="space-y-1 text-xs text-fg-muted">
+            <span>{t("discover.sort")}</span>
+            <select name="sort" defaultValue={query.sort} className={INPUT}>
+              {DISCOVERY_SORTS.map((s) => (
+                <option key={s} value={s}>
+                  {t(`discover.sortBy.${s}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {/* Phones: search and sort stay visible; the other filters fold
+              behind one button so results are on the first screen. From sm
+              up every filter shows, as before. */}
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            aria-controls="discover-more-filters"
+            className="inline-flex h-10 items-center justify-center rounded-full border border-line-strong bg-surface px-4 text-sm font-medium text-fg-secondary hover:bg-surface-hover focus-visible:focus-ring sm:hidden"
+          >
+            {showFilters ? t("discover.fewerFilters") : t("discover.moreFilters", { count: activeFilters })}
+          </button>
+          <div id="discover-more-filters" className={`${showFilters ? "grid" : "hidden"} gap-3 sm:contents`}>
           <label className="space-y-1 text-xs text-fg-muted">
             <span>{t("discover.category")}</span>
             <select name="category" defaultValue={query.category ?? ""} className={INPUT}>
@@ -221,27 +248,18 @@ export function DiscoverView({
             <span>{t("discover.minViews")}</span>
             <input name="minViews" type="number" min={0} defaultValue={query.minViews ?? ""} className={INPUT} dir="ltr" />
           </label>
-          <label className="space-y-1 text-xs text-fg-muted">
-            <span>{t("discover.sort")}</span>
-            <select name="sort" defaultValue={query.sort} className={INPUT}>
-              {DISCOVERY_SORTS.map((s) => (
-                <option key={s} value={s}>
-                  {t(`discover.sortBy.${s}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-xs text-fg/65 sm:col-span-2 lg:col-span-2">
+          <label className="flex items-center gap-2 text-xs text-fg-muted sm:col-span-2 lg:col-span-2">
             <input type="checkbox" name="verified" value="1" defaultChecked={query.verifiedOnly} className="h-4 w-4 accent-brand-green" />
             {t("discover.verifiedOnly")}
           </label>
+          </div>
           <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-2 lg:justify-end">
             <Link href="/discover" className="text-xs text-fg-muted underline underline-offset-4 hover:text-fg">
               {t("discover.reset")}
             </Link>
             <button
               type="submit"
-              className="inline-flex h-10 items-center rounded-xl bg-brand-green px-5 text-sm font-semibold text-ink transition hover:brightness-110"
+              className="inline-flex h-10 items-center rounded-full bg-brand-green px-5 text-sm font-semibold text-ink transition-colors hover:bg-[#57d61d] focus-visible:focus-ring"
             >
               {t("discover.apply")}
             </button>

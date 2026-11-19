@@ -848,6 +848,8 @@ const de: Dictionary = {
     },
   },
   discover: {
+    moreFilters: "Weitere Filter ({count} aktiv)",
+    fewerFilters: "Weniger Filter",
     title: "Creator entdecken",
     description: "Durchsuche die Creator auf Green Light. Jede Zahl zeigt, ob sie verifiziert, synchronisiert oder selbst angegeben ist.",
     search: "Suchen",

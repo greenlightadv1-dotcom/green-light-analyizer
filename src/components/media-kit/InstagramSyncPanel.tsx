@@ -19,7 +19,7 @@ function SyncButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? t("common.syncing") : t("mediaKit.syncFromInstagram")}
     </button>
@@ -43,7 +43,7 @@ export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
+      <div className="rounded-2xl border border-line bg-surface-soft p-3.5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-medium text-fg-muted">
             {t("mediaKit.accountStats")}

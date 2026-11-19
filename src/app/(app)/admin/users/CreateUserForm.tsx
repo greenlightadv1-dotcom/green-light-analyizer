@@ -10,7 +10,7 @@ import { useTranslation } from "@/components/LocaleProvider";
 import { createUser, type CreateUserState } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 text-sm text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

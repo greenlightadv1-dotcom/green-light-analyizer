@@ -58,7 +58,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls={listId}
-          className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
+          className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring"
         >
           {open ? t("inbox.heldHide") : t("inbox.heldShow")}
         </button>

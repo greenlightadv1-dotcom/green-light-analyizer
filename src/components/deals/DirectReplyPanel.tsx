@@ -96,7 +96,7 @@ export function DirectReplyPanel({
           rows={8}
           maxLength={4000}
           required
-          className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3 py-2.5 text-xs leading-relaxed text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+          className="w-full resize-y rounded-control border border-line-strong bg-surface px-3 py-2.5 text-xs leading-relaxed text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
         />
 
         <div className="flex flex-wrap items-center gap-2">

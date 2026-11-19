@@ -63,7 +63,7 @@ export function VerificationPanel({
 
   if (availability === "in-development") {
     return (
-      <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
+      <div className="rounded-2xl border border-line bg-surface-soft p-3.5">
         <IntegrationStatusBadge status="in_development" />
         <p className="mt-2 text-xs leading-relaxed text-fg-muted">
           {t("mediaKit.inDevelopmentNote", { source: support.source })}
@@ -73,7 +73,7 @@ export function VerificationPanel({
   }
 
   return (
-    <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
+    <div className="rounded-2xl border border-line bg-surface-soft p-3.5">
       <p className="text-xs leading-relaxed text-fg-muted">{support.note}</p>
       <Link
         href="/settings"

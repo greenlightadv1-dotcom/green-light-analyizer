@@ -95,7 +95,7 @@ function ConnectionRow({
   );
 
   return (
-    <li className="rounded-xl border border-fg/10 bg-fg/5 p-4">
+    <li className="rounded-2xl border border-line bg-surface-soft p-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${ICON_CLASSNAMES[platform]}`}

@@ -34,7 +34,7 @@ function GenerateDraftButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? t("inbox.generatingDraft") : t("inbox.generateDraft")}
     </button>
@@ -158,7 +158,7 @@ export function Composer({
                   autoComplete="off"
                   placeholder="$"
                   aria-describedby={`${chatId}-minimum-note`}
-                  className="h-7 w-24 rounded-lg border border-fg/10 bg-fg/5 px-2 text-xs text-fg focus:border-brand-green/50 focus:outline-none"
+                  className="h-7 w-24 rounded-control border border-line-strong bg-surface px-2 text-xs text-fg focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
                 />
               </label>
             ) : null}
@@ -270,7 +270,7 @@ export function Composer({
             maxLength={4000}
             required
             placeholder={t("inbox.writeReply")}
-            className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+            className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
           />
           <SendButton />
         </div>

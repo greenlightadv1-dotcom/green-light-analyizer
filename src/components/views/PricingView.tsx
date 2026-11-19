@@ -106,7 +106,7 @@ export function PricingView({ profile }: { profile: Profile }) {
           {INTEGRATION_PLATFORMS.map((platform) => {
             const status = INTEGRATION_STATUS[platform];
             return (
-              <li key={platform} className="rounded-xl border border-fg/10 bg-fg/5 p-4">
+              <li key={platform} className="rounded-2xl border border-line bg-surface-soft p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-medium text-fg">{INTEGRATION_LABELS[platform]}</span>
                   <IntegrationStatusBadge status={status} />

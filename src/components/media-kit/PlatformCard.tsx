@@ -170,7 +170,7 @@ export function PlatformCard({
                   kit?.declared_top_countries as CountryShare[] | null,
                 )}
                 placeholder={"EG 40\nSA 25\nAE 15"}
-                className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+                className="w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
               />
               <p className="text-xs text-fg-muted">
                 {t("mediaKit.countriesHint")}

@@ -860,6 +860,8 @@ const en = {
     },
   },
   discover: {
+    moreFilters: "More filters ({count} on)",
+    fewerFilters: "Fewer filters",
     title: "Discover creators",
     description: "Search the creators on Green Light. Every number shows whether it is verified, synced or self-reported.",
     search: "Search",
