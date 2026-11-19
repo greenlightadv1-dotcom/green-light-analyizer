@@ -1849,6 +1849,7 @@ const es: Dictionary = {
       business_activity: "Actividad de la empresa",
       contact_title: "Cargo del representante",
       company_website: "Sitio web de la empresa",
+      id_number: "Número del documento de identidad",
     },
     fieldErrors: {
       legal_name: "Escribe tu nombre legal completo.",
@@ -1872,6 +1873,7 @@ const es: Dictionary = {
       business_activity: "Describe a qué se dedica la empresa.",
       contact_title: "Introduce el cargo del representante.",
       company_website: "Introduce una dirección completa que empiece por https://.",
+      id_number: "Introduce el número que aparece en tu documento de identidad (letras y números).",
     },
     docType: {
       id_front: "Documento de identidad (anverso)",
@@ -1929,6 +1931,8 @@ const es: Dictionary = {
       consent: "Marca la casilla de confirmación para enviar.",
       email_unverified: "Verifica primero tu correo: abre el enlace que te enviamos.",
       enhanced_review_note_required: "Nuestro equipo debe completar una revisión adicional antes de aprobar.",
+      second_reviewer_required: "This case needs approval by a second reviewer who did not raise its fraud flag.",
+      approval_requires_transition: "This approval must go through the review workflow.",
     },
     wizard: {
       progress: "Progreso de la solicitud",
@@ -2018,6 +2022,7 @@ const es: Dictionary = {
       business_activity: "En una o dos frases: qué hace y vende la empresa.",
       company_name: "Tal como está registrada. Nuestro equipo solo te vincula a una cuenta de empresa aprobada.",
       company_website: "Opcional: ayuda a nuestro equipo a encontrar la empresa correcta.",
+      id_number: "El número del documento que fotografías. Solo guardamos una huella protegida para detectar solicitudes duplicadas, y te mostramos sus 2 últimos caracteres.",
     },
     option: {
       platform: {

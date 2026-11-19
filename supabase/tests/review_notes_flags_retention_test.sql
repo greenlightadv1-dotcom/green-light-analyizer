@@ -5,11 +5,13 @@ BEGIN;
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, created_at, updated_at) VALUES
   ('a3000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','n-ad@t.local','x',NOW(),NOW()),
   ('a3000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','n-ad2@t.local','x',NOW(),NOW()),
+  ('a3000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','n-ad3@t.local','x',NOW(),NOW()),
   ('a1000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','n-cr@t.local','x',NOW(),NOW()),
   ('a1000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','n-cr2@t.local','x',NOW(),NOW());
 INSERT INTO public.profiles (id, full_name, role, primary_email, account_status) VALUES
   ('a3000000-0000-0000-0000-000000000001','N Reviewer','admin','n-ad@t.local','active'),
   ('a3000000-0000-0000-0000-000000000002','N Admin (not reviewer)','admin','n-ad2@t.local','active'),
+  ('a3000000-0000-0000-0000-000000000003','N Second Reviewer','admin','n-ad3@t.local','active'),
   ('a1000000-0000-0000-0000-000000000001','N Creator','creator','n-cr@t.local','pending_verification'),
   ('a1000000-0000-0000-0000-000000000002','N Creator Two','creator','n-cr2@t.local','active');
 
@@ -31,11 +33,12 @@ DO $$
 DECLARE n int; s text; c1 uuid; c2 uuid; c3 uuid; req uuid; capp uuid; d_old uuid; d_new uuid; d_draft uuid; cold uuid; cdraft uuid;
   ad uuid := 'a3000000-0000-0000-0000-000000000001';
   ad2 uuid := 'a3000000-0000-0000-0000-000000000002';
+  ad3 uuid := 'a3000000-0000-0000-0000-000000000003';  -- 0041: the independent second reviewer
   cr uuid := 'a1000000-0000-0000-0000-000000000001';
   cr2 uuid := 'a1000000-0000-0000-0000-000000000002';
 BEGIN
   SET LOCAL ROLE service_role;
-  INSERT INTO public.verification_reviewers (admin_id) VALUES (ad);
+  INSERT INTO public.verification_reviewers (admin_id) VALUES (ad), (ad3);
   INSERT INTO public.verification_cases (profile_id, kind) VALUES (cr, 'creator_kyc') RETURNING id INTO c1;
   PERFORM pg_temp.camera(c1);
   PERFORM public.verification_transition(cr, c1, 'submit');
@@ -62,8 +65,10 @@ BEGIN
   IF s <> 'n-cr@t.local' THEN RAISE EXCEPTION 'FAIL: flag email %', s; END IF;
   SELECT status INTO s FROM public.verification_cases WHERE id = c1;
   IF s <> 'submitted' THEN RAISE EXCEPTION 'FAIL: a flag changed the case status to %', s; END IF;
-  -- The note written BEFORE the flag does not count.
-  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, c1, 'approve'), 'verification:enhanced_review_note_required%');
+  -- The flagging reviewer may not approve at all (0041), and for a second
+  -- reviewer the note written BEFORE the flag does not count.
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, c1, 'approve'), 'verification:second_reviewer_required%');
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad3, c1, 'approve'), 'verification:enhanced_review_note_required%');
   -- Rejecting a flagged case needs no extra step.
   PERFORM public.verification_transition(ad, c1, 'reject', 'We could not verify your identity document.');
   SELECT account_status INTO s FROM public.profiles WHERE id = cr;
@@ -84,9 +89,10 @@ BEGIN
   PERFORM pg_temp.camera(c2);
   PERFORM public.verification_transition(cr, c2, 'submit');
   -- The earlier flag (same email) still requires a fresh justification by the approver.
-  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, c2, 'approve'), 'verification:enhanced_review_note_required%');
-  PERFORM public.verification_add_note(ad, c2, 'Enhanced review: new ID checked against the issuing format; consistent.');
-  PERFORM public.verification_transition(ad, c2, 'approve');
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, c2, 'approve'), 'verification:second_reviewer_required%');
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad3, c2, 'approve'), 'verification:enhanced_review_note_required%');
+  PERFORM public.verification_add_note(ad3, c2, 'Enhanced review: new ID checked against the issuing format; consistent.');
+  PERFORM public.verification_transition(ad3, c2, 'approve');
   SELECT account_status INTO s FROM public.profiles WHERE id = cr;
   IF s <> 'active' THEN RAISE EXCEPTION 'FAIL: after a reviewer approval the account is %', s; END IF;
   -- A new application from the same email inherits enhanced review too.
@@ -95,7 +101,8 @@ BEGIN
   PERFORM pg_temp.camera(capp);
   INSERT INTO public.verification_documents (case_id, doc_type, storage_path, mime, size_bytes) VALUES (capp, 'profile_photo', capp || '/' || gen_random_uuid() || '.png', 'image/png', 10);
   PERFORM public.verification_transition(null, capp, 'submit');
-  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, capp, 'approve'), 'verification:enhanced_review_note_required%');
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad, capp, 'approve'), 'verification:second_reviewer_required%');
+  PERFORM pg_temp.expect_error(format('select public.verification_transition(%L,%L,%L)', ad3, capp, 'approve'), 'verification:enhanced_review_note_required%');
   RAISE NOTICE 'PASS reapplication: new case, pending until a reviewer approves, enhanced review follows the person';
 
   -- 4. Retention: never before 365 days, whoever asks; retries and failures recorded.

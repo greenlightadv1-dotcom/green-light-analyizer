@@ -120,7 +120,7 @@ function FieldInput({ f, value }: { f: FieldDef; value: string }) {
         maxLength={f.max}
         required={f.required}
         inputMode={f.type === "phone" ? "tel" : undefined}
-        dir={f.type === "phone" || f.type === "url" || f.type === "country" || f.type === "handle" ? "ltr" : "auto"}
+        dir={f.type === "phone" || f.type === "url" || f.type === "country" || f.type === "handle" || f.type === "idnumber" ? "ltr" : "auto"}
         autoComplete={f.type === "phone" ? "tel" : f.key === "legal_name" ? "name" : "off"}
         aria-describedby={describedBy}
         className={`${INPUT} mt-1 h-10`}

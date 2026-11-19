@@ -1841,6 +1841,7 @@ const ar: Dictionary = {
       business_activity: "نشاط الشركة",
       contact_title: "المسمى الوظيفي للممثل",
       company_website: "موقع الشركة",
+      id_number: "رقم وثيقة الهوية",
     },
     fieldErrors: {
       legal_name: "أدخل اسمك القانوني الكامل.",
@@ -1864,6 +1865,7 @@ const ar: Dictionary = {
       business_activity: "صِف ما تقوم به الشركة.",
       contact_title: "أدخل المسمى الوظيفي للممثل.",
       company_website: "أدخل عنوان موقع كاملًا يبدأ بـ https://.",
+      id_number: "أدخل الرقم الظاهر على وثيقة هويتك (حروف وأرقام).",
     },
     docType: {
       id_front: "بطاقة الهوية (الوجه)",
@@ -1921,6 +1923,8 @@ const ar: Dictionary = {
       consent: "حدّد مربع التأكيد للإرسال.",
       email_unverified: "تحقق من بريدك الإلكتروني أولًا: افتح الرابط الذي أرسلناه إليك.",
       enhanced_review_note_required: "يحتاج فريقنا إلى إكمال مراجعة إضافية قبل الموافقة.",
+      second_reviewer_required: "This case needs approval by a second reviewer who did not raise its fraud flag.",
+      approval_requires_transition: "This approval must go through the review workflow.",
     },
     wizard: {
       progress: "تقدّم الطلب",
@@ -2010,6 +2014,7 @@ const ar: Dictionary = {
       business_activity: "في جملة أو جملتين: ماذا تعمل الشركة وماذا تبيع.",
       company_name: "كما هو مسجَّل. يربطك فريقنا فقط بحساب شركة موافَق عليه.",
       company_website: "اختياري: يساعد فريقنا على تحديد الشركة الصحيحة.",
+      id_number: "الرقم المكتوب على الهوية التي تصورها. نحتفظ فقط ببصمة محمية منه لاكتشاف الطلبات المكررة، ونعرض لك آخر حرفين منه.",
     },
     option: {
       platform: {

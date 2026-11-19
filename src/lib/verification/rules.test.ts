@@ -11,9 +11,12 @@ test("only creators and companies open cases, never admins", () => {
 });
 
 test("details are validated; drafts may be partial, submissions may not", () => {
-  const ok = parseDetails("creator_kyc", { legal_name: " Layla ", date_of_birth: "1998-02-03", nationality: "eg", phone: "+20 101 234 5678", main_platform: "youtube", handle: "@layla", categories: "gaming,tech", junk: "x" }, { requireAll: true });
+  const ok = parseDetails("creator_kyc", { legal_name: " Layla ", date_of_birth: "1998-02-03", nationality: "eg", id_number: "••••89", phone: "+20 101 234 5678", main_platform: "youtube", handle: "@layla", categories: "gaming,tech", junk: "x" }, { requireAll: true });
   assert.ok(ok.ok);
-  if (ok.ok) assert.deepEqual(ok.value, { legal_name: "Layla", date_of_birth: "1998-02-03", nationality: "EG", phone: "+201012345678", main_platform: "youtube", handle: "@layla", categories: "gaming,tech" });
+  if (ok.ok) assert.deepEqual(ok.value, { legal_name: "Layla", date_of_birth: "1998-02-03", nationality: "EG", id_number: "••••89", phone: "+201012345678", main_platform: "youtube", handle: "@layla", categories: "gaming,tech" });
+  // 0041: a plaintext ID number can never be stored, whoever calls.
+  assert.deepEqual(parseDetails("creator_kyc", { id_number: "29801011234567" }, { requireAll: false }), { ok: false, field: "id_number" });
+  assert.deepEqual(mergeDetails("representative", {}, { id_number: "A1234567" }), { ok: false, field: "id_number" });
   assert.deepEqual(parseDetails("creator_kyc", { legal_name: "Layla" }, { requireAll: true }), { ok: false, field: "date_of_birth" });
   assert.ok(parseDetails("creator_kyc", { legal_name: "Layla" }, { requireAll: false }).ok);
   assert.deepEqual(parseDetails("creator_kyc", { date_of_birth: "2999-01-01" }, { requireAll: false }), { ok: false, field: "date_of_birth" });
@@ -26,7 +29,7 @@ test("data already on the profile is offered, never overriding what was saved", 
   const p = prefill("creator_kyc", { legal_name: "Saved Name" }, { full_name: "Profile Name", country: "EG" });
   assert.equal(p.values.legal_name, "Saved Name");
   assert.equal(p.values.nationality, "EG");
-  assert.deepEqual(p.missing, ["date_of_birth", "phone", "main_platform", "handle", "categories"]);
+  assert.deepEqual(p.missing, ["date_of_birth", "id_number", "phone", "main_platform", "handle", "categories"]);
   // Free text from the application pre-fills a choice only when it is one of the choices.
   assert.equal(prefill("creator_kyc", {}, { primary_platform: "YouTube", channel_handle: "@layla" }).values.main_platform, "youtube");
   assert.equal(prefill("creator_kyc", {}, { primary_platform: "my blog", channel_handle: "has spaces" }).values.main_platform, undefined);
@@ -86,7 +89,7 @@ test("a step saves only its own fields and keeps the others", () => {
   // Checkbox groups arrive as repeated keys, with an empty hidden marker so "none" is expressible.
   assert.deepEqual(formDetails([["categories", ""], ["categories", "gaming"], ["categories", "tech"], ["case_id", "x"]]), { categories: "gaming,tech", case_id: "x" });
   assert.deepEqual(formDetails([["categories", ""]]), { categories: "" });
-  assert.deepEqual(missingFields("representative", { legal_name: "A" }), ["phone", "company_name", "job_title"]);
+  assert.deepEqual(missingFields("representative", { legal_name: "A" }), ["id_number", "phone", "company_name", "job_title"]);
 });
 
 test("every field and document belongs to exactly one step, and the review comes last", () => {

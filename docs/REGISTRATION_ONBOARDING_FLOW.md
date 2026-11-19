@@ -211,6 +211,90 @@ See `IDENTITY_DOCUMENT_SECURITY.md`, *Retention: 12 months*. In short:
 
 The isolated run also found and fixed a real bug: the purge looked for decided cases by `updated_at` instead of `reviewed_at`, so a case touched after its decision would never have been purged.
 
+## Update 2026-11-19 (later): second reviewer, duplicate fingerprints, malware requirement (migration 0041, isolated stack only)
+
+### Independent second reviewer for fraud-flagged cases
+
+**Which flags apply to a case** (`private.verification_applicable_flags`):
+- flags on the case itself;
+- flags on any case with the same subject email;
+- flags on any case sharing a **strong** identity fingerprint: ID document number, legal name and date of birth, company registration or tax number.
+
+Flags have no "cleared" state, so every applicable flag is active.
+
+**Approving a case with applicable flags is refused by the database unless all of these hold:**
+1. **Through the transition.** The approval comes through `verification_transition()`, which records its actor for the transaction. A direct service-role `UPDATE` that writes another reviewer into `reviewed_by` is refused (`verification:approval_requires_transition`).
+2. **A different reviewer.** The approver raised **none** of the applicable flags (`verification:second_reviewer_required`). With flags from reviewers A and B, only a third reviewer may approve.
+3. **Their own justification.** The approver wrote their own internal note (kind `note`, not a flag's explanation) **after** the latest applicable flag (`verification:enhanced_review_note_required`).
+
+**On success** the trigger writes a `verification_flag_approvals` row: the applicable flag ids, who raised them, the approver, the justification note's id, and the time. That table is reviewers-only (RLS) and trigger-written: no client can write it, not even the service role.
+
+**What a flag does not change:**
+- the justification stays in `verification_notes`: never emailed, never in the applicant-readable history;
+- rejection and information requests need no second reviewer, and nothing bans anyone;
+- cases without applicable flags keep the ordinary single-reviewer approval.
+
+**Server action:** `reviewVerification` asks `verification_enhanced_review_state()` first. It refuses the flagger (`second_reviewer_required`) and a missing justification before writing anything. The page hides the approve form from a reviewer who raised an applicable flag and lists the approvals made under enhanced review.
+
+**Limit:** a flag whose raiser's account was deleted (`raised_by` NULL) blocks no specific reviewer. It still requires a justification.
+
+### Duplicate-identity fingerprints
+
+**Signals** (`lib/verification/match-keys.ts`):
+
+| Signal | Strength | Normalised as |
+|---|---|---|
+| ID document number | strong | ASCII digits (Arabic-Indic converted), upper case, separators removed |
+| Legal name and date of birth (creators) | strong | Accents, Arabic diacritics and letter variants (أ/إ/آ→ا, ى→ي, ة→ه), case and punctuation ignored; word order kept |
+| Commercial registration number (companies) | strong | As identifiers, prefixed by the country |
+| Tax number (companies) | strong | As identifiers, prefixed by the country |
+| WhatsApp number | weak | International digits; Egyptian `01…` becomes `201…` |
+
+**Storage:**
+- each value is stored only as an HMAC-SHA256 fingerprint keyed by a key derived from the service-role key, in `verification_match_keys`;
+- that table is service-role only, with no client grant, not even SELECT;
+- the reviewer page shows only *which* signal matched and *which* case, never a value or fingerprint.
+
+**The ID number (new required field for creators and representatives):**
+- it is collected only for matching, and its plaintext is never stored;
+- the server fingerprints it and stores a masked hint (`••••` plus the last 2 characters);
+- validation accepts only that masked form, so plaintext cannot be stored even by a caller that skips the fingerprinting.
+
+**What the signals do:**
+- **Strong signals** link enhanced review across emails in the database, and are shown to reviewers.
+- **Phone** is a reviewer warning only, labelled weak ("shared numbers are common"), and never triggers enhanced review. A representative sharing a phone with a company case is labelled "expected if this person represents that company".
+- **A match** is shown as a signal for judgement, never proof. Nothing is rejected or banned on a match.
+
+**Limitations:**
+- Exact-match only after normalisation: transliterations (Mohamed / Muhammad), typos, a different ID document (passport versus national ID), or another phone escape matching.
+- Cases saved before 0041 have no ID-number fingerprint. Their other fingerprints are written when the case is saved, submitted or opened by a reviewer.
+- Rotating the service-role key changes every fingerprint. Old ID-number fingerprints can then never match again, because their plaintext was never kept.
+- The reviewer cannot read back the full ID number to compare with the photographed document; only its last 2 characters.
+
+**Legal and privacy (unresolved, for legal review):**
+- whether a keyed fingerprint of a national ID number is still personal data under Egypt's PDPL (it almost certainly is);
+- its retention: fingerprints are deleted with their case, and follow no separate period;
+- whether the Privacy Policy must say identities are compared across applications. Not changed.
+
+### Malware scanning
+
+**Not implemented.** The pre-launch requirement covers:
+- upload paths and buckets;
+- fail-closed scanning before any public or reviewer use;
+- quarantine, re-scanning and audit;
+- the EICAR acceptance test.
+
+It is in `docs/RELEASE/MALWARE_SCANNING_REQUIREMENT.md` and Gate 0 of `PRODUCTION_RELEASE_CHECKLIST.md`.
+
+### Evidence
+
+| Check | Result |
+|---|---|
+| `scripts/local-migrations-test.sh` | **100 / 100**, including `supabase/tests/second_reviewer_test.sql` and `0041_verify.sql`. The 0040 test was tightened to the new rule: the flagger is now refused, and a second reviewer approves |
+| Unit tests | **804 + 19 + 33**, including `match-keys.test.ts` (normalisation, Arabic and Latin names, Egyptian phones, country-scoped company numbers, keyed fingerprints, ID-number masking, source guards). It replaces `duplicates.test.ts`, whose plaintext matching it supersedes |
+| `scripts/isolated-validation/second-reviewer-check.mjs` | **6 / 6** on the real reviewer page and server action. The flagger loses the approve form. Enhanced review is inherited across emails through the ID fingerprint. The server refuses B's approval without a justification even with the browser check removed. B approves with one, and it is audited. The justification is in no applicant-readable column, event or email |
+| `registration-smoke.mjs` | **9 / 9**. It now also checks that the ID number is stored only as a fingerprint and a masked hint |
+
 ## Owner decisions
 
 1. **Terms §2 and accounts before approval.** The Terms say every account is created by the team after review, so applicants have no password before approval and track their status by emailed link. If applicants must sign in with a password *before* approval, Terms §2 must change first (separate approval).

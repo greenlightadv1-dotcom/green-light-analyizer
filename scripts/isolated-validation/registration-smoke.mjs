@@ -81,6 +81,7 @@ try {
   await p.fill('input[name="legal_name"]', "Smoke Creator");
   await p.fill('input[name="date_of_birth"]', "1998-02-03");
   await p.fill('input[name="nationality"]', "EG");
+  await p.fill('input[name="id_number"]', "2980-2031234567");
   await p.fill('input[name="phone"]', "+20 101 234 5678");
   await p.getByRole("button", { name: "Save and continue" }).click();
   await p.getByRole("heading", { name: "Public profile" }).waitFor();
@@ -91,8 +92,12 @@ try {
   await p.getByRole("button", { name: "Save and continue" }).click();
   await p.getByRole("heading", { name: "Identity photos" }).waitFor();
   const details = JSON.parse(sql(`select details from verification_cases where id='${caseId}'`));
-  assert.deepEqual(details, { legal_name: "Smoke Creator", date_of_birth: "1998-02-03", nationality: "EG", phone: "+201012345678", main_platform: "youtube", handle: "@smoke", categories: "gaming,tech" });
-  ok("two steps saved: the second kept the first's fields; the phone is stored normalised");
+  assert.deepEqual(details, { legal_name: "Smoke Creator", date_of_birth: "1998-02-03", nationality: "EG", id_number: "••••67", phone: "+201012345678", main_platform: "youtube", handle: "@smoke", categories: "gaming,tech" });
+  // 0041: the ID number exists only as a keyed fingerprint; no plaintext anywhere in the case.
+  assert.ok(!JSON.stringify(details).includes("2980203") && !JSON.stringify(details).includes("2980-203"));
+  assert.equal(sql(`select string_agg(signal, ',' order by signal) from verification_match_keys where case_id='${caseId}'`), "id_number,name_dob,phone");
+  assert.equal(sql(`select count(*) from verification_match_keys where case_id='${caseId}' and fingerprint !~ '^[0-9a-f]{64}$'`), "0");
+  ok("two steps saved: the second kept the first's fields; the phone is stored normalised; the ID number only as a fingerprint (masked hint ••••67)");
 
   // --- 5. Public photo: an image is accepted, a PDF is not -------------------------------
   const up = (bytes, type) => p.evaluate(async ({ caseId, bytes, type }) => {

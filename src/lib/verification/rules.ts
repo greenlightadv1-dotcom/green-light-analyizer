@@ -12,7 +12,14 @@ export type FieldDef = {
   key: string;
   required: boolean;
   max: number;
-  type: "text" | "phone" | "url" | "date" | "country" | "select" | "multiselect" | "handle" | "urls" | "textarea";
+  type: "text" | "phone" | "url" | "date" | "country" | "select" | "multiselect" | "handle" | "urls" | "textarea" | "idnumber";
+  /**
+   * 0041: the value is collected only to be fingerprinted
+   * (lib/verification/match-keys.ts). The server replaces it with a masked
+   * hint before saving, and validation accepts ONLY the masked form, so the
+   * plaintext can never be stored even if a caller forgets.
+   */
+  fingerprintOnly?: true;
   /** For select / multiselect: the allowed values (labels come from the dictionary). */
   options?: readonly string[];
   /** For multiselect: at most this many values. */
@@ -30,6 +37,7 @@ export const FIELDS: Record<VerificationKind, FieldDef[]> = {
     { key: "legal_name", required: true, max: 120, type: "text", fromProfile: "full_name" },
     { key: "date_of_birth", required: true, max: 10, type: "date" },
     { key: "nationality", required: true, max: 2, type: "country", fromProfile: "country" },
+    { key: "id_number", required: true, max: 40, type: "idnumber", fingerprintOnly: true },
     // A WhatsApp contact number. Collected, never verified by OTP or SMS.
     { key: "phone", required: true, max: 20, type: "phone" },
     { key: "main_platform", required: true, max: 20, type: "select", options: MAIN_PLATFORMS, fromProfile: "primary_platform" },
@@ -52,6 +60,7 @@ export const FIELDS: Record<VerificationKind, FieldDef[]> = {
   ],
   representative: [
     { key: "legal_name", required: true, max: 120, type: "text", fromProfile: "full_name" },
+    { key: "id_number", required: true, max: 40, type: "idnumber", fingerprintOnly: true },
     { key: "phone", required: true, max: 20, type: "phone" },
     { key: "company_name", required: true, max: 160, type: "text", fromProfile: "company_name" },
     { key: "company_website", required: false, max: 200, type: "url", fromProfile: "company_website" },
@@ -111,7 +120,7 @@ export type StepDef = { id: StepId; fields: string[]; docs: VerificationDocType[
  */
 export const STEPS: Record<VerificationKind, StepDef[]> = {
   creator_kyc: [
-    { id: "personal", fields: ["legal_name", "date_of_birth", "nationality", "phone"], docs: [] },
+    { id: "personal", fields: ["legal_name", "date_of_birth", "nationality", "id_number", "phone"], docs: [] },
     { id: "public", fields: ["main_platform", "handle", "profile_links", "categories"], docs: ["profile_photo"] },
     { id: "identity", fields: [], docs: ["selfie", "id_front", "id_back"] },
     { id: "review", fields: [], docs: [] },
@@ -124,7 +133,7 @@ export const STEPS: Record<VerificationKind, StepDef[]> = {
     { id: "review", fields: [], docs: [] },
   ],
   representative: [
-    { id: "personal", fields: ["legal_name", "phone"], docs: [] },
+    { id: "personal", fields: ["legal_name", "id_number", "phone"], docs: [] },
     { id: "represented", fields: ["company_name", "company_website", "job_title"], docs: [] },
     { id: "identity", fields: [], docs: ["selfie", "id_front", "id_back"] },
     { id: "authorization", fields: [], docs: ["authorization_letter", "other"] },
@@ -141,6 +150,7 @@ export const EDITABLE: VerificationStatus[] = ["draft", "needs_info"];
 
 const PHONE = /^\+?[0-9][0-9 -]{6,18}$/;
 const HANDLE = /^@?[A-Za-z0-9._-]{1,60}$/;
+const MASKED_ID = /^••••[A-Z0-9]{0,2}$/;
 const MAX_LINKS = 5;
 
 function httpUrl(v: string): boolean {
@@ -189,6 +199,8 @@ export function parseDetails(
     if (f.type === "date" && !validDate(v)) return { ok: false, field: f.key };
     if (f.type === "url" && !httpUrl(v)) return { ok: false, field: f.key };
     if (f.type === "handle" && !HANDLE.test(v)) return { ok: false, field: f.key };
+    // Only the masked hint is ever stored (see FieldDef.fingerprintOnly).
+    if (f.type === "idnumber" && !MASKED_ID.test(v)) return { ok: false, field: f.key };
     if (f.type === "select" && !f.options?.includes(v)) return { ok: false, field: f.key };
     if (f.type === "urls") {
       const lines = v.split(/[\n,]+/).map((x) => x.trim()).filter(Boolean);
@@ -282,7 +294,7 @@ export function missingFields(kind: VerificationKind, details: Record<string, st
   return FIELDS[kind].filter((f) => f.required && !details?.[f.key]?.trim()).map((f) => f.key);
 }
 
-const KNOWN = new Set(["not_found", "invalid_state", "documents_missing", "email_unverified", "enhanced_review_note_required", "note_required", "not_allowed", "company_required", "invalid_input"]);
+const KNOWN = new Set(["not_found", "invalid_state", "documents_missing", "email_unverified", "enhanced_review_note_required", "second_reviewer_required", "approval_requires_transition", "note_required", "not_allowed", "company_required", "invalid_input"]);
 export function verificationErrorKey(message: string | null | undefined): string {
   const m = /verification:([a-z_]+)/.exec(message ?? "");
   return m && KNOWN.has(m[1]) ? `verification.errors.${m[1]}` : "ui.errors.generic";

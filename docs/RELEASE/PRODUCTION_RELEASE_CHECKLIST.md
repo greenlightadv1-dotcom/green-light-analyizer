@@ -11,6 +11,9 @@ branch protection.
 - [ ] **`CRON_SECRET`** set in Vercel Production (item 3).
 - [ ] **Audit-trail decision** recorded (item 4), whether approved or deferred.
 - [ ] **Migration 0024** confirmed present (done read-only on 2 November 2026: its objects exist).
+- [ ] **Malware scanning** of every upload path, fail-closed, with quarantine and re-scanning (`MALWARE_SCANNING_REQUIREMENT.md`). **Not implemented**: unscanned files must never be public or viewable by reviewers. Choosing a scanner, and any paid or external service, is an owner decision.
+- [ ] **Migrations 0039–0041** applied and their `supabase/verify/*.sql` checks all `ok` (registration trust, notes and flags, retention guard, second reviewer and match keys).
+- [ ] **At least two verification reviewers** granted (`verification_reviewers`). A fraud-flagged case can only be approved by a reviewer who did not flag it (0041), so with one reviewer such a case can only be rejected.
 
 ## Gate 1: code
 

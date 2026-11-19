@@ -181,3 +181,20 @@ See `ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
 - **With the code:** deploy them together. `vercel.json` schedules `/api/cron/verification-retention` daily. It deletes nothing without `CRON_SECRET`, and nothing younger than 365 days in any case.
 - **Rollback:** in the migration header.
 - **Evidence:** local suite 96 / 96; isolated `review-retention-check.mjs` 3 / 3.
+
+## Update 2026-11-19: 0041 `second_reviewer_and_match_keys` (not applied anywhere but the isolated stack)
+
+- **What it does:**
+  - `verification_match_keys` (fingerprints; service role only);
+  - `verification_flag_approvals` (audit; reviewers only, trigger-written);
+  - `private.verification_applicable_flags`;
+  - `verification_enhanced_review_state()`;
+  - a new `private.verification_submit_guard()` (second reviewer, transition-only approval of flagged cases);
+  - `verification_transition()` redefined with 0032's body plus an actor marker.
+- **Order:** after 0040.
+- **Cost:** two empty tables, two functions, one trigger function and one function body replaced.
+- **Apply:** `psql --single-transaction -v ON_ERROR_STOP=1 -f supabase/migrations/0041_second_reviewer_and_match_keys.sql`, then `supabase/verify/0041_verify.sql`. Every row must say `ok`.
+- **With the code:** deploy them together. The code requires the new ID-number field on the creator and representative personal steps.
+- **Operational:** at least two verification reviewers are needed to approve any fraud-flagged case.
+- **Rollback:** in the migration header.
+- **Evidence:** local suite 100 / 100; isolated `second-reviewer-check.mjs` 6 / 6.

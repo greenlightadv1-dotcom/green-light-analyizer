@@ -1484,3 +1484,15 @@ Not deployed. **Migration 0039 is applied to the isolated stack only.** Full des
   - each purge is audited without contents, and failures are recorded and retried;
   - `VERIFICATION_RETENTION_DAYS` is gone.
 - **Details:** `docs/REGISTRATION_ONBOARDING_FLOW.md` (update section) and PENDING_OWNER_DECISIONS §15.
+
+**Second follow-up (migration 0041, isolated stack only; owner decisions):**
+- **Second reviewer:** approving a case with an applicable fraud flag needs a reviewer who raised none of those flags, through `verification_transition()` only, with their own internal justification written after the flag.
+  - "Applicable" means the same case, the same email, or a strong identity fingerprint.
+  - The rule is enforced by the guard trigger and checked early in the server action.
+  - Each such approval is audited in `verification_flag_approvals` (reviewers only).
+- **Duplicate fingerprints:** `verification_match_keys` (service role only) holds keyed HMAC fingerprints.
+  - Strong: ID number, name and date of birth, registration or tax number with the country. Weak: phone, which only warns.
+  - The ID number is a required field stored only as a fingerprint plus a `••••xx` hint.
+  - Matches are warnings for reviewers, never decisions.
+- **Malware scanning is NOT implemented.** It is a launch blocker: `docs/RELEASE/MALWARE_SCANNING_REQUIREMENT.md`.
+- **Details:** `docs/REGISTRATION_ONBOARDING_FLOW.md` and PENDING_OWNER_DECISIONS §16.

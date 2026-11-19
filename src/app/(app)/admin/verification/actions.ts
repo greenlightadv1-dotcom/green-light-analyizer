@@ -53,11 +53,31 @@ export async function reviewVerification(_prev: ActionResult | null, fd: FormDat
   const company = String(fd.get("company_id") ?? "");
   // Written first, so it can be the justification an enhanced-review approval needs.
   const internal = String(fd.get("internal_note") ?? "").trim().slice(0, 2000);
+  const service = createAdminClient();
+  if (action === "approve") {
+    // 0041: a case with applicable fraud flags needs an independent second
+    // reviewer with their own justification. Refused here before anything is
+    // written; the database enforces the same rule on every path regardless.
+    const { data: state } = await service.rpc("verification_enhanced_review_state", { p_case: caseId });
+    const flags = state?.[0];
+    if (flags && flags.flag_count > 0) {
+      if (flags.raised_by.includes(admin.id)) return fail("verification.errors.second_reviewer_required");
+      if (!internal) {
+        const { count } = await service
+          .from("verification_notes")
+          .select("id", { count: "exact", head: true })
+          .eq("case_id", caseId)
+          .eq("author_id", admin.id)
+          .eq("kind", "note")
+          .gt("created_at", flags.latest_flag_at ?? "1970-01-01");
+        if (!count) return fail("verification.errors.enhanced_review_note_required");
+      }
+    }
+  }
   if (internal) {
     const noteError = await addInternal(admin.id, caseId, internal);
     if (noteError) return fail(noteError);
   }
-  const service = createAdminClient();
   const { error } = await service.rpc("verification_transition", {
     p_actor: admin.id,
     p_case: caseId,

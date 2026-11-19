@@ -8,6 +8,7 @@ import { log } from "@/lib/log";
 import { clientKey } from "@/lib/client-key";
 import { EDITABLE, formDetails, mergeDetails, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
 import { clearApplicationCookie, currentApplication, sendResumeLink } from "@/lib/verification/application";
+import { prepareIdNumber, writeMatchKeys } from "@/lib/verification/match-keys-server";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 /**
@@ -35,7 +36,10 @@ export async function saveApplicationDetails(_prev: ActionResult | null, fd: For
   if (!EDITABLE.includes(c.status)) return fail("verification.errors.invalid_state");
   if (!(await consumeRateLimit("application_write", app.request.id)).allowed) return fail("verification.errors.rate_limited");
   // One step at a time: only the fields this step's form carries are validated and replaced.
-  const parsed = mergeDetails(c.kind, c.details ?? {}, formDetails(fd.entries()));
+  // The ID number is fingerprinted and masked here; its plaintext is never stored (0041).
+  const prepared = prepareIdNumber(c.kind, formDetails(fd.entries()));
+  if (!prepared.ok) return fail(`verification.fieldErrors.${prepared.field}`);
+  const parsed = mergeDetails(c.kind, c.details ?? {}, prepared.raw);
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
   const { error } = await createAdminClient()
     .from("verification_cases")
@@ -47,6 +51,7 @@ export async function saveApplicationDetails(_prev: ActionResult | null, fd: For
     log.error("application.save_failed", { error });
     return fail("ui.errors.generic");
   }
+  await writeMatchKeys(c.id, c.kind, parsed.value, prepared.idFingerprint);
   revalidatePath("/apply");
   return OK;
 }
@@ -62,6 +67,7 @@ export async function submitApplication(_prev: ActionResult | null, fd: FormData
   if (!(await consumeRateLimit("application_write", app.request.id)).allowed) return fail("verification.errors.rate_limited");
   const parsed = parseDetails(c.kind, c.details ?? {}, { requireAll: true });
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
+  await writeMatchKeys(c.id, c.kind, parsed.value);
   const { error } = await createAdminClient().rpc("verification_transition", { p_actor: null, p_case: c.id, p_action: "submit" });
   if (error) {
     const key = verificationErrorKey(error.message);

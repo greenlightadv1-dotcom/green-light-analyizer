@@ -46,3 +46,6 @@ Registration and verification (`registration-smoke.mjs`, migration 0039 applied 
 Reviewer notes, reapplication, photo metadata and retention (migration 0040 applied to the isolated stack):
 - `review-retention-check.mjs` needs `CRON_SECRET` in the app's environment (a throwaway test value in the scratch env file, never a real secret) and `FIXTURE`, a JPEG carrying GPS. Run it with `APP_URL=http://localhost:3200`. Checks: real-storage purge and its 365-day guard; notes and flags through the real PostgREST; GPS removed through the real avatar route. 3/3.
 - `exif-strip-check.py` reads real JPEG, PNG and WebP files back with Pillow; run it with a Python that has Pillow (the system one here is broken, so use a venv). 4/4.
+
+Second reviewer (migration 0041 applied to the isolated stack):
+- `second-reviewer-check.mjs` creates a throwaway second admin (`ux-admin2@example.invalid`), grants both reviewers, and removes everything afterwards. Run it with `APP_URL=http://localhost:3200` and `MOCK_OUTBOX`. 6/6.

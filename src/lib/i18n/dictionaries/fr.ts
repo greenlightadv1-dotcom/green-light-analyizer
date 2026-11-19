@@ -1849,6 +1849,7 @@ const fr: Dictionary = {
       business_activity: "Activité de l'entreprise",
       contact_title: "Fonction du représentant",
       company_website: "Site web de l'entreprise",
+      id_number: "Numéro de la pièce d'identité",
     },
     fieldErrors: {
       legal_name: "Saisissez votre nom légal complet.",
@@ -1872,6 +1873,7 @@ const fr: Dictionary = {
       business_activity: "Décrivez l'activité de l'entreprise.",
       contact_title: "Saisissez la fonction du représentant.",
       company_website: "Saisissez une adresse complète commençant par https://.",
+      id_number: "Saisissez le numéro figurant sur votre pièce d'identité (lettres et chiffres).",
     },
     docType: {
       id_front: "Carte d’identité (recto)",
@@ -1929,6 +1931,8 @@ const fr: Dictionary = {
       consent: "Cochez la case de confirmation pour envoyer.",
       email_unverified: "Vérifiez d'abord votre adresse e-mail : ouvrez le lien que nous vous avons envoyé.",
       enhanced_review_note_required: "Notre équipe doit effectuer un examen supplémentaire avant d'approuver.",
+      second_reviewer_required: "This case needs approval by a second reviewer who did not raise its fraud flag.",
+      approval_requires_transition: "This approval must go through the review workflow.",
     },
     wizard: {
       progress: "Progression de la demande",
@@ -2018,6 +2022,7 @@ const fr: Dictionary = {
       business_activity: "En une ou deux phrases : ce que fait et vend l'entreprise.",
       company_name: "Tel qu'enregistré. Notre équipe ne vous associe qu'à un compte entreprise approuvé.",
       company_website: "Facultatif : aide notre équipe à trouver la bonne entreprise.",
+      id_number: "Le numéro de la pièce que vous photographiez. Nous n'en conservons qu'une empreinte protégée, pour détecter les demandes en double, et vous en montrons les 2 derniers caractères.",
     },
     option: {
       platform: {

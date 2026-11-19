@@ -1849,6 +1849,7 @@ const de: Dictionary = {
       business_activity: "Geschäftstätigkeit",
       contact_title: "Funktion der bevollmächtigten Person",
       company_website: "Website des Unternehmens",
+      id_number: "Ausweisnummer",
     },
     fieldErrors: {
       legal_name: "Gib deinen vollständigen rechtlichen Namen ein.",
@@ -1872,6 +1873,7 @@ const de: Dictionary = {
       business_activity: "Beschreibe, was das Unternehmen tut.",
       contact_title: "Gib die Funktion der bevollmächtigten Person ein.",
       company_website: "Gib eine vollständige Adresse ein, die mit https:// beginnt.",
+      id_number: "Gib die Nummer auf deinem Ausweisdokument ein (Buchstaben und Ziffern).",
     },
     docType: {
       id_front: "Ausweis (Vorderseite)",
@@ -1929,6 +1931,8 @@ const de: Dictionary = {
       consent: "Setze das Bestätigungshäkchen, um einzureichen.",
       email_unverified: "Bestätige zuerst deine E-Mail-Adresse: Öffne den Link aus unserer E-Mail.",
       enhanced_review_note_required: "Unser Team muss vor der Freigabe eine zusätzliche Prüfung abschließen.",
+      second_reviewer_required: "This case needs approval by a second reviewer who did not raise its fraud flag.",
+      approval_requires_transition: "This approval must go through the review workflow.",
     },
     wizard: {
       progress: "Fortschritt der Bewerbung",
@@ -2018,6 +2022,7 @@ const de: Dictionary = {
       business_activity: "In ein, zwei Sätzen: was das Unternehmen tut und verkauft.",
       company_name: "Wie eingetragen. Unser Team verknüpft dich nur mit einem freigegebenen Unternehmenskonto.",
       company_website: "Optional: hilft unserem Team, das richtige Unternehmen zu finden.",
+      id_number: "Die Nummer auf dem Ausweis, den du fotografierst. Wir speichern nur einen geschützten Fingerabdruck davon, um doppelte Bewerbungen zu erkennen, und zeigen dir die letzten 2 Zeichen.",
     },
     option: {
       platform: {

@@ -1861,6 +1861,7 @@ const en = {
       business_activity: "Business activity",
       contact_title: "Representative's job title",
       company_website: "Company website",
+      id_number: "ID document number",
     },
     fieldErrors: {
       legal_name: "Enter your full legal name.",
@@ -1884,6 +1885,7 @@ const en = {
       business_activity: "Describe what the company does.",
       contact_title: "Enter the representative's job title.",
       company_website: "Enter a full website address starting with https://.",
+      id_number: "Enter the number shown on your ID document (letters and digits).",
     },
     docType: {
       id_front: "ID card (front)",
@@ -1941,6 +1943,8 @@ const en = {
       consent: "Tick the confirmation box to submit.",
       email_unverified: "Verify your email address first: open the link we emailed you.",
       enhanced_review_note_required: "Our team needs to complete an additional review before approving this.",
+      second_reviewer_required: "This case needs approval by a second reviewer who did not raise its fraud flag.",
+      approval_requires_transition: "This approval must go through the review workflow.",
     },
     wizard: {
       progress: "Application progress",
@@ -2030,6 +2034,7 @@ const en = {
       business_activity: "In a sentence or two: what the company does and sells.",
       company_name: "As registered. Our team links you only to an approved company account.",
       company_website: "Optional: helps our team find the right company.",
+      id_number: "The number on the ID you photograph. We keep only a protected fingerprint of it, to detect duplicate applications, and show you its last 2 characters.",
     },
     option: {
       platform: {

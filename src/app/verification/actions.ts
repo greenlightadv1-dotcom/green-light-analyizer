@@ -7,6 +7,7 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import { log } from "@/lib/log";
 import { EDITABLE, formDetails, kindsForRole, mergeDetails, parseDetails, verificationErrorKey } from "@/lib/verification/rules";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
+import { prepareIdNumber, writeMatchKeys } from "@/lib/verification/match-keys-server";
 import type { VerificationKind } from "@/lib/types/database";
 
 /**
@@ -58,7 +59,10 @@ export async function saveVerificationDetails(_prev: ActionResult | null, fd: Fo
   const { data: row } = await admin.from("verification_cases").select("id, kind, status, details").eq("id", caseId).eq("profile_id", profile.id).maybeSingle();
   if (!row) return fail("verification.errors.not_found");
   if (!EDITABLE.includes(row.status)) return fail("verification.errors.invalid_state");
-  const parsed = mergeDetails(row.kind, row.details ?? {}, formDetails(fd.entries()));
+  // The ID number is fingerprinted and masked here; its plaintext is never stored (0041).
+  const prepared = prepareIdNumber(row.kind, formDetails(fd.entries()));
+  if (!prepared.ok) return fail(`verification.fieldErrors.${prepared.field}`);
+  const parsed = mergeDetails(row.kind, row.details ?? {}, prepared.raw);
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
   const { error } = await admin
     .from("verification_cases")
@@ -70,6 +74,7 @@ export async function saveVerificationDetails(_prev: ActionResult | null, fd: Fo
     log.error("verification.save_failed", { error });
     return fail("ui.errors.generic");
   }
+  await writeMatchKeys(caseId, row.kind, parsed.value, prepared.idFingerprint);
   revalidatePath("/verification");
   return OK;
 }
@@ -86,6 +91,7 @@ export async function submitVerification(_prev: ActionResult | null, fd: FormDat
   if (!row) return fail("verification.errors.not_found");
   const parsed = parseDetails(row.kind, row.details ?? {}, { requireAll: true });
   if (!parsed.ok) return fail(`verification.fieldErrors.${parsed.field}`);
+  await writeMatchKeys(caseId, row.kind, parsed.value);
   const { error } = await admin.rpc("verification_transition", { p_actor: profile.id, p_case: caseId, p_action: "submit" });
   if (error) {
     const key = verificationErrorKey(error.message);

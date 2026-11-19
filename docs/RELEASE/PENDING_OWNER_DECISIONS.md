@@ -140,3 +140,16 @@ The sync now stores the median views of a YouTube channel's recent uploads (migr
   - whether enhanced review should also follow a person who reapplies with a **different** email. Today that is the reviewer's judgement from the duplicate signals; the database rule links by email only;
   - whether enhanced approvals need a **second** reviewer. Today the approving reviewer's written justification is required, and one reviewer may both flag and approve;
   - the Privacy Policy wording on the 12-month period and metadata removal. Not changed.
+
+## 16. Second reviewer, duplicate fingerprints and malware scanning (migration 0041)
+
+- **Implemented:**
+  - an independent second reviewer for fraud-flagged cases (database-enforced and audited);
+  - keyed duplicate fingerprints, which make enhanced review follow strong identity matches across emails;
+  - a new required ID-number field, stored only as a fingerprint.
+- **Still needed:**
+  - **at least two verification reviewers** in production. A flagged case cannot be approved by the reviewer who flagged it; with one reviewer it can only be rejected;
+  - **legal review** of storing a keyed fingerprint of national ID numbers, and of comparing identities across applications. The Privacy Policy is not changed;
+  - **malware scanning:** choose a scanner (self-hosted ClamAV or a service; a paid or external one needs your approval) and build it to `MALWARE_SCANNING_REQUIREMENT.md`. Launch is blocked until then;
+  - whether a flag should ever be **cleared** (today flags are permanent and keep requiring a second reviewer for that person);
+  - whether transliterated or fuzzy name matching is wanted. Today it is exact after normalisation, chosen to avoid false positives.

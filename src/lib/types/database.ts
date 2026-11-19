@@ -502,6 +502,10 @@ export type VerificationNote = { id: number; case_id: string; author_id: string 
 export type VerificationFlagReason = "suspected_fraud" | "identity_forgery" | "impersonation";
 /** 0040: enhanced-review flags. Reviewers only (RLS). */
 export type VerificationFlag = { id: number; case_id: string; subject_email: string; reason: VerificationFlagReason; raised_by: string | null; raised_at: string };
+/** 0041: keyed fingerprints for duplicate-identity signals. Service role only. */
+export type VerificationMatchKey = { case_id: string; signal: "id_number" | "name_dob" | "phone" | "registration_number" | "tax_number"; fingerprint: string; updated_at: string };
+/** 0041: audit of approvals of fraud-flagged cases. Reviewers only; written by the database. */
+export type VerificationFlagApproval = { id: number; case_id: string; flag_ids: number[]; flagged_by: string[]; approved_by: string; justification_note_id: number; approved_at: string };
 export type VerificationEvent = { id: number; case_id: string; actor_id: string | null; event: string; detail: Record<string, unknown>; created_at: string };
 
 export type NotificationCategory = "invitations" | "terms" | "deliverables" | "status" | "messages";
@@ -697,6 +701,8 @@ export type Database = {
       verification_events: Table<VerificationEvent, Optional<VerificationEvent, Exclude<keyof VerificationEvent, "case_id" | "event">>>;
       verification_notes: Table<VerificationNote, never>;
       verification_flags: Table<VerificationFlag, never>;
+      verification_match_keys: Table<VerificationMatchKey, Optional<VerificationMatchKey, "updated_at">>;
+      verification_flag_approvals: Table<VerificationFlagApproval, never>;
       notification_preferences: Table<NotificationPreferences, Optional<NotificationPreferences, Exclude<keyof NotificationPreferences, "profile_id">>>;
       admin_actions: Table<
         AdminAction,
@@ -736,6 +742,7 @@ export type Database = {
       /* 0032 one-time tokens: service_role only. Each raises 'activation:<code>' on refusal. */
       verification_add_note: { Args: { p_actor: string; p_case: string; p_body: string }; Returns: number };
       verification_flag: { Args: { p_actor: string; p_case: string; p_reason: VerificationFlagReason; p_note: string }; Returns: number };
+      verification_enhanced_review_state: { Args: { p_case: string }; Returns: { flag_count: number; flag_ids: number[]; raised_by: string[]; latest_flag_at: string | null }[] };
       verification_reapply: { Args: { p_profile: string; p_kind: VerificationKind }; Returns: string };
       verification_purge_mark: { Args: { p_doc: string }; Returns: string };
       verification_purge_confirm: { Args: { p_doc: string }; Returns: undefined };
