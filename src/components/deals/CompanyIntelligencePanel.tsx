@@ -192,7 +192,7 @@ export function CompanyIntelligencePanel({
         {t("inbox.measuredTag")}
       </p>
 
-      <p className="mt-3 text-sm text-fg/60">
+      <p className="mt-3 text-sm text-fg-muted">
         {t("analyzer.domain")} <span className="text-fg">{security?.domain ?? domainHistory?.domain ?? "—"}</span>
       </p>
 

@@ -44,6 +44,7 @@ const ar: Dictionary = {
     tabG: "اسأل G",
   },
   topbar: {
+    skipToContent: "انتقل إلى المحتوى الرئيسي",
     signOut: "تسجيل الخروج",
     openMenu: "فتح القائمة",
     closeMenu: "إغلاق القائمة",

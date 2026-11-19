@@ -56,6 +56,7 @@ const en = {
     tabG: "Ask G",
   },
   topbar: {
+    skipToContent: "Skip to main content",
     signOut: "Sign out",
     openMenu: "Open menu",
     closeMenu: "Close menu",

@@ -12,8 +12,8 @@ export function GetStartedChooser() {
   const { t } = useTranslation();
   return (
     <section className="mx-auto max-w-5xl px-4 pt-16 pb-20 sm:px-6">
-      <h1 className="text-center text-3xl font-bold tracking-tight text-ink sm:text-4xl dark:text-white">{t("getStarted.title")}</h1>
-      <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-ink/60 sm:text-base dark:text-white/60">{t("getStarted.intro")}</p>
+      <h1 className="text-center text-3xl font-bold tracking-tight text-fg sm:text-4xl">{t("getStarted.title")}</h1>
+      <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-fg-muted sm:text-base">{t("getStarted.intro")}</p>
       <ul className="mt-10 grid gap-4 md:grid-cols-3">
         {JOURNEYS.map((j) => (
           <li key={j}>
@@ -28,7 +28,7 @@ export function GetStartedChooser() {
           </li>
         ))}
       </ul>
-      <p className="mt-8 text-center text-xs text-ink/45 dark:text-white/40">
+      <p className="mt-8 text-center text-xs text-fg-muted">
         {t("getStarted.reviewNote")}{" "}
         <Link href="/login" className="underline">
           {t("getStarted.haveAccount")}

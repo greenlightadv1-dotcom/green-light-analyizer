@@ -32,7 +32,9 @@ export function Table<Row>({
 }) {
   const align = (a?: "start" | "end") => (a === "end" ? "text-end" : "text-start");
   return (
-    <div className="overflow-x-auto">
+    // Focusable and named, so a keyboard user can scroll a table that is wider
+    // than the screen (WCAG 2.1.1; axe scrollable-region-focusable).
+    <div className="overflow-x-auto rounded-card focus-visible:focus-ring" tabIndex={0} role="region" aria-label={caption}>
       <table className="w-full border-collapse text-sm">
         <caption className={captionVisible ? "px-5 pt-4 text-start text-sm font-semibold text-fg" : "sr-only"}>
           {caption}

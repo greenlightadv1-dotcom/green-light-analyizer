@@ -44,6 +44,7 @@ const de: Dictionary = {
     tabG: "G fragen",
   },
   topbar: {
+    skipToContent: "Zum Hauptinhalt springen",
     signOut: "Abmelden",
     openMenu: "Menü öffnen",
     closeMenu: "Menü schließen",

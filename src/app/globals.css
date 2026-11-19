@@ -66,7 +66,7 @@
   --color-surface-hover: color-mix(in srgb, var(--color-fg) 7%, transparent);
 
   /* State colours (text AA on white and on canvas). */
-  --color-success: #1f7a3a;
+  --color-success: #19692f;
   --color-warning: #8a5300;
   --color-danger: #b42318;
   --color-info: #0f3b2c;

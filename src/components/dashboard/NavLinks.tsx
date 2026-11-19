@@ -33,7 +33,7 @@ export function NavLinks({
         return (
           <div key={section} role="group" aria-label={heading ? t(heading) : undefined}>
             {heading ? (
-              <p className="mb-1 px-4 text-xs font-semibold text-fg-subtle">{t(heading)}</p>
+              <p className="mb-1 px-4 text-xs font-semibold text-fg-muted">{t(heading)}</p>
             ) : null}
             <ul className="flex flex-col gap-0.5">
               {items.map((item) => {

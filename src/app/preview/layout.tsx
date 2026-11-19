@@ -1,3 +1,4 @@
+import { T } from "@/components/ui/T";
 import { notFound } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
@@ -41,6 +42,12 @@ export default function PreviewLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-[1680px] gap-5 p-4 lg:gap-6 lg:p-6 2xl:p-8">
+      <a
+        href="#main-content"
+        className="sr-only z-[70] rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus-visible:focus-ring"
+      >
+        <T k="topbar.skipToContent" />
+      </a>
       <Sidebar role={mockProfile.role} basePath="/preview" />
       {/* pb-24: the last content can always scroll clear of the fixed G launcher. */}
       <div className="min-w-0 flex-1 pb-24">
@@ -51,7 +58,9 @@ export default function PreviewLayout({
         </div>
 
         <TopBar profile={mockProfile} basePath="/preview" demo />
-        <PageTransition>{children}</PageTransition>
+        <main id="main-content" tabIndex={-1} className="outline-none">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
       {/* Preview has no session: G renders, but answers with a preview notice. */}
       <GAssistant userId="preview" role={mockProfile.role} demo basePath="/preview" />

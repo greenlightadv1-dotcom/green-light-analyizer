@@ -11,11 +11,11 @@ import { useTranslation } from "@/components/LocaleProvider";
 export function SourceBadge({ companyId }: { companyId: string | null }) {
   const { t } = useTranslation();
   return companyId ? (
-    <span className="rounded-md bg-brand-green/15 px-2 py-0.5 text-xs font-medium text-accent">
+    <span className="rounded-full bg-lime-soft px-2.5 py-0.5 text-xs font-medium text-accent">
       {t("inbox.sourceInApp")}
     </span>
   ) : (
-    <span className="rounded-md bg-fg/10 px-2 py-0.5 text-xs font-medium text-fg/60">
+    <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-fg-secondary">
       {t("inbox.sourceForwarded")}
     </span>
   );

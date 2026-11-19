@@ -32,3 +32,8 @@ Results: 9/9. On the same build:
 - `g-wake-e2e` 31/31;
 - `phase1-ui-e2e` 204/204;
 - `mobile-nav-e2e` 19/19.
+
+Accessibility (`a11y-axe.mjs`, `a11y-keyboard.mjs`):
+- zero axe WCAG 2.0/2.1 A and AA violations on 33 signed-in pages (creator, company and admin; desktop light and phone dark) and on 6 public pages (en light; ar dark on a phone);
+- the skip link is the first Tab stop and moves focus into `<main>`;
+- all 40 Tab stops checked on the dashboard show a visible focus style.
