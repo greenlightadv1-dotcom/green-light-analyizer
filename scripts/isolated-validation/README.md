@@ -21,7 +21,7 @@ Create three throwaway accounts on the isolated stack with the Auth admin API:
 - `ux-company@…` (complete details, one published brief);
 - `ux-admin@…`.
 
-Set `must_change_password = false` on their profiles. Also add one `news_items` row tagged `platform_youtube`, titled as a test fixture. With NVIDIA mocked to 503, `g-workflows.cjs` checks nine things:
+Set `must_change_password = false` on their profiles. Also add one `news_items` row tagged `platform_youtube`, titled as a test fixture. With NVIDIA mocked to 503, `g-workflows.mjs` checks nine things:
 - the creator's assessment and deals cards;
 - a content-idea proposal built from the stored headline, saved only after the confirmation dialog;
 - a company invitation proposal for its own published brief, sent only after confirmation and not proposed twice;

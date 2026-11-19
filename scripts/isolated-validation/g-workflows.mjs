@@ -1,11 +1,13 @@
 // Isolated stack only. Seed with the ux-* accounts (see README), then:
-//   DB_URL=... APP_URL=http://127.0.0.1:3200 node scripts/isolated-validation/g-workflows.cjs <screenshot-dir>
+//   DB_URL=... APP_URL=http://127.0.0.1:3200 node scripts/isolated-validation/g-workflows.mjs <screenshot-dir>
 // NVIDIA must be unreachable (mock-externals answers 503), so this checks the
 // rules engine and the deterministic proposals end to end.
 // G workflows on the isolated stack (NVIDIA mocked to 503 -> rules + fallback proposals).
-const { chromium } = require("playwright");
-const assert = require("node:assert/strict");
-const { execSync } = require("node:child_process");
+import assert from "node:assert/strict";
+import { execSync } from "node:child_process";
+import { createRequire } from "node:module";
+
+const { chromium } = createRequire(import.meta.url)("playwright");
 const OUT = process.argv[2];
 const sql = (q) => execSync(`psql "$DB_URL" -XqAt -c "${q}"`, { encoding: "utf8" }).trim();
 let n = 0;
