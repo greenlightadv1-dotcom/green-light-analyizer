@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Collaborations · Preview" };
 export default function PreviewCollaborations() {
   return (
     <CollaborationsView
+      basePath="/preview"
       role="creator"
       collaborations={[previewCollaboration]}
       names={previewNames}

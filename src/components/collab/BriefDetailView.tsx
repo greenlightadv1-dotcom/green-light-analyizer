@@ -24,6 +24,7 @@ export function BriefDetailView({
   query,
   candidates,
   detailsComplete,
+  basePath = "",
 }: {
   brief: Brief;
   invitations: Invitation[];
@@ -32,13 +33,15 @@ export function BriefDetailView({
   query: string;
   candidates: InviteCandidate[];
   detailsComplete: boolean;
+  /** Link prefix; the UI preview passes "/preview". */
+  basePath?: string;
 }) {
   const { t } = useTranslation();
   const can = briefActions(brief.status);
 
   return (
     <>
-      <Link href="/briefs" className="mb-3 inline-block text-xs text-fg-muted hover:text-fg focus-visible:focus-ring">← {t("collab.briefs.back")}</Link>
+      <Link href={`${basePath}/briefs`} className="mb-3 inline-block text-xs text-fg-muted hover:text-fg focus-visible:focus-ring">← {t("collab.briefs.back")}</Link>
       <SectionHeader title={brief.title} action={<Status status={brief.status} />} />
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -82,7 +85,7 @@ export function BriefDetailView({
                       ) : null}
                       <div className="flex flex-wrap gap-2 pt-1">
                         {collabId ? (
-                          <Link href={`/collaborations/${collabId}`} className={BTN_GHOST}>{t("collab.opp.openCollaboration")}</Link>
+                          <Link href={`${basePath}/collaborations/${collabId}`} className={BTN_GHOST}>{t("collab.opp.openCollaboration")}</Link>
                         ) : null}
                         {a.withdraw ? (
                           <ConfirmActionForm

@@ -13,3 +13,22 @@ The passwords in these files are throwaway values for disposable test users on t
 6. **Run the app workflows.** Build the app with the stack's URL and keys, then start it with `NODE_OPTIONS="--import mock-externals.mjs" MOCK_OUTBOX=<file>`. Run `flow1.mjs` through `flow4.mjs` with `DB_URL`, `MOCK_OUTBOX` and `STATE` set.
 
 Results of the 2026-11-06 run: `docs/RELEASE/ISOLATED_SUPABASE_VALIDATION_REPORT.md`.
+
+## UX and G walkthrough (2026-11-19)
+
+Create three throwaway accounts on the isolated stack with the Auth admin API:
+- `ux-creator@…` (YouTube kit, two deal rooms);
+- `ux-company@…` (complete details, one published brief);
+- `ux-admin@…`.
+
+Set `must_change_password = false` on their profiles. Also add one `news_items` row tagged `platform_youtube`, titled as a test fixture. With NVIDIA mocked to 503, `g-workflows.cjs` checks nine things:
+- the creator's assessment and deals cards;
+- a content-idea proposal built from the stored headline, saved only after the confirmation dialog;
+- a company invitation proposal for its own published brief, sent only after confirmation and not proposed twice;
+- admin navigation-only answers.
+
+Results: 9/9. On the same build:
+- `g-voice-e2e` 18/18;
+- `g-wake-e2e` 31/31;
+- `phase1-ui-e2e` 204/204;
+- `mobile-nav-e2e` 19/19.

@@ -107,28 +107,37 @@ for (const locale of ["en", "ar"]) {
     );
     check(noteAfterConfirm, `${tag} success note appears after confirming`);
 
-    // --- G launcher -----------------------------------------------------------
+    // --- G entry point ---------------------------------------------------------
+    // Desktop: the floating launcher at the end side. Phones: no floating
+    // button; "Ask G" lives in the bottom tab bar, and content scrolls clear
+    // of the bar.
     await page.goto(`${BASE}/preview/dashboard`, { waitUntil: "networkidle" });
-    const launcher = page.locator("[data-testid='g-launcher'] > button").last();
+    const phone = vp.width < 1024;
+    const launcher = phone
+      ? page.locator("[data-testid='mobile-tabbar'] button").first()
+      : page.locator("[data-testid='g-launcher'] > button").last();
     const lb = await launcher.boundingBox();
-    check(Boolean(lb) && lb.x >= 0 && lb.y >= 0 && lb.x + lb.width <= vp.width && lb.y + lb.height <= vp.height, `${tag} G launcher inside the viewport`);
-    const onEnd = locale === "ar" ? lb.x + lb.width / 2 < vp.width / 2 : lb.x + lb.width / 2 > vp.width / 2;
-    check(onEnd, `${tag} G launcher on the end side`);
-    const name = await launcher.getAttribute("aria-label");
-    check(Boolean(name && name.trim()), `${tag} G launcher has an accessible name`);
-    if (vp.width === 390) {
-      check(lb.width <= 56, `${tag} G launcher is icon-only on phones (${Math.round(lb.width)}px wide)`);
+    check(Boolean(lb) && lb.x >= 0 && lb.y >= 0 && lb.x + lb.width <= vp.width && lb.y + lb.height <= vp.height, `${tag} G entry point inside the viewport`);
+    if (phone) {
+      check(!(await page.locator("[data-testid='g-launcher'] > button").last().isVisible()), `${tag} no floating G button on phones`);
+      check(/G/.test((await launcher.innerText()) ?? ""), `${tag} the tab bar's G button is labelled`);
+    } else {
+      const onEnd = locale === "ar" ? lb.x + lb.width / 2 < vp.width / 2 : lb.x + lb.width / 2 > vp.width / 2;
+      check(onEnd, `${tag} G launcher on the end side`);
+      const name = await launcher.getAttribute("aria-label");
+      check(Boolean(name && name.trim()), `${tag} G launcher has an accessible name`);
     }
-    // Scroll to the end: the last content block must end above the launcher.
-    const clear = await page.evaluate(() => {
+    // Scroll to the end: the last content block must end above whatever is
+    // fixed at the bottom (the tab bar on phones, the launcher on desktop).
+    const clear = await page.evaluate((isPhone) => {
       window.scrollTo(0, document.documentElement.scrollHeight);
       const column = document.querySelector("div.min-w-0.flex-1.pb-24");
       const blocks = column ? [...column.querySelectorAll(":scope > * , :scope > * > *")] : [];
       const lastBottom = Math.max(...blocks.map((b) => b.getBoundingClientRect().bottom).filter((n) => Number.isFinite(n)));
-      const launcherTop = document.querySelector("[data-testid='g-launcher']").getBoundingClientRect().top;
-      return { lastBottom, launcherTop };
-    });
-    check(clear.lastBottom <= clear.launcherTop + 1, `${tag} last content scrolls clear of the G launcher (${Math.round(clear.lastBottom)} <= ${Math.round(clear.launcherTop)})`);
+      const fixed = document.querySelector(isPhone ? "[data-testid='mobile-tabbar']" : "[data-testid='g-launcher'] > button:last-child");
+      return { lastBottom, launcherTop: fixed.getBoundingClientRect().top };
+    }, phone);
+    check(clear.lastBottom <= clear.launcherTop + 1, `${tag} last content scrolls clear of the fixed G/tab bar (${Math.round(clear.lastBottom)} <= ${Math.round(clear.launcherTop)})`);
     if (SHOTS && vp.width === 390) await page.screenshot({ path: `${SHOTS}/${locale}-dashboard-bottom.png` });
 
     // --- Growth summary from real (preview) snapshots --------------------------

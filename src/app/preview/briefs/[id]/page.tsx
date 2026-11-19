@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Brief · Preview" };
 export default function PreviewBrief() {
   return (
     <BriefDetailView
+      basePath="/preview"
       brief={previewBriefs[0]}
       invitations={previewInvitations}
       names={previewNames}

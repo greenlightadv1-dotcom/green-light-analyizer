@@ -36,6 +36,7 @@ export function CollaborationDetailView({
   brief,
   briefTitle,
   names,
+  basePath = "",
 }: {
   side: Side | null;
   viewerId: string;
@@ -45,6 +46,8 @@ export function CollaborationDetailView({
   brief: Brief | null;
   briefTitle: string;
   names: Record<string, string>;
+  /** Link prefix; the UI preview passes "/preview". */
+  basePath?: string;
 }) {
   const { t } = useTranslation();
   const can = side ? collaborationActions(side, c, deliverables) : null;
@@ -53,7 +56,7 @@ export function CollaborationDetailView({
 
   return (
     <>
-      <Link href="/collaborations" className="mb-3 inline-block text-xs text-fg-muted hover:text-fg focus-visible:focus-ring">← {t("collab.c.title")}</Link>
+      <Link href={`${basePath}/collaborations`} className="mb-3 inline-block text-xs text-fg-muted hover:text-fg focus-visible:focus-ring">← {t("collab.c.title")}</Link>
       <SectionHeader title={briefTitle} description={t("collab.c.with", { name: other ?? "—" })} action={<Status status={c.status} />} />
       {!side ? <p className="mb-4 text-sm text-fg-muted">{t("collab.c.readOnly")}</p> : null}
 
@@ -266,7 +269,7 @@ export function CollaborationDetailView({
           <GlassPanel className="space-y-3 p-5">
             {c.deal_chat_id && side ? (
               <>
-                <Link href={`/inbox/${c.deal_chat_id}`} className={BTN_PRIMARY}>{t("collab.c.openDealRoom")}</Link>
+                <Link href={`${basePath}/inbox/${c.deal_chat_id}`} className={BTN_PRIMARY}>{t("collab.c.openDealRoom")}</Link>
                 <p className="text-xs text-fg-muted">{t("collab.c.dealRoomNote")}</p>
               </>
             ) : null}

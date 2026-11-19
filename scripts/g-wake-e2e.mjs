@@ -84,7 +84,15 @@ async function session({ locale = "en", mic = "grant", perm = "granted", support
   return { p, ctx, errors, v: () => p.evaluate(() => ({ gum: window.__v.gum, spoken: window.__v.spoken.length, chimes: window.__v.chimes, recs: window.__v.recs.length, wake: !!window.__wakeRec(), voice: !!window.__voiceRec(), wakeLang: window.__wakeRec()?.lang ?? null })) };
 }
 const dialog = (p) => p.locator("[role=dialog]");
-const openPanel = async (p) => { if (!(await dialog(p).count())) await p.locator(`button[aria-label^="Open G"], button[aria-label^="افتح G"]`).click(); await dialog(p).waitFor(); };
+// Desktop opens G from the floating launcher; below lg the launcher is hidden
+// and G opens from the tab bar's first button ("Ask G").
+const openPanel = async (p) => {
+  if (await dialog(p).count()) return;
+  const floating = p.locator(`button[aria-label^="Open G"], button[aria-label^="افتح G"]`);
+  if (await floating.isVisible()) await floating.click();
+  else await p.locator("[data-testid=mobile-tabbar] button").first().click();
+  await dialog(p).waitFor();
+};
 const closePanel = async (p) => { await p.keyboard.press("Escape"); await p.waitForTimeout(150); };
 const indicator = (p) => p.locator("[data-testid=g-wake-indicator]");
 const enableWake = async (p, label = "Enable “Hey G” voice activation", allow = "Allow microphone and turn on") => {
@@ -314,10 +322,13 @@ try {
   // ---------------------------------------------------------------- mobile + motion
   {
     const { p, ctx } = await session({ viewport: { width: 390, height: 844 } });
-    await check("mobile: indicator visible, wake opens the panel, no horizontal scroll", async () => {
+    await check("mobile: indicator visible above the tab bar, wake opens the panel, no horizontal scroll", async () => {
       await enableWake(p);
       await closePanel(p);
       assert.ok(await indicator(p).isVisible());
+      const ib = await indicator(p).boundingBox();
+      const bar = await p.locator("[data-testid=mobile-tabbar]").boundingBox();
+      assert.ok(ib && bar && ib.y + ib.height <= bar.y + 1, `indicator ${JSON.stringify(ib)} overlaps the tab bar ${JSON.stringify(bar)}`);
       await p.evaluate(() => window.__hear("Hey G"));
       await dialog(p).waitFor();
       const [sw, iw] = await p.evaluate(() => [document.documentElement.scrollWidth, innerWidth]);

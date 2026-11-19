@@ -15,7 +15,7 @@ export type BriefRow = Pick<Brief, "id" | "title" | "status" | "budget_min_usd" 
 };
 
 /** A company's own briefs. */
-export function BriefsView({ briefs, newHref }: { briefs: BriefRow[]; newHref: string }) {
+export function BriefsView({ briefs, newHref, basePath = "" }: { briefs: BriefRow[]; newHref: string; basePath?: string }) {
   const { t } = useTranslation();
   return (
     <>
@@ -31,7 +31,7 @@ export function BriefsView({ briefs, newHref }: { briefs: BriefRow[]; newHref: s
           <ul className="divide-y divide-line">
             {briefs.map((b) => (
               <li key={b.id}>
-                <Link href={`/briefs/${b.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface-hover focus-visible:focus-ring">
+                <Link href={`${basePath}/briefs/${b.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface-hover focus-visible:focus-ring">
                   <div className="min-w-0">
                     <p dir="auto" className="font-medium [overflow-wrap:anywhere] text-fg">{b.title}</p>
                     <p className="mt-0.5 text-xs text-fg-muted">

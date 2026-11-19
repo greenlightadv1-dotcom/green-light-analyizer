@@ -15,11 +15,14 @@ export function CollaborationsView({
   collaborations,
   names,
   briefTitles,
+  basePath = "",
 }: {
   role: Role;
   collaborations: Collaboration[];
   names: Record<string, string>;
   briefTitles: Record<string, string>;
+  /** Link prefix; the UI preview passes "/preview". */
+  basePath?: string;
 }) {
   const { t } = useTranslation();
   const counterpart = (c: Collaboration) =>
@@ -38,7 +41,7 @@ export function CollaborationsView({
           <ul className="divide-y divide-line">
             {collaborations.map((c) => (
               <li key={c.id}>
-                <Link href={`/collaborations/${c.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface-hover focus-visible:focus-ring">
+                <Link href={`${basePath}/collaborations/${c.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface-hover focus-visible:focus-ring">
                   <div className="min-w-0">
                     <p dir="auto" className="font-medium [overflow-wrap:anywhere] text-fg">{briefTitles[c.brief_id] ?? "—"}</p>
                     <p className="mt-0.5 text-xs text-fg-muted">

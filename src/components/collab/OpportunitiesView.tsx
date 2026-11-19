@@ -19,12 +19,15 @@ export function OpportunitiesView({
   briefTitles,
   names,
   collaborationByInvitation,
+  basePath = "",
 }: {
   invitations: Invitation[];
   briefs: Brief[];
   briefTitles: Record<string, string>;
   names: Record<string, string>;
   collaborationByInvitation: Record<string, string>;
+  /** Link prefix; the UI preview passes "/preview". */
+  basePath?: string;
 }) {
   const { t } = useTranslation();
   return (
@@ -60,7 +63,7 @@ export function OpportunitiesView({
                       <p dir="auto" className="whitespace-pre-wrap [overflow-wrap:anywhere] text-fg">{inv.response_note}</p>
                     </div>
                   ) : null}
-                  {collabId ? <Link href={`/collaborations/${collabId}`} className={BTN_PRIMARY}>{t("collab.opp.openCollaboration")}</Link> : null}
+                  {collabId ? <Link href={`${basePath}/collaborations/${collabId}`} className={BTN_PRIMARY}>{t("collab.opp.openCollaboration")}</Link> : null}
                   <div className="flex flex-wrap gap-2">
                     {a.accept ? (
                       <ConfirmActionForm

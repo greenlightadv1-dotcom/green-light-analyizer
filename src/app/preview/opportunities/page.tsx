@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Opportunities · Preview" };
 export default function PreviewOpportunities() {
   return (
     <OpportunitiesView
+      basePath="/preview"
       invitations={previewCreatorInvitations}
       briefs={[previewBriefs[0]]}
       briefTitles={{ [previewBriefs[0].id]: previewBriefs[0].title }}

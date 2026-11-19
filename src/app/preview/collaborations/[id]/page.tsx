@@ -9,6 +9,7 @@ export default async function PreviewCollaboration({ searchParams }: { searchPar
   const side = (await searchParams).side === "company" ? "company" : "creator";
   return (
     <CollaborationDetailView
+      basePath="/preview"
       side={side}
       viewerId={side === "company" ? previewIds.company : previewIds.creator}
       collaboration={previewCollaboration}

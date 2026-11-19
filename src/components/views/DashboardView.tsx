@@ -26,10 +26,13 @@ export function DashboardView({
   profile,
   chats,
   kits,
+  basePath = "",
 }: {
   profile: Profile;
   chats: DealChatListItem[];
   kits: MediaKit[];
+  /** Link prefix; the UI preview passes "/preview" to stay inside itself. */
+  basePath?: string;
 }) {
   const { t } = useTranslation();
   const recent = chats.slice(0, 5);
@@ -48,7 +51,7 @@ export function DashboardView({
 
       {incompleteProfile ? (
         <Link
-          href="/onboarding"
+          href={`${basePath}/onboarding`}
           className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-green/25 bg-brand-green/8 px-5 py-4 transition hover:bg-brand-green/12"
         >
           <div>
@@ -61,7 +64,7 @@ export function DashboardView({
         </Link>
       ) : null}
 
-      <QuickActions actions={CREATOR_ACTIONS} />
+      <QuickActions actions={CREATOR_ACTIONS} basePath={basePath} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="surface-lime flex flex-col p-5 sm:p-6">
@@ -100,7 +103,7 @@ export function DashboardView({
               body={t("dashboard.noDealsYetBody")}
             />
           ) : (
-            <DealList chats={recent} total={chats.length} title={(c) => ({ text: c.sender_email, ltr: true })} />
+            <DealList chats={recent} total={chats.length} title={(c) => ({ text: c.sender_email, ltr: true })} basePath={basePath} />
           )}
         </div>
 
@@ -130,7 +133,7 @@ export function DashboardView({
             </p>
           )}
           <Link
-            href="/media-kit"
+            href={`${basePath}/media-kit`}
             className="mt-3 inline-block text-xs text-accent transition hover:brightness-125"
           >
             {t("dashboard.openMediaKit")}
