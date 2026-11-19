@@ -82,7 +82,7 @@ export function DealRoomView({
 
         <div className="space-y-4">
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-fg">{t("inbox.deal")}</h2>
+            <h2 className="text-base font-semibold text-fg">{t("inbox.deal")}</h2>
             <dl className="mt-4 space-y-3.5 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-xs text-fg-muted">{t("inbox.offer")}</dt>
@@ -158,7 +158,7 @@ export function DealRoomView({
           ) : null}
 
           <GlassPanel className="p-5">
-            <h2 className="text-sm font-semibold text-fg">
+            <h2 className="text-base font-semibold text-fg">
               {t("inbox.whyCantShare")}
             </h2>
             <p className="mt-2 text-xs leading-relaxed text-fg-muted">

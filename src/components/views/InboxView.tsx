@@ -85,7 +85,7 @@ export function InboxView({
                   aria-pressed={active}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                     active
-                      ? "border-brand-green/30 bg-brand-green/10 text-brand-green"
+                      ? "border-brand-green/30 bg-brand-green/10 text-accent"
                       : "border-fg/10 bg-fg/5 text-fg/60 hover:bg-fg/10 hover:text-fg"
                   }`}
                 >
@@ -129,7 +129,7 @@ export function InboxView({
                       <SourceBadge companyId={chat.company_id} />
                       {!chat.is_likely_sponsorship ? (
                         <span
-                          className="rounded-md bg-amber-300/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-200"
+                          className="rounded-md bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning"
                           title={t("inbox.possibleSpamTitle")}
                         >
                           {t("inbox.possibleSpam")}

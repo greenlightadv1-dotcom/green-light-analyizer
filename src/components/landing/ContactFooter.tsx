@@ -31,7 +31,7 @@ export function ContactFooter() {
 
   return (
     <footer className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-      <div className="flex flex-col items-center gap-6 rounded-2xl border border-navy/10 bg-white/70 px-6 py-8 text-center backdrop-blur-xl sm:flex-row sm:justify-between sm:text-start dark:border-white/10 dark:bg-navy-dark/50">
+      <div className="glass-panel flex flex-col items-center gap-6 px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-start">
         <div className="flex items-center gap-3">
           <ThemedLogo size={28} />
         </div>
@@ -41,7 +41,7 @@ export function ContactFooter() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-navy/15 bg-navy/5 px-3 py-1.5 text-xs text-ink transition hover:bg-navy/10 dark:border-white/15 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-medium text-fg transition-colors hover:bg-surface-hover focus-visible:focus-ring"
           >
             <WhatsAppIcon />
             {WHATSAPP_PHONE}
@@ -50,7 +50,7 @@ export function ContactFooter() {
             href={DISCORD_INVITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg border border-navy/15 bg-navy/5 px-3 py-1.5 text-xs text-ink transition hover:bg-navy/10 dark:border-white/15 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm font-medium text-fg transition-colors hover:bg-surface-hover focus-visible:focus-ring"
           >
             <DiscordIcon />
             {t("landing.joinDiscord")}
@@ -63,22 +63,22 @@ export function ContactFooter() {
         (a mistranslated term of art changes the agreement), so a translated
         link into an English document would be misleading about what's behind it.
       */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-ink/35 dark:text-white/30">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-fg-muted">
         <Link
           href="/terms"
-          className="transition hover:text-ink/70 dark:hover:text-white/60"
+          className="transition-colors hover:text-fg"
         >
           Terms of Service
         </Link>
         <Link
           href="/privacy"
-          className="transition hover:text-ink/70 dark:hover:text-white/60"
+          className="transition-colors hover:text-fg"
         >
           Privacy Policy
         </Link>
       </div>
 
-      <p className="mt-3 text-center text-xs text-ink/35 dark:text-white/30">
+      <p className="mt-3 text-center text-sm text-fg-muted">
         © {new Date().getFullYear()} Green Light. {t("landing.footerRights")}
       </p>
     </footer>

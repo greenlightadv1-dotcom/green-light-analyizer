@@ -100,7 +100,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
                     {item.sender} · {formatDate(item.receivedAt)}
                   </p>
                   {item.subjectRedacted ? (
-                    <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-200/70">
+                    <p className="mt-1 text-[11px] text-warning/80">
                       {t("inbox.heldRedacted")}
                     </p>
                   ) : null}
@@ -120,7 +120,7 @@ export function HeldDeliveriesPanel({ held }: { held: HeldDeliveries | null }) {
 
           <Link
             href="/analyzer"
-            className="mt-4 inline-flex rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
+            className="mt-4 inline-flex rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-accent transition hover:bg-brand-green/20"
           >
             {t("inbox.heldOpenAnalyzer")}
           </Link>

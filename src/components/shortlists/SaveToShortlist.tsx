@@ -23,7 +23,7 @@ export function SaveToShortlist({
   return (
     <GlassPanel className="space-y-3 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-fg">{t("shortlists.save")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("shortlists.save")}</h2>
         <Link href="/shortlists" className="text-xs text-fg-muted underline hover:text-fg focus-visible:focus-ring">{t("shortlists.manage")}</Link>
       </div>
       {lists.some((l) => l.hasCreator) ? (
@@ -51,7 +51,7 @@ export function SaveToShortlist({
           <Labelled id="sl-pick" labelKey="shortlists.pickList">
             <select id="sl-pick" name="shortlist_id" required className={SELECT_CLASS} defaultValue={open[0].id}>
               {open.map((l) => (
-                <option key={l.id} value={l.id} className="bg-slate-900 text-white">{l.name}</option>
+                <option key={l.id} value={l.id} className="bg-surface text-fg">{l.name}</option>
               ))}
             </select>
           </Labelled>

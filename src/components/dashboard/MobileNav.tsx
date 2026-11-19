@@ -94,7 +94,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-fg/15 bg-fg/5 text-fg transition hover:bg-fg/10 lg:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-fg transition-colors hover:bg-surface-hover focus-visible:focus-ring lg:hidden"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4.5 w-4.5" aria-hidden>
           <path d="M4 7h16M4 12h16M4 17h16" />
@@ -105,7 +105,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
         ? createPortal(
             <div className="fixed inset-0 z-[60] lg:hidden" data-testid="mobile-nav">
               <div
-                className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-black/45"
                 onClick={close}
                 aria-hidden
                 data-testid="mobile-nav-backdrop"
@@ -118,7 +118,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
                 aria-labelledby={titleId}
                 // Opaque, unlike the translucent glass panels: page text bleeding
                 // through behind the links made them hard to read.
-                className="absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto border-e border-fg/10 bg-white p-4 shadow-2xl dark:bg-navy-dark"
+                className="absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col overflow-y-auto border-e border-fg/10 bg-surface p-4 shadow-2xl"
               >
                 <div className="mb-5 flex items-center justify-between gap-3 px-1 pt-1">
                   <h2 id={titleId} className="sr-only">
@@ -129,7 +129,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
                     type="button"
                     onClick={close}
                     aria-label={t("topbar.closeMenu")}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-fg/15 bg-fg/5 text-fg transition hover:bg-fg/10"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-fg transition-colors hover:bg-surface-hover focus-visible:focus-ring"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4" aria-hidden>
                       <path d="M6 6l12 12M18 6L6 18" />

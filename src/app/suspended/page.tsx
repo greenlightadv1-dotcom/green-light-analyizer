@@ -22,7 +22,7 @@ export default function SuspendedPage() {
         </div>
 
         <GlassPanel className="p-7 sm:p-8">
-          <h1 className="text-xl font-semibold text-fg">
+          <h1 className="text-2xl font-bold text-fg sm:text-3xl">
             This account is suspended
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-fg-muted">
@@ -36,7 +36,7 @@ export default function SuspendedPage() {
               href={DISCORD_INVITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand-green underline underline-offset-2 hover:brightness-110"
+              className="text-accent underline underline-offset-2 hover:brightness-110"
             >
               Discord support server
             </a>{" "}

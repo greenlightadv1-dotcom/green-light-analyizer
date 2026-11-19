@@ -36,7 +36,7 @@ export default async function AdminTaxonomyPage() {
         <GlassPanel className="mb-4 p-5 text-sm text-fg-muted">The taxonomy table is not on this database yet, so the built-in list is in use and cannot be edited. Ask the developer to apply the latest database update.</GlassPanel>
       ) : (
         <GlassPanel className="mb-4 space-y-3 p-5">
-          <h2 className="text-sm font-semibold text-fg">Add a term</h2>
+          <h2 className="text-base font-semibold text-fg">Add a term</h2>
           <TermForm term={null} parents={parents} />
         </GlassPanel>
       )}
@@ -45,7 +45,7 @@ export default async function AdminTaxonomyPage() {
           const terms = termsOf(snap, kind, { activeOnly: false });
           return (
             <GlassPanel key={kind} className="overflow-hidden">
-              <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{kind.replace(/_/g, " ")} ({terms.length})</h2>
+              <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{kind.replace(/_/g, " ")} ({terms.length})</h2>
               {terms.length ? (
                 <ul className="divide-y divide-line">
                   {terms.map((t) => (

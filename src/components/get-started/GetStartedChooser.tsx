@@ -23,7 +23,7 @@ export function GetStartedChooser() {
             >
               <span className="text-base font-semibold text-fg">{t(`getStarted.journey.${j}.title`)}</span>
               <span className="mt-2 flex-1 text-sm leading-relaxed text-fg/60">{t(`getStarted.journey.${j}.body`)}</span>
-              <span className="mt-5 text-sm font-semibold text-brand-green">{t("getStarted.choose")} →</span>
+              <span className="mt-5 text-sm font-semibold text-accent">{t("getStarted.choose")} →</span>
             </Link>
           </li>
         ))}

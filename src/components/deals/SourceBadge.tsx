@@ -11,7 +11,7 @@ import { useTranslation } from "@/components/LocaleProvider";
 export function SourceBadge({ companyId }: { companyId: string | null }) {
   const { t } = useTranslation();
   return companyId ? (
-    <span className="rounded-md bg-brand-green/15 px-2 py-0.5 text-xs font-medium text-brand-green">
+    <span className="rounded-md bg-brand-green/15 px-2 py-0.5 text-xs font-medium text-accent">
       {t("inbox.sourceInApp")}
     </span>
   ) : (

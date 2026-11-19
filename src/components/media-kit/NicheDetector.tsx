@@ -42,7 +42,7 @@ export function NicheDetector({
 
   return (
     <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
-      <p className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+      <p className="text-sm font-medium text-fg-muted">
         {t("mediaKit.nicheAndTags")}
       </p>
 
@@ -77,7 +77,7 @@ export function NicheDetector({
         </div>
       ) : null}
       {state.result ? (
-        <p className="mt-2.5 text-xs text-brand-green">
+        <p className="mt-2.5 text-xs text-accent">
           {t("mediaKit.detected", { category: state.result.category })}
         </p>
       ) : null}

@@ -93,7 +93,7 @@ export function ApplicationLinkRequest({
   const [state, formAction, pending] = useActionState<LinkState, FormData>(action, { status: "idle" });
   return (
     <section className="mx-auto max-w-xl space-y-4 px-4 pt-16 pb-20 sm:px-6">
-      <h1 className="text-2xl font-bold tracking-tight text-fg">{t("apply.title")}</h1>
+      <h1 className="text-3xl font-bold text-fg sm:text-4xl">{t("apply.title")}</h1>
       <GlassPanel className="space-y-4 p-6">
         <p className="text-sm text-fg">{t(`apply.link.${reason}`)}</p>
         {state.status === "sent" ? (

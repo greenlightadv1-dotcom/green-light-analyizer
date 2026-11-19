@@ -82,6 +82,14 @@ components:
     padding: "24px"
 ---
 
+> **Superseded (2026-11 redesign).** The token values above describe the old
+> "Liquid Glass" identity. The current palette (warm off-white canvas, lime
+> `#62E823`, deep forest, near-black ink), fonts (Manrope + IBM Plex Sans
+> Arabic), radii and component recipes are in
+> `docs/DESIGN/GREEN_LIGHT_DESIGN_SYSTEM.md` and `src/app/globals.css`, which
+> win over anything below.
+
+
 # Design System: Green Light
 
 ## Overview

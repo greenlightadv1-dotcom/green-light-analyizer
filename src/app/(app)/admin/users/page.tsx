@@ -16,9 +16,9 @@ const selectClass =
 const inputClass =
   "h-9 w-full rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 const saveButtonClass =
-  "h-9 shrink-0 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs font-medium text-brand-green transition hover:bg-brand-green/20";
+  "h-9 shrink-0 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs font-medium text-accent transition hover:bg-brand-green/20";
 const banButtonClass =
-  "h-9 shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-3 text-xs font-medium text-red-700 dark:text-red-200 transition hover:bg-red-500/20";
+  "h-9 shrink-0 rounded-lg border border-danger/30 bg-danger/10 px-3 text-xs font-medium text-danger transition hover:bg-danger/20";
 const unbanButtonClass =
   "h-9 shrink-0 rounded-lg border border-fg/10 bg-fg/5 px-3 text-xs text-fg/60 transition hover:bg-fg/10 hover:text-fg";
 
@@ -114,13 +114,13 @@ export default async function AdminUsersPage({
                     ) : null}
                   </span>
                   {p.banned_at ? (
-                    <span className="text-red-700 dark:text-red-300">Banned</span>
+                    <span className="text-danger">Banned</span>
                   ) : p.must_change_password ? (
-                    <span className="text-xs text-amber-700/80 dark:text-amber-300/80">
+                    <span className="text-xs text-warning/80">
                       Password reset pending
                     </span>
                   ) : (
-                    <span className="text-xs text-brand-green">Active</span>
+                    <span className="text-xs text-accent">Active</span>
                   )}
                 </div>
 

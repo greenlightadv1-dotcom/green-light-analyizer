@@ -40,12 +40,12 @@ export function GMark({ size = 36, state = "idle" }: { size?: number; state?: GM
         <span className="g-spin absolute -inset-1 rounded-full border-2 border-transparent border-t-brand-green border-e-brand-green/50" />
       ) : null}
       <span
-        className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-green to-emerald-500 font-bold text-ink shadow-[0_0_18px_rgba(98,232,35,0.45)] ${state === "wake" ? "g-wake" : ""}`}
+        className={`relative flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-brand-green to-success font-bold text-ink shadow-[0_0_18px_rgba(98,232,35,0.45)] ${state === "wake" ? "g-wake" : ""}`}
       >
         <span style={{ fontSize: size * 0.5 }}>G</span>
       </span>
       {state === "speaking" ? (
-        <span className="absolute -bottom-0.5 -end-1 flex h-3 items-end gap-[2px] rounded-full bg-white/90 px-0.5 dark:bg-navy-dark/90">
+        <span className="absolute -bottom-0.5 -end-1 flex h-3 items-end gap-[2px] rounded-full bg-surface px-0.5">
           {[0, 0.15, 0.3].map((d) => (
             <span key={d} className="g-bar block h-full w-[2px] rounded bg-brand-green" style={{ animationDelay: `${d}s` }} />
           ))}
@@ -86,7 +86,7 @@ const SUGGESTIONS: Record<Role, string[]> = {
 const newId = () => Math.random().toString(36).slice(2, 10);
 const CHIP = "rounded-full border px-2.5 py-1 text-[11px] transition";
 const chipClass = (on: boolean) =>
-  `${CHIP} ${on ? "border-brand-green/40 bg-brand-green/15 text-brand-green" : "border-fg/10 bg-fg/5 text-fg/60 hover:text-fg"}`;
+  `${CHIP} ${on ? "border-brand-green/40 bg-brand-green/15 text-accent" : "border-fg/10 bg-fg/5 text-fg/60 hover:text-fg"}`;
 
 /**
  * G — the site-wide assistant (feature 7), mounted once in the app shell so it
@@ -282,7 +282,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           type="button"
           onClick={() => update((s) => ({ ...s, open: true }))}
           aria-label={t("g.open")}
-          className="flex items-center gap-2 rounded-full border border-brand-green/30 bg-white/90 p-1.5 text-sm font-semibold text-fg shadow-xl backdrop-blur transition hover:-translate-y-0.5 focus-visible:focus-ring sm:pe-4 dark:bg-navy-dark/90"
+          className="flex items-center gap-2 rounded-full border border-brand-green/30 bg-surface p-1.5 text-sm font-semibold text-fg shadow-xl transition hover:-translate-y-0.5 focus-visible:focus-ring sm:pe-4"
         >
           <GMark size={34} state={markState} />
           {/* Icon-only on phones so the launcher covers less of the page; the
@@ -301,7 +301,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col rounded-t-2xl border border-fg/10 bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl dark:bg-navy-dark sm:inset-x-auto sm:pb-0 sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-2xl"
+      className="g-panel-in fixed inset-x-0 bottom-0 z-40 flex h-[88dvh] flex-col rounded-t-2xl border border-fg/10 bg-surface pb-[env(safe-area-inset-bottom)] shadow-2xl sm:inset-x-auto sm:pb-0 sm:end-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[420px] sm:rounded-2xl"
     >
       <header className="flex items-center gap-3 border-b border-fg/10 px-4 py-3">
         <GMark state={markState} />
@@ -360,7 +360,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           ) : (
             <div key={m.id} className="me-4 space-y-2">
               {m.error ? (
-                <p className="rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs text-red-700 dark:text-red-200">
+                <p className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
                   {t(`g.error.${m.error}`)}
                 </p>
               ) : (
@@ -400,7 +400,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                         <Link
                           key={`${a.action}-${a.param ?? ""}`}
                           href={`${basePath}${actionHref(a)}`}
-                          className="rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-brand-green hover:bg-brand-green/20"
+                          className="rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-accent hover:bg-brand-green/20"
                         >
                           {t(`g.action.${a.action}`)} →
                         </Link>
@@ -437,7 +437,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                 </button>
               ))}
               {state.compare.length >= 2 ? (
-                <button type="button" onClick={() => void send(t("g.compareMessage"))} className="text-[11px] font-medium text-brand-green underline underline-offset-4">
+                <button type="button" onClick={() => void send(t("g.compareMessage"))} className="text-[11px] font-medium text-accent underline underline-offset-4">
                   {t("g.compareNow")}
                 </button>
               ) : null}
@@ -515,7 +515,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   className="h-9 rounded-lg border border-fg/10 bg-fg/5 px-2.5 text-xs text-fg"
                 />
               </div>
-              <button type="button" onClick={() => void send(t("g.brief.findMessage"))} className="text-[11px] font-semibold text-brand-green underline underline-offset-4">
+              <button type="button" onClick={() => void send(t("g.brief.findMessage"))} className="text-[11px] font-semibold text-accent underline underline-offset-4">
                 {t("g.brief.find")}
               </button>
             </div>
@@ -557,7 +557,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
             className="min-h-[44px] flex-1 resize-none rounded-xl border border-fg/10 bg-fg/5 px-3 py-2 text-sm text-fg placeholder:text-fg/35 focus:border-brand-green/50 focus:outline-none"
           />
           {listening || speaking ? (
-            <button type="button" onClick={voice.stop} aria-label={t("g.voice.stop")} className="flex h-11 w-11 items-center justify-center rounded-xl border border-red-400/40 bg-red-400/10 text-red-600 dark:text-red-300">
+            <button type="button" onClick={voice.stop} aria-label={t("g.voice.stop")} className="flex h-11 w-11 items-center justify-center rounded-xl border border-danger/40 bg-danger/10 text-danger">
               ■
             </button>
           ) : null}
@@ -604,10 +604,10 @@ function WakeIndicator({ status, enabled, onOff, onResume }: { status: WakeStatu
   const { t } = useTranslation();
   if (status === "needs_resume") {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-fg/15 bg-white/95 px-3 py-1 text-[11px] text-fg/75 shadow dark:bg-navy-dark/95" role="status">
+      <div className="flex items-center gap-2 rounded-full border border-fg/15 bg-surface px-3 py-1 text-[11px] text-fg/75 shadow" role="status">
         <span aria-hidden>🎙</span>
         {t("g.wake.needsResume")}
-        <button type="button" onClick={onResume} className="font-semibold text-brand-green underline underline-offset-2">
+        <button type="button" onClick={onResume} className="font-semibold text-accent underline underline-offset-2">
           {t("g.wake.resume")}
         </button>
       </div>
@@ -617,14 +617,14 @@ function WakeIndicator({ status, enabled, onOff, onResume }: { status: WakeStatu
   const live = status === "listening";
   return (
     <div
-      className="flex items-center gap-2 rounded-full border border-red-400/40 bg-white/95 px-3 py-1 text-[11px] text-fg/80 shadow dark:bg-navy-dark/95"
+      className="flex items-center gap-2 rounded-full border border-danger/40 bg-surface px-3 py-1 text-[11px] text-fg/80 shadow"
       role="status"
       data-testid="g-wake-indicator"
     >
-      <span aria-hidden className={`h-2 w-2 rounded-full ${live ? "g-blink bg-red-500" : "bg-fg/30"}`} />
+      <span aria-hidden className={`h-2 w-2 rounded-full ${live ? "g-blink bg-danger" : "bg-fg/30"}`} />
       <span aria-hidden>🎙</span>
       {live ? t("g.wake.listening") : status === "network" ? t("g.wake.error.network") : t("g.wake.paused")}
-      <button type="button" onClick={onOff} className="font-semibold text-red-600 underline underline-offset-2 dark:text-red-300">
+      <button type="button" onClick={onOff} className="font-semibold text-danger underline underline-offset-2">
         {t("g.wake.turnOff")}
       </button>
     </div>
@@ -649,7 +649,7 @@ function WakeSettings({
         <div className="space-y-1">
           <WakeIndicator status={wake.status} enabled={wake.enabled} onOff={wake.disable} onResume={() => void wake.enable()} />
           {wake.status === "network" ? (
-            <button type="button" onClick={wake.retry} className="font-medium text-brand-green underline underline-offset-2">
+            <button type="button" onClick={wake.retry} className="font-medium text-accent underline underline-offset-2">
               {t("g.wake.retry")}
             </button>
           ) : null}
@@ -698,8 +698,8 @@ function WakeSettings({
             {t("g.wake.enable")}
           </button>
           {wake.status === "unsupported" ? <span className="text-fg-muted">{t("g.wake.error.unsupported")}</span> : null}
-          {wake.status === "denied" ? <span className="text-red-600 dark:text-red-300" role="alert">{t("g.wake.error.denied")}</span> : null}
-          {wake.status === "unavailable" ? <span className="text-red-600 dark:text-red-300" role="alert">{t("g.wake.error.unavailable")}</span> : null}
+          {wake.status === "denied" ? <span className="text-danger" role="alert">{t("g.wake.error.denied")}</span> : null}
+          {wake.status === "unavailable" ? <span className="text-danger" role="alert">{t("g.wake.error.unavailable")}</span> : null}
         </div>
       )}
     </div>

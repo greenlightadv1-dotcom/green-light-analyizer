@@ -109,7 +109,7 @@ export function DealRoom({
                         // its text stays literal white rather than the
                         // theme-reactive fg token — ink-on-navy in light
                         // mode would be close to unreadable.
-                        "w-full max-w-full border border-white/8 bg-navy-dark/50 text-white/80"
+                        "w-full max-w-full border border-white/8 bg-forest-strong text-white/80"
                       : mine
                         ? "bg-brand-green/15 text-fg"
                         : "bg-fg/6 text-fg/90"
@@ -131,7 +131,7 @@ export function DealRoom({
                     ) : null}
                     {message.is_masked ? (
                       <span
-                        className="text-[10px] text-amber-700/70 dark:text-amber-200/70"
+                        className="text-[10px] text-warning/70"
                         title={t("inbox.filteredTitle")}
                       >
                         {t("inbox.filtered")}

@@ -43,7 +43,7 @@ export function WhatsAppSettingsCard({ profile, demo = false }: { profile: Profi
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.whatsapp")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("settings.whatsapp")}</h2>
       <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">{t("settings.whatsappNote")}</p>
 
       <form action={demo ? undefined : formAction} className="mt-4 space-y-3">

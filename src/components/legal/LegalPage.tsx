@@ -56,7 +56,7 @@ export function LegalPage({
             [&_strong]:font-semibold [&_strong]:text-fg
             [&_code]:rounded [&_code]:border [&_code]:border-fg/10 [&_code]:bg-fg/5
             [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs
-            [&_a]:text-brand-green [&_a]:underline [&_a]:underline-offset-2
+            [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2
           "
         >
           {children}

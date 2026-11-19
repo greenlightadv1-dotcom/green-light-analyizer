@@ -18,7 +18,7 @@ export function SetupBanner({ done, total, gatedNote = false }: { done: number; 
           {gatedNote ? ` · ${t("onboarding.offersGated")}` : ""}
         </p>
       </div>
-      <span className="text-sm font-semibold text-brand-green">→</span>
+      <span className="text-sm font-semibold text-accent">→</span>
     </Link>
   );
 }

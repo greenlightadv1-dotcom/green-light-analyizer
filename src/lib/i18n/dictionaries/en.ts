@@ -74,6 +74,13 @@ const en = {
       "Every inbound offer gets an instant price recommendation and a green / yellow / red risk rating, weighted by how much of the audience data behind it is actually verified.",
     footerRights: "All rights reserved.",
     joinDiscord: "Join our Discord",
+    howTitle: "How a deal moves",
+    how1Title: "Forward the offer",
+    how1Body: "Your alias receives the sponsor's email and opens a deal room.",
+    how2Title: "Priced and risk-rated",
+    how2Body: "The co-pilot recommends a price and a green, yellow or red rating.",
+    how3Title: "Negotiate on-platform",
+    how3Body: "Masked chat keeps contact details private, so the deal stays on the platform.",
   },
   common: {
     save: "Save",

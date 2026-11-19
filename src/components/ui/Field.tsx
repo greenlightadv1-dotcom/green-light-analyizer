@@ -16,16 +16,16 @@ export function Field({
     <div className="space-y-1.5">
       <label
         htmlFor={id}
-        className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+        className="block text-sm font-medium text-fg-secondary"
       >
         {label}
       </label>
       <input
         id={id}
         aria-describedby={hintId}
-        className={`h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg
-          placeholder:text-fg/30 transition
-          focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none ${className}`}
+        className={`h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 text-sm text-fg
+          placeholder:text-fg-subtle transition
+          focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green ${className}`}
         {...rest}
       />
       {hint ? (

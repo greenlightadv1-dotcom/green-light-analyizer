@@ -28,8 +28,8 @@ export interface SystemNotificationProps {
   ctaUrl?: string;
 }
 
-const NAVY = "#293E61";
-const NAVY_DARK = "#1F2E47";
+const NAVY = "#0F3B2C";
+const NAVY_DARK = "#0A2A1F";
 const GREEN = "#62E823";
 const INK = "#231F20";
 

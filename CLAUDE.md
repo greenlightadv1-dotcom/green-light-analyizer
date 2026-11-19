@@ -82,6 +82,17 @@ An advanced glassmorphism style. Every panel/card follows this recipe:
 - **Motion**: use Framer Motion for all panel/route transitions — fade + slight
   scale/translate, nothing abrupt.
 
+> **Update — 2026-11 visual identity (owner-requested redesign, branch only).**
+> §2.1's navy/obsidian palette and §2.2's "Liquid Glass" recipe are
+> superseded: warm off-white canvas `#F4F3EE`, white rounded cards (24px,
+> hairline + soft shadow, no blur), near-black ink `#0E1210`, the brand lime
+> `#62E823` (unchanged — the logo's own green) for primary actions, and deep
+> forest `#0F3B2C` for secondary surfaces. Glow orbs and mesh gradients are
+> removed. Lime is never text on a light surface; green text uses the
+> `accent` token. Fonts are Manrope + IBM Plex Sans Arabic (answers §13's
+> typography question). The `navy`/`glass-panel` names survive as aliases.
+> Full spec: `docs/DESIGN/GREEN_LIGHT_DESIGN_SYSTEM.md`.
+
 ### 2.3 Logo usage
 
 Assets are in `/assets` next to this file:

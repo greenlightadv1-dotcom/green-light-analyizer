@@ -45,7 +45,7 @@ export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
     <div className="space-y-3">
       <div className="rounded-xl border border-fg/10 bg-fg/5 p-3.5">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+          <p className="text-sm font-medium text-fg-muted">
             {t("mediaKit.accountStats")}
           </p>
           {hasStats ? <VerifiedTag verified /> : null}
@@ -82,7 +82,7 @@ export function InstagramSyncPanel({ kit }: { kit: MediaKit }) {
           </div>
         ) : null}
         {state.synced ? (
-          <p className="mt-2.5 text-xs text-brand-green">{t("common.synced")}</p>
+          <p className="mt-2.5 text-xs text-accent">{t("common.synced")}</p>
         ) : null}
       </div>
 

@@ -82,11 +82,11 @@ export default async function AdminRequestsPage() {
                   {r.message ? <p className="text-xs whitespace-pre-wrap text-fg/60">{r.message}</p> : null}
                   <div className="flex gap-2 pt-1">
                     {caseOf(r.id) ? (
-                      <Link href={`/admin/verification/${caseOf(r.id)!.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                      <Link href={`/admin/verification/${caseOf(r.id)!.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-accent hover:bg-brand-green/20">
                         Verification: {caseOf(r.id)!.status.replace(/_/g, " ")}
                       </Link>
                     ) : (
-                      <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-brand-green hover:bg-brand-green/20">
+                      <Link href={`/admin/users?request=${r.id}`} className="h-9 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 text-xs leading-9 font-medium text-accent hover:bg-brand-green/20">
                         Create account
                       </Link>
                     )}
@@ -122,7 +122,7 @@ export default async function AdminRequestsPage() {
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <h2 className="text-sm font-semibold text-fg">Company representatives</h2>
+          <h2 className="text-base font-semibold text-fg">Company representatives</h2>
           <p className="mt-1 mb-4 text-xs leading-relaxed text-fg-muted">
             Create the representative as a company account first, then link it to the company it acts for. A link shows the representative who they represent; it does not share the company&apos;s deals.
           </p>

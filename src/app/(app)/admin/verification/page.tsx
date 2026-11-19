@@ -60,12 +60,12 @@ export default async function AdminVerificationPage() {
       />
       {error ? <GlassPanel className="mb-4 p-5 text-sm text-fg-muted">Verification is not available on this database yet. Ask the developer to apply the latest database update.</GlassPanel> : null}
       <GlassPanel className="mb-4 overflow-hidden">
-        <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">Waiting for review ({open.length})</h2>
+        <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">Waiting for review ({open.length})</h2>
         {open.length ? <ul className="divide-y divide-line">{open.map(row)}</ul> : <p className="px-5 py-4 text-sm text-fg-muted">Nothing is waiting.</p>}
       </GlassPanel>
       {rest.length ? (
         <GlassPanel className="overflow-hidden">
-          <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">Other cases ({rest.length})</h2>
+          <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">Other cases ({rest.length})</h2>
           <ul className="divide-y divide-line">{rest.map(row)}</ul>
         </GlassPanel>
       ) : null}

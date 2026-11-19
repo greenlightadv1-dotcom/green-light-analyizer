@@ -171,7 +171,7 @@ export function Composer({
         </form>
 
         {!demo && draftState.error ? (
-          <p className="mt-1.5 text-xs text-red-700 dark:text-red-300">{draftState.error}</p>
+          <p className="mt-1.5 text-xs text-danger">{draftState.error}</p>
         ) : null}
 
         {draft ? (
@@ -240,7 +240,7 @@ export function Composer({
               <button
                 type="button"
                 onClick={useDraft}
-                className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-brand-green transition hover:bg-brand-green/20"
+                className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-accent transition hover:bg-brand-green/20"
               >
                 {t("inbox.useDraft")}
               </button>
@@ -276,7 +276,7 @@ export function Composer({
         </div>
 
         {state.error ? (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
+        <p role="alert" className="text-xs text-danger">
           {t(state.error)}
         </p>
       ) : null}
@@ -284,7 +284,7 @@ export function Composer({
       {state.relayFailed ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.relayFailed")}
         </p>
@@ -293,7 +293,7 @@ export function Composer({
       {demoViolation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.contactRemovedDemo", { rules: ruleList(demoViolation) })}
         </p>
@@ -302,7 +302,7 @@ export function Composer({
       {state.violation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.contactRemovedLive", { rules: ruleList(state.violation.rules) })}
         </p>

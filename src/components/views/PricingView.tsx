@@ -24,7 +24,7 @@ const STATUS_NOTE_KEY: Record<IntegrationStatus, string> = {
 };
 
 const LINK_CLASS =
-  "inline-flex items-center text-sm text-brand-green underline underline-offset-4 transition hover:brightness-110";
+  "inline-flex items-center text-sm text-accent underline underline-offset-4 transition hover:brightness-110";
 
 /**
  * Pricing — the unified Creator Plan and free Company Access (lib/plans.ts),
@@ -48,7 +48,7 @@ export function PricingView({ profile }: { profile: Profile }) {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-fg">{t(CREATOR_PLAN.nameKey)}</h2>
             {profile.role === "creator" ? (
-              <span className="rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-brand-green">
+              <span className="rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-accent">
                 {t("pricing.yourPlan")}
               </span>
             ) : null}
@@ -89,7 +89,7 @@ export function PricingView({ profile }: { profile: Profile }) {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-fg">{t("pricing.companyName")}</h2>
             {profile.role === "company" ? (
-              <span className="rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-brand-green">
+              <span className="rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-accent">
                 {t("pricing.yourPlan")}
               </span>
             ) : null}
@@ -100,7 +100,7 @@ export function PricingView({ profile }: { profile: Profile }) {
       </div>
 
       <GlassPanel as="section" className="mt-4 p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("integrations.title")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("integrations.title")}</h2>
         <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">{t("integrations.description")}</p>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {INTEGRATION_PLATFORMS.map((platform) => {
@@ -119,11 +119,11 @@ export function PricingView({ profile }: { profile: Profile }) {
       </GlassPanel>
 
       <GlassPanel as="section" className="mt-4 p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("support.title")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("support.title")}</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-fg/60">{t("support.hours")}</p>
         <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("support.hoursNote")}</p>
         {openNow === null ? null : (
-          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg-muted"}`}>
+          <p className={`mt-2 text-xs font-medium ${openNow ? "text-accent" : "text-fg-muted"}`}>
             {openNow ? t("support.openNow") : t("support.closedNow")}
           </p>
         )}

@@ -69,7 +69,7 @@ export function Dialog({
         // never stays true for a dialog that is no longer showing.
         if (open) onClose();
       }}
-      className={`gl-dialog m-auto w-[calc(100%-2rem)] ${width} rounded-card border border-line bg-white p-0 text-fg shadow-overlay backdrop:bg-transparent dark:bg-navy-dark`}
+      className={`gl-dialog m-auto w-[calc(100%-2rem)] ${width} rounded-card border border-line bg-surface p-0 text-fg shadow-overlay backdrop:bg-transparent`}
     >
       <div className="max-h-[85dvh] overflow-y-auto p-6">
         <div className="flex items-start justify-between gap-4">

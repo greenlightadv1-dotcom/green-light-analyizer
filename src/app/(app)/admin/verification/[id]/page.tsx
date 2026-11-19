@@ -76,7 +76,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
             {c.decision_reason ? <p className="mt-3 text-xs text-fg-muted">Decision note: {c.decision_reason}</p> : null}
           </GlassPanel>
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">Documents ({docs?.length ?? 0})</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">Documents ({docs?.length ?? 0})</h2>
             <ul className="divide-y divide-line">
               {(docs ?? []).map((d) => (
                 <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 text-sm">
@@ -87,7 +87,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
             </ul>
           </GlassPanel>
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">History</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">History</h2>
             <ol className="divide-y divide-line text-sm">
               {(events ?? []).map((e) => (
                 <li key={e.id} className="flex justify-between gap-2 px-5 py-2">
@@ -99,7 +99,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
           </GlassPanel>
         </div>
         <GlassPanel className="h-fit space-y-4 p-5">
-          <h2 className="text-sm font-semibold text-fg">Decision</h2>
+          <h2 className="text-base font-semibold text-fg">Decision</h2>
           {!open ? <p className="text-sm text-fg-muted">This case is not waiting for a decision.</p> : null}
           {awaitingActivation ? (
             <div className="space-y-2 rounded-control border border-info/30 bg-info/10 p-3 text-xs text-fg">
@@ -116,8 +116,8 @@ export default async function AdminVerificationCase({ params }: { params: Promis
                 {c.kind === "representative" ? (
                   <label className="block text-xs text-fg-muted">Company this person represents
                     <select name="company_id" required className={`${field} mt-1`} defaultValue="">
-                      <option value="" disabled className="bg-slate-900 text-white">Choose a company account</option>
-                      {companies.map((co) => <option key={co.id} value={co.id} className="bg-slate-900 text-white">{co.full_name}</option>)}
+                      <option value="" disabled className="bg-surface text-fg">Choose a company account</option>
+                      {companies.map((co) => <option key={co.id} value={co.id} className="bg-surface text-fg">{co.full_name}</option>)}
                     </select>
                   </label>
                 ) : null}

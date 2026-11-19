@@ -22,7 +22,7 @@ import { day, usd } from "@/lib/collab/display";
 const field =
   "w-full rounded-lg border border-line bg-surface-muted px-2.5 py-1.5 text-xs text-fg focus:border-brand-green/50 focus:outline-none";
 const btn =
-  "rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-brand-green hover:bg-brand-green/20 focus-visible:focus-ring";
+  "rounded-full border border-brand-green/30 bg-brand-green/10 px-3 py-1 text-[11px] font-medium text-accent hover:bg-brand-green/20 focus-visible:focus-ring";
 
 export function CollaborationsCard({
   data,

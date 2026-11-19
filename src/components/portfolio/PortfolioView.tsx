@@ -37,9 +37,9 @@ function ItemForm({ item, demo }: { item: PortfolioItem | null; demo: boolean })
         <TextInput id={`pf-url-${p}`} name="url" type="url" labelKey="portfolio.fieldUrl" dir="ltr" pattern="https://.*" maxLength={PORTFOLIO_LIMITS.url} defaultValue={item?.url ?? ""} />
         <Labelled id={`pf-platform-${p}`} labelKey="portfolio.fieldPlatform">
           <select id={`pf-platform-${p}`} name="platform" className={SELECT_CLASS} defaultValue={item?.platform ?? ""}>
-            <option value="" className="bg-slate-900 text-white">{t("portfolio.platformNone")}</option>
+            <option value="" className="bg-surface text-fg">{t("portfolio.platformNone")}</option>
             {PORTFOLIO_PLATFORMS.map((x) => (
-              <option key={x} value={x} className="bg-slate-900 text-white">{x === "other" ? t("portfolio.platformOther") : PLATFORM_LABEL[x]}</option>
+              <option key={x} value={x} className="bg-surface text-fg">{x === "other" ? t("portfolio.platformOther") : PLATFORM_LABEL[x]}</option>
             ))}
           </select>
         </Labelled>
@@ -164,7 +164,7 @@ export function PortfolioView({
         </div>
 
         <GlassPanel className="h-fit space-y-3 p-5">
-          <h2 className="text-sm font-semibold text-fg">{t("portfolio.visTitle")}</h2>
+          <h2 className="text-base font-semibold text-fg">{t("portfolio.visTitle")}</h2>
           <p className="text-xs leading-relaxed text-fg-muted">{t("portfolio.visBody")}</p>
           <form action={saveVis} className="space-y-3">
             <fieldset className="space-y-2">

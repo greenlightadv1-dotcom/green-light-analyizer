@@ -44,7 +44,7 @@ export function AnalyzerView({
           {/* §7.2: never show audience data without saying which kind it is. */}
           <GlassPanel className="p-5">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-fg">
+              <h2 className="text-base font-semibold text-fg">
                 {t("analyzer.pricingBasis")}
               </h2>
               <VerifiedTag verified={audienceVerified} />

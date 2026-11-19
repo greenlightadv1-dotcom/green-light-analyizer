@@ -19,14 +19,14 @@ export function EmptyState({
   return (
     <GlassPanel className="flex flex-col items-start gap-2 p-8">
       <div className="flex items-center gap-2">
-        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand-green" />
-        <h2 className="text-sm font-semibold text-fg">{title}</h2>
+        <span aria-hidden className="h-2 w-2 rounded-full bg-brand-green" />
+        <h2 className="text-base font-semibold text-fg">{title}</h2>
       </div>
       <p className="max-w-xl text-sm leading-relaxed text-fg-muted">{body}</p>
       {action ? (
         <Link
           href={action.href}
-          className="mt-2 inline-flex h-10 items-center rounded-control bg-brand-green px-4 text-sm font-semibold text-ink transition hover:brightness-110 focus-visible:focus-ring"
+          className="mt-2 inline-flex h-10 items-center rounded-full bg-brand-green px-5 text-sm font-semibold text-ink transition-colors hover:bg-[#57d61d] focus-visible:focus-ring"
         >
           {action.label}
         </Link>

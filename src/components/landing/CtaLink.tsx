@@ -1,21 +1,13 @@
 import Link from "next/link";
 import type { AnchorHTMLAttributes } from "react";
+import { BUTTON_BASE, BUTTON_VARIANTS } from "@/components/ui/Button";
 
-type Variant = "primary" | "ghost";
-
-const VARIANTS: Record<Variant, string> = {
-  // Same recipe as ui/Button.tsx's "primary" — ink text for AA contrast on
-  // the bright neon-green fill, in both themes.
-  primary:
-    "bg-brand-green text-ink hover:brightness-110 active:brightness-95 shadow-[0_8px_30px_-12px_rgba(98,232,35,0.7)]",
-  ghost:
-    "border border-navy/15 bg-navy/5 text-ink hover:bg-navy/10 dark:border-white/15 dark:bg-white/5 dark:text-white dark:hover:bg-white/10",
-};
+type Variant = "primary" | "secondary" | "outline" | "ghost";
 
 /**
- * Landing-page CTA, styled like ui/Button.tsx but rendered as a link — the
- * landing page's CTAs navigate (to /login, or out to Discord/WhatsApp)
- * rather than submit a form, so a <button> isn't the right element.
+ * A link that looks like ui/Button. The landing page's CTAs navigate (to
+ * /login, /get-started, or out to Discord/WhatsApp) rather than submit a
+ * form, so a <button> isn't the right element.
  */
 export function CtaLink({
   href,
@@ -29,19 +21,11 @@ export function CtaLink({
   variant?: Variant;
   external?: boolean;
 }) {
-  const classes = `inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold transition
-    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green
-    ${VARIANTS[variant]} ${className}`;
+  const classes = `${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`;
 
   if (external) {
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={classes}
-        {...rest}
-      >
+      <a href={href} target="_blank" rel="noopener noreferrer" className={classes} {...rest}>
         {children}
       </a>
     );

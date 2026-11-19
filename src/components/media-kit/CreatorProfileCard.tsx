@@ -57,7 +57,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
   return (
     <form action={formAction} className="space-y-4">
       <GlassPanel className="p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("mediaKit.creatorProfile")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("mediaKit.creatorProfile")}</h2>
 
         <div className="mt-4 space-y-4">
           {/* Drag-and-drop upload with preview, progress, replace and remove
@@ -65,7 +65,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
           <AvatarUpload initialUrl={profile.avatar_url ?? null} />
 
           <div className="space-y-1.5">
-            <p className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+            <p className="block text-sm font-medium text-fg-muted">
               {t("mediaKit.nameLabel")}
             </p>
             <p className="text-sm text-fg">{profile.full_name}</p>
@@ -73,7 +73,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="bio" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+            <label htmlFor="bio" className="block text-sm font-medium text-fg-muted">
               {t("mediaKit.bio")}
             </label>
             <textarea
@@ -119,7 +119,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
       </GlassPanel>
 
       <GlassPanel className="p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("mediaKit.socialAccounts")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("mediaKit.socialAccounts")}</h2>
         <p className="mt-1 text-xs text-fg-muted">{t("mediaKit.socialAccountsNote")}</p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

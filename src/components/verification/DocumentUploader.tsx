@@ -72,7 +72,7 @@ export function DocumentUploader({ caseId, types, endpoint = "/api/verification/
         {t("verification.docTypeLabel")}
         <select value={docType} onChange={(e) => setDocType(e.target.value as VerificationDocType)} className="mt-1 h-10 w-full rounded-control border border-line bg-surface-muted px-3 text-sm text-fg">
           {types.map((d) => (
-            <option key={d} value={d} className="bg-slate-900 text-white">{t(`verification.docType.${d}`)}</option>
+            <option key={d} value={d} className="bg-surface text-fg">{t(`verification.docType.${d}`)}</option>
           ))}
         </select>
       </label>

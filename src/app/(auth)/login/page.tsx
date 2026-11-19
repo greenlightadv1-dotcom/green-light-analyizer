@@ -16,7 +16,7 @@ export default async function LoginPage({
 
   return (
     <GlassPanel className="p-7 sm:p-8">
-      <h1 className="text-xl font-semibold text-fg">Sign in</h1>
+      <h1 className="text-2xl font-bold text-fg sm:text-3xl">Sign in</h1>
       <p className="mt-1.5 text-sm text-fg-muted">
         Your Personal Business Manager.
       </p>
@@ -36,11 +36,11 @@ export default async function LoginPage({
 
       <p className="mt-4 text-xs leading-relaxed text-fg-muted">
         Signing in means you accept our{" "}
-        <Link href="/terms" className="text-brand-green underline underline-offset-2">
+        <Link href="/terms" className="text-accent underline underline-offset-2">
           Terms of Service
         </Link>{" "}
         and{" "}
-        <Link href="/privacy" className="text-brand-green underline underline-offset-2">
+        <Link href="/privacy" className="text-accent underline underline-offset-2">
           Privacy Policy
         </Link>
         .

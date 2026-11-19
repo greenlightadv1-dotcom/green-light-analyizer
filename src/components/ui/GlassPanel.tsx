@@ -8,8 +8,9 @@ type GlassPanelProps = HTMLAttributes<HTMLElement> & {
 };
 
 /**
- * The Liquid Glass surface (CLAUDE.md §2.2). Every card / panel in the product
- * should be one of these rather than hand-rolling the blur recipe.
+ * The card surface: white (surface token), hairline border, 24px radius,
+ * soft shadow. The name is historical (it was the "Liquid Glass" panel); the
+ * recipe lives in globals.css so every card re-themes from one place.
  */
 export function GlassPanel({
   as: Tag = "div",

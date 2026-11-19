@@ -88,7 +88,7 @@ export function NotificationsView({
         </div>
 
         <GlassPanel className="h-fit space-y-3 p-5">
-          <h2 className="text-sm font-semibold text-fg">{t("notifications.prefsTitle")}</h2>
+          <h2 className="text-base font-semibold text-fg">{t("notifications.prefsTitle")}</h2>
           <p className="text-xs leading-relaxed text-fg-muted">{t("notifications.prefsBody")}</p>
           <form action={savePrefs} className="space-y-3">
             <fieldset className="space-y-2">

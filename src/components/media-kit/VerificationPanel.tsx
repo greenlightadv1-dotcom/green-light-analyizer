@@ -45,7 +45,7 @@ export function VerificationPanel({
         </p>
         <Link
           href="/settings"
-          className="mt-2.5 inline-block text-xs text-brand-green underline underline-offset-4 transition hover:text-fg"
+          className="mt-2.5 inline-block text-xs text-accent underline underline-offset-4 transition hover:text-fg"
         >
           {t("mediaKit.manageInSettings")}
         </Link>
@@ -77,7 +77,7 @@ export function VerificationPanel({
       <p className="text-xs leading-relaxed text-fg-muted">{support.note}</p>
       <Link
         href="/settings"
-        className="mt-2.5 inline-block text-xs text-brand-green underline underline-offset-4 transition hover:text-fg"
+        className="mt-2.5 inline-block text-xs text-accent underline underline-offset-4 transition hover:text-fg"
       >
         {t("mediaKit.connectInSettings")}
       </Link>

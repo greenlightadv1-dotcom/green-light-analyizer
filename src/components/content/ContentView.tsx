@@ -18,7 +18,7 @@ import type { ContentItem } from "@/lib/types/database";
 import { BTN_DANGER, BTN_GHOST, BTN_PRIMARY, Labelled, SELECT_CLASS, TextArea, TextInput } from "@/components/collab/ui";
 
 const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-const opt = "bg-slate-900 text-white";
+const opt = "bg-surface text-fg";
 
 function ItemForm({ item, collaborations, demo, defaultDate }: { item: ContentItem | null; collaborations: { id: string; title: string }[]; demo: boolean; defaultDate?: string }) {
   const { t } = useTranslation();
@@ -202,7 +202,7 @@ export function ContentView({
         <GlassPanel className="p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <Link href={href({ month: monthKey(prev.year, prev.month) })} className={`${BTN_GHOST} h-8`} aria-label={t("content.prevMonth")}>‹</Link>
-            <h2 className="text-sm font-semibold text-fg" dir="ltr">{monthKey(year, month)}</h2>
+            <h2 className="text-base font-semibold text-fg" dir="ltr">{monthKey(year, month)}</h2>
             <Link href={href({ month: monthKey(next.year, next.month) })} className={`${BTN_GHOST} h-8`} aria-label={t("content.nextMonth")}>›</Link>
           </div>
           <div className="overflow-x-auto">

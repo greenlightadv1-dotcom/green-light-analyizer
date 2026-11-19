@@ -34,9 +34,9 @@ export function BriefForm({ brief }: { brief: Brief | null }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Labelled id="brief-type" labelKey="collab.briefs.fieldType">
           <select id="brief-type" name="sponsorship_type" defaultValue={brief?.sponsorship_type ?? ""} className={SELECT_CLASS}>
-            <option value="" className="bg-slate-900 text-white">{t("collab.briefs.fieldTypeAny")}</option>
+            <option value="" className="bg-surface text-fg">{t("collab.briefs.fieldTypeAny")}</option>
             {SPONSORSHIP_TYPES.map((s) => (
-              <option key={s} value={s} className="bg-slate-900 text-white">{t(TYPE_LABEL_KEY[s])}</option>
+              <option key={s} value={s} className="bg-surface text-fg">{t(TYPE_LABEL_KEY[s])}</option>
             ))}
           </select>
         </Labelled>

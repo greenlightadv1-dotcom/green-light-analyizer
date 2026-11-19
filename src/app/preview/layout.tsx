@@ -44,7 +44,7 @@ export default function PreviewLayout({
       <Sidebar role={mockProfile.role} basePath="/preview" />
       {/* pb-24: the last content can always scroll clear of the fixed G launcher. */}
       <div className="min-w-0 flex-1 pb-24">
-        <div className="mb-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+        <div className="mb-4 rounded-xl border border-warning/25 bg-warning/10 px-4 py-2.5 text-xs leading-relaxed text-warning">
           <strong className="font-semibold">Interface preview.</strong> Every
           name, figure and message on these screens is invented, and nothing is
           saved. The real product is admin-gated and holds no data yet.

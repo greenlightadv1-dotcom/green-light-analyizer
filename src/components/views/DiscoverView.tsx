@@ -90,7 +90,7 @@ export function DiscoverView({
                     </span>
                   ))}
                   {games.map((g) => (
-                    <span key={g} className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[11px] text-brand-green">
+                    <span key={g} className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[11px] text-accent">
                       {label(g)}
                     </span>
                   ))}
@@ -135,14 +135,14 @@ export function DiscoverView({
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
           {c.shareable_slug ? (
-            <Link href={`/p/${c.shareable_slug}`} className="text-brand-green underline underline-offset-4" target="_blank">
+            <Link href={`/p/${c.shareable_slug}`} className="text-accent underline underline-offset-4" target="_blank">
               {t("discover.viewProfile")}
             </Link>
           ) : null}
           <button
             type="button"
             onClick={() => emitG({ type: "compare", creatorId: c.creator_id, name: c.full_name })}
-            className="text-brand-green underline underline-offset-4"
+            className="text-accent underline underline-offset-4"
           >
             {t("discover.addToCompare")}
           </button>

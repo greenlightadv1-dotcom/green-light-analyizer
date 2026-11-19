@@ -13,7 +13,7 @@ export function ResetPasswordForm({ state, email, action }: { state: "ready" | "
   const [result, formAction, pending] = useActionState<ResetState, FormData>(action, { errorKey: null });
   return (
     <GlassPanel className="space-y-4 p-7 sm:p-8">
-      <h1 className="text-xl font-semibold text-fg">{t("passwordReset.resetTitle")}</h1>
+      <h1 className="text-2xl font-bold text-fg sm:text-3xl">{t("passwordReset.resetTitle")}</h1>
       {state === "missing" ? (
         <div data-testid="reset-missing" className="space-y-3">
           <p className="text-sm text-fg-secondary">{t("passwordReset.missing")}</p>
@@ -22,7 +22,7 @@ export function ResetPasswordForm({ state, email, action }: { state: "ready" | "
       ) : state === "signed_in" ? (
         <div data-testid="reset-signed-in" className="space-y-3">
           <p className="text-sm text-fg-secondary">{t("passwordReset.signedIn")}</p>
-          <Link href="/settings" className="text-sm text-brand-green underline underline-offset-2">{t("passwordReset.toSettings")}</Link>
+          <Link href="/settings" className="text-sm text-accent underline underline-offset-2">{t("passwordReset.toSettings")}</Link>
         </div>
       ) : (
         <>

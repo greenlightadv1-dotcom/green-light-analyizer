@@ -62,6 +62,13 @@ const de: Dictionary = {
       "Jedes eingehende Angebot erhält sofort eine Preisempfehlung und eine Risikobewertung grün / gelb / rot, gewichtet danach, wie viele der zugrunde liegenden Audience-Daten tatsächlich verifiziert sind.",
     footerRights: "Alle Rechte vorbehalten.",
     joinDiscord: "Tritt unserem Discord bei",
+    howTitle: "So läuft ein Deal ab",
+    how1Title: "Angebot weiterleiten",
+    how1Body: "Deine Alias-Adresse empfängt die E-Mail des Sponsors und öffnet einen Deal-Raum.",
+    how2Title: "Preis und Risikobewertung",
+    how2Body: "Der Co-Pilot empfiehlt einen Preis und eine grüne, gelbe oder rote Bewertung.",
+    how3Title: "Auf der Plattform verhandeln",
+    how3Body: "Der maskierte Chat schützt Kontaktdaten, damit der Deal auf der Plattform bleibt.",
   },
   common: {
     save: "Speichern",

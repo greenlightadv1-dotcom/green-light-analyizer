@@ -211,7 +211,7 @@ export function SendInviteModal() {
         ref={triggerRef}
         type="button"
         onClick={openModal}
-        className="flex items-center gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20"
+        className="flex items-center gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-accent transition hover:bg-brand-green/20"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden>
           <path d="M4 4l16 8-16 8 3.5-8L4 4Z" />
@@ -222,7 +222,7 @@ export function SendInviteModal() {
       <AnimatePresence>
         {open ? (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -278,7 +278,7 @@ export function SendInviteModal() {
                     aria-pressed={type === option}
                     className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition ${
                       type === option
-                        ? "border-brand-green/30 bg-brand-green/10 text-brand-green"
+                        ? "border-brand-green/30 bg-brand-green/10 text-accent"
                         : "border-fg/10 bg-fg/5 text-fg/60 hover:bg-fg/10 hover:text-fg"
                     }`}
                   >
@@ -298,7 +298,7 @@ export function SendInviteModal() {
                     value={form.to}
                     onChange={field("to")}
                   />
-                  {errors.to ? <p className="mt-1 text-xs text-red-700 dark:text-red-300">{errors.to}</p> : null}
+                  {errors.to ? <p className="mt-1 text-xs text-danger">{errors.to}</p> : null}
                 </div>
 
                 {type === "creator_outreach" ? (
@@ -311,7 +311,7 @@ export function SendInviteModal() {
                       onChange={field("creatorName")}
                     />
                     {errors.creatorName ? (
-                      <p className="mt-1 text-xs text-red-700 dark:text-red-300">{errors.creatorName}</p>
+                      <p className="mt-1 text-xs text-danger">{errors.creatorName}</p>
                     ) : null}
                   </div>
                 ) : null}
@@ -325,7 +325,7 @@ export function SendInviteModal() {
                       value={form.title}
                       onChange={field("title")}
                     />
-                    {errors.title ? <p className="mt-1 text-xs text-red-700 dark:text-red-300">{errors.title}</p> : null}
+                    {errors.title ? <p className="mt-1 text-xs text-danger">{errors.title}</p> : null}
                   </div>
 
                   {type === "creator_outreach" ? (
@@ -341,14 +341,14 @@ export function SendInviteModal() {
                         onChange={field("offerAmount")}
                       />
                       {errors.offerAmount ? (
-                        <p className="mt-1 text-xs text-red-700 dark:text-red-300">{errors.offerAmount}</p>
+                        <p className="mt-1 text-xs text-danger">{errors.offerAmount}</p>
                       ) : null}
                     </div>
                   ) : null}
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="outreach-message" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+                  <label htmlFor="outreach-message" className="block text-sm font-medium text-fg-muted">
                     {messageLabel}
                   </label>
                   <textarea
@@ -360,7 +360,7 @@ export function SendInviteModal() {
                     value={form.message}
                     onChange={field("message")}
                   />
-                  {errors.message ? <p className="text-xs text-red-700 dark:text-red-300">{errors.message}</p> : null}
+                  {errors.message ? <p className="text-xs text-danger">{errors.message}</p> : null}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -374,7 +374,7 @@ export function SendInviteModal() {
                       value={form.ctaUrl}
                       onChange={field("ctaUrl")}
                     />
-                    {errors.ctaUrl ? <p className="mt-1 text-xs text-red-700 dark:text-red-300">{errors.ctaUrl}</p> : null}
+                    {errors.ctaUrl ? <p className="mt-1 text-xs text-danger">{errors.ctaUrl}</p> : null}
                   </div>
                   <Field
                     id="outreach-cta-label"

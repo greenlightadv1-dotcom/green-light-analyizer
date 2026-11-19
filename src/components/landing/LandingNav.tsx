@@ -8,17 +8,16 @@ import { CtaLink } from "@/components/landing/CtaLink";
 import { useTranslation } from "@/components/LocaleProvider";
 
 /**
- * Floating nav (spec point 2): inset from the viewport edges rather than
- * full-bleed, sticky, glass. Light/dark via `dark:` — everything else on the
- * public site follows the same pattern.
+ * Floating pill nav, inset from the viewport edges and sticky. Colours come
+ * from the semantic tokens, so it themes with the rest of the site.
  */
 export function LandingNav() {
   const { t } = useTranslation();
 
   return (
     <div className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4 sm:px-6">
-      <nav className="flex items-center justify-between gap-4 rounded-2xl border border-navy/10 bg-white/70 px-4 py-3 shadow-[0_8px_30px_-16px_rgba(41,62,97,0.35)] backdrop-blur-xl dark:border-white/10 dark:bg-navy-dark/60 dark:shadow-[0_8px_30px_-16px_rgba(0,0,0,0.6)]">
-        <Link href="/" aria-label="Green Light home">
+      <nav className="glass-panel-solid flex items-center justify-between gap-3 rounded-full py-2 ps-5 pe-2">
+        <Link href="/" aria-label="Green Light home" className="rounded-full focus-visible:focus-ring">
           <ThemedLogo size={30} />
         </Link>
 

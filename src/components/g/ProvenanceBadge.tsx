@@ -4,10 +4,10 @@ import { useTranslation } from "@/components/LocaleProvider";
 import type { Provenance } from "@/lib/g/provenance";
 
 const TONE: Record<Provenance, string> = {
-  verified: "border-brand-green/30 bg-brand-green/10 text-brand-green",
-  synced: "border-sky-400/30 bg-sky-400/10 text-sky-700 dark:text-sky-200",
-  self_reported: "border-amber-400/30 bg-amber-400/10 text-amber-700 dark:text-amber-200",
-  stale: "border-orange-400/30 bg-orange-400/10 text-orange-700 dark:text-orange-200",
+  verified: "border-brand-green/30 bg-brand-green/10 text-accent",
+  synced: "border-info/30 bg-info/10 text-info",
+  self_reported: "border-warning/30 bg-warning/10 text-warning",
+  stale: "border-warning/30 bg-warning/10 text-warning",
   missing: "border-fg/10 bg-fg/5 text-fg-muted",
 };
 

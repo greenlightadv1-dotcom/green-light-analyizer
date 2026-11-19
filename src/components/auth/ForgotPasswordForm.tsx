@@ -33,11 +33,11 @@ export function ForgotPasswordForm({ action, linkProblem }: { action: (p: Forgot
   return (
     <GlassPanel className="space-y-4 p-7 sm:p-8">
       <div>
-        <h1 className="text-xl font-semibold text-fg">{t("passwordReset.requestTitle")}</h1>
+        <h1 className="text-2xl font-bold text-fg sm:text-3xl">{t("passwordReset.requestTitle")}</h1>
         <p className="mt-1.5 text-sm text-fg-muted">{t("passwordReset.requestIntro")}</p>
       </div>
       {problem && state.status === "idle" ? (
-        <p role="alert" data-testid="link-problem" className="rounded-lg border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-100">
+        <p role="alert" data-testid="link-problem" className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
           {t(`passwordReset.link.${problem}`)}
         </p>
       ) : null}
@@ -61,7 +61,7 @@ export function ForgotPasswordForm({ action, linkProblem }: { action: (p: Forgot
         </form>
       )}
       <p className="text-sm">
-        <Link href="/login" className="text-brand-green underline underline-offset-2">{t("passwordReset.backToSignIn")}</Link>
+        <Link href="/login" className="text-accent underline underline-offset-2">{t("passwordReset.backToSignIn")}</Link>
       </p>
     </GlassPanel>
   );

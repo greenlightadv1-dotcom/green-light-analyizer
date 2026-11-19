@@ -55,33 +55,33 @@ export function DashboardView({
             <p className="text-sm font-semibold text-fg">{t("dashboard.completeProfileTitle")}</p>
             <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("dashboard.completeProfileBody")}</p>
           </div>
-          <span className="shrink-0 text-xs font-medium text-brand-green">
+          <span className="shrink-0 text-xs font-medium text-accent">
             {t("dashboard.completeProfileCta")}
           </span>
         </Link>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg-muted uppercase">
+        <div className="surface-lime flex flex-col p-6">
+          <p className="text-sm font-semibold text-ink/75">
             {t("dashboard.openDeals")}
           </p>
-          <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
+          <p className="mt-2 text-5xl font-bold text-ink tabular-nums">
             {openDeals}
           </p>
-          <p className="mt-2 text-xs text-fg-muted">
+          <p className="mt-auto pt-4 text-xs font-medium text-ink/70">
             {t("dashboard.pricingNote", { pct: CREATOR_COMMISSION })}
           </p>
-        </GlassPanel>
+        </div>
 
-        <GlassPanel className="p-5 lg:col-span-2">
+        <GlassPanel className="p-6 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs tracking-wide text-fg-muted uppercase">
+            <p className="text-sm font-medium text-fg-muted">
               {t("dashboard.inboundAlias")}
             </p>
             {profile.inbound_alias ? <CopyButton value={profile.inbound_alias} /> : null}
           </div>
-          <p className="mt-2 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+          <p className="mt-2 rounded-xl border border-fg/10 bg-forest-strong px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {profile.inbound_alias ?? t("dashboard.notIssuedYet")}
           </p>
           <p className="mt-2 text-xs text-fg-muted">
@@ -100,7 +100,7 @@ export function DashboardView({
           ) : (
             <GlassPanel className="overflow-hidden">
               <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
-                <h2 className="text-sm font-semibold text-fg">
+                <h2 className="text-base font-semibold text-fg">
                   {t("dashboard.recentDeals")}
                 </h2>
                 <Link
@@ -142,7 +142,7 @@ export function DashboardView({
           beats a generic "connect your accounts" prompt.
         */}
         <GlassPanel className="h-fit p-5">
-          <h2 className="text-sm font-semibold text-fg">
+          <h2 className="text-base font-semibold text-fg">
             {t("dashboard.audienceVerification")}
           </h2>
           {verifiedKits > 0 ? (
@@ -163,7 +163,7 @@ export function DashboardView({
           )}
           <Link
             href="/media-kit"
-            className="mt-3 inline-block text-xs text-brand-green transition hover:brightness-125"
+            className="mt-3 inline-block text-xs text-accent transition hover:brightness-125"
           >
             {t("dashboard.openMediaKit")}
           </Link>

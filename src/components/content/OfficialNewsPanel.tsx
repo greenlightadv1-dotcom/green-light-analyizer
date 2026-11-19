@@ -15,7 +15,7 @@ export function OfficialNewsPanel({ items }: { items: NewsHeadline[] }) {
   const df = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   return (
     <GlassPanel className="mb-4 p-5">
-      <h2 className="text-sm font-semibold text-fg">{t("content.news.title")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("content.news.title")}</h2>
       <p className="mt-1 text-xs text-fg-muted">{t("content.news.intro")}</p>
       {items.length ? (
         <ul className="mt-3 space-y-2 text-sm">

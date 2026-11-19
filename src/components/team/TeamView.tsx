@@ -99,7 +99,7 @@ export function TeamView(props: Props) {
         ) : null}
         {can("briefs.view") ? (
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{t("team.companyBriefs")}</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{t("team.companyBriefs")}</h2>
             {props.briefs.length ? (
               <ul className="divide-y divide-line">{props.briefs.map((b) => <li key={b.id} className="flex justify-between gap-2 px-5 py-2 text-sm"><span dir="auto" className="text-fg">{b.title}</span><span className="text-xs text-fg-muted">{b.status} · {day(b.updated_at)}</span></li>)}</ul>
             ) : (
@@ -131,7 +131,7 @@ export function TeamView(props: Props) {
       )}
       {props.events.length ? (
         <GlassPanel className="mt-4 overflow-hidden">
-          <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{t("team.history")}</h2>
+          <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{t("team.history")}</h2>
           <ol className="divide-y divide-line text-sm">
             {props.events.map((e) => (
               <li key={e.id} className="flex justify-between gap-2 px-5 py-2">

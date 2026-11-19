@@ -36,7 +36,7 @@ export function CompanyDetailsForm({ initial, demo = false }: { initial: Company
         dir="ltr"
       />
       <div className="space-y-1.5">
-        <label htmlFor="bio" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+        <label htmlFor="bio" className="block text-sm font-medium text-fg-muted">
           {t("onboarding.description")}
         </label>
         <textarea

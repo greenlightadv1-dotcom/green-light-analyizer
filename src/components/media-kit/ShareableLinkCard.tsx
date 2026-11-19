@@ -20,11 +20,11 @@ export function ShareableLinkCard({ slug }: { slug: string | null }) {
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("mediaKit.shareableLink")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("mediaKit.shareableLink")}</h2>
       {slug ? (
         <>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+            <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-forest-strong px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
               {shareableProfileUrl(slug).replace(/^https?:\/\//, "")}
             </code>
             <CopyButton value={shareableProfileUrl(slug)} />

@@ -79,7 +79,7 @@ export function ViolationsView({
                       theme, so its text stays literal white. */}
                   <p
                     dir="auto"
-                    className="mt-3 rounded-control border border-white/8 bg-navy-dark/60 px-3.5 py-2.5 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/75"
+                    className="mt-3 rounded-control border border-white/8 bg-forest-strong px-3.5 py-2.5 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-white/75"
                   >
                     {item.excerpt}
                   </p>

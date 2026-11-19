@@ -78,7 +78,7 @@ export function OnboardingView({
                   {step.done ? "✓" : i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-sm font-semibold text-fg">
+                  <h2 className="text-base font-semibold text-fg">
                     {t(`onboarding.step.${step.id}.title`)}
                     {step.optional ? <span className="ms-2 text-xs font-normal text-fg-muted">{t("onboarding.optional")}</span> : null}
                     <span className="sr-only"> — {step.done ? t("onboarding.done") : t("onboarding.todo")}</span>
@@ -86,7 +86,7 @@ export function OnboardingView({
                   <p className="mt-1 text-sm leading-relaxed text-fg/60">{t(`onboarding.step.${step.id}.body`)}</p>
                   {inline[step.id] ? <div className="mt-4">{inline[step.id]}</div> : null}
                   {step.href && !inline[step.id] ? (
-                    <Link href={`${basePath}${step.href}`} className="mt-3 inline-block text-sm font-medium text-brand-green underline-offset-2 hover:underline">
+                    <Link href={`${basePath}${step.href}`} className="mt-3 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline">
                       {t(`onboarding.step.${step.id}.cta`)} →
                     </Link>
                   ) : null}
@@ -99,7 +99,7 @@ export function OnboardingView({
 
       {role === "creator" ? (
         <GlassPanel as="section" className="mt-4 p-5 sm:p-6">
-          <h2 className="text-sm font-semibold text-fg">{t("onboarding.documentsTitle")}</h2>
+          <h2 className="text-base font-semibold text-fg">{t("onboarding.documentsTitle")}</h2>
           <p className="mt-1 mb-4 text-sm text-fg/60">{t("onboarding.documentsBody")}</p>
           <DocumentsUpload demo={demo} />
         </GlassPanel>

@@ -35,10 +35,10 @@ export function NavLinks({
             href={href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`rounded-xl border-s-2 py-2.5 ps-2.5 pe-3 text-sm transition ${
+            className={`flex items-center rounded-full px-4 py-2.5 text-sm transition-colors focus-visible:focus-ring ${
               active
-                ? "border-brand-green bg-brand-green/12 font-medium text-brand-green"
-                : "border-transparent text-fg/60 hover:translate-x-0.5 rtl:hover:-translate-x-0.5 hover:bg-fg/5 hover:text-fg"
+                ? "bg-forest font-semibold text-white dark:bg-brand-green dark:text-ink"
+                : "text-fg-muted hover:bg-surface-hover hover:text-fg"
             }`}
           >
             {t(item.labelKey)}

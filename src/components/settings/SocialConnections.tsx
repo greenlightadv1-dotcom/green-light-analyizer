@@ -37,13 +37,13 @@ const ICONS: Record<OAuthPlatform, ReactNode> = {
 };
 
 const CONNECT_CLASSNAME =
-  "inline-flex items-center justify-center rounded-lg border border-brand-green/30 bg-brand-green/10 px-3.5 py-2 text-xs font-medium text-brand-green transition hover:bg-brand-green/20";
+  "inline-flex items-center justify-center rounded-lg border border-brand-green/30 bg-brand-green/10 px-3.5 py-2 text-xs font-medium text-accent transition hover:bg-brand-green/20";
 
 function StatusBadge({ connected }: { connected: boolean }) {
   const { t } = useTranslation();
 
   return connected ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-brand-green">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-accent">
       <span className="h-1.5 w-1.5 rounded-full bg-brand-green" aria-hidden />
       {t("common.connected")}
     </span>
@@ -62,7 +62,7 @@ function SyncButton({ demo }: { demo: boolean }) {
     <button
       type={demo ? "button" : "submit"}
       disabled={pending}
-      className="text-xs text-brand-green underline underline-offset-4 transition hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="text-xs text-accent underline underline-offset-4 transition hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? t("common.syncing") : t("mediaKit.syncNow")}
     </button>
@@ -162,12 +162,12 @@ function ConnectionRow({
           </div>
 
           {syncState.error ? (
-            <p className="mt-2 text-[11px] text-red-700 dark:text-red-300">
+            <p className="mt-2 text-[11px] text-danger">
               {t(syncState.error)}
             </p>
           ) : null}
           {syncState.synced ? (
-            <p className="mt-2 text-[11px] text-brand-green">
+            <p className="mt-2 text-[11px] text-accent">
               {t("common.synced")}
             </p>
           ) : null}
@@ -181,7 +181,7 @@ function ConnectionRow({
           {t("mediaKit.inDevelopmentNote", { source: support.source })}
         </p>
       ) : !configured ? (
-        <p className="mt-3 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-amber-700/60 dark:text-amber-200/60">
+        <p className="mt-3 border-t border-fg/8 pt-3 text-[11px] leading-relaxed text-warning/60">
           {t("mediaKit.pendingReview")}
         </p>
       ) : null}
@@ -216,7 +216,7 @@ export function SocialConnections({
 
   return (
     <GlassPanel as="section" className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.socialTitle")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("settings.socialTitle")}</h2>
       <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
         {t("settings.socialNote")}
       </p>

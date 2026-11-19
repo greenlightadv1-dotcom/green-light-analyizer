@@ -22,7 +22,7 @@ export function TermForm({ term, parents, usage }: { term: TaxonomyTerm | null; 
         <label className="text-xs text-fg-muted">Kind
           {create ? (
             <select name="kind" required className={`${field} mt-1`} defaultValue="sport">
-              {KINDS.map((k) => <option key={k} value={k} className="bg-slate-900 text-white">{k.replace(/_/g, " ")}</option>)}
+              {KINDS.map((k) => <option key={k} value={k} className="bg-surface text-fg">{k.replace(/_/g, " ")}</option>)}
             </select>
           ) : (
             <input name="kind" defaultValue={term.kind} readOnly className={`${field} mt-1 opacity-70`} />
@@ -30,8 +30,8 @@ export function TermForm({ term, parents, usage }: { term: TaxonomyTerm | null; 
         </label>
         <label className="text-xs text-fg-muted">Parent
           <select name="parent_id" defaultValue={term?.parent_id ?? ""} className={`${field} mt-1`}>
-            <option value="" className="bg-slate-900 text-white">None</option>
-            {parents.filter((p) => p.id !== term?.id).map((p) => <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.label_en} ({p.kind})</option>)}
+            <option value="" className="bg-surface text-fg">None</option>
+            {parents.filter((p) => p.id !== term?.id).map((p) => <option key={p.id} value={p.id} className="bg-surface text-fg">{p.label_en} ({p.kind})</option>)}
           </select>
         </label>
         <label className="text-xs text-fg-muted">Order

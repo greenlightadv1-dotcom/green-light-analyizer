@@ -71,7 +71,7 @@ export function DocumentsUpload({ demo = false }: { demo?: boolean }) {
       <FileDrop accept="application/pdf,image/jpeg,image/png,image/webp" maxBytes={MAX} disabled={pct !== null} onFile={send} label={t("uploads.documentLabel")} />
       {pct !== null ? <ProgressBar pct={pct} /> : null}
       {error ? (
-        <p role="alert" className="text-xs text-red-600 dark:text-red-300">
+        <p role="alert" className="text-xs text-danger">
           {error}{" "}
           {lastFile && !demo ? (
             <button type="button" className="underline" onClick={() => send(lastFile)}>

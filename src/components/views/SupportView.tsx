@@ -51,11 +51,11 @@ export function SupportView() {
       <SectionHeader title={t("support.pageTitle")} description={t("support.pageDescription")} />
 
       <GlassPanel as="section" className="mb-4 p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("support.hoursTitle")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("support.hoursTitle")}</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-fg/65">{t("support.hours")}</p>
         <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("support.hoursNote")}</p>
         {openNow === null ? null : (
-          <p className={`mt-2 text-xs font-medium ${openNow ? "text-brand-green" : "text-fg-muted"}`}>
+          <p className={`mt-2 text-xs font-medium ${openNow ? "text-accent" : "text-fg-muted"}`}>
             {openNow ? t("support.openNow") : t("support.closedNow")}
           </p>
         )}
@@ -67,7 +67,7 @@ export function SupportView() {
           return (
             <li key={channel.id}>
               <GlassPanel className="flex h-full flex-col p-5 sm:p-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-brand-green/25 bg-brand-green/10 text-brand-green">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-brand-green/25 bg-brand-green/10 text-accent">
                   {ICONS[channel.id]}
                 </span>
                 <h2 className="mt-4 text-base font-semibold text-fg">{t(keys.title)}</h2>

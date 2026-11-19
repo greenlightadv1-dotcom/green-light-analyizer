@@ -50,7 +50,7 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.account")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("settings.account")}</h2>
 
       <dl className="mt-4 space-y-3 text-sm">
         <div>
@@ -84,7 +84,7 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
       </form>
 
       <form action={demo ? undefined : passwordAction} className="mt-5 space-y-3 border-t border-fg/8 pt-4">
-        <h3 className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+        <h3 className="text-sm font-medium text-fg-muted">
           {t("settings.changePassword")}
         </h3>
         <div className="grid gap-3 sm:grid-cols-2">

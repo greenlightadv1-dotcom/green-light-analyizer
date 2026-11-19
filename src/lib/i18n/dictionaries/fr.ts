@@ -62,6 +62,13 @@ const fr: Dictionary = {
       "Chaque offre entrante reçoit instantanément une recommandation de prix et une note de risque vert / jaune / rouge, pondérée selon la part de données d'audience réellement vérifiées.",
     footerRights: "Tous droits réservés.",
     joinDiscord: "Rejoindre notre Discord",
+    howTitle: "Le parcours d'un accord",
+    how1Title: "Transférez l'offre",
+    how1Body: "Votre alias reçoit l'e-mail du sponsor et ouvre un espace d'accord.",
+    how2Title: "Prix et niveau de risque",
+    how2Body: "Le copilote recommande un prix et une note verte, jaune ou rouge.",
+    how3Title: "Négociez sur la plateforme",
+    how3Body: "Le chat masqué protège les coordonnées : l'accord reste sur la plateforme.",
   },
   common: {
     save: "Enregistrer",

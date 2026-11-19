@@ -12,7 +12,7 @@ import { gameTitle } from "@/lib/taxonomy";
 import type { Platform } from "@/lib/types/database";
 
 const BOX = "rounded-xl border border-fg/10 bg-fg/[0.03] p-3";
-const H = "text-[11px] font-semibold tracking-wide text-fg-muted uppercase";
+const H = "text-xs font-medium text-fg-muted";
 
 function useFmt() {
   const { locale } = useTranslation();
@@ -152,7 +152,7 @@ export function BriefCard({ brief, missing, understood = [] }: { brief: Brief; m
       <p className="text-xs text-fg/70">{parts.length ? parts.join(" · ") : t("g.card.briefEmpty")}</p>
       {understood.length ? <p className="text-[11px] text-fg-muted">{t("g.card.fromYourWords")}</p> : null}
       {missing.length ? (
-        <p className="text-[11px] text-amber-700 dark:text-amber-200">
+        <p className="text-[11px] text-warning">
           {t("g.card.briefMissing")}: {missing.map((m) => t(`g.briefField.${m}`)).join(", ")}
         </p>
       ) : null}
@@ -197,10 +197,10 @@ export function RecommendationsCard({
             ))}
           </ul>
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
-            <Link href={actionHref({ action: "open_creator", param: r.creator_id })} className="text-brand-green underline underline-offset-4">
+            <Link href={actionHref({ action: "open_creator", param: r.creator_id })} className="text-accent underline underline-offset-4">
               {t("g.action.open_creator")}
             </Link>
-            <button type="button" onClick={() => onCompare(r.creator_id, r.full_name)} className="text-brand-green underline underline-offset-4">
+            <button type="button" onClick={() => onCompare(r.creator_id, r.full_name)} className="text-accent underline underline-offset-4">
               {t("discover.addToCompare")}
             </button>
           </div>

@@ -33,7 +33,7 @@ function Chips({
   const { t } = useTranslation();
   return (
     <fieldset>
-      <legend className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+      <legend className="text-sm font-medium text-fg-muted">
         {label} <span className="normal-case text-fg-muted">{t("onboarding.upTo", { n: String(max) })}</span>
       </legend>
       <div className="mt-2 flex flex-wrap gap-2">

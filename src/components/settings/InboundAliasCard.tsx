@@ -32,20 +32,20 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.emailIntake")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("settings.emailIntake")}</h2>
       <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">
         {t("settings.emailIntakeNote")}
       </p>
 
       {alias ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+          <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-forest-strong px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {alias}
           </code>
           <CopyButton value={alias} />
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+        <p className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-3.5 py-2.5 text-xs leading-relaxed text-warning">
           {t("settings.noAliasNote")}
         </p>
       )}

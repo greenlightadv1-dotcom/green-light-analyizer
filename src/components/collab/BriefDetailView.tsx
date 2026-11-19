@@ -55,7 +55,7 @@ export function BriefDetailView({
           </GlassPanel>
 
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{t("collab.briefs.invitations")}</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{t("collab.briefs.invitations")}</h2>
             {invitations.length === 0 ? (
               <p className="px-5 py-6 text-sm text-fg-muted">{t("collab.briefs.noInvitations")}</p>
             ) : (
@@ -157,7 +157,7 @@ export function BriefDetailView({
           </GlassPanel>
 
           <GlassPanel className="space-y-3 p-5">
-            <h2 className="text-sm font-semibold text-fg">{t("collab.invite.title")}</h2>
+            <h2 className="text-base font-semibold text-fg">{t("collab.invite.title")}</h2>
             {!can.invite ? (
               <p className="text-sm text-fg-muted">{t("collab.invite.needsDetails")}</p>
             ) : (

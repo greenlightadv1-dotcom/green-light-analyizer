@@ -8,7 +8,7 @@ export function ForgotPasswordLink() {
   const { t } = useTranslation();
   return (
     <p className="mt-3 text-end text-sm">
-      <Link href="/forgot-password" className="text-brand-green underline underline-offset-2">{t("passwordReset.forgotLink")}</Link>
+      <Link href="/forgot-password" className="text-accent underline underline-offset-2">{t("passwordReset.forgotLink")}</Link>
     </p>
   );
 }

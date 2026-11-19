@@ -61,7 +61,7 @@ export function CollaborationDetailView({
         <div className="space-y-4 lg:col-span-2">
           {/* Terms */}
           <GlassPanel className="space-y-3 p-5">
-            <h2 className="text-sm font-semibold text-fg">{t("collab.c.terms")}</h2>
+            <h2 className="text-base font-semibold text-fg">{t("collab.c.terms")}</h2>
             {c.agreed_at ? (
               <div className="space-y-1 text-sm">
                 <p className="font-medium text-success">{t("collab.c.agreed", { amount: usd(c.agreed_amount_usd), date: day(c.agreed_at) })}</p>
@@ -122,7 +122,7 @@ export function CollaborationDetailView({
 
           {/* Deliverables */}
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{t("collab.c.deliverables")}</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{t("collab.c.deliverables")}</h2>
             {deliverables.length === 0 ? (
               <p className="px-5 py-6 text-sm text-fg-muted">{t("collab.c.noDeliverables")}</p>
             ) : (
@@ -247,7 +247,7 @@ export function CollaborationDetailView({
 
           {/* History */}
           <GlassPanel className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-3 text-sm font-semibold text-fg">{t("collab.c.history")}</h2>
+            <h2 className="border-b border-line px-5 py-4 text-base font-semibold text-fg">{t("collab.c.history")}</h2>
             <ol className="divide-y divide-line">
               {events.map((e) => (
                 <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-2 px-5 py-2.5 text-sm">
@@ -313,7 +313,7 @@ export function CollaborationDetailView({
 
           {brief ? (
             <GlassPanel className="space-y-2 p-5">
-              <h2 className="text-sm font-semibold text-fg">{t("collab.c.brief")}</h2>
+              <h2 className="text-base font-semibold text-fg">{t("collab.c.brief")}</h2>
               <BriefSummary brief={brief} />
             </GlassPanel>
           ) : null}

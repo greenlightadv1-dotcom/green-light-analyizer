@@ -56,7 +56,7 @@ export default async function PromoCodesPage() {
                 {c.is_used ? (
                   <span className="text-xs text-fg-muted">Redeemed</span>
                 ) : (
-                  <span className="text-xs text-brand-green">Unused</span>
+                  <span className="text-xs text-accent">Unused</span>
                 )}
               </li>
             ))}

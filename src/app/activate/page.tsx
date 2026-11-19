@@ -36,7 +36,7 @@ export default async function ActivatePage({ searchParams }: { searchParams: Pro
   return (
     <GetStartedShell>
       <section className="mx-auto max-w-xl space-y-4 px-4 pt-16 pb-20 sm:px-6">
-        <h1 className="text-2xl font-bold tracking-tight text-fg"><T k="activation.title" /></h1>
+        <h1 className="text-3xl font-bold text-fg sm:text-4xl"><T k="activation.title" /></h1>
         {state === "valid" && token ? (
           <ActivateForm token={token} email={email} action={activateAccount} />
         ) : (

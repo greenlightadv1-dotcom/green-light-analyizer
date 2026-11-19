@@ -94,7 +94,7 @@ export function CompanyDashboardView({
         ) : (
           <GlassPanel className="overflow-hidden">
             <div className="flex items-center justify-between gap-3 border-b border-fg/8 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-fg">
+              <h2 className="text-base font-semibold text-fg">
                 {t("dashboard.recentDeals")}
               </h2>
               <Link

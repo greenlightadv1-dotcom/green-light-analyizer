@@ -131,7 +131,7 @@ export default async function PublicProfilePage({
         ) : null}
 
         {profile.base_rate_usd !== null ? (
-          <p className="mt-6 rounded-xl border border-brand-green/25 bg-brand-green/8 px-4 py-2.5 text-sm font-semibold text-brand-green">
+          <p className="mt-6 rounded-xl border border-brand-green/25 bg-brand-green/8 px-4 py-2.5 text-sm font-semibold text-accent">
             ${profile.base_rate_usd.toLocaleString("en-US")}+
           </p>
         ) : null}
@@ -139,7 +139,7 @@ export default async function PublicProfilePage({
 
       {portfolio.length ? (
         <GlassPanel className="mt-4 w-full p-6">
-          <h2 className="text-sm font-semibold text-fg">Selected work</h2>
+          <h2 className="text-base font-semibold text-fg">Selected work</h2>
           <ul className="mt-3 divide-y divide-fg/5">
             {portfolio.map((item, i) => (
               <li key={i} className="py-3 text-sm">

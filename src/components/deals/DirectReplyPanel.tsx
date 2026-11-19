@@ -48,7 +48,7 @@ function SendButton({ demo }: { demo: boolean }) {
       // form with no action navigates the page away.
       type={demo ? "button" : "submit"}
       disabled={pending}
-      className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-brand-green transition hover:bg-brand-green/20 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-3 py-1.5 text-xs font-medium text-accent transition hover:bg-brand-green/20 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? t("inbox.directReplySending") : t("inbox.directReplySend")}
     </button>
@@ -78,7 +78,7 @@ export function DirectReplyPanel({
 
   return (
     <GlassPanel className="p-5">
-      <h2 className="text-sm font-semibold text-fg">{t("inbox.directReply")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("inbox.directReply")}</h2>
       <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
         {t("inbox.directReplyIntro", { sender: senderEmail })}
       </p>
@@ -105,11 +105,11 @@ export function DirectReplyPanel({
         </div>
 
         {state.sent && !state.relayFailed ? (
-          <p className="text-xs text-brand-green">{t("inbox.directReplySent")}</p>
+          <p className="text-xs text-accent">{t("inbox.directReplySent")}</p>
         ) : null}
 
         {state.error ? (
-          <p role="alert" className="text-xs text-red-700 dark:text-red-300">
+          <p role="alert" className="text-xs text-danger">
             {t(state.error)}
           </p>
         ) : null}
@@ -117,7 +117,7 @@ export function DirectReplyPanel({
         {state.relayFailed ? (
           <p
             role="alert"
-            className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+            className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
           >
             {t("inbox.relayFailed")}
           </p>

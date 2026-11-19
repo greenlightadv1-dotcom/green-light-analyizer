@@ -39,7 +39,7 @@ export function CreateUserForm({ prefill }: { prefill?: CreateUserPrefill | null
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("admin.createUser.title")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("admin.createUser.title")}</h2>
       <p className="mt-1 text-xs leading-relaxed text-fg-muted">{t("admin.createUser.body")}</p>
 
       {prefill ? (
@@ -71,7 +71,7 @@ export function CreateUserForm({ prefill }: { prefill?: CreateUserPrefill | null
         <div className="space-y-1.5">
           <label
             htmlFor="role"
-            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+            className="block text-sm font-medium text-fg-muted"
           >
             {t("admin.createUser.role")}
           </label>
@@ -85,7 +85,7 @@ export function CreateUserForm({ prefill }: { prefill?: CreateUserPrefill | null
         <div className="space-y-1.5">
           <label
             htmlFor="region"
-            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+            className="block text-sm font-medium text-fg-muted"
           >
             {t("admin.createUser.region")}
           </label>
@@ -109,7 +109,7 @@ export function CreateUserForm({ prefill }: { prefill?: CreateUserPrefill | null
             <p className="mt-2 text-xs text-fg-secondary">{t("admin.createUser.tempPasswordNote")}</p>
             {/* navy-dark is a fixed dark "code block" surface (§2.1) regardless
                 of theme, so its text stays literal white, not the fg token. */}
-            <code dir="ltr" className="mt-1.5 block rounded-chip bg-navy-dark/80 px-3 py-2 font-mono text-sm break-all text-white">
+            <code dir="ltr" className="mt-1.5 block rounded-chip bg-forest-strong px-3 py-2 font-mono text-sm break-all text-white">
               {state.created.tempPassword}
             </code>
           </div>

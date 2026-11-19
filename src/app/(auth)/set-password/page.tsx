@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Set your password" };
 export default function SetPasswordPage() {
   return (
     <GlassPanel className="p-7 sm:p-8">
-      <h1 className="text-xl font-semibold text-fg">Set your password</h1>
+      <h1 className="text-2xl font-bold text-fg sm:text-3xl">Set your password</h1>
       <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">
         Your account was opened with a temporary password. Choose a permanent
         one to finish activating it — the rest of Green Light stays locked until

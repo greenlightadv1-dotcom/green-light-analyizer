@@ -20,7 +20,7 @@ const selectClass =
   "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
 
 /** Dark, readable regardless of theme — native <option> popups ignore the app's light/dark CSS variables in most browsers. */
-const optionClass = "bg-slate-900 text-white dark:bg-slate-900 dark:text-white";
+const optionClass = "bg-surface text-fg";
 
 /** §6.2 sponsorship_type, in the order a creator is most likely to need. */
 const TYPES = [
@@ -80,12 +80,12 @@ const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
 
 function trustScoreClass(score: number): string {
   if (score >= 80) {
-    return "border-brand-green/30 bg-brand-green/10 text-brand-green";
+    return "border-brand-green/30 bg-brand-green/10 text-accent";
   }
   if (score >= 50) {
-    return "border-amber-300/30 bg-amber-300/10 text-amber-700 dark:text-amber-200";
+    return "border-warning/30 bg-warning/10 text-warning";
   }
-  return "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200";
+  return "border-danger/30 bg-danger/10 text-danger";
 }
 
 export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
@@ -129,7 +129,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           <div className="space-y-1.5">
             <label
               htmlFor="message_text"
-              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+              className="block text-sm font-medium text-fg-muted"
             >
               {t("analyzer.theOffer")}
             </label>
@@ -148,7 +148,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <div className="space-y-1.5">
               <label
                 htmlFor="sponsorship_type"
-                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+                className="block text-sm font-medium text-fg-muted"
               >
                 {t("analyzer.whatTheyWant")}
               </label>
@@ -185,7 +185,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-fg">{t("analyzer.recommendation")}</h2>
+            <h2 className="text-base font-semibold text-fg">{t("analyzer.recommendation")}</h2>
             <RiskBadge risk={r.risk} capped={r.risk_capped} />
           </div>
 
@@ -219,13 +219,13 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 }),
               })
             }
-            className="mt-3 text-xs font-semibold text-brand-green underline-offset-4 hover:underline"
+            className="mt-3 text-xs font-semibold text-accent underline-offset-4 hover:underline"
           >
             {t("analyzer.askG")}
           </button>
 
           {r.risk_capped ? (
-            <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+            <p className="mt-3 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning">
               {t("analyzer.heldAtYellow")}
             </p>
           ) : null}
@@ -285,7 +285,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r?.security ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-fg">
+            <h2 className="text-base font-semibold text-fg">
               {t("analyzer.domainSecurityCheck")}
             </h2>
             {r.security.trustScore !== null ? (
@@ -310,7 +310,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               {r.security.reasons.map((reason) => (
                 <li
                   key={reason}
-                  className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-100"
+                  className="rounded-lg border border-warning/20 bg-warning/5 px-3 py-1.5 text-xs text-warning"
                 >
                   {reason}
                 </li>

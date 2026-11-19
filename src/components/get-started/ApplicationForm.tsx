@@ -31,7 +31,7 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
       <div className="glass-panel p-6 text-center sm:p-8" role="status">
         <h2 className="text-lg font-semibold text-fg">{t("getStarted.submittedTitle")}</h2>
         <p className="mt-2 text-sm leading-relaxed text-fg/60">{t("getStarted.submittedBody")}</p>
-        <Link href="/" className="mt-5 inline-block text-sm font-medium text-brand-green underline-offset-2 hover:underline">
+        <Link href="/" className="mt-5 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline">
           {t("getStarted.backHome")}
         </Link>
       </div>
@@ -72,7 +72,7 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
       ) : (
         <>
           <div className="space-y-1.5">
-            <label htmlFor="primary_platform" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+            <label htmlFor="primary_platform" className="block text-sm font-medium text-fg-muted">
               {t("getStarted.primaryPlatform")}
             </label>
             <select
@@ -83,23 +83,23 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
               aria-invalid={!!errors.primary_platform}
               className="h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3 text-sm text-fg focus:border-brand-green/50 focus:outline-none"
             >
-              <option value="" disabled className="bg-slate-900 text-white">
+              <option value="" disabled className="bg-surface text-fg">
                 {t("getStarted.choosePlatform")}
               </option>
               {PLATFORMS.map((p) => (
-                <option key={p} value={p} className="bg-slate-900 text-white">
+                <option key={p} value={p} className="bg-surface text-fg">
                   {t(`getStarted.platform.${p}`)}
                 </option>
               ))}
             </select>
-            {errors.primary_platform ? <p className="text-xs text-red-600 dark:text-red-300">{err("primary_platform")}</p> : null}
+            {errors.primary_platform ? <p className="text-xs text-danger">{err("primary_platform")}</p> : null}
           </div>
           <Field id="channel_handle" name="channel_handle" defaultValue={v?.channel_handle} label={t("getStarted.channelHandle")} maxLength={120} dir="ltr" hint={err("channel_handle") ?? t("getStarted.optional")} />
         </>
       )}
 
       <div className="space-y-1.5">
-        <label htmlFor="message" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+        <label htmlFor="message" className="block text-sm font-medium text-fg-muted">
           {t("getStarted.message")}
         </label>
         <textarea

@@ -91,7 +91,7 @@ export function MediaKitView({
 
       {/* Feature 3: the controlled classification Discovery and G filter on. */}
       <GlassPanel as="section" className="mb-4 p-5 sm:p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("onboarding.step.classification.title")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("onboarding.step.classification.title")}</h2>
         <p className="mt-1 mb-4 text-sm text-fg/60">{t("onboarding.step.classification.body")}</p>
         <ClassificationForm
           demo={demo}
@@ -111,7 +111,7 @@ export function MediaKitView({
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg-muted uppercase">
+          <p className="text-sm font-medium text-fg-muted">
             {t("mediaKit.platforms")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
@@ -126,7 +126,7 @@ export function MediaKitView({
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg-muted uppercase">
+          <p className="text-sm font-medium text-fg-muted">
             {t("mediaKit.verifiedAudiences")}
           </p>
           <p className="mt-1.5 text-lg font-semibold text-fg tabular-nums">
@@ -138,7 +138,7 @@ export function MediaKitView({
         </GlassPanel>
 
         <GlassPanel className="p-5">
-          <p className="text-xs tracking-wide text-fg-muted uppercase">
+          <p className="text-sm font-medium text-fg-muted">
             {t("mediaKit.pricingImpact")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-fg/60">

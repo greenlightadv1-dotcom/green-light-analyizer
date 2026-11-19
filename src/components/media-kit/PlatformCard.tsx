@@ -61,7 +61,7 @@ export function PlatformCard({
   if (locked) {
     return (
       <GlassPanel className="p-5 opacity-60">
-        <h2 className="text-sm font-semibold text-fg">
+        <h2 className="text-base font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
         <p className="mt-2 text-xs leading-relaxed text-fg-muted">
@@ -74,7 +74,7 @@ export function PlatformCard({
   return (
     <GlassPanel className="p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-fg">
+        <h2 className="text-base font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
         <button
@@ -150,7 +150,7 @@ export function PlatformCard({
 
           {verifiedGeoConnected ? (
             <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3">
-              <p className="text-xs leading-relaxed text-brand-green">
+              <p className="text-xs leading-relaxed text-accent">
                 {t("mediaKit.audienceGeoVerifiedNote")}
               </p>
             </div>
@@ -158,7 +158,7 @@ export function PlatformCard({
             <div className="space-y-1.5">
               <label
                 htmlFor={`${platform}-countries`}
-                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+                className="block text-sm font-medium text-fg-muted"
               >
                 {t("mediaKit.whereAudienceIs")}
               </label>

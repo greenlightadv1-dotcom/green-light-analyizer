@@ -11,11 +11,11 @@ import { useTranslation } from "@/components/LocaleProvider";
 export function VerifiedTag({ verified }: { verified: boolean }) {
   const { t } = useTranslation();
   return verified ? (
-    <span className="inline-flex items-center gap-1 rounded-md border border-brand-green/30 bg-brand-green/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-brand-green uppercase">
+    <span className="inline-flex items-center gap-1 rounded-md border border-brand-green/30 bg-brand-green/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-accent uppercase">
       {t("badges.verified")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/25 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-700 dark:text-amber-200 uppercase">
+    <span className="inline-flex items-center gap-1 rounded-md border border-warning/25 bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-warning uppercase">
       {t("badges.selfReported")}
     </span>
   );

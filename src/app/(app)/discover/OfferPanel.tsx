@@ -102,7 +102,7 @@ export function OfferPanel({
   return (
     <div className="w-full max-w-md space-y-3 rounded-2xl border border-fg/10 bg-fg/5 p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-fg/60 uppercase">
+        <p className="text-sm font-medium text-fg-muted">
           Offer to {creatorName}
         </p>
         <button
@@ -122,7 +122,7 @@ export function OfferPanel({
           <div className="space-y-1.5">
             <label
               htmlFor={`sponsorship_type-${creatorId}`}
-              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+              className="block text-sm font-medium text-fg-muted"
             >
               What you want
             </label>
@@ -163,7 +163,7 @@ export function OfferPanel({
         <div className="space-y-1.5">
           <label
             htmlFor={`message_text-${creatorId}`}
-            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+            className="block text-sm font-medium text-fg-muted"
           >
             Your message
           </label>

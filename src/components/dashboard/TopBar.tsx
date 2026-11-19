@@ -24,13 +24,13 @@ export function TopBar({
   const { t } = useTranslation();
 
   return (
-    <header className="glass-panel-solid mb-5 flex items-center justify-between gap-4 px-4 py-2.5">
+    <header className="glass-panel-solid mb-6 flex items-center justify-between gap-4 rounded-full px-3 py-2 sm:px-4">
       <div className="flex min-w-0 items-center gap-2.5 lg:hidden">
         <MobileNav role={profile.role} basePath={basePath} />
         <ThemedLogo size={30} />
       </div>
 
-      <div className="hidden min-w-0 lg:block">
+      <div className="hidden min-w-0 ps-2 lg:block">
         <p className="truncate text-sm font-medium text-fg">
           {profile.full_name}
         </p>
@@ -49,7 +49,7 @@ export function TopBar({
           <button
             type={demo ? "button" : "submit"}
             onClick={demo ? signOutG : undefined}
-            className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg"
+            className="h-9 rounded-full border border-line px-4 text-xs font-semibold text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring"
           >
             {t("topbar.signOut")}
           </button>

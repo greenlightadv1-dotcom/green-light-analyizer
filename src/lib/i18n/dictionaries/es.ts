@@ -62,6 +62,13 @@ const es: Dictionary = {
       "Cada oferta entrante recibe al instante una recomendación de precio y una calificación de riesgo verde / amarillo / rojo, ponderada según cuánto de los datos de audiencia detrás está realmente verificado.",
     footerRights: "Todos los derechos reservados.",
     joinDiscord: "Únete a nuestro Discord",
+    howTitle: "Cómo avanza un acuerdo",
+    how1Title: "Reenvía la oferta",
+    how1Body: "Tu alias recibe el correo del patrocinador y abre una sala de acuerdo.",
+    how2Title: "Precio y nivel de riesgo",
+    how2Body: "El copiloto recomienda un precio y una calificación verde, amarilla o roja.",
+    how3Title: "Negocia en la plataforma",
+    how3Body: "El chat enmascarado protege los datos de contacto, así el acuerdo sigue en la plataforma.",
   },
   common: {
     save: "Guardar",

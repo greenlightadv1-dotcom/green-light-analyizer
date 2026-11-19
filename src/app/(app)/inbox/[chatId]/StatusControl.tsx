@@ -41,7 +41,7 @@ export function StatusControl({
   if (current === "paid" && !isAdmin) {
     return (
       <GlassPanel className="p-5">
-        <h2 className="text-sm font-semibold text-fg">{t("inbox.updateStatus")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("inbox.updateStatus")}</h2>
         <p className="mt-3 text-xs leading-relaxed text-fg-muted">{t("inbox.paidLockedNote")}</p>
       </GlassPanel>
     );
@@ -77,7 +77,7 @@ export function StatusControl({
 
   return (
     <GlassPanel className="p-5">
-      <h2 className="text-sm font-semibold text-fg">{t("inbox.updateStatus")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("inbox.updateStatus")}</h2>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {options.map((option) => {
