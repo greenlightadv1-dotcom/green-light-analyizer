@@ -1,6 +1,7 @@
 import type { Role } from "../types/database.ts";
 import { allowedProposals, type CollabSummary, type GProposal, type NextStep, type ProposalScope } from "./collab.ts";
 import type { GLocale, Intent } from "./conversation.ts";
+import type { DealRoomBrief } from "./dealroom.ts";
 
 /**
  * G's prepared actions when the AI engine cannot answer (no NVIDIA key, rate
@@ -37,6 +38,8 @@ export type FallbackInput = {
     maxBudgetUsd: number | null;
   };
   message?: string;
+  /** Either side: the deal room on the current page, party-checked by the loader. */
+  dealRoom?: DealRoomBrief;
 };
 
 type Templates = {
@@ -44,6 +47,9 @@ type Templates = {
   invite: (name: string, brief: string) => string;
   checkIn: (title: string) => string;
   ideaBody: (headline: string, source: string, date: string, url: string) => string;
+  /** Deal room follow-ups. The bracketed part is for the user to fill in; nothing is invented. */
+  answerQuestion: string;
+  followUp: string;
 };
 
 const T: Record<GLocale, Templates> = {
@@ -52,30 +58,40 @@ const T: Record<GLocale, Templates> = {
     invite: (n, b) => `Hi ${n}, we think you'd be a great fit for our brief "${b}". The scope, timeline and budget are in the brief. Would you like to take a look?`,
     checkIn: (t) => `Hi, checking in on "${t}". Is there anything you need from me to move this forward?`,
     ideaBody: (h, s, d, u) => `Based on an official update: ${h}\nSource: ${s}, ${d}\n${u}\n\nAngle: explain what changed and what it means for your audience.`,
+    answerQuestion: "Hi, thanks for your message. On your question: [your answer]. Let me know if anything else is open on your side.",
+    followUp: "Hi, following up on our conversation here. Could you confirm the next step on your side?",
   },
   ar: {
     briefTitle: "موجز حملة (مسودة من G)",
     invite: (n, b) => `مرحبًا ${n}، نرى أنك مناسب جدًا لموجز حملتنا "${b}". النطاق والجدول الزمني والميزانية مذكورة في الموجز. هل تود الاطلاع عليه؟`,
     checkIn: (t) => `مرحبًا، أتابع بخصوص "${t}". هل تحتاج إلى أي شيء مني للمضي قدمًا؟`,
     ideaBody: (h, s, d, u) => `مستوحاة من تحديث رسمي: ${h}\nالمصدر: ${s}، ${d}\n${u}\n\nالزاوية: اشرح ما الذي تغيّر وما يعنيه لجمهورك.`,
+    answerQuestion: "مرحبًا، شكرًا على رسالتك. بخصوص سؤالك: [إجابتك]. أخبرني إن كان هناك أي شيء آخر معلّق من جهتك.",
+    followUp: "مرحبًا، أتابع محادثتنا هنا. هل يمكنك تأكيد الخطوة التالية من جهتك؟",
   },
   fr: {
     briefTitle: "Brief de campagne (brouillon de G)",
     invite: (n, b) => `Bonjour ${n}, nous pensons que vous correspondez très bien à notre brief « ${b} ». Le périmètre, le calendrier et le budget figurent dans le brief. Souhaitez-vous y jeter un œil ?`,
     checkIn: (t) => `Bonjour, je fais le point sur « ${t} ». Avez-vous besoin de quelque chose de ma part pour avancer ?`,
     ideaBody: (h, s, d, u) => `D'après une annonce officielle : ${h}\nSource : ${s}, ${d}\n${u}\n\nAngle : expliquez ce qui a changé et ce que cela signifie pour votre audience.`,
+    answerQuestion: "Bonjour, merci pour votre message. Concernant votre question : [votre réponse]. Dites-moi si autre chose reste en suspens de votre côté.",
+    followUp: "Bonjour, je fais suite à notre échange ici. Pouvez-vous confirmer la prochaine étape de votre côté ?",
   },
   es: {
     briefTitle: "Brief de campaña (borrador de G)",
     invite: (n, b) => `Hola ${n}, creemos que encajas muy bien con nuestro brief "${b}". El alcance, los plazos y el presupuesto están en el brief. ¿Te gustaría verlo?`,
     checkIn: (t) => `Hola, hago seguimiento de "${t}". ¿Necesitas algo de mi parte para avanzar?`,
     ideaBody: (h, s, d, u) => `Basado en una actualización oficial: ${h}\nFuente: ${s}, ${d}\n${u}\n\nEnfoque: explica qué cambió y qué significa para tu audiencia.`,
+    answerQuestion: "Hola, gracias por tu mensaje. Sobre tu pregunta: [tu respuesta]. Avísame si queda algo pendiente por tu parte.",
+    followUp: "Hola, hago seguimiento de nuestra conversación aquí. ¿Puedes confirmar el siguiente paso por tu parte?",
   },
   de: {
     briefTitle: "Kampagnen-Briefing (Entwurf von G)",
     invite: (n, b) => `Hallo ${n}, wir glauben, dass du sehr gut zu unserem Briefing „${b}“ passt. Umfang, Zeitplan und Budget stehen im Briefing. Möchtest du es dir ansehen?`,
     checkIn: (t) => `Hallo, ich melde mich wegen „${t}“. Brauchst du noch etwas von mir, um weiterzumachen?`,
     ideaBody: (h, s, d, u) => `Basierend auf einer offiziellen Meldung: ${h}\nQuelle: ${s}, ${d}\n${u}\n\nAnsatz: Erkläre, was sich geändert hat und was das für dein Publikum bedeutet.`,
+    answerQuestion: "Hallo, danke für deine Nachricht. Zu deiner Frage: [deine Antwort]. Sag Bescheid, falls bei dir noch etwas offen ist.",
+    followUp: "Hallo, ich knüpfe an unser Gespräch hier an. Kannst du den nächsten Schritt auf deiner Seite bestätigen?",
   },
 };
 
@@ -139,6 +155,15 @@ export function fallbackProposals(input: FallbackInput): GProposal[] {
   if (intents.includes("collab")) {
     const waiting = (input.collaborations ?? []).find((c) => WAITING.includes(c.next) && c.title.trim());
     if (waiting) candidates.push({ type: "message_draft", collaboration_id: waiting.id, text: tpl.checkIn(waiting.title) });
+  }
+
+  // On a deal room: a follow-up the user copies and finishes. It answers the
+  // other side's open question if there is one; otherwise it asks for the
+  // next step. Only while the room is still being worked on.
+  const room = input.dealRoom;
+  if (room && intents.includes("dealroom") && !["paid"].includes(room.deal.status) && room.terms?.collaboration_status !== "completed" && room.terms?.collaboration_status !== "cancelled") {
+    const text = room.openQuestions.length ? tpl.answerQuestion : tpl.followUp;
+    candidates.unshift(room.terms ? { type: "message_draft", collaboration_id: room.terms.collaboration_id, text } : { type: "message_draft", deal_id: room.deal.id, text });
   }
 
   return allowedProposals(candidates, scope);

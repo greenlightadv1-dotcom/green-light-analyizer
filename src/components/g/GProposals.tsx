@@ -8,6 +8,7 @@ import { createBriefDraft, inviteCreator } from "@/app/(app)/collaborations/acti
 import { saveContentItem } from "@/app/(app)/content/actions";
 import type { CollabSummary, GProposal, InvitationSummary, OpportunityMatch } from "@/lib/g/collab";
 import { day, usd } from "@/lib/collab/display";
+import type { DealRoomBrief } from "@/lib/g/dealroom";
 
 /**
  * G's collaboration and content cards, and its prepared proposals.
@@ -98,7 +99,11 @@ export function ProposalCard({ p, basePath = "", demo = false }: { p: GProposal;
         <p dir="auto" className="whitespace-pre-wrap text-fg">{p.text}</p>
         <div className="flex flex-wrap items-center gap-2">
           <CopyButton value={p.text} />
-          <Link href={`${basePath}/collaborations/${p.collaboration_id}`} className={btn}>{t("g.action.open_collaboration")} →</Link>
+          {p.collaboration_id ? (
+            <Link href={`${basePath}/collaborations/${p.collaboration_id}`} className={btn}>{t("g.action.open_collaboration")} →</Link>
+          ) : (
+            <Link href={`${basePath}/inbox/${p.deal_id}`} className={btn}>{t("g.action.open_deal")} →</Link>
+          )}
         </div>
         <p className="text-fg-muted">{t("g.proposal.messageHint")}</p>
       </div>
@@ -231,6 +236,98 @@ export function OpportunitiesCard({
         ))}
       </ul>
       <Link href={`${basePath}/opportunities`} className={btn}>{t("g.action.open_opportunities")} →</Link>
+    </div>
+  );
+}
+
+const DEAL_STATUS_KEY: Record<string, string> = {
+  new: "badges.statusNew",
+  negotiating: "badges.statusNegotiating",
+  agreed: "badges.statusAgreed",
+  paid: "badges.statusPaid",
+  disputed: "badges.statusDisputed",
+};
+
+/**
+ * The deal room on the current page (Phase 1C). Recorded facts and
+ * rule-based interpretations are shown in two separate, labelled sections, so
+ * nothing read from a chat message is presented as a recorded term.
+ */
+export function DealRoomCard({ data }: { data: DealRoomBrief }) {
+  const { t } = useTranslation();
+  const d = data;
+  const terms = d.terms;
+  return (
+    <div className="space-y-2.5 rounded-2xl border border-line bg-surface-soft p-3.5 text-xs" data-testid="g-dealroom-card">
+      <p className="font-semibold text-fg">{t("g.dealRoom.title")}</p>
+      <section className="space-y-1" aria-label={t("g.dealRoom.recorded")}>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">{t("g.dealRoom.recorded")}</p>
+        <p className="text-fg-secondary">
+          {t("g.dealRoom.status", { status: t(DEAL_STATUS_KEY[d.deal.status] ?? "badges.statusNew") })} ·{" "}
+          {t(d.deal.source === "in_app" ? "g.dealRoom.sourceInApp" : "g.dealRoom.sourceEmail")} · {day(d.deal.created_at)}
+        </p>
+        <p className="text-fg-secondary">
+          {d.deal.offered_amount_usd !== null ? t("g.dealRoom.offer", { amount: usd(d.deal.offered_amount_usd) }) : t("g.dealRoom.noOffer")}
+        </p>
+        {terms ? (
+          <>
+            <p className="text-fg">
+              {terms.state === "frozen"
+                ? t("g.dealRoom.termsFrozen", { date: terms.agreed_at ? day(terms.agreed_at) : "—", amount: terms.amount_usd !== null ? usd(terms.amount_usd) : "—" })
+                : terms.state === "proposed"
+                  ? t("g.dealRoom.termsProposed", { who: t(`g.dealRoom.who.${terms.proposed_by ?? "other_party"}`), amount: terms.amount_usd !== null ? usd(terms.amount_usd) : "—" })
+                  : t("g.dealRoom.termsNone")}
+            </p>
+            {terms.state === "proposed" ? (
+              <p className="text-fg-muted">
+                {t("g.dealRoom.confirmations", { you: t(terms.you_confirmed ? "g.dealRoom.yes" : "g.dealRoom.no"), other: t(terms.other_confirmed ? "g.dealRoom.yes" : "g.dealRoom.no") })}
+              </p>
+            ) : null}
+            {terms.text ? <p dir="auto" className="whitespace-pre-wrap text-fg-secondary">{terms.text}</p> : null}
+            <p className="font-medium text-fg-secondary">{t("g.dealRoom.deliverables")}</p>
+            {d.deliverables.length ? (
+              <ul className="space-y-0.5">
+                {d.deliverables.map((x, i) => (
+                  <li key={i} className="text-fg-secondary">
+                    <span dir="auto" className="text-fg">{x.title}</span> · {t(`collab.status.${x.status}`)}
+                    {x.due_date ? ` · ${t("g.dealRoom.due", { date: day(x.due_date) })}` : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-fg-muted">{t("g.dealRoom.noDeliverables")}</p>
+            )}
+          </>
+        ) : null}
+        <p className="font-medium text-fg">{t(`g.next.${d.next}`)}</p>
+      </section>
+      <section className="space-y-1 border-t border-line pt-2" aria-label={t("g.dealRoom.interpretation")}>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">{t("g.dealRoom.interpretation")}</p>
+        <p className="text-[11px] text-fg-muted">{t("g.dealRoom.interpretationNote")}</p>
+        <p className="font-medium text-fg-secondary">{t("g.dealRoom.openQuestions")}</p>
+        {d.openQuestions.length ? (
+          <ul className="space-y-0.5">
+            {d.openQuestions.map((q, i) => (
+              <li key={i} dir="auto" className="text-fg-secondary">{day(q.at)}: “{q.excerpt}”</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-fg-muted">{t("g.dealRoom.noOpenQuestions")}</p>
+        )}
+        {d.inconsistencies.length ? (
+          <>
+            <ul className="space-y-0.5">
+              {d.inconsistencies.map((x, i) => (
+                <li key={i} className="text-warning">
+                  {t("g.dealRoom.inconsistency", { date: day(x.at), speaker: t(`g.dealRoom.speaker.${x.from}`), mentioned: usd(x.mentioned_usd), field: t(`g.dealRoom.field.${x.recorded_as}`), recorded: usd(x.recorded_usd) })}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-fg-muted">{t("g.dealRoom.inconsistencyNote")}</p>
+          </>
+        ) : null}
+        <p className="text-[10px] text-fg-muted">{t("g.dealRoom.thread", { included: d.thread.included, total: d.thread.total })}</p>
+      </section>
     </div>
   );
 }

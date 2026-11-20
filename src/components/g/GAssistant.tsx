@@ -11,7 +11,8 @@ import { useVoice } from "@/components/g/useVoice";
 import { useWakeWord, type WakeStatus } from "@/components/g/useWakeWord";
 import { WAKE_PHRASES } from "@/lib/g/wake";
 import { actionHref } from "@/lib/g/actions";
-import { CollaborationsCard, ContentCard, OpportunitiesCard, ProposalCard } from "@/components/g/GProposals";
+import { CollaborationsCard, ContentCard, DealRoomCard, OpportunitiesCard, ProposalCard } from "@/components/g/GProposals";
+import type { DealRoomBrief } from "@/lib/g/dealroom";
 import type { CreatorAssessment, DealSummary } from "@/lib/g/assessment";
 import type { Brief, ComparisonRow, Recommendation } from "@/lib/g/recommend";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -379,6 +380,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
                   {m.text ? <p className="rounded-[20px] rounded-es-md bg-surface-soft px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-fg">{m.text}</p> : null}
                   {m.engine === "rules" && !demo ? <p className="text-[11px] text-fg-muted">{t("g.rulesNotice")}</p> : null}
                   {m.engine === "ai" ? <p className="text-[10px] text-fg-muted">{t("g.aiNotice")}</p> : null}
+                  {m.cards?.dealRoom ? <DealRoomCard data={m.cards.dealRoom as DealRoomBrief} /> : null}
                   {m.cards?.assessment ? <AssessmentCard a={m.cards.assessment as CreatorAssessment} /> : null}
                   {m.cards?.brief ? <BriefCard {...(m.cards.brief as { value: Brief; missing: string[]; understood?: string[] })} brief={(m.cards.brief as { value: Brief }).value} /> : null}
                   {m.cards?.recommendations ? (

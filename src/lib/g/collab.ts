@@ -76,7 +76,12 @@ export type InvitationSummary = { id: string; brief_id: string; title: string; s
 export type GProposal =
   | { type: "content_draft"; kind: ContentKind; title: string; body: string }
   | { type: "invitation"; brief_id: string; creator_id: string; message: string; creator_name?: string }
-  | { type: "message_draft"; collaboration_id: string; text: string }
+  /**
+   * A message the user may copy into a collaboration or a deal room (exactly
+   * one of the two ids). Copy-only: G never sends it, and nothing here can.
+   */
+  | { type: "message_draft"; collaboration_id: string; deal_id?: undefined; text: string }
+  | { type: "message_draft"; deal_id: string; collaboration_id?: undefined; text: string }
   /**
    * A campaign brief G filled in for a company. Confirming saves it as a
    * DRAFT through the ordinary brief action (validation, masking, rate
@@ -109,6 +114,8 @@ export type ProposalScope = {
   invited: ReadonlySet<string>;
   /** Collaborations the user is a party to. */
   collaborationIds: ReadonlySet<string>;
+  /** Deal rooms the user is a party to (the current page's, checked by entity-server). */
+  dealIds?: ReadonlySet<string>;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -161,8 +168,10 @@ export function allowedProposals(candidates: unknown, scope: ProposalScope): GPr
       }
     } else if (r.type === "message_draft") {
       const id = typeof r.collaboration_id === "string" && UUID.test(r.collaboration_id) ? r.collaboration_id : null;
+      const deal = typeof r.deal_id === "string" && UUID.test(r.deal_id) ? r.deal_id : null;
       const text = clean(r.text, 2000);
-      if (id && text && scope.collaborationIds.has(id)) out.push({ type: "message_draft", collaboration_id: id, text });
+      if (text && id && scope.collaborationIds.has(id)) out.push({ type: "message_draft", collaboration_id: id, text });
+      else if (text && !id && deal && scope.dealIds?.has(deal)) out.push({ type: "message_draft", deal_id: deal, text });
     }
     if (out.length === 2) break;
   }

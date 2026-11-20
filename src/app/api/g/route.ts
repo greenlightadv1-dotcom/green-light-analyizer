@@ -7,6 +7,8 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import { G_ACTIONS, allowedActions, type GAction, type GActionId } from "@/lib/g/actions";
 import { collabContext, companyContext, creatorContext, loadGSession, type CollabGData } from "@/lib/g/context";
 import { briefFromText } from "@/lib/g/brief-text";
+import { pageEntity } from "@/lib/g/entity";
+import { entityContext, tasksContext, type EntityContext, type TasksContext } from "@/lib/g/entity-server";
 import { allowedProposals, matchOpportunities, proposalText, proposalTypesFor, type GProposal, type ProposalScope } from "@/lib/g/collab";
 import { fallbackProposals, type FallbackInput } from "@/lib/g/fallback";
 import {
@@ -42,6 +44,8 @@ import {
  * - Nothing is stored. The conversation stays in the user's tab.
  */
 export const maxDuration = 60;
+
+const union = (a: ReadonlySet<string>, b: ReadonlySet<string>) => new Set([...a, ...b]);
 
 const MAX_BODY = 24_000;
 const MODEL_BUDGET_MS = 25_000;
@@ -113,11 +117,30 @@ export async function POST(request: Request) {
     ...(c.content ? { content: c.content } : {}),
   });
 
+  // The current page's entity (deal room, collaboration or brief) and the
+  // caller's unread notifications. Both read with the caller's own client and
+  // party-checked (lib/g/entity-server.ts); the page path only says what to look for.
+  let entity: EntityContext = { dealRoom: null, currentBrief: null, dealIds: new Set(), collaborationIds: new Set() };
+  let tasks: TasksContext = { unread: 0, byCategory: {} };
+  if (profile.role === "creator" || profile.role === "company") {
+    [entity, tasks] = await Promise.all([entityContext(profile, pageEntity(req.page)), tasksContext(profile)]);
+    if (entity.dealRoom && !intents.includes("dealroom")) {
+      const h = intents.indexOf("help");
+      if (h >= 0) intents.splice(h, 1, "dealroom");
+      else intents.push("dealroom");
+    }
+  }
+  const entityData = () => ({
+    ...(entity.dealRoom ? { dealRoom: entity.dealRoom } : {}),
+    ...(entity.currentBrief ? { currentBrief: entity.currentBrief } : {}),
+    ...(tasks.unread ? { unreadNotifications: tasks } : {}),
+  });
+
   try {
     if (profile.role === "creator") {
       const [ctx, collab] = await Promise.all([creatorContext(profile), collabContext(profile)]);
-      scope = { ...scope, dealIds: ctx.dealIds, collaborationIds: collab.collaborationIds };
-      proposalScope = { ...proposalScope, collaborationIds: collab.collaborationIds };
+      scope = { ...scope, dealIds: union(ctx.dealIds, entity.dealIds), collaborationIds: union(collab.collaborationIds, entity.collaborationIds) };
+      proposalScope = { ...proposalScope, collaborationIds: scope.collaborationIds, dealIds: scope.dealIds };
       if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: collab.invitations };
       // Published briefs matched to this creator's own categories, connected
       // platforms and top audience countries (verified or self-reported, as
@@ -145,6 +168,7 @@ export async function POST(request: Request) {
       fallback = { collaborations: collab.collaborations, news };
       modelData = {
         intents,
+        ...entityData(),
         assessment: ctx.assessment,
         deals: { summary: ctx.assessment.deals, recent: ctx.recentDeals },
         ...(wantsCollab ? collabData(collab) : {}),
@@ -158,14 +182,15 @@ export async function POST(request: Request) {
           : ctx.assessment.nextActions.map((action) => ({ action }));
     } else if (profile.role === "company") {
       const [ctx, collab] = await Promise.all([companyContext(profile, req.brief, req.compare, fromText.brief), collabContext(profile)]);
-      scope = { ...scope, dealIds: ctx.dealIds, creatorIds: ctx.creatorIds, briefIds: collab.briefIds, collaborationIds: collab.collaborationIds };
+      scope = { ...scope, dealIds: union(ctx.dealIds, entity.dealIds), creatorIds: ctx.creatorIds, briefIds: collab.briefIds, collaborationIds: union(collab.collaborationIds, entity.collaborationIds) };
       creatorNames = ctx.creatorNames;
       proposalScope = {
         ...proposalScope,
         publishedBriefIds: collab.publishedBriefIds,
         creatorIds: ctx.creatorIds,
         invited: collab.invited,
-        collaborationIds: collab.collaborationIds,
+        collaborationIds: scope.collaborationIds,
+        dealIds: scope.dealIds,
       };
       if (intents.includes("collab")) cards.collaborations = { items: collab.collaborations, invitations: [], briefs: collab.briefs };
       if (intents.includes("recommend") || intents.includes("brief") || intents.includes("help")) {
@@ -193,6 +218,7 @@ export async function POST(request: Request) {
       };
       modelData = {
         intents,
+        ...entityData(),
         brief: ctx.brief,
         briefMissing: ctx.briefMissing,
         directorySize: ctx.directorySize,
@@ -208,6 +234,11 @@ export async function POST(request: Request) {
       modelData = { intents, note: "Admin users get navigation help only." };
       defaults = [{ action: "open_dashboard" }];
     }
+    if (entity.dealRoom) {
+      cards.dealRoom = entity.dealRoom;
+      fallback = { ...fallback, dealRoom: entity.dealRoom };
+    }
+    if (entity.currentBrief) cards.currentBrief = entity.currentBrief;
   } catch (error) {
     log.error("g.context_failed", { error });
     return NextResponse.json({ error: "context_unavailable" }, { status: 503 });

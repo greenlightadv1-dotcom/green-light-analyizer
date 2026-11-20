@@ -13,9 +13,13 @@
 //   hostile    actions and proposals pointing at ids outside the caller's scope
 //   500 | 429  that HTTP status
 //   slow       never answers; honours the request's abort signal
+//   dealroom   writes the full prompt to <MOCK_NVIDIA>.prompt (so a test can
+//              inspect exactly what the model would see) and answers with two
+//              message_draft proposals: one for the deal room in DATA, one for
+//              a foreign deal id (must be dropped by the server)
 //   live       pass NVIDIA calls through to the real endpoint (owner-run live
 //              check only; needs a real NVIDIA_API_KEY in the app's env)
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 const OUTBOX = process.env.MOCK_OUTBOX;
 const realFetch = globalThis.fetch;
 const MOCKED = ["api.resend.com", "graph.facebook.com", "discord.com", "integrate.api.nvidia.com", "oauth2.googleapis.com", "www.googleapis.com", "youtubeanalytics.googleapis.com", "safebrowsing.googleapis.com"];
@@ -49,6 +53,19 @@ async function nvidia(body, signal) {
       if (signal?.aborted) return err();
       signal?.addEventListener("abort", err);
     });
+  }
+  if (mode === "dealroom") {
+    writeFileSync(`${process.env.MOCK_NVIDIA}.prompt`, prompt);
+    let dealId = null;
+    try { dealId = JSON.parse(block(prompt, "DATA"))?.dealRoom?.deal?.id ?? null; } catch { /* not JSON */ }
+    return completion(JSON.stringify({
+      reply: "Recorded: the deal is being negotiated. Interpretation: one question looks unanswered.",
+      actions: [{ action: "open_deal", param: dealId ?? FOREIGN }],
+      proposals: [
+        ...(dealId ? [{ type: "message_draft", deal_id: dealId, text: "Thanks, replying to your question here." }] : []),
+        { type: "message_draft", deal_id: FOREIGN, text: "Should be dropped" },
+      ],
+    }));
   }
   if (mode === "invalid") return completion("I think your channel is doing great!");
   if (mode === "incomplete") return completion(JSON.stringify({ actions: [] }));
