@@ -24,12 +24,28 @@ test("no applicant-facing code reads internal notes or enhanced-review flags", (
     "lib/verification/application.ts",
     "lib/verification/server.ts",
     "lib/verification/email.ts",
+    // G for applicants (Phase 1E)
+    ...files("app/api/g/applicant"),
+    "lib/g/applicant.ts",
+    "components/g/GApplicantHelp.tsx",
   ];
   assert.ok(applicant.length > 15);
   for (const f of applicant) {
     const src = readFileSync(join(SRC, f), "utf8");
     assert.doesNotMatch(src, /verification_notes|verification_flags|internal_note|verification_flag\b/, f);
   }
+});
+
+test("G's applicant path never reads match keys, flag approvals or reviewer identity, and takes no email or id", () => {
+  for (const f of [...files("app/api/g/applicant"), "lib/g/applicant.ts"]) {
+    const src = readFileSync(join(SRC, f), "utf8");
+    assert.doesNotMatch(src, /verification_match_keys|verification_flag_approvals|verification_reviewers|reviewed_by|storage_path|enhanced_review/, f);
+  }
+  const route = readFileSync(join(SRC, "app/api/g/applicant/route.ts"), "utf8");
+  // Identity is the cookie or the session; the body is parsed only for the question.
+  assert.match(route, /currentApplication\(\)/);
+  assert.match(route, /supabase\.auth\.getUser\(\)/);
+  assert.doesNotMatch(route, /req\.(email|id|request_id|case_id)|body\.(email|id)/);
 });
 
 test("internal notes go only to the reviewer-only function, never into email, history or logs", () => {

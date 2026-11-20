@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GetStartedShell } from "@/components/get-started/GetStartedShell";
 import { ApplicationLinkRequest, ApplicationView } from "@/components/apply/ApplicationView";
+import { GApplicantHelp } from "@/components/g/GApplicantHelp";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { currentApplication } from "@/lib/verification/application";
 import { prefill } from "@/lib/verification/rules";
@@ -43,6 +44,7 @@ export default async function ApplyPage({ searchParams }: { searchParams: Promis
         submit={submitApplication}
         leave={leaveApplication}
       />
+      <GApplicantHelp />
     </GetStartedShell>
   );
 }

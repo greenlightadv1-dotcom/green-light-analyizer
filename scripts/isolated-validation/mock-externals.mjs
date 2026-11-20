@@ -17,6 +17,9 @@
 //              inspect exactly what the model would see) and answers with two
 //              message_draft proposals: one for the deal room in DATA, one for
 //              a foreign deal id (must be dropped by the server)
+//   capture    writes the full prompt to <MOCK_NVIDIA>.prompt and answers a
+//              plain, figure-free reply
+//   reviewtime a reply that promises a review time (must be discarded)
 //   live       pass NVIDIA calls through to the real endpoint (owner-run live
 //              check only; needs a real NVIDIA_API_KEY in the app's env)
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
@@ -67,6 +70,11 @@ async function nvidia(body, signal) {
       ],
     }));
   }
+  if (mode === "capture") {
+    writeFileSync(`${process.env.MOCK_NVIDIA}.prompt`, prompt);
+    return completion(JSON.stringify({ reply: "Here is where your application stands.", actions: [], proposals: [] }));
+  }
+  if (mode === "reviewtime") return completion(JSON.stringify({ reply: "Your application will be reviewed within 24 hours.", actions: [], proposals: [] }));
   if (mode === "invalid") return completion("I think your channel is doing great!");
   if (mode === "incomplete") return completion(JSON.stringify({ actions: [] }));
   if (mode === "ungrounded") return completion(JSON.stringify({ reply: "Your channel grew 937% last month and is worth $48,250.", actions: [], proposals: [] }));

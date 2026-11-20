@@ -35,6 +35,7 @@ export type RateLimitAction =
   | "ai_detect_niche"
   | "ai_company_intel"
   | "g_chat"
+  | "g_applicant"
   | "access_request"
   | "upload"
   | "collab_write"
@@ -122,6 +123,13 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   g_chat: [
     { limit: 60, windowSeconds: HOUR, label: "hour" },
     { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // G for applicants and accounts awaiting verification (Phase 1E), keyed by
+  // the application or account id. Lower than g_chat: the questions are about
+  // one application, and the caller may not have an account yet.
+  g_applicant: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
   ],
   // Public Get Started form, keyed by a hash of the client address: each
   // submission is a service-role write and lands in an admin's queue.

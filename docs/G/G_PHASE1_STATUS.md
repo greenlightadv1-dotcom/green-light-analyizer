@@ -95,7 +95,57 @@ Left out:
 
 **Not proven:** a real model's explanation of the matches. Ranking is rule-based. Not considered, because the data does not exist: content language and engagement thresholds (briefs state neither).
 
-## E–G: pending
+## E. Pending verification assistance (done)
+
+**Who it is for:**
+- an applicant with **no account**, identified only by the httpOnly resume cookie, exactly like `/apply`;
+- a signed-in account that is `pending_verification` or `rejected`.
+
+Active accounts keep the full G and are refused here (403). Nobody else gets anything (401).
+
+**Route** `POST /api/g/applicant`:
+- public in `session.ts`, so applicants reach it; its own rate limit `g_applicant` (20 per hour, 60 per day);
+- identity from the cookie or the session only. The body carries the question: no email, id or lookup parameter exists.
+
+**What G sees** (`lib/g/applicant.ts` `applicantSummary`), a fixed projection of the caller's own cases:
+- kind and status;
+- the **keys** of missing required fields and documents;
+- the reviewer's applicant-facing `info_request` (only while information is requested) and `decision_reason` (only on a rejection), masked;
+- dates and the next step.
+
+**Never read on this path** (enforced by `notes-separation.test.ts`):
+- internal notes, fraud flags, flag approvals, match keys, reviewer identity, document paths;
+- the values the applicant typed.
+
+**Rules:**
+- read-only;
+- cannot approve, change or speed up an application;
+- **no review time**: a model reply that states one (`promisesReviewTime`, five languages) is discarded;
+- an invented figure is discarded;
+- no knowledge of other applications.
+
+**UI:** `GApplicantHelp` on `/apply`, and on `/verification` for accounts that are not active.
+- Text only, with no voice or wake word.
+- No prepared actions.
+- The conversation is held only in memory, never in storage (the device may be shared).
+- Five languages.
+
+**FAKE-MODEL evidence:**
+- `applicant.test.ts`: 4 unit tests.
+- `g-applicant.mjs`: 8/8.
+  - No cookie gets 401.
+  - The own case shows the reviewer's request; no note, flag, typed details, reviewer or other applicant appears.
+  - The captured prompt holds only the caller's summary, and another applicant's email typed into the question is masked.
+  - A "within 24 hours" reply is discarded.
+  - An active account gets 403.
+  - A pending account gets the helper on `/verification` and no full G.
+  - An Arabic question on `/apply` is answered from the applicant's own case.
+  - The 21st request gets 429.
+- `registration-smoke` 9/9 and `second-reviewer-action-check` 7/7 are unchanged.
+
+**Not proven (real model):** answer quality, Arabic wording, and that a real model never implies a timeline in words that `promisesReviewTime` does not catch (for example "soon" or "shortly").
+
+## F–G: pending
 
 (Updated as each step lands.)
 
