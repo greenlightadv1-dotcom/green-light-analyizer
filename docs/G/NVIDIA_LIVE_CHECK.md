@@ -1,5 +1,42 @@
 # Live NVIDIA check (owner-run)
 
+## Live findings, 2026-11-20 (no key used)
+
+`integrate.api.nvidia.com` became reachable from the agent environment (the owner allowed the host). No real key was supplied, so **no successful model call has been made**. What the real endpoint showed:
+
+| Check | Result |
+|---|---|
+| `GET /v1/models` without any key | **HTTP 200**, 33 models. The catalog is public, so a 200 here does **not** validate a key |
+| Is `meta/llama-3.3-70b-instruct` (the code default) listed? | **No** |
+| Chat with the code default | **HTTP 410**: "The model 'meta/llama-3.3-70b-instruct' has reached its end of life on 2026-08-26T09:00:00Z and is no longer available." |
+| Chat with a listed model and no key | HTTP 401 "Unauthorized access" |
+| Chat with a listed model and an invalid Bearer key | **HTTP 403** "Authorization failed" (not 401) |
+
+**Consequences:**
+- Every deployment that leaves `NVIDIA_MODEL` unset has served rule-based output only since 2026-08-26: deal pricing, reply drafts, company briefs, niche detection and G. Whether production sets `NVIDIA_MODEL` could not be checked; reading Vercel was not permitted.
+- Choosing the replacement model is an owner decision. The code default is unchanged.
+- No model's output quality, Arabic behaviour, latency or JSON compliance is known until a real key is used.
+
+**Fixed in code** (`src/lib/ai/chat.ts`, `nvidia-config.ts`):
+- 410 is now terminal. It was retried before, wasting the second attempt.
+- A 404 or 410 logs `nvidia.model_unavailable` with NVIDIA's reason.
+- The key diagnostic `nvidia.credential_rejected` now fires on 403 as well. Before, it never fired for a wrong key.
+- `scripts/check-nvidia.mjs` says the catalog step does not validate the key, and explains 403 and 410.
+
+**Verified against the real endpoint, isolated stack, synthetic `ux-creator` account** (`scripts/isolated-validation/g-nvidia-failure-live.mjs`):
+- **Retired default (410):** G answered HTTP 200 from rules in English and Arabic, after one attempt, and logged `nvidia.model_unavailable`. The key never appeared in the log. 4/4.
+- **Listed model with an invalid key (403):** the same, and `nvidia.credential_rejected` was logged. 4/4.
+
+These prove the failure paths only. They do not prove the AI works.
+
+**Still required for a real validation:**
+- a build.nvidia.com key, entered through the environment's secret form (the proxy injects it, and it never reaches a file or the chat) or on the owner's machine;
+- an owner choice of `NVIDIA_MODEL` from the current catalog.
+
+Then run the two steps below, with step 2 against `g-ai-live.mjs`.
+
+---
+
 Every AI path of G is tested against a scripted fake (`g-ai-paths.mjs`, 12/12). The real model has never been called from this project's test environment:
 - `integrate.api.nvidia.com` is not reachable from the agent sandbox;
 - the key exists only in Vercel, which is not to be read or changed.
@@ -42,10 +79,11 @@ Remove-Item Env:NVIDIA_API_KEY
 
 | Output | Meaning |
 |---|---|
-| `GET /v1/models` HTTP 200 and `✓ "<model>" is in the catalog` | Key valid, model available |
-| HTTP 401 | Key rejected: a wrong value, an NGC/org key instead of a build.nvidia.com `nvapi-` key, or revoked. The script lists the likely causes |
+| `GET /v1/models` HTTP 200 and `✓ "<model>" is in the catalog` | Model is listed. **Not** a key check: the catalog is public |
+| HTTP 401 or 403 in step 2 | Key rejected (NVIDIA answers an invalid key with 403): a wrong value, an NGC/org key instead of a build.nvidia.com `nvapi-` key, or revoked. The script lists the likely causes |
 | `✗ "<model>" is NOT in the catalog` | Every production call would 404 and G would silently use rules. Change `NVIDIA_MODEL` |
-| `POST /v1/chat/completions` HTTP 200 with `content: N chars` | The model answers |
+| `POST /v1/chat/completions` HTTP 200 with `content: N chars` | The key is valid and the model answers |
+| HTTP 410 in step 2 | The model is retired; pick another from the catalog |
 | A non-printable-character warning | The stored key contains invisible characters (often bidi marks from an RTL editor). Re-copy it |
 
 ## Step 2: G end to end against the real model (optional)

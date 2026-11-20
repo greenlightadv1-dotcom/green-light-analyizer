@@ -3,6 +3,9 @@ import "server-only";
 import { log } from "@/lib/log";
 import {
   NVIDIA_MIN_RETRY_MS,
+  NVIDIA_TERMINAL_STATUS,
+  isCredentialRejectedStatus,
+  isModelUnavailableStatus,
   describeKey,
   isHeaderSafe,
   parseRetryAfterMs,
@@ -71,14 +74,6 @@ export type ChatResult = { model: string };
  * without it costs a round trip and rescues an otherwise dead deployment.
  */
 const RETRY_WITHOUT_JSON_MODE = new Set([400, 415, 422, 500]);
-
-/**
- * Statuses where a second attempt cannot possibly help, so spending the
- * remaining budget on one only delays the fallback. A rejected credential, an
- * unknown model or a malformed request is deterministic: it will be rejected
- * again, identically.
- */
-const TERMINAL_STATUS = new Set([400, 401, 403, 404, 413, 415, 422]);
 
 /** One retry. More would spend the fallback's budget chasing a bad queue. */
 const MAX_ATTEMPTS = 2;
@@ -258,7 +253,7 @@ async function callNvidia(
     // wrote the same paragraph to the drain twice per failure.
     throw new NvidiaError(
       `HTTP ${response.status}${detail ? ` — ${detail}` : ""}`,
-      TERMINAL_STATUS.has(response.status),
+      NVIDIA_TERMINAL_STATUS.has(response.status),
       response.status,
       response.status === 429
         ? parseRetryAfterMs(response.headers.get("retry-after"))
@@ -350,7 +345,10 @@ export async function chatJson<T>(
         reason: lastReason,
       });
 
-      if (nvidia?.status === 401) {
+      // 403 too: observed live on 2026-11-20, NVIDIA answers a well-formed but
+      // invalid Bearer key with 403 "Authorization failed" (401 only when no
+      // credential is sent), so a 401-only check never diagnosed a wrong key.
+      if (isCredentialRejectedStatus(nvidia?.status ?? null)) {
         // The one status where the useful fact is about our own request rather
         // than NVIDIA's answer. "Authentication failed" is true of a revoked
         // key AND of a valid key carrying an invisible character, and those
@@ -360,6 +358,18 @@ export async function chatJson<T>(
           model: provider.model,
           key_as_received: describeKey(provider.apiKey, provider.keyNotes),
           hint: "if that length or prefix is not what you set, re-paste NVIDIA_API_KEY",
+        });
+      }
+
+      if (isModelUnavailableStatus(nvidia?.status ?? null)) {
+        // Every call to this model fails the same way until NVIDIA_MODEL (or
+        // the code default) names a model that is in the catalog. Its own
+        // event, because a retired default otherwise reads like an outage.
+        log.error("nvidia.model_unavailable", {
+          model: provider.model,
+          status: nvidia?.status,
+          reason: lastReason,
+          hint: "set NVIDIA_MODEL to a model listed by GET /v1/models (scripts/check-nvidia.mjs)",
         });
       }
 

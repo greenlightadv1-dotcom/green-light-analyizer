@@ -124,7 +124,10 @@ let catalog = null;
 try {
   const response = await fetch(`${BASE}/models`, { headers });
   console.log(`   HTTP ${response.status}`);
-  if (response.status === 401) {
+  // The catalog is public (verified 2026-11-20: 200 with no credential at
+  // all), so a 200 here says nothing about the key. Step 2 is the key check.
+  if (response.ok) console.log("   (the catalog is public: this does NOT validate the key; step 2 does)");
+  if (response.status === 401 || response.status === 403) {
     console.log(`   → ${await detail(response)}`);
     console.log("   The credential is rejected at the account level, not the model level.");
     console.log("   In order of likelihood:");
@@ -180,6 +183,15 @@ async function chat(body, label) {
   console.log(`   ${label}: HTTP ${response.status} in ${ms}ms`);
   if (!response.ok) {
     console.log(`   → ${await detail(response)}`);
+    if (response.status === 401 || response.status === 403) {
+      // NVIDIA answers an invalid Bearer key with 403 "Authorization failed".
+      console.log("   → the key is rejected: re-check its length above, that it is a");
+      console.log("     build.nvidia.com nvapi- key, and that it is not revoked.");
+    }
+    if (response.status === 410) {
+      console.log("   → this model is retired. Every call fails until NVIDIA_MODEL names a");
+      console.log("     model from the catalog in step 1.");
+    }
     return { ok: false, status: response.status };
   }
   const json = await response.json();

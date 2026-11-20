@@ -783,6 +783,17 @@ deal, not on company seats.
 > output stops appearing. The key itself is only ever read from
 > `NVIDIA_API_KEY` — it is never hardcoded, and rotating it is an environment
 > change plus a redeploy, not a code change.
+>
+> **Update — the default model is retired (checked live, 2026-11-20).**
+> NVIDIA answers `meta/llama-3.3-70b-instruct` with HTTP 410, "end of life on
+> 2026-08-26", and the id is gone from the public catalog. A deployment without
+> `NVIDIA_MODEL` has therefore served rule-based output only since that date.
+> Choosing the replacement is the owner's decision, so the default is unchanged.
+> 410 is now terminal and logged as `nvidia.model_unavailable`. A wrong key is
+> diagnosed on 403 too, since NVIDIA answers an invalid Bearer key with 403
+> rather than 401. `GET /v1/models` is public, so it never validates a key.
+> No successful live model call has been made yet: no key was available.
+> Evidence and steps are in `docs/G/NVIDIA_LIVE_CHECK.md`.
 
 ---
 
