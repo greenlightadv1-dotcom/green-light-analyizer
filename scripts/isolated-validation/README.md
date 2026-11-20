@@ -49,3 +49,4 @@ Reviewer notes, reapplication, photo metadata and retention (migration 0040 appl
 
 Second reviewer (migration 0041 applied to the isolated stack):
 - `second-reviewer-check.mjs` creates a throwaway second admin (`ux-admin2@example.invalid`), grants both reviewers, and removes everything afterwards. Run it with `APP_URL=http://localhost:3200` and `MOCK_OUTBOX`. 6/6.
+- `second-reviewer-action-check.mjs`: the flagging reviewer refused by the real `reviewVerification` Server Action (their own request-information form posted with `action=approve`), with nothing changed; B approves with a justification; regressions for request-information, reject and unflagged approval. Same environment and cleanup as above. 7/7.
