@@ -192,6 +192,27 @@ Voice code was not changed in Phase 1. The applicant helper has no voice at all.
 
 **Still to do with a person:** `VOICE_MANUAL_TEST_CHECKLIST.md` on real devices, and a screen-reader pass of the new cards.
 
+## Live validation attempt (2026-11-20): blocked, no key
+
+**Key and model:**
+- No NVIDIA key is available in the isolated environment: none in the shell, any `.env` file, the app's environment or the environment's network secrets. A key was previously declined, so none was requested again.
+- **No real-model check could run.** Model recommended: `mistralai/mistral-large-4-1t-a52b` with `NVIDIA_REASONING_EFFORT=low`; fallback candidate `google/gemma-4-31b-it`. Both, and how to supply the key safely, are in `NVIDIA_LIVE_CHECK.md`.
+
+**Safe fallback, re-verified:**
+- **Real endpoint:**
+  - an invalid key with the recommended model: 403, one attempt, rules answer, `nvidia.credential_rejected`, no key in the log (4/4);
+  - the retired default: 410, `nvidia.model_unavailable` (4/4).
+- **Fake model** (`g-ai-paths` 12/12):
+  - 429 and 500;
+  - a hanging provider, abandoned at the 25s budget;
+  - invalid, incomplete and ungrounded replies;
+  - hostile ids and actions;
+  - the rate limit.
+
+  A rules answer has no prose (`reply: null`), so it can never claim an action was done.
+
+**Prepared:** `g-ai-live-phase1.mjs` runs checks 3–7 against the real model and writes a report. Its only run so far was a dry run against the fake model, which proves the script works and nothing about any model.
+
 ## Real-model validation still required (owner)
 
 Needs a model from the current catalog and a key (`NVIDIA_LIVE_CHECK.md`). Then:

@@ -17,6 +17,54 @@
 - Choosing the replacement model is an owner decision. The code default is unchanged.
 - No model's output quality, Arabic behaviour, latency or JSON compliance is known until a real key is used.
 
+## Model selection (2026-11-20)
+
+**Availability check.** Each candidate was checked against the live endpoint with no key: 401 means the model is live and needs a key; 410 means it is retired.
+
+Retired:
+- `meta/llama-3.3-70b-instruct`: end of life 2026-08-26.
+- `moonshotai/kimi-k3`: end of life 2026-10-15.
+- `z-ai/glm-5.3`: end of life 2026-10-28.
+
+Every default this project has used is now retired. The models below all answered 401 (live).
+
+| Model | Size (active) | Arabic | JSON / system prompt | Notes for G |
+|---|---|---|---|---|
+| **`mistralai/mistral-large-4-1t-a52b`** | 1T (≈52B) | 160+ languages; Arabic not named on the card | Strict JSON schema, JSON output, system prompts, function calling (card) | Released on NIM 2026-10-29, the newest in the catalog. Reasoning defaults to **high**: set `NVIDIA_REASONING_EFFORT=low` for latency |
+| `google/gemma-4-31b-it` | 31B dense | 140+ languages; Arabic not named | Function calling; JSON output not stated | Released 2026-04-02. G parses JSON from text anyway (`extractJsonObject`, json_object retry) |
+| `moonshotai/kimi-k3.1-pro` | (vision model, thinking) | not stated | Catalog says structured output, tools, thinking | Heavy (vision, 1M context). Its predecessor `kimi-k3` was retired after a short life |
+| `z-ai/glm-5.3-flash` | 320B (18B) | not stated | Structured output, function calling | The family runs a thinking mode (mandatory on FlashX variants): latency risk. Its predecessor `glm-5.3` was retired 2026-10-28 |
+| `nvidia/nemotron-3.5-lightning-30b-a3b` | 30B (3B) | **No**: English plus 6 languages, none of them Arabic | Structured outputs listed by providers | Fastest, but **unsuitable**: Arabic is a primary market |
+| `nvidia/nemotron-3.5-super-vl-120b-a12b`, `nemotron-3-ultra-550b-a55b` | 120B / 550B | not established | not established | No public language list was found |
+
+**Recommendation (owner decision; nothing is changed in code or production):**
+- **Default: `mistralai/mistral-large-4-1t-a52b` with `NVIDIA_REASONING_EFFORT=low`.** It is the only candidate whose card states strict JSON-schema output, system-prompt support and broad multilingual coverage together. That is what G's contract needs: one prompt, a JSON object with `reply` / `actions` / `proposals`, and replies in the message's language. Being the newest release, it is the least likely to be retired soon.
+
+  G needs no code change: `NVIDIA_MODEL` and `NVIDIA_REASONING_EFFORT` are already read from the environment, and `chat.ts` already reads `reasoning_content` when a reasoning model leaves `content` empty.
+
+  **Unknowns until a key is used:**
+  - real Arabic quality (the card does not name Arabic);
+  - latency at low reasoning effort against G's 25s and the applicant path's 20s budgets.
+- **Fallback candidate: `google/gemma-4-31b-it`.** Dense, smaller, and broadly multilingual.
+  - It is a manual swap through `NVIDIA_MODEL`, not an automatic second model: the product makes exactly one call, and CLAUDE.md §9 forbids a second provider without the owner.
+  - JSON compliance is not documented, so it must pass the same checks.
+
+## Owner setup for the live checks (the key never leaves your control)
+
+Pick **one** of these:
+
+1. **In this Claude cloud environment.**
+   - Add the key as a network secret for host `integrate.api.nvidia.com`, with header `Authorization: Bearer`, in the environment's settings (or accept the secure form when asked). The proxy then adds it to requests. It is never written to a file, a commit or the chat, and Claude never sees it.
+   - The isolated app is then started with a placeholder `NVIDIA_API_KEY` (the proxy replaces it), `NVIDIA_MODEL=mistralai/mistral-large-4-1t-a52b`, `NVIDIA_REASONING_EFFORT=low` and the mode file set to `live`.
+2. **On your own machine.** Use step 1 below with `read -rs` (nothing is echoed or stored), then step 2 with the same two variables.
+
+**Then run, in order:**
+1. `scripts/check-nvidia.mjs`.
+2. `g-ai-live.mjs`: checks 1–2.
+3. `g-ai-live-phase1.mjs` with `REPORT=<file>`: checks 3–7. It writes each case's category, expected behaviour, observed reply, engine, latency and result. PASS/FAIL covers what a script can check; REVIEW means a person reads the reply.
+
+Never paste the key into a chat, an issue or a file in the repository.
+
 **Fixed in code** (`src/lib/ai/chat.ts`, `nvidia-config.ts`):
 - 410 is now terminal. It was retried before, wasting the second attempt.
 - A 404 or 410 logs `nvidia.model_unavailable` with NVIDIA's reason.
