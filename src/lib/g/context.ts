@@ -129,7 +129,7 @@ export async function collabContext(profile: Profile): Promise<CollabGData> {
     supabase.from("invitations").select("id, brief_id, creator_id, status, proposed_amount_usd").eq(column, profile.id).order("updated_at", { ascending: false }).limit(50),
     side === "company"
       ? supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, categories, target_countries, budget_min_usd, budget_max_usd, due_date").eq("company_id", profile.id).order("updated_at", { ascending: false }).limit(20)
-      : supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, categories, target_countries, budget_min_usd, budget_max_usd, due_date").eq("status", "published").order("published_at", { ascending: false }).limit(10),
+      : supabase.from("briefs").select("id, title, status, sponsorship_type, platforms, categories, target_countries, budget_min_usd, budget_max_usd, due_date").eq("status", "published").order("published_at", { ascending: false }).limit(50),
   ]);
   const ids = (collabs ?? []).map((c) => c.id);
   const { data: dels } = ids.length

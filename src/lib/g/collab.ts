@@ -211,51 +211,89 @@ export type OpportunityMatch = {
   title: string;
   /** Criteria the brief states and this creator meets, from the creator's own data. */
   matched: { kind: "category" | "platform" | "country"; values: string[] }[];
-  /** Criteria the brief states that the creator's data does not show. */
+  /** Criteria the brief states that the creator's data shows they do not meet. */
   unmatched: ("category" | "platform" | "country")[];
+  /** Criteria the brief states that the creator's profile does not state at all, so cannot be checked. */
+  unknown: ("category" | "platform" | "country")[];
   budget_min_usd: number | null;
   budget_max_usd: number | null;
+  /**
+   * The sponsor's top budget against the creator's own base rate (a figure the
+   * creator set, not market data). "unknown" when either is missing.
+   */
+  budget_fit: "within" | "below_your_rate" | "unknown";
   due_date: string | null;
   invited: boolean;
+  /** The creator's invitation to this brief, if any (only pending or changes_requested are listed). */
+  invitation_status: InvitationStatus | null;
 };
+
+/** Invitation states after which a brief is no longer an opportunity for this creator. */
+const CLOSED_INVITATION: readonly InvitationStatus[] = ["accepted", "declined", "withdrawn"];
 
 /**
  * Which published briefs fit this creator, and why, using only what the
  * creator's own profile and media kits state (categories, connected
- * platforms, top audience countries). A brief that states a criterion the
- * creator does not meet is still listed with that criterion unmet; a brief
- * that matches nothing is left out. Ordered by how many stated criteria
- * match. Budgets and dates are the sponsor's own figures. Pure.
+ * platforms, top audience countries, their own base rate). Pure.
+ *
+ * - A brief that states a criterion the creator does not meet is still listed
+ *   with that criterion unmet; a criterion the creator's profile does not
+ *   state at all is "unknown", not unmet; a brief that matches nothing is
+ *   left out.
+ * - Left out as well: briefs past their due date, and briefs whose invitation
+ *   to this creator was accepted (already a collaboration), declined or
+ *   withdrawn, so G does not keep recommending what is settled.
+ * - Ordered by how many stated criteria match. Budgets and dates are the
+ *   sponsor's own figures.
+ *
+ * The third argument is either the set of invited brief ids (older callers)
+ * or a map of brief id → invitation status.
  */
 export function matchOpportunities(
-  creator: { categories: readonly string[]; platforms: readonly string[]; countries: readonly string[] },
+  creator: { categories: readonly string[]; platforms: readonly string[]; countries: readonly string[]; baseRateUsd?: number | null },
   briefs: readonly OpportunityBrief[],
-  invitedBriefIds: ReadonlySet<string>,
+  invitations: ReadonlySet<string> | ReadonlyMap<string, InvitationStatus>,
   max = 5,
+  today: string = new Date().toISOString().slice(0, 10),
 ): OpportunityMatch[] {
+  const statusOf = (id: string): InvitationStatus | null =>
+    invitations instanceof Map ? (invitations.get(id) ?? null) : (invitations as ReadonlySet<string>).has(id) ? "pending" : null;
   const lower = (xs: readonly string[] | null | undefined) => (xs ?? []).map((x) => x.toLowerCase());
   const mine = { category: lower(creator.categories), platform: lower(creator.platforms), country: lower(creator.countries) };
+  const rate = typeof creator.baseRateUsd === "number" && creator.baseRateUsd > 0 ? creator.baseRateUsd : null;
   const out: (OpportunityMatch & { score: number })[] = [];
   for (const b of briefs) {
+    if (b.due_date && b.due_date < today) continue;
+    const invitation = statusOf(b.id);
+    if (invitation && CLOSED_INVITATION.includes(invitation)) continue;
     const stated = { category: lower(b.categories), platform: lower(b.platforms), country: lower(b.target_countries) };
     const matched: OpportunityMatch["matched"] = [];
     const unmatched: OpportunityMatch["unmatched"] = [];
+    const unknown: OpportunityMatch["unknown"] = [];
     for (const kind of ["category", "platform", "country"] as const) {
       if (!stated[kind].length) continue;
+      if (!mine[kind].length) {
+        unknown.push(kind);
+        continue;
+      }
       const hit = stated[kind].filter((v) => mine[kind].includes(v));
       if (hit.length) matched.push({ kind, values: hit.map((v) => (kind === "country" ? v.toUpperCase() : v)) });
       else unmatched.push(kind);
     }
     if (!matched.length) continue;
+    const top = b.budget_max_usd ?? b.budget_min_usd;
     out.push({
       brief_id: b.id,
       title: b.title,
       matched,
       unmatched,
+      unknown,
       budget_min_usd: b.budget_min_usd,
       budget_max_usd: b.budget_max_usd,
+      budget_fit: rate === null || top === null ? "unknown" : Number(top) >= rate ? "within" : "below_your_rate",
       due_date: b.due_date,
-      invited: invitedBriefIds.has(b.id),
+      invited: invitation !== null,
+      invitation_status: invitation,
       score: matched.length * 10 - unmatched.length,
     });
   }

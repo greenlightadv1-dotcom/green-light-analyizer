@@ -852,6 +852,20 @@ const fr: Dictionary = {
         platform: "Plateforme non connectée",
         country: "Pays hors de vos principaux pays d'audience",
       },
+      view: "Voir le brief",
+      due: "Échéance {date}",
+      budgetWithin: "égal ou supérieur à votre tarif de base (fixé par vous)",
+      budgetBelow: "inférieur à votre tarif de base (fixé par vous)",
+      howItWorks: "Il n'est pas encore possible de postuler à un brief sur Green Light. Les entreprises envoient des invitations ; une fois invité, vous pouvez accepter, refuser ou demander des modifications dans Opportunités. Les entreprises trouvent les créateurs via Découvrir, qui affiche votre profil et votre Media Kit.",
+      unknown: {
+        category: "Le brief cite des catégories ; votre profil n'en indique aucune",
+        platform: "Le brief cite des plateformes ; vous n'en avez connecté aucune",
+        country: "Le brief cite des pays ; les pays de votre audience ne sont pas encore enregistrés",
+      },
+      invitation: {
+        pending: "Vous êtes invité : votre réponse est attendue.",
+        changes_requested: "Vous avez demandé des modifications : en attente de l'entreprise.",
+      },
     },
     proposal: {
       brief_draft: "Brief préparé par G",

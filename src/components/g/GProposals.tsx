@@ -225,16 +225,26 @@ export function OpportunitiesCard({
               {o.unmatched.map((k) => (
                 <li key={k} className="text-fg-muted">✗ {t(`g.opp.miss.${k}`)}</li>
               ))}
+              {(o.unknown ?? []).map((k) => (
+                <li key={`u-${k}`} className="text-fg-muted">? {t(`g.opp.unknown.${k}`)}</li>
+              ))}
             </ul>
             {o.budget_min_usd !== null || o.budget_max_usd !== null ? (
               <p className="mt-1 text-fg-muted">
                 {t("g.opp.budget", { range: [o.budget_min_usd, o.budget_max_usd].filter((v) => v !== null).map((v) => usd(v as number)).join(" – ") })}
+                {o.budget_fit === "within" ? ` · ${t("g.opp.budgetWithin")}` : o.budget_fit === "below_your_rate" ? ` · ${t("g.opp.budgetBelow")}` : ""}
               </p>
             ) : null}
+            {o.due_date ? <p className="text-fg-muted">{t("g.opp.due", { date: day(o.due_date) })}</p> : null}
             {o.invited ? <p className="mt-1 font-medium text-accent">{t("g.opp.invited")}</p> : null}
+            {o.invitation_status ? <p className="text-fg-secondary">{t(`g.opp.invitation.${o.invitation_status}`)}</p> : null}
+            <Link href={`${basePath}/opportunities#brief-${o.brief_id}`} className="mt-1 inline-block font-medium text-accent hover:underline focus-visible:focus-ring">
+              {t("g.opp.view")} →
+            </Link>
           </li>
         ))}
       </ul>
+      <p className="text-[11px] leading-relaxed text-fg-muted" data-testid="g-opp-how">{t("g.opp.howItWorks")}</p>
       <Link href={`${basePath}/opportunities`} className={btn}>{t("g.action.open_opportunities")} →</Link>
     </div>
   );

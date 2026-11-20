@@ -69,7 +69,33 @@ The path names *what* to load, never *whose*.
 
 **Not proven (needs a real model):** that a real model's summary is accurate, attributes speakers correctly, keeps facts and interpretations apart, and never states chat claims as terms.
 
-## D–G: pending
+## D. Creator brief recommendations (done)
+
+`matchOpportunities` (`lib/g/collab.ts`) matches the briefs a creator can already read (RLS: published only, now up to 50) against the creator's own data: profile categories, connected platforms, and top audience countries (verified or self-reported, as the kit says).
+
+Each match lists:
+- matched criteria;
+- unmet criteria;
+- **unknown** criteria (the brief states something the creator's profile does not state at all, so it is not counted as unmet);
+- the sponsor's budget against the creator's **own** base rate: within, below or unknown, never guessed;
+- the due date and the invitation status.
+
+Left out:
+- past their due date;
+- invitation accepted (already a collaboration), declined or withdrawn.
+
+"Which briefs fit me?" and similar now reach this for creators.
+
+**No application feature.** Prompt rule 12 and the card's note say companies invite and creators answer in Opportunities. "View the brief" opens the original in `/opportunities#brief-<id>`.
+
+**FAKE-MODEL (AI down) evidence:**
+- 2 new unit tests;
+- `g-creator-recs.mjs` 4/4: expired, declined and draft briefs are excluded; reasons, budget fit and status are shown; Arabic gets the same results; the panel note is there; there is no apply button; the link opens the brief;
+- `g-actions` 13/13 unchanged.
+
+**Not proven:** a real model's explanation of the matches. Ranking is rule-based. Not considered, because the data does not exist: content language and engagement thresholds (briefs state neither).
+
+## E–G: pending
 
 (Updated as each step lands.)
 

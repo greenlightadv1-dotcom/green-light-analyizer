@@ -151,9 +151,10 @@ export async function POST(request: Request) {
               categories: profile.creator_categories ?? [],
               platforms: (ctx.assessment.platforms ?? []).map((p) => p.platform),
               countries: (ctx.assessment.platforms ?? []).flatMap((p) => p.geography.shares.slice(0, 3).map((c) => c.country)),
+              baseRateUsd: profile.base_rate_usd ?? null,
             },
             collab.briefs,
-            new Set(collab.invitations.map((i) => i.brief_id)),
+            new Map(collab.invitations.map((i) => [i.brief_id, i.status])),
           )
         : [];
       if (intents.includes("collab")) cards.opportunities = { items: opportunities, published: collab.briefs.length };

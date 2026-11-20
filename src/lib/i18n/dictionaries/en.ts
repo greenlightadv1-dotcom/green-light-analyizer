@@ -864,6 +864,20 @@ const en = {
         platform: "Platform not connected",
         country: "Audience country not among your top countries",
       },
+      view: "View the brief",
+      due: "Due {date}",
+      budgetWithin: "at or above your base rate (set by you)",
+      budgetBelow: "below your base rate (set by you)",
+      howItWorks: "You can't apply to a brief on Green Light yet. Companies send invitations; when you're invited, you can accept, decline or ask for changes in Opportunities. Companies find creators through Discover, which shows your profile and Media Kit.",
+      unknown: {
+        category: "The brief names categories; your profile lists none yet",
+        platform: "The brief names platforms; you have none connected yet",
+        country: "The brief names countries; your audience countries aren't recorded yet",
+      },
+      invitation: {
+        pending: "You're invited: waiting for your answer.",
+        changes_requested: "You asked for changes: waiting for the company.",
+      },
     },
     proposal: {
       brief_draft: "Brief prepared by G",

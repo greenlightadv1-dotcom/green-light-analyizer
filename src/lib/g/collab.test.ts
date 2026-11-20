@@ -122,3 +122,39 @@ test("a brief draft's idempotency key never comes from the model: the filter dro
   const action = readFileSync(new URL("../../app/(app)/collaborations/actions.ts", import.meta.url), "utf8");
   assert.match(action, /error\?\.code === "23505" && requestKey/, "a duplicate key is answered with the existing brief");
 });
+
+test("opportunities (Phase 1D): expired and settled briefs are left out; status, budget fit and unknown criteria are reported", () => {
+  const me = { categories: ["gaming"], platforms: ["youtube"], countries: [] as string[], baseRateUsd: 800 };
+  const briefs = [
+    brief("open", { categories: ["gaming"], target_countries: ["EG"], budget_max_usd: 1000, due_date: "2026-12-31" }),
+    brief("expired", { categories: ["gaming"], due_date: "2026-11-01" }),
+    brief("declined", { categories: ["gaming"] }),
+    brief("accepted", { categories: ["gaming"] }),
+    brief("withdrawn", { categories: ["gaming"] }),
+    brief("pending", { categories: ["gaming"], budget_min_usd: 300, budget_max_usd: 500 }),
+    brief("asked", { platforms: ["youtube"] }),
+  ];
+  const statuses = new Map([["declined", "declined"], ["accepted", "accepted"], ["withdrawn", "withdrawn"], ["pending", "pending"], ["asked", "changes_requested"]] as const);
+  const out = matchOpportunities(me, briefs, statuses, 10, "2026-11-20");
+  assert.deepEqual(out.map((o) => o.brief_id).sort(), ["asked", "open", "pending"]);
+  const open = out.find((o) => o.brief_id === "open")!;
+  assert.deepEqual(open.unknown, ["country"], "no audience countries on record: unknown, not unmet");
+  assert.deepEqual(open.unmatched, []);
+  assert.equal(open.budget_fit, "within");
+  assert.equal(open.invitation_status, null);
+  const pending = out.find((o) => o.brief_id === "pending")!;
+  assert.equal(pending.budget_fit, "below_your_rate");
+  assert.equal(pending.invitation_status, "pending");
+  assert.equal(pending.invited, true);
+  assert.equal(out.find((o) => o.brief_id === "asked")!.invitation_status, "changes_requested");
+  // Without a base rate the budget fit is unknown, never guessed.
+  assert.equal(matchOpportunities({ ...me, baseRateUsd: null }, briefs, statuses, 10, "2026-11-20").find((o) => o.brief_id === "open")!.budget_fit, "unknown");
+});
+
+test("creators asking which briefs fit them get opportunities, and the prompt rules out an application feature", async () => {
+  const { detectIntents, buildPrompt } = await import("./conversation.ts");
+  assert.ok(detectIntents("Which briefs fit me?", "creator", "/dashboard").includes("collab"));
+  assert.ok(detectIntents("Recommend me a campaign", "creator", "/dashboard").includes("collab"));
+  assert.ok(!detectIntents("Recommend me a campaign", "creator", "/dashboard").includes("recommend"), "never creator search for a creator");
+  assert.match(buildPrompt({ role: "creator", locale: "en", page: "/", allowedActions: [], data: {}, history: [], message: "x" }), /Creators cannot apply to briefs/);
+});

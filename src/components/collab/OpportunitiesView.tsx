@@ -123,7 +123,7 @@ export function OpportunitiesView({
             <GlassPanel className="p-5 text-sm text-fg-muted">{t("collab.opp.noBriefs")}</GlassPanel>
           ) : (
             briefs.map((b) => (
-              <GlassPanel key={b.id} className="space-y-2 p-5">
+              <GlassPanel key={b.id} id={`brief-${b.id}`} className="scroll-mt-24 space-y-2 p-5 target:ring-2 target:ring-accent">
                 <p dir="auto" className="font-medium [overflow-wrap:anywhere] text-fg">{b.title}</p>
                 <p className="text-xs text-fg-muted">{t("collab.opp.from", { company: names[b.company_id] ?? "—" })} · {day(b.published_at)}</p>
                 <BriefSummary brief={b} />

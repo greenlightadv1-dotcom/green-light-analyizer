@@ -852,6 +852,20 @@ const de: Dictionary = {
         platform: "Plattform nicht verbunden",
         country: "Land nicht unter deinen wichtigsten Publikumsländern",
       },
+      view: "Briefing ansehen",
+      due: "Fällig am {date}",
+      budgetWithin: "mindestens dein Grundpreis (von dir festgelegt)",
+      budgetBelow: "unter deinem Grundpreis (von dir festgelegt)",
+      howItWorks: "Auf Green Light kannst du dich noch nicht auf ein Briefing bewerben. Unternehmen senden Einladungen; wenn du eingeladen wirst, kannst du unter Chancen annehmen, ablehnen oder Änderungen anfragen. Unternehmen finden Creator über Entdecken, wo dein Profil und dein Media Kit zu sehen sind.",
+      unknown: {
+        category: "Das Briefing nennt Kategorien; dein Profil enthält noch keine",
+        platform: "Das Briefing nennt Plattformen; du hast noch keine verbunden",
+        country: "Das Briefing nennt Länder; die Länder deines Publikums sind noch nicht erfasst",
+      },
+      invitation: {
+        pending: "Du bist eingeladen: deine Antwort steht aus.",
+        changes_requested: "Du hast Änderungen angefragt: das Unternehmen ist am Zug.",
+      },
     },
     proposal: {
       brief_draft: "Briefing von G vorbereitet",
