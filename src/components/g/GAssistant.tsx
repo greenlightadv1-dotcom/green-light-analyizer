@@ -13,6 +13,7 @@ import { WAKE_PHRASES } from "@/lib/g/wake";
 import { actionHref } from "@/lib/g/actions";
 import { CollaborationsCard, ContentCard, DealRoomCard, OpportunitiesCard, ProposalCard } from "@/components/g/GProposals";
 import type { DealRoomBrief } from "@/lib/g/dealroom";
+import { pageEntity } from "@/lib/g/entity";
 import type { CreatorAssessment, DealSummary } from "@/lib/g/assessment";
 import type { Brief, ComparisonRow, Recommendation } from "@/lib/g/recommend";
 import { PLATFORMS, PLATFORM_LABELS } from "@/lib/media-kit/platforms";
@@ -83,6 +84,18 @@ const SUGGESTIONS: Record<Role, string[]> = {
   company: ["g.suggest.company1", "g.suggest.company2", "g.suggest.company3"],
   admin: ["g.suggest.admin1"],
 };
+
+/**
+ * Suggestions for the page the user is on (Phase 1G): inside a deal room or
+ * collaboration they are about that room; a creator browsing Opportunities
+ * starts with brief matching. Otherwise the role's defaults.
+ */
+function suggestionsFor(role: Role, page: string): string[] {
+  const entity = pageEntity(page);
+  if (role !== "admin" && entity && entity.kind !== "brief") return ["g.suggest.room1", "g.suggest.room2", "g.suggest.room3"];
+  if (role === "creator" && page.startsWith("/opportunities")) return ["g.suggest.creatorBriefs", ...SUGGESTIONS.creator.slice(0, 2)];
+  return SUGGESTIONS[role];
+}
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 const CHIP = "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:focus-ring";
@@ -350,7 +363,7 @@ export function GAssistant({ userId, role, demo = false, basePath = "" }: { user
           <div className="space-y-3">
             <p className="text-[15px] leading-relaxed text-fg-secondary">{t(`g.welcome.${role}`)}</p>
             <div className="grid gap-2">
-              {SUGGESTIONS[role].map((k) => (
+              {suggestionsFor(role, page).map((k) => (
                 <button
                   key={k}
                   type="button"

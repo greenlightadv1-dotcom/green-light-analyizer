@@ -162,6 +162,9 @@ try {
   await c.p.goto(`${BASE}/inbox/${mine}`);
   await c.p.getByRole("button", { name: /Open G/ }).click();
   const panel = c.p.locator("section[role=dialog]");
+  // Page-aware suggestions (Phase 1G): inside a deal room they are about the room.
+  await panel.getByRole("button", { name: "Summarise this conversation." }).waitFor();
+  await panel.getByRole("button", { name: "Draft a follow-up message." }).waitFor();
   await panel.getByRole("textbox", { name: /Ask G/ }).fill("Summarise this conversation");
   await panel.getByRole("button", { name: "Send", exact: true }).click();
   const card = panel.getByTestId("g-dealroom-card");
@@ -176,7 +179,7 @@ try {
   assert.match(interp, /the other side mentioned \$800; the recorded offer is \$1,000/);
   assert.match(interp, /Messages never change recorded or frozen terms\./);
   await panel.getByRole("button", { name: /Copy/ }).first().waitFor();
-  ok("the panel renders the card with separate Recorded and Interpretation sections, and the follow-up can only be copied");
+  ok("the panel offers room suggestions, renders the card with separate Recorded and Interpretation sections, and the follow-up can only be copied");
 } finally {
   for (const r of rooms) sql(`delete from deal_chats where id='${r}'`);
   sql("delete from rate_limits where key like 'g_chat%'");

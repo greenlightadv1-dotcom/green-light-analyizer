@@ -142,6 +142,14 @@ Everything below describes the **branch**, not production.
 | G14 | Admin assistance | **PARTIAL** | Navigation only | No review-queue summaries (by design so far) |
 | G15 | Prompt-injection defence | **COMPLETE** | Fenced and masked untrusted text; allow-listed actions; `lib/g/*.test.ts` | — |
 
+> **Phase 1 update (2026-11-20, branch, fake-model evidence only; `docs/G/G_PHASE1_STATUS.md`).**
+> - **G4 (deal-room thread awareness):** now built: recorded facts, interpretations, and copy-only follow-ups for rooms the caller is a party to.
+> - **G13 (pending users):** now built: a limited, read-only helper for applicants and accounts awaiting verification.
+> - **G5 / C11 (creator recommendations):** improved: expired and settled briefs are excluded; status, budget fit and unknown criteria are shown.
+> - **G1 (live model):** still UNVERIFIED. The default model `meta/llama-3.3-70b-instruct` is **retired** (HTTP 410 since 2026-08-26) and no key was available.
+> - **G10 (voice):** still simulated only.
+> - **G7 (deliverable actions)** and **G11 (streaming):** unchanged.
+
 **What G still cannot do:**
 - answer with a verified live model (G1);
 - read a deal's conversation (G4);

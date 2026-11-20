@@ -662,6 +662,10 @@ const en = {
       company2: "Help me write a campaign brief.",
       company3: "Summarize my deals.",
       admin1: "Where do I review applications?",
+      room1: "Summarise this conversation.",
+      room2: "What's still open in this deal?",
+      room3: "Draft a follow-up message.",
+      creatorBriefs: "Which briefs fit me?",
     },
     error: {
       rateLimited: "You've reached G's hourly limit. Try again a little later.",

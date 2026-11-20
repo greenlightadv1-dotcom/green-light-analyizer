@@ -650,6 +650,10 @@ const es: Dictionary = {
       company2: "Ayúdame a redactar un brief de campaña.",
       company3: "Resume mis acuerdos.",
       admin1: "¿Dónde reviso las solicitudes?",
+      room1: "Resume esta conversación.",
+      room2: "¿Qué queda pendiente en este acuerdo?",
+      room3: "Redacta un mensaje de seguimiento.",
+      creatorBriefs: "¿Qué briefs encajan conmigo?",
     },
     error: {
       rateLimited: "Has alcanzado el límite por hora de G. Inténtalo un poco más tarde.",

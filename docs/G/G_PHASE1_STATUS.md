@@ -145,9 +145,52 @@ Active accounts keep the full G and are refused here (403). Nobody else gets any
 
 **Not proven (real model):** answer quality, Arabic wording, and that a real model never implies a timeline in words that `promisesReviewTime` does not catch (for example "soon" or "shortly").
 
-## F–G: pending
+## F. Action safety (done)
 
-(Updated as each step lands.)
+Every impactful G action is a prepared form. The user sees the exact target and details, confirms in a dialog, and the client then calls the product's ordinary server action. That action derives the actor from the session and re-checks role, ownership and state in the database. G executes nothing.
+
+| Proposal | Effect on confirm | Server check |
+|---|---|---|
+| `content_draft` | saves a private draft (`saveContentItem`) | creator role, session id, rate limit |
+| `brief_draft` | saves a **draft** brief, never publishes (`createBriefDraft`) | company role, idempotency key assigned by the route (0038) |
+| `invitation` | sends one invitation (`inviteCreator`) | `collab_create_invitation`: the brief is the session's company's and still published; the creator exists; not already invited |
+| `message_draft` (collaboration or deal room) | **none: copy only** | nothing can be sent from it |
+
+Evidence (AI down, real browser):
+- `g-actions.mjs` 13/13 (existing): Cancel, Escape, double click, replay, wrong role, already invited, idempotent brief drafts.
+- New `g-action-safety.mjs` 3/3:
+  - **stale proposal:** the brief is archived between preparing and confirming; the server refuses, nothing is created, and an error is shown;
+  - **cross-company replay:** company A's captured invitation request, replayed with company B's session, creates nothing;
+  - **copy-only drafts:** copying a deal-room draft makes no server-action call and writes no message, and the draft has no send button.
+- Model-generated ids: `allowedProposals` keeps only ids from the caller's own context (`hostile` fake mode in `g-ai-paths`, the foreign deal draft in `g-dealroom`).
+
+No automatic invitations, messages, financial actions, contract changes or approvals exist.
+
+## G. Voice and UX (done; no real-device testing)
+
+**Voice: simulated only.** I had no microphone or real browsers other than headless Chromium, so **no real-device or real-microphone test was performed** on Chrome, Edge, Safari, Firefox or mobile.
+
+What was run (a spec-faithful fake recognizer in headless Chromium, preview build):
+- `g-voice-e2e.mjs`: 18/18 on three runs. One earlier run, on the build's first requests, had 1 failure that I did not capture and could not reproduce.
+- `g-wake-e2e.mjs`: 31/31.
+
+Together they cover:
+- explicit mic start; listening and speaking states; interrupting; Stop; mute;
+- switching between typing and voice;
+- Arabic `ar-EG`;
+- permission denied, unavailable, network and silence errors, and a stalled service;
+- an unsupported browser;
+- "Hey G" off by default, with consent, an indicator and Turn off; hidden-tab pause; sign-out clearing; no wake on ordinary speech.
+
+Voice code was not changed in Phase 1. The applicant helper has no voice at all.
+
+**UX changes:**
+- Page-aware suggestions: inside a deal room or collaboration, "Summarise this conversation.", "What's still open in this deal?" and "Draft a follow-up message."; creators on Opportunities start with "Which briefs fit me?". Five languages.
+- The Deal Room card, the opportunity details and the applicant helper (above).
+
+**Accessibility:** new `a11y-g-phase1.mjs` found **0 axe violations** (WCAG 2.0/2.1 A+AA) with G open in a deal room, G open on Opportunities, and the applicant helper open on `/apply`, each on desktop light and phone dark. The existing `a11y-axe.mjs` still reports none.
+
+**Still to do with a person:** `VOICE_MANUAL_TEST_CHECKLIST.md` on real devices, and a screen-reader pass of the new cards.
 
 ## Real-model validation still required (owner)
 
@@ -162,5 +205,9 @@ Needs a model from the current catalog and a key (`NVIDIA_LIVE_CHECK.md`). Then:
    - the summary matches the recorded card;
    - the $800 claim is not stated as the agreed amount;
    - the injected "reveal the email" is ignored.
-4. **Grounding rejection rate:** over around 20 varied questions, how often `g.reply_ungrounded` fires. A high rate means most answers fall back to rules.
-5. Latency against the 25s model budget, token use, and 429 behaviour under the rate limit.
+4. **Creator recommendations** on the `g-creator-recs.mjs` fixture: the explanation uses only matched, unmet and unknown criteria, and never mentions applying.
+5. **Applicant help** on the `g-applicant.mjs` fixture: no review time, including vague wording like "soon"; no claims about other applicants; Arabic wording.
+6. **Grounding rejection rate:** over around 20 varied questions, how often `g.reply_ungrounded` or a review-time rejection fires. A high rate means most answers fall back to rules.
+7. Latency against the model budgets (25s G, 20s applicant), token use, and 429 behaviour under the rate limit.
+
+Until these pass, **no G capability is production-ready as an AI feature**. What works today in every case is the rule-computed part: the cards, the proposals and the fallbacks.

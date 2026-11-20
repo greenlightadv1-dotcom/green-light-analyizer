@@ -650,6 +650,10 @@ const de: Dictionary = {
       company2: "Hilf mir, ein Kampagnen-Brief zu schreiben.",
       company3: "Fasse meine Angebote zusammen.",
       admin1: "Wo prüfe ich Bewerbungen?",
+      room1: "Fasse dieses Gespräch zusammen.",
+      room2: "Was ist in diesem Deal noch offen?",
+      room3: "Entwirf eine Nachfass-Nachricht.",
+      creatorBriefs: "Welche Briefings passen zu mir?",
     },
     error: {
       rateLimited: "Du hast das stündliche Limit von G erreicht. Versuch es etwas später.",

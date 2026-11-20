@@ -1507,3 +1507,31 @@ Not deployed. **Migration 0039 is applied to the isolated stack only.** Full des
   - Matches are warnings for reviewers, never decisions.
 - **Malware scanning is NOT implemented.** It is a launch blocker: `docs/RELEASE/MALWARE_SCANNING_REQUIREMENT.md`.
 - **Details:** `docs/REGISTRATION_ONBOARDING_FLOW.md` and PENDING_OWNER_DECISIONS §16.
+
+## 22. G Phase 1: real AI and core intelligence (branch only, 2026-11-20)
+
+Not deployed, and no migration. Status and evidence: `docs/G/G_PHASE1_STATUS.md`. **All validation used the fake model or the AI down.** No real model call has succeeded: the default model is retired (§9's update) and no key was supplied.
+
+- **Page-entity context** (`lib/g/entity.ts`, `entity-server.ts`):
+  - the deal room, collaboration or brief on the current page;
+  - read with the caller's own client **and** an explicit party check, because RLS lets admins read every deal and G summarises nobody else's;
+  - the caller's unread notifications.
+  - Prompt fences can no longer be closed by untrusted text.
+- **Deal Room intelligence** (`lib/g/dealroom.ts`, `DealRoomCard`):
+  - recorded facts (status, offer, proposed or frozen terms, deliverables, next step) kept separate from rule-based interpretations (unanswered questions, chat amounts that differ from the record);
+  - a masked, bounded thread;
+  - copy-only follow-up drafts, now also for email deal rooms.
+- **Creator brief recommendations** (`matchOpportunities`):
+  - skip expired briefs and briefs whose invitation was accepted, declined or withdrawn;
+  - report unknown criteria, the budget against the creator's own base rate, and the invitation status.
+  - No application feature is described: companies invite.
+- **Applicants and accounts awaiting verification** (`/api/g/applicant`, `GApplicantHelp` on `/apply` and `/verification`):
+  - identity from the resume cookie or the session only;
+  - a fixed projection of the caller's own cases: status, missing keys, the reviewer's applicant-facing text, the next step;
+  - never notes, flags, match keys or documents;
+  - no review time; text only; rate limit `g_applicant`.
+- **Safety and UX:**
+  - `g-action-safety.mjs` covers a stale proposal, a cross-company replay and copy-only drafts;
+  - suggestions follow the page;
+  - `a11y-g-phase1.mjs` found 0 axe violations;
+  - voice is unchanged and tested with a fake recognizer only.
