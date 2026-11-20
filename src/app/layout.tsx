@@ -1,18 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import { GlowOrbs } from "@/components/ui/GlowOrbs";
+import { IBM_Plex_Sans_Arabic, Manrope } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LocaleProvider } from "@/components/LocaleProvider";
 import "./globals.css";
 
 /**
- * Typography (§2.4): a clean geometric/grotesk sans. Inter is the working
- * choice — see the open question in §13 (Inter vs. Manrope) still to be
- * confirmed with the client. Swapping it is a one-line change here.
+ * Typography (2026-11 redesign): Manrope, a geometric sans, for Latin text,
+ * and IBM Plex Sans Arabic for Arabic. Both are free Google fonts, served
+ * self-hosted by next/font. --font-sans (globals.css) lists Manrope first, so
+ * Latin glyphs come from it and Arabic falls through to Plex.
  */
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
+  display: "swap",
+});
+const arabic = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-arabic",
   display: "swap",
 });
 
@@ -30,8 +36,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0D14" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F3EE" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B110E" },
   ],
 };
 
@@ -39,14 +45,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${manrope.variable} ${arabic.variable}`} suppressHydrationWarning>
       {/* No bg-/text- utility classes here on purpose: globals.css's `body`
           selector owns background + color now (theme-reactive), and a
           class utility here would out-specificity it in light mode. */}
       <body className="min-h-screen antialiased">
         <LocaleProvider>
           <ThemeProvider>
-            <GlowOrbs />
             {children}
           </ThemeProvider>
         </LocaleProvider>

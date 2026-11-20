@@ -14,7 +14,7 @@ import {
 } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 text-sm text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 
 const TYPES = [
   { value: "video_dedicated", label: "Dedicated video" },
@@ -102,13 +102,13 @@ export function OfferPanel({
   return (
     <div className="w-full max-w-md space-y-3 rounded-2xl border border-fg/10 bg-fg/5 p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium tracking-wide text-fg/60 uppercase">
+        <p className="text-sm font-medium text-fg-muted">
           Offer to {creatorName}
         </p>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-xs text-fg/40 hover:text-fg/70"
+          className="text-xs text-fg-muted hover:text-fg/70"
         >
           Cancel
         </button>
@@ -122,7 +122,7 @@ export function OfferPanel({
           <div className="space-y-1.5">
             <label
               htmlFor={`sponsorship_type-${creatorId}`}
-              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+              className="block text-sm font-medium text-fg-muted"
             >
               What you want
             </label>
@@ -163,7 +163,7 @@ export function OfferPanel({
         <div className="space-y-1.5">
           <label
             htmlFor={`message_text-${creatorId}`}
-            className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+            className="block text-sm font-medium text-fg-muted"
           >
             Your message
           </label>
@@ -174,7 +174,7 @@ export function OfferPanel({
             maxLength={20000}
             required
             placeholder="Describe the deliverable, timeline and anything else the creator needs…"
-            className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+            className="w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
           />
         </div>
 
@@ -194,18 +194,18 @@ export function OfferPanel({
 
           <p className="text-lg font-semibold text-fg tabular-nums">
             ${r.recommended_price_usd.toLocaleString("en-US")}{" "}
-            <span className="text-xs font-normal text-fg/45">
+            <span className="text-xs font-normal text-fg-muted">
               fair range ${r.price_range_usd.low.toLocaleString("en-US")}–$
               {r.price_range_usd.high.toLocaleString("en-US")}
             </span>
           </p>
 
-          <p className="text-xs leading-relaxed text-fg/55">
+          <p className="text-xs leading-relaxed text-fg-muted">
             {r.reasoning}
           </p>
 
           {r.engine === "heuristic" ? (
-            <p className="text-[11px] leading-relaxed text-fg/35">
+            <p className="text-[11px] leading-relaxed text-fg-muted">
               Rule-based estimate — the AI engine could not be reached, so
               this is arithmetic on reach and category rather than an AI
               reading of the offer.

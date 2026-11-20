@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireProfile } from "@/lib/auth";
+import { canUseCreatorFeatures } from "@/lib/access";
+import { verificationAvailability } from "@/lib/media-kit/platforms";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   isOAuthPlaceholderPlatform,
@@ -38,6 +40,23 @@ export async function GET(
   }
 
   const profile = await requireProfile();
+
+  // Defence in depth behind the start route's own check: a non-creator never
+  // gets a token exchanged or stored, even with a valid signed state.
+  if (!canUseCreatorFeatures(profile.role)) {
+    failureUrl.searchParams.set("oauth_error", platform);
+    return NextResponse.redirect(failureUrl);
+  }
+
+  // The platform's integration must be operational here too, not only at the
+  // start route (W2). The signed state names the creator, not the platform,
+  // so a state issued for YouTube would otherwise complete an Instagram
+  // callback while Instagram is still in development. Checked before the
+  // state and before any token exchange, so nothing is sent to the provider.
+  if (verificationAvailability(platform) !== "available") {
+    failureUrl.searchParams.set("oauth_error", platform);
+    return NextResponse.redirect(failureUrl);
+  }
 
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");

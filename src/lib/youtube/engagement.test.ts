@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { meanEngagementRate } from "./engagement.ts";
+import { meanEngagementRate, medianViews } from "./engagement.ts";
 
 test("returns null when given no videos", () => {
   assert.equal(meanEngagementRate([]), null);
@@ -39,4 +39,22 @@ test("excludes zero-view videos rather than counting them as 0% engagement", () 
 test("rounds to two decimal places", () => {
   const result = meanEngagementRate([{ viewCount: 3, likeCount: 1, commentCount: 0 }]);
   assert.equal(result, 33.33);
+});
+
+test("hidden like counts are left out, not counted as zero (analyzer report A1)", () => {
+  // Two videos at 5%; one with likes hidden must not drag the mean to 3.33%.
+  const rate = meanEngagementRate([
+    { viewCount: 1000, likeCount: 40, commentCount: 10 },
+    { viewCount: 1000, likeCount: 45, commentCount: 5 },
+    { viewCount: 1000, commentCount: 0 },
+  ]);
+  assert.equal(rate, 5);
+  assert.equal(meanEngagementRate([{ viewCount: 100, commentCount: 3 }]), null);
+});
+
+test("median views of recent uploads (analyzer report A2)", () => {
+  assert.deepEqual(medianViews([{ viewCount: 100 }, { viewCount: 9_000_000 }, { viewCount: 300 }]), { median: 300, sample: 3 });
+  assert.deepEqual(medianViews([{ viewCount: 100 }, { viewCount: 300 }]), { median: 200, sample: 2 });
+  assert.deepEqual(medianViews([{ viewCount: 0 }, {}]), { median: 0, sample: 1 });
+  assert.equal(medianViews([]), null);
 });

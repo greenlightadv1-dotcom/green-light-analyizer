@@ -2,15 +2,16 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
 import {
+  INTEGRATION_PLATFORMS,
+  INTEGRATION_STATUS,
+  MAX_CONNECTIONS,
   PLATFORMS,
   VERIFICATION_SUPPORT,
   canAddConnection,
-  canVerifyAudience,
-  maxConnections,
   verificationAvailability,
 } from "./platforms.ts";
 
-/** §7.3 verification matrix and §8 tier limits. */
+/** §7.3 verification matrix, the unified Creator Plan's connection ceiling, and integration status. */
 
 test("§7.3: only YouTube and Instagram can ever be verified", () => {
   assert.equal(VERIFICATION_SUPPORT.youtube.supported, true);
@@ -26,32 +27,41 @@ test("every platform in the schema has a matrix entry", () => {
   }
 });
 
-test("§8: Starter gets 2 connections, paid plans get all of them", () => {
-  assert.equal(maxConnections("Starter"), 2);
-  assert.equal(maxConnections("Pro"), PLATFORMS.length);
-  assert.equal(maxConnections("Elite"), PLATFORMS.length);
+test("Creator Plan: one four-platform ceiling for every creator, not unlimited", () => {
+  assert.equal(MAX_CONNECTIONS, 4);
+  assert.equal(MAX_CONNECTIONS, PLATFORMS.length);
+  assert.equal(Number.isFinite(MAX_CONNECTIONS), true);
 });
 
-test("§8: verified geography is Pro and Elite only", () => {
-  assert.equal(canVerifyAudience("Starter"), false);
-  assert.equal(canVerifyAudience("Pro"), true);
-  assert.equal(canVerifyAudience("Elite"), true);
+test("the connection ceiling is inclusive at the boundary", () => {
+  assert.equal(canAddConnection(0), true);
+  assert.equal(canAddConnection(3), true, "the fourth connection is allowed");
+  assert.equal(canAddConnection(4), false, "a fifth connection is refused");
+  assert.equal(canAddConnection(5), false);
 });
 
-test("connection limit is inclusive at the boundary", () => {
-  assert.equal(canAddConnection("Starter", 1), true);
-  assert.equal(canAddConnection("Starter", 2), false);
-  assert.equal(canAddConnection("Starter", 3), false);
+test("integration status: YouTube available, Instagram in development, Twitch/Kick manual, TikTok/X planned", () => {
+  assert.deepEqual(INTEGRATION_STATUS, {
+    youtube: "available",
+    instagram: "in_development",
+    twitch: "manual",
+    kick: "manual",
+    tiktok: "planned",
+    x: "planned",
+  });
+  for (const p of PLATFORMS) assert.ok(INTEGRATION_PLATFORMS.includes(p), `${p} has no status`);
 });
 
-test("upgrading is only offered where upgrading would actually help", () => {
-  // The distinction that matters: a Starter creator looking at Twitch must not
-  // be told to upgrade, because no plan can deliver Twitch audience geography.
-  assert.equal(verificationAvailability("twitch", "Starter"), "unsupported");
-  assert.equal(verificationAvailability("twitch", "Elite"), "unsupported");
-  assert.equal(verificationAvailability("kick", "Pro"), "unsupported");
+test("only YouTube is presented as operational", () => {
+  const available = INTEGRATION_PLATFORMS.filter((p) => INTEGRATION_STATUS[p] === "available");
+  assert.deepEqual(available, ["youtube"]);
+});
 
-  assert.equal(verificationAvailability("youtube", "Starter"), "needs-upgrade");
-  assert.equal(verificationAvailability("youtube", "Pro"), "available");
-  assert.equal(verificationAvailability("instagram", "Elite"), "available");
+test("verification availability depends on the platform, never on a plan", () => {
+  assert.equal(verificationAvailability("youtube"), "available");
+  // Instagram could support it, but its integration is not operational.
+  assert.equal(verificationAvailability("instagram"), "in-development");
+  // No API exists: no plan, and no upgrade, could deliver it.
+  assert.equal(verificationAvailability("twitch"), "unsupported");
+  assert.equal(verificationAvailability("kick"), "unsupported");
 });

@@ -23,14 +23,14 @@ export function CountryShareList({
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+        <h3 className="text-sm font-medium text-fg-muted">
           {t("mediaKit.audienceGeography")}
         </h3>
         <VerifiedTag verified={verified} />
       </div>
 
       {!shares?.length ? (
-        <p className="mt-2.5 text-xs leading-relaxed text-fg/40">
+        <p className="mt-2.5 text-xs leading-relaxed text-fg-muted">
           {emptyHint}
         </p>
       ) : (
@@ -46,7 +46,7 @@ export function CountryShareList({
               >
                 <span
                   className={`block h-full rounded-full ${
-                    verified ? "bg-brand-green" : "bg-amber-300/70"
+                    verified ? "bg-brand-green" : "bg-warning/70"
                   }`}
                   style={{ width: `${Math.min(share.pct, 100)}%` }}
                 />

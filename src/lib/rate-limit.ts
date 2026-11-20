@@ -10,12 +10,12 @@ import { log } from "@/lib/log";
  * button, and the Manual Analyzer additionally spends a WHOIS lookup and a
  * Safe Browsing call. None of them had any ceiling.
  *
- * This is an abuse and cost guard, deliberately distinct from the §8 plan
- * quotas ("5 email analyses/mo" on Starter, unlimited on Pro). Those are a
- * billing rule about what a plan entitles someone to; these are a technical
- * rule about what any one account can do to the bill in an hour. The plan
- * quota is not implemented yet — adding it here would conflate the two and
- * silently give Starter a limit nobody agreed to.
+ * This is an abuse and cost guard, not a plan quota. Under the unified
+ * Creator Plan there are no per-plan quotas at all (the old "5 email
+ * analyses/mo" and "unlimited" tiers are retired), so these limits apply the
+ * same to every account. The Pricing page calls them fair-use limits and
+ * never "unlimited". Adding a monthly quota here would be a new billing rule
+ * nobody has agreed to.
  *
  * The counter lives in Postgres (migration 0019) because the app is
  * serverless: a module-level Map is per-instance and per-cold-start, so on
@@ -33,7 +33,21 @@ export type RateLimitAction =
   | "platform_sync"
   | "ai_reply_draft"
   | "ai_detect_niche"
-  | "ai_company_intel";
+  | "ai_company_intel"
+  | "g_chat"
+  | "g_applicant"
+  | "access_request"
+  | "upload"
+  | "collab_write"
+  | "shortlist_write"
+  | "portfolio_write"
+  | "content_write"
+  | "verification_write"
+  | "application_write"
+  | "activation"
+  | "password_reset"
+  | "password_reset_client"
+  | "team_write";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -102,6 +116,88 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   ai_company_intel: [
     { limit: 10, windowSeconds: HOUR, label: "hour" },
     { limit: 40, windowSeconds: DAY, label: "day" },
+  ],
+  // G: each question can spend one NVIDIA call. A conversation is many short
+  // turns, so the hourly ceiling sits above a long working session; the daily
+  // one bounds what one account can add to the bill.
+  g_chat: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // G for applicants and accounts awaiting verification (Phase 1E), keyed by
+  // the application or account id. Lower than g_chat: the questions are about
+  // one application, and the caller may not have an account yet.
+  g_applicant: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // Public Get Started form, keyed by a hash of the client address: each
+  // submission is a service-role write and lands in an admin's queue.
+  access_request: [
+    { limit: 3, windowSeconds: HOUR, label: "hour" },
+    { limit: 10, windowSeconds: DAY, label: "day" },
+  ],
+  // Avatar and document uploads: storage writes, bounded per account.
+  upload: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // Briefs, invitations, terms and deliverables (0026): every write can
+  // notify the other party, so one account cannot flood another.
+  collab_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // Shortlists (0028): private to the company; a generous cap on churn.
+  shortlist_write: [
+    { limit: 120, windowSeconds: HOUR, label: "hour" },
+    { limit: 600, windowSeconds: DAY, label: "day" },
+  ],
+  // Verification drafts and submissions (0032).
+  verification_write: [
+    { limit: 40, windowSeconds: HOUR, label: "hour" },
+    { limit: 120, windowSeconds: DAY, label: "day" },
+  ],
+  // Pre-account applications (0032), keyed by application id: drafts,
+  // submissions and new-link requests.
+  application_write: [
+    { limit: 40, windowSeconds: HOUR, label: "hour" },
+    { limit: 120, windowSeconds: DAY, label: "day" },
+  ],
+  // Opening an emailed link and activating an account, keyed by a hash of the
+  // client address: guessing is already infeasible (256-bit tokens), this
+  // bounds password attempts and lookup volume.
+  activation: [
+    { limit: 20, windowSeconds: HOUR, label: "hour" },
+    { limit: 60, windowSeconds: DAY, label: "day" },
+  ],
+  // "Forgot password" requests. password_reset is keyed by a hash of the
+  // submitted email (so one victim's inbox cannot be flooded) and
+  // password_reset_client by a hash of the client address (so one client
+  // cannot sweep many addresses). Both keys exist whether or not the email has
+  // an account, so hitting either limit reveals nothing.
+  password_reset: [
+    { limit: 5, windowSeconds: HOUR, label: "hour" },
+    { limit: 20, windowSeconds: DAY, label: "day" },
+  ],
+  password_reset_client: [
+    { limit: 30, windowSeconds: HOUR, label: "hour" },
+    { limit: 100, windowSeconds: DAY, label: "day" },
+  ],
+  // Representative scopes and company edits by a representative (0034).
+  team_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
+  ],
+  // Content plans (0029): private drafts, autosave-free, so a modest cap.
+  content_write: [
+    { limit: 200, windowSeconds: HOUR, label: "hour" },
+    { limit: 1000, windowSeconds: DAY, label: "day" },
+  ],
+  // Portfolio and public-profile visibility (0028).
+  portfolio_write: [
+    { limit: 60, windowSeconds: HOUR, label: "hour" },
+    { limit: 300, windowSeconds: DAY, label: "day" },
   ],
 };
 

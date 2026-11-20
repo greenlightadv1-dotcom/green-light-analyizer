@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 import { maskSensitiveData } from "@/lib/mask";
 import { log } from "@/lib/log";
 import { relayMessageToCompany, relaySubject } from "@/lib/email/outbound";
+import { processRelay } from "@/lib/email/relay-queue";
+import { relayIdempotencyKey } from "@/lib/email/relay-lifecycle";
 import { generateReplyDraft } from "@/lib/ai/reply-draft";
 import { generateCompanyProfile } from "@/lib/ai/company-intel";
 import type { CompanyProfile } from "@/lib/ai/company-intel-types";
+import { normalizeSecurityCheck } from "@/lib/deals/intel-shape";
 import { buildReplyTemplate } from "@/lib/deals/reply-template";
 import { isFreeEmailDomain } from "@/lib/deals/company-intelligence";
 import { extractDomain } from "@/lib/security/check";
@@ -17,6 +20,7 @@ import { getDealChat, latestIncomingMessage, listMessages } from "@/lib/deals/qu
 import { draftIsAcceptable, readPrivateMinimum } from "@/lib/deals/negotiation";
 import { planNegotiation, type NegotiationAnalysis } from "@/lib/deals/negotiation-context";
 import type { DealStatus } from "@/lib/types/database";
+import { OK, fail as failWith, type ActionResult } from "@/lib/ui/action-result";
 
 export type SendMessageState = {
   /** True once a send has actually gone through, so a caller can say so. */
@@ -98,7 +102,7 @@ export async function sendMessage(
     .select("id")
     .single();
 
-  if (error) return fail("Your message could not be sent.");
+  if (error) return fail("actionErrors.messageNotSent");
 
   if (isMasked) {
     // §6: log which rule matched, redacted, for admin review — in addition to
@@ -131,27 +135,32 @@ export async function sendMessage(
 
   let relayFailed = false;
   if (shouldRelay) {
-    const relay = await relayMessageToCompany({
-      to: chat.sender_email,
-      subject: relaySubject(chatId),
-      body: maskedText,
-      creatorDisplayName: profile.full_name,
-      // The reply path back into the platform. Never profile.primary_email.
-      creatorAlias: profile.inbound_alias,
-    });
-
-    await admin
-      .from("messages")
-      .update(
-        relay.ok
-          ? { relayed_at: new Date().toISOString(), relay_error: null }
-          : { relay_error: relay.error.slice(0, 500) },
-      )
-      .eq("id", inserted.id);
-
-    if (!relay.ok) {
-      log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });
-      relayFailed = true;
+    // 0036: the message enters the relay lifecycle (queued → sent / retryable
+    // / permanent), so a failure is retried instead of being lost.
+    const { error: queueError } = await admin.from("messages").update({ relay_status: "queued" }).eq("id", inserted.id);
+    if (!queueError) {
+      const outcome = await processRelay(inserted.id);
+      relayFailed = outcome !== "sent";
+    } else {
+      // A database without 0036: the single attempt from before, still recorded.
+      const relay = await relayMessageToCompany({
+        to: chat.sender_email,
+        subject: relaySubject(chatId),
+        body: maskedText,
+        creatorDisplayName: profile.full_name,
+        // The reply path back into the platform. Never profile.primary_email.
+        creatorAlias: profile.inbound_alias,
+        idempotencyKey: relayIdempotencyKey(inserted.id),
+      });
+      const { error: recordError } = await admin
+        .from("messages")
+        .update(relay.ok ? { relayed_at: new Date().toISOString(), relay_error: null } : { relay_error: relay.error.slice(0, 500) })
+        .eq("id", inserted.id);
+      if (recordError) log.error("relay.outcome_not_recorded", { chat_id: chatId, message_id: inserted.id, relayed: relay.ok, error: recordError });
+      if (!relay.ok) {
+        log.error("relay.failed", { chat_id: chatId, message_id: inserted.id, reason: relay.error });
+        relayFailed = true;
+      }
     }
   }
 
@@ -177,7 +186,10 @@ const NEGOTIABLE: DealStatus[] = ["new", "negotiating", "agreed", "disputed"];
  *  - a paid deal is the settlement record, so no party can move it again —
  *    a problem after payment goes to support, like every payment matter (§4).
  */
-export async function updateDealStatus(formData: FormData): Promise<void> {
+export async function updateDealStatus(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const profile = await requireProfile();
   const isAdmin = profile.role === "admin";
 
@@ -185,23 +197,31 @@ export async function updateDealStatus(formData: FormData): Promise<void> {
   const status = String(formData.get("deal_status") ?? "") as DealStatus;
 
   const allowed = isAdmin ? [...NEGOTIABLE, "paid"] : NEGOTIABLE;
-  if (!chatId || !allowed.includes(status)) return;
+  if (!chatId) return failWith("ui.errors.invalid");
+  if (!allowed.includes(status)) return failWith("dealStatus.errors.notAllowed");
 
   // RLS scopes this read to the parties and admins.
   const chat = await getDealChat(chatId);
-  if (!chat) return;
-  if (chat.deal_status === "paid" && !isAdmin) return;
+  if (!chat) return failWith("ui.errors.notFound");
+  if (chat.deal_status === "paid" && !isAdmin) return failWith("dealStatus.errors.locked");
 
   const admin = createAdminClient();
   let update = admin.from("deal_chats").update({ deal_status: status }).eq("id", chatId);
   // Repeated in the write itself, so an admin marking the deal paid between
   // the read above and this line cannot be overwritten by a party.
   if (!isAdmin) update = update.neq("deal_status", "paid");
-  const { error } = await update;
-  if (error) log.error("deal_status.update_failed", { chat_id: chatId, status, error });
+  // Read back the row id: an update that matched nothing (the deal was marked
+  // paid in between) is not an error to PostgREST, but it is not a success.
+  const { data, error } = await update.select("id");
+  if (error) {
+    log.error("deal_status.update_failed", { chat_id: chatId, status, error });
+    return failWith("dealStatus.errors.failed");
+  }
+  if (!data?.length) return failWith("dealStatus.errors.locked");
 
   revalidatePath(`/inbox/${chatId}`);
   revalidatePath("/inbox");
+  return OK;
 }
 
 export type ReplyDraftState = {
@@ -359,7 +379,8 @@ export async function analyzeCompany(
     return { error: "This offer came from a verified company account.", profile: null };
   }
 
-  const domain = chat.security_check?.domain ?? extractDomain(chat.sender_email);
+  const security = normalizeSecurityCheck(chat.security_check);
+  const domain = security?.domain ?? extractDomain(chat.sender_email);
   if (!domain) return { error: "This sender has no usable domain.", profile: null };
 
   const limit = await consumeRateLimit("ai_company_intel", profile.id);
@@ -371,7 +392,7 @@ export async function analyzeCompany(
 
   const result = await generateCompanyProfile({
     domain,
-    security: chat.security_check,
+    security,
     isFreeEmail: isFreeEmailDomain(domain),
     offerText: incoming?.message_text ?? "",
   });

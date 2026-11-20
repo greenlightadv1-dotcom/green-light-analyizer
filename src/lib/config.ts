@@ -76,7 +76,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.RESEND_API_KEY),
       required: false,
       impact:
-        "Creator replies are stored but never reach the company (§6), and POST /api/emails/send returns 503 — the outreach/system-notification dispatcher (src/lib/resend.ts) sends nothing.",
+        "Creator replies are stored but never reach the company, and POST /api/emails/send returns 503, so no outreach or system-notification email is sent.",
     },
     {
       name: "RESEND_INBOUND_WEBHOOK_SECRET",
@@ -84,6 +84,20 @@ export function readConfigReport(): ConfigReport {
       required: false,
       impact:
         "The inbound webhook returns 503 and refuses every delivery. No offer ever becomes a deal room.",
+    },
+    {
+      name: "ROLE_MAILBOX_FORWARD_TO",
+      set: Boolean(process.env.ROLE_MAILBOX_FORWARD_TO),
+      required: false,
+      impact:
+        "Mail to support@, privacy@, security@, legal@ and deals@ is recorded but forwarded to nobody. These addresses are published on the Support page and in the legal pages.",
+    },
+    {
+      name: "NEWS_MONITORING_ENABLED",
+      set: Boolean(process.env.NEWS_MONITORING_ENABLED),
+      required: false,
+      impact:
+        "Scheduled official-news refresh is off. Admins can still refresh by hand at /admin/news. Turning it on also needs CRON_SECRET and a schedule for /api/cron/news-refresh.",
     },
     {
       name: "RESEND_FROM_ADDRESS",
@@ -125,7 +139,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
       required: false,
       impact:
-        "YouTube verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+        "Connecting YouTube for verified audience geography shows 'not configured' to every creator instead of connecting.",
     },
     {
       name: "GOOGLE_OAUTH_CLIENT_SECRET",
@@ -136,19 +150,19 @@ export function readConfigReport(): ConfigReport {
     {
       name: "CRON_SECRET",
       set: Boolean(process.env.CRON_SECRET),
-      // Required once YouTube OAuth is configured: without it the daily job
-      // that deletes stale or revoked YouTube data refuses to run, and the
-      // privacy policy's 30-day statement stops being true.
-      required: Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID),
+      // Required: without it the scheduled jobs refuse to run. That includes
+      // the 12-month identity-document purge (0040), and, once YouTube OAuth
+      // is configured, the 30-day YouTube data cleanup.
+      required: true,
       impact:
-        "The daily YouTube data cleanup (/api/cron/youtube-data-freshness) refuses every call, so verified geography and public stats older than 30 days and data for revoked tokens are not deleted. Must be 16+ characters.",
+        "Every scheduled job refuses its calls: identity and company documents older than the 12-month retention period are not deleted (/api/cron/verification-retention), and the daily YouTube data cleanup (/api/cron/youtube-data-freshness) does not run. Must be 16+ characters.",
     },
     {
       name: "META_APP_ID",
       set: Boolean(process.env.META_APP_ID),
       required: false,
       impact:
-        "Instagram verified-audience-geography OAuth (§7.3, Pro/Elite) shows 'not configured' instead of connecting.",
+        "Instagram verified audience geography is in development and not offered to creators until the integration works.",
     },
     {
       name: "META_APP_SECRET",
@@ -189,7 +203,7 @@ export function readConfigReport(): ConfigReport {
       set: Boolean(process.env.WHATSAPP_ACCESS_TOKEN),
       required: false,
       impact:
-        "Settings' WhatsApp notification toggle still saves, but no message is ever sent — src/lib/whatsapp.ts silently no-ops.",
+        "The WhatsApp notification switch in Settings still saves, but no WhatsApp message is sent.",
     },
     {
       name: "WHATSAPP_PHONE_NUMBER_ID",

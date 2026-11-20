@@ -61,10 +61,10 @@ export function PlatformCard({
   if (locked) {
     return (
       <GlassPanel className="p-5 opacity-60">
-        <h2 className="text-sm font-semibold text-fg">
+        <h2 className="text-base font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-fg/40">
+        <p className="mt-2 text-xs leading-relaxed text-fg-muted">
           {lockReason}
         </p>
       </GlassPanel>
@@ -74,14 +74,14 @@ export function PlatformCard({
   return (
     <GlassPanel className="p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-fg">
+        <h2 className="text-base font-semibold text-fg">
           {PLATFORM_LABELS[platform]}
         </h2>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="text-xs text-fg/45 transition hover:text-fg/80"
+          className="text-xs text-fg-muted transition hover:text-fg/80"
         >
           {open ? t("common.close") : kit ? t("common.edit") : t("common.add")}
         </button>
@@ -150,7 +150,7 @@ export function PlatformCard({
 
           {verifiedGeoConnected ? (
             <div className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-3">
-              <p className="text-xs leading-relaxed text-brand-green">
+              <p className="text-xs leading-relaxed text-accent">
                 {t("mediaKit.audienceGeoVerifiedNote")}
               </p>
             </div>
@@ -158,7 +158,7 @@ export function PlatformCard({
             <div className="space-y-1.5">
               <label
                 htmlFor={`${platform}-countries`}
-                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+                className="block text-sm font-medium text-fg-muted"
               >
                 {t("mediaKit.whereAudienceIs")}
               </label>
@@ -170,15 +170,15 @@ export function PlatformCard({
                   kit?.declared_top_countries as CountryShare[] | null,
                 )}
                 placeholder={"EG 40\nSA 25\nAE 15"}
-                className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg/25 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+                className="w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 font-mono text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
               />
-              <p className="text-xs text-fg/45">
+              <p className="text-xs text-fg-muted">
                 {t("mediaKit.countriesHint")}
               </p>
             </div>
           )}
 
-          {state.error ? <Alert>{state.error}</Alert> : null}
+          {state.error ? <Alert>{t(state.error)}</Alert> : null}
           {saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
           <SaveButton label={kit ? t("mediaKit.saveChanges") : t("mediaKit.addPlatform")} />

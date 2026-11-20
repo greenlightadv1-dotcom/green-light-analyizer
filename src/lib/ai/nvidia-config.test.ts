@@ -198,3 +198,22 @@ test("an absurd Retry-After is capped, so it cannot swallow the whole deadline",
   assert.ok(parseRetryAfterMs("3600") <= NVIDIA_DEADLINE_MS);
   assert.ok(parseRetryAfterMs("99999") <= NVIDIA_DEADLINE_MS);
 });
+
+test("a retired model (410) and an unknown one (404) are terminal: no retry is spent on them", async () => {
+  const { NVIDIA_TERMINAL_STATUS, isModelUnavailableStatus } = await import("./nvidia-config.ts");
+  for (const s of [400, 401, 403, 404, 410, 413, 415, 422]) assert.ok(NVIDIA_TERMINAL_STATUS.has(s), `${s} terminal`);
+  for (const s of [408, 429, 500, 502, 503, 504]) assert.ok(!NVIDIA_TERMINAL_STATUS.has(s), `${s} retryable`);
+  assert.equal(isModelUnavailableStatus(410), true);
+  assert.equal(isModelUnavailableStatus(404), true);
+  assert.equal(isModelUnavailableStatus(401), false);
+  assert.equal(isModelUnavailableStatus(null), false);
+});
+
+test("an invalid key is diagnosed whether NVIDIA answers 401 or 403", async () => {
+  const { isCredentialRejectedStatus } = await import("./nvidia-config.ts");
+  assert.equal(isCredentialRejectedStatus(401), true);
+  assert.equal(isCredentialRejectedStatus(403), true);
+  assert.equal(isCredentialRejectedStatus(410), false);
+  assert.equal(isCredentialRejectedStatus(429), false);
+  assert.equal(isCredentialRejectedStatus(null), false);
+});

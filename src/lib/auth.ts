@@ -3,9 +3,9 @@ import "server-only";
 import { redirect, unstable_rethrow } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { log } from "@/lib/log";
+import { canUseCreatorFeatures } from "@/lib/access";
 import type { Database, Role } from "@/lib/types/database";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -18,6 +18,21 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
  * if the matcher is later changed.
  */
 export async function requireProfile(): Promise<Profile> {
+  const profile = await requireAnyStatusProfile();
+  // 0032: a self-registered account is usable only after an admin approves
+  // its verification. Until then (and after a rejection) the only signed-in
+  // page is /verification. A database without 0032 has no account_status,
+  // which reads as active, so admin-created accounts are never affected.
+  if (profile.account_status && profile.account_status !== "active") redirect("/verification");
+  return profile;
+}
+
+/**
+ * The signed-in profile whatever its account_status (still refusing banned
+ * accounts). Only the verification flow uses this; everything else goes
+ * through requireProfile().
+ */
+export async function requireAnyStatusProfile(): Promise<Profile> {
   // Every route under (app) reaches this via its layout, unconditionally — so
   // a missing or broken Supabase config would otherwise 500 the whole product
   // rather than the specific integration that's degraded. The root page
@@ -73,38 +88,23 @@ export async function requireProfile(): Promise<Profile> {
   // already being read — and so it holds on every authenticated render.
   if (profile.banned_at) redirect("/suspended");
 
-  // A paid plan (set by admin, or by redeeming a promo code) carries an end
-  // date. Checked here rather than a cron job: this already runs on every
-  // authenticated request, so there is never more than one request's worth of
-  // gap between "expired" and "enforced".
-  if (
-    profile.subscription_plan !== "Starter" &&
-    profile.subscription_expires_at &&
-    new Date(profile.subscription_expires_at) < new Date()
-  ) {
-    profile = {
-      ...profile,
-      subscription_plan: "Starter",
-      subscription_expires_at: null,
-    };
-    try {
-      // subscription_plan/subscription_expires_at are not writable through
-      // the caller's own client (column privileges) — this correction, like
-      // every other write to those columns, has to go through the
-      // service-role client.
-      await createAdminClient()
-        .from("profiles")
-        .update({ subscription_plan: "Starter", subscription_expires_at: null })
-        .eq("id", profile.id);
-    } catch (error) {
-      // Opportunistic: the in-memory value above is already correct for this
-      // request regardless of whether the write lands, so a failure here
-      // (including a missing SUPABASE_SERVICE_ROLE_KEY) just means the next
-      // request tries the write again rather than breaking this one.
-      log.warn("auth.plan_downgrade_not_persisted", { profile_id: profile.id, error });
-    }
-  }
+  // Unified Creator Plan: a stored plan or its end date no longer decides
+  // what anyone may use, so an expired subscription_expires_at is left as
+  // the historical record it is. This used to rewrite an expired paid plan
+  // to Starter on the next request; that write is retired rather than kept
+  // as a no-op, so stored plan values are never changed behind anyone's back.
 
+  return profile;
+}
+
+/**
+ * A page that only creators (and admins) may render — the Media Kit. Anyone
+ * else is sent to their dashboard, the same refusal requireRole() gives.
+ * Hiding the nav link is not authorization; this is.
+ */
+export async function requireCreatorFeatures(): Promise<Profile> {
+  const profile = await requireProfile();
+  if (!canUseCreatorFeatures(profile.role)) redirect("/dashboard");
   return profile;
 }
 

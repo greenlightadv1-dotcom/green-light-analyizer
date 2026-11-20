@@ -24,6 +24,8 @@ import {
   type NormalizedEmail,
 } from "./parse";
 import { fetchReceivedEmail } from "./received";
+import { buildForward, forwardTarget, roleMailboxIn, type RoleMailbox } from "./role-mailbox";
+import { fromAddress } from "./from";
 import {
   CONTENT_FETCH_PERMANENT_PREFIX,
   CONTENT_FETCH_RETRYABLE_PREFIX,
@@ -143,7 +145,28 @@ export type IntakeDeps = {
    * (budget.ts). Defaults to a full budget from now.
    */
   deadlineAt?: number;
+  /** Injected so role-mailbox forwarding never calls Resend in tests. */
+  sendForward?: (msg: { to: string; subject: string; text: string; replyTo: string }) => Promise<{ ok: boolean; error?: string }>;
+  /** Overrides ROLE_MAILBOX_FORWARD_TO (tests). */
+  forwardTo?: string | null;
 };
+
+/** Send one forwarded role-mailbox message through Resend, from the platform address. */
+async function sendForwardViaResend(msg: { to: string; subject: string; text: string; replyTo: string }): Promise<{ ok: boolean; error?: string }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return { ok: false, error: "RESEND_API_KEY is not configured" };
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+      body: JSON.stringify({ from: fromAddress(), to: [msg.to], reply_to: msg.replyTo, subject: msg.subject, text: msg.text }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    return res.ok ? { ok: true } : { ok: false, error: `Resend returned ${res.status}` };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.name : "send failed" };
+  }
+}
 
 /**
  * Process one inbound delivery.
@@ -274,6 +297,44 @@ export async function processInboundEmail(
   // Pinned to the webhook's sender, which claimed the row and is what every
   // later step (threading, WHOIS, the room's sender) keys on.
   const sender: string = email.from;
+  // Mail to a published role mailbox (support@, privacy@ …) is not an offer:
+  // forward it to the operator inbox instead of rejecting it unread.
+  const role: RoleMailbox | null = alias ? null : roleMailboxIn(email.to);
+  if (role) {
+    const target = deps.forwardTo !== undefined ? deps.forwardTo : forwardTarget();
+    if (!target) {
+      log.error("inbound.role_mailbox_unrouted", { mailbox: role });
+      return finish({
+        status: "rejected",
+        detail: `${role}@ mail received, but ROLE_MAILBOX_FORWARD_TO is not set: nothing was forwarded (the original stays in Resend)`,
+      });
+    }
+    const got = await (deps.fetchContent ?? fetchReceivedEmail)(key, { deadlineAt: fetchDeadline(Date.now(), deadlineAt) });
+    if (!got.ok) {
+      log.warn("inbound.role_mailbox_fetch_failed", { mailbox: role, reason: got.reason, retryable: got.retryable });
+      return finish(
+        got.retryable
+          ? { status: "failed", detail: `${CONTENT_FETCH_RETRYABLE_PREFIX} ${got.reason}` }
+          : { status: "rejected", detail: `${CONTENT_FETCH_PERMANENT_PREFIX} ${got.reason}` },
+      );
+    }
+    const full = mergeReceivedEmail(meta, got.email);
+    const fwd = buildForward({
+      role,
+      from: sender,
+      fromName: full.fromName,
+      subject: full.subject,
+      text: full.text,
+      attachmentNames: full.attachments.map((a) => a.filename),
+    });
+    const sent = await (deps.sendForward ?? sendForwardViaResend)({ to: target, ...fwd });
+    if (!sent.ok) {
+      log.error("inbound.role_mailbox_forward_failed", { mailbox: role, reason: sent.error ?? "unknown" });
+      return finish({ status: "rejected", detail: `${role}@ mail could not be forwarded: ${sent.error ?? "send failed"}` });
+    }
+    return finish({ status: "processed", detail: `${role}@ mail forwarded to the operator inbox` });
+  }
+
   if (!alias) {
     return finish({
       status: "rejected",

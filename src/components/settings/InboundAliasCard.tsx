@@ -32,20 +32,20 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.emailIntake")}</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-fg/50">
+      <h2 className="text-base font-semibold text-fg">{t("settings.emailIntake")}</h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-fg-muted">
         {t("settings.emailIntakeNote")}
       </p>
 
       {alias ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+          <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-forest-strong px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
             {alias}
           </code>
           <CopyButton value={alias} />
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3.5 py-2.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+        <p className="mt-4 rounded-xl border border-warning/25 bg-warning/10 px-3.5 py-2.5 text-xs leading-relaxed text-warning">
           {t("settings.noAliasNote")}
         </p>
       )}
@@ -59,7 +59,7 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
         </summary>
         <ol className="mt-3 space-y-2.5">
           {STEP_KEYS.map((key, i) => (
-            <li key={key} className="flex gap-3 text-xs leading-relaxed text-fg/55">
+            <li key={key} className="flex gap-3 text-xs leading-relaxed text-fg-muted">
               <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-fg/8 text-[10px] font-medium text-fg/60">
                 {i + 1}
               </span>
@@ -69,7 +69,7 @@ export function InboundAliasCard({ alias }: { alias: string | null }) {
         </ol>
       </details>
 
-      <p className="mt-5 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg/35">
+      <p className="mt-5 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg-muted">
         {t("settings.privacyFooter")}
       </p>
     </GlassPanel>

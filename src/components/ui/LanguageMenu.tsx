@@ -74,7 +74,7 @@ export function LanguageMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t("language.changeLanguage")}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-fg/15 bg-fg/5 text-fg transition hover:bg-fg/10"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-fg transition-colors hover:bg-surface-hover focus-visible:focus-ring"
       >
         <GlobeIcon />
       </button>
@@ -101,7 +101,7 @@ export function LanguageMenu() {
                 }}
                 className={`flex w-full items-center rounded-lg px-2.5 py-2 text-start text-sm transition ${
                   active
-                    ? "bg-brand-green/12 font-medium text-brand-green"
+                    ? "bg-brand-green/12 font-medium text-accent"
                     : "text-fg/70 hover:bg-fg/5 hover:text-fg"
                 }`}
               >

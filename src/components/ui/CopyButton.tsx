@@ -23,7 +23,7 @@ export function CopyButton({ value, className = "" }: { value: string; className
     <button
       type="button"
       onClick={copy}
-      className={`rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg ${className}`}
+      className={`inline-flex h-9 items-center rounded-full border border-line-strong bg-surface px-4 text-xs font-semibold text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring ${className}`}
     >
       {copied ? t("common.copied") : t("common.copy")}
     </button>

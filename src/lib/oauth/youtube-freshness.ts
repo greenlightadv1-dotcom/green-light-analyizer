@@ -85,6 +85,8 @@ export function clearedYouTubeStats() {
     subscriber_count: null,
     channel_view_count: null,
     media_count: null,
+    recent_median_views: null,
+    recent_views_sample: null,
     youtube_stats_synced_at: null,
   };
 }

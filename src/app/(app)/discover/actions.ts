@@ -1,5 +1,7 @@
 "use server";
 
+import { companyDetailsComplete } from "@/lib/onboarding";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { evaluateOffer } from "@/lib/ai/evaluate";
@@ -153,6 +155,13 @@ export async function sendOfferToCreator(
   formData: FormData,
 ): Promise<SendOfferState> {
   const profile = await requireRole("company", "admin");
+
+  // Onboarding gate (feature 2): a company sends offers only once it has said
+  // who it is, so a creator never receives an offer from a blank account.
+  // Admins (support/testing) are exempt.
+  if (profile.role === "company" && !companyDetailsComplete(profile)) {
+    return { error: "Complete your company details on the Get set up page before sending offers." };
+  }
 
   const creatorId = String(formData.get("creator_id") ?? "").trim();
   const offerText = String(formData.get("offer_text") ?? "").trim();

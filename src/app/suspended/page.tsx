@@ -22,21 +22,21 @@ export default function SuspendedPage() {
         </div>
 
         <GlassPanel className="p-7 sm:p-8">
-          <h1 className="text-xl font-semibold text-fg">
+          <h1 className="text-2xl font-bold text-fg sm:text-3xl">
             This account is suspended
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-fg/55">
+          <p className="mt-3 text-sm leading-relaxed text-fg-muted">
             Green Light closed this account for attempting to move a deal off
             the platform or exchange direct contact details, which the terms
             treat as a permanent breach.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-fg/45">
+          <p className="mt-3 text-sm leading-relaxed text-fg-muted">
             If you believe this is a mistake, open a ticket in our{" "}
             <a
               href={DISCORD_INVITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand-green underline underline-offset-2 hover:brightness-110"
+              className="text-accent underline underline-offset-2 hover:brightness-110"
             >
               Discord support server
             </a>{" "}
@@ -46,7 +46,7 @@ export default function SuspendedPage() {
           <form action="/auth/signout" method="post" className="mt-6">
             <button
               type="submit"
-              className="text-xs text-fg/40 underline underline-offset-4 transition hover:text-fg/70"
+              className="text-xs text-fg-muted underline underline-offset-4 transition hover:text-fg/70"
             >
               Sign out
             </button>

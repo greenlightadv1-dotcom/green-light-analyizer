@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { RiskBadge } from "@/components/deals/RiskBadge";
+import { emitG } from "@/components/g/events";
 import { useTranslation } from "@/components/LocaleProvider";
 import {
   analyzeOffer,
@@ -16,10 +17,10 @@ import {
 } from "./actions";
 
 const selectClass =
-  "h-11 w-full rounded-xl border border-fg/10 bg-fg/5 px-3.5 text-sm text-fg transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "h-11 w-full rounded-control border border-line-strong bg-surface px-3.5 text-sm text-fg transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 
 /** Dark, readable regardless of theme — native <option> popups ignore the app's light/dark CSS variables in most browsers. */
-const optionClass = "bg-slate-900 text-white dark:bg-slate-900 dark:text-white";
+const optionClass = "bg-surface text-fg";
 
 /** §6.2 sponsorship_type, in the order a creator is most likely to need. */
 const TYPES = [
@@ -79,12 +80,12 @@ const DEMO_RESULT: NonNullable<AnalyzerState["result"]> = {
 
 function trustScoreClass(score: number): string {
   if (score >= 80) {
-    return "border-brand-green/30 bg-brand-green/10 text-brand-green";
+    return "border-success/30 bg-success/10 text-success";
   }
   if (score >= 50) {
-    return "border-amber-300/30 bg-amber-300/10 text-amber-700 dark:text-amber-200";
+    return "border-warning/30 bg-warning/10 text-warning";
   }
-  return "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200";
+  return "border-danger/30 bg-danger/10 text-danger";
 }
 
 export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
@@ -128,7 +129,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           <div className="space-y-1.5">
             <label
               htmlFor="message_text"
-              className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+              className="block text-sm font-medium text-fg-muted"
             >
               {t("analyzer.theOffer")}
             </label>
@@ -139,7 +140,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               maxLength={20000}
               required
               placeholder={t("analyzer.offerPlaceholder")}
-              className="w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+              className="w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
             />
           </div>
 
@@ -147,7 +148,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <div className="space-y-1.5">
               <label
                 htmlFor="sponsorship_type"
-                className="block text-xs font-medium tracking-wide text-fg/70 uppercase"
+                className="block text-sm font-medium text-fg-muted"
               >
                 {t("analyzer.whatTheyWant")}
               </label>
@@ -184,7 +185,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-fg">{t("analyzer.recommendation")}</h2>
+            <h2 className="text-base font-semibold text-fg">{t("analyzer.recommendation")}</h2>
             <RiskBadge risk={r.risk} capped={r.risk_capped} />
           </div>
 
@@ -192,7 +193,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             <p className="text-3xl font-semibold text-fg tabular-nums">
               ${r.recommended_price_usd.toLocaleString("en-US")}
             </p>
-            <p className="text-sm text-fg/45 tabular-nums">
+            <p className="text-sm text-fg-muted tabular-nums">
               {t("analyzer.fairRange", {
                 low: r.price_range_usd.low.toLocaleString("en-US"),
                 high: r.price_range_usd.high.toLocaleString("en-US"),
@@ -204,8 +205,27 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             {r.reasoning}
           </p>
 
+          {/* Feature 6: G explains this result. Only the result itself is
+              sent, as the user's own message; the offer text never is. */}
+          <button
+            type="button"
+            onClick={() =>
+              emitG({
+                type: "ask",
+                text: t("analyzer.askGMessage", {
+                  risk: r.risk,
+                  price: r.recommended_price_usd.toLocaleString("en-US"),
+                  reasoning: r.reasoning.slice(0, 600),
+                }),
+              })
+            }
+            className="mt-3 text-xs font-semibold text-accent underline-offset-4 hover:underline"
+          >
+            {t("analyzer.askG")}
+          </button>
+
           {r.risk_capped ? (
-            <p className="mt-3 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+            <p className="mt-3 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning">
               {t("analyzer.heldAtYellow")}
             </p>
           ) : null}
@@ -217,14 +237,14 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
             about the one feature the product is sold on.
           */}
           {r.engine === "heuristic" ? (
-            <p className="mt-3 text-[11px] leading-relaxed text-fg/35">
+            <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">
               {t("analyzer.ruleBasedEstimate")}
             </p>
           ) : null}
 
           {createState.error ? (
             <div className="mt-5">
-              <Alert>{createState.error}</Alert>
+              <Alert>{t(createState.error)}</Alert>
             </div>
           ) : null}
           <form
@@ -265,7 +285,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
       {r?.security ? (
         <GlassPanel className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-fg">
+            <h2 className="text-base font-semibold text-fg">
               {t("analyzer.domainSecurityCheck")}
             </h2>
             {r.security.trustScore !== null ? (
@@ -275,7 +295,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 {t("analyzer.trustPercent", { score: r.security.trustScore })}
               </span>
             ) : (
-              <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg/45">
+              <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg-muted">
                 {t("analyzer.safetyScoreUnavailable")}
               </span>
             )}
@@ -290,7 +310,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               {r.security.reasons.map((reason) => (
                 <li
                   key={reason}
-                  className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-100"
+                  className="rounded-lg border border-warning/20 bg-warning/5 px-3 py-1.5 text-xs text-warning"
                 >
                   {reason}
                 </li>
@@ -301,7 +321,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
           {r.security.whois ? (
             <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-fg/45">
+                <dt className="text-xs text-fg-muted">
                   {t("analyzer.companyOrg")}
                 </dt>
                 <dd className="text-sm text-fg">
@@ -309,13 +329,13 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.registrantCountry")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.registrantCountry")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.registrantCountry ?? "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.domainCreated")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.domainCreated")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.createdAt
                     ? new Date(r.security.whois.createdAt).toLocaleDateString()
@@ -323,7 +343,7 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-fg/45">{t("analyzer.domainExpires")}</dt>
+                <dt className="text-xs text-fg-muted">{t("analyzer.domainExpires")}</dt>
                 <dd className="text-sm text-fg">
                   {r.security.whois.expiresAt
                     ? new Date(r.security.whois.expiresAt).toLocaleDateString()
@@ -332,19 +352,19 @@ export function AnalyzerForm({ demo = false }: { demo?: boolean }) {
               </div>
             </dl>
           ) : (
-            <p className="mt-4 text-xs text-fg/40">
+            <p className="mt-4 text-xs text-fg-muted">
               {t("analyzer.whoisUnavailable")}
             </p>
           )}
 
           <div className="mt-4 space-y-1 border-t border-fg/8 pt-3">
             {r.security.whois?.whoisServer ? (
-              <p className="text-[11px] text-fg/30">
+              <p className="text-[11px] text-fg-muted">
                 {t("analyzer.whoisSource", { server: r.security.whois.whoisServer })}
               </p>
             ) : null}
             {!r.security.safeBrowsing ? (
-              <p className="text-[11px] text-fg/30">
+              <p className="text-[11px] text-fg-muted">
                 {t("analyzer.phishingCheckUnavailable")}
               </p>
             ) : null}

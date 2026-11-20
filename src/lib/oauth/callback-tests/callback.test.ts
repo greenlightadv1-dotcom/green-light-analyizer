@@ -126,13 +126,32 @@ test("the log names the missing scopes, never the token", async () => {
   assert.ok(!line.includes('"at"') && !line.includes("rt"));
 });
 
-test("Instagram is unchanged: no scope check, connects as before", async () => {
+test("Instagram is refused while it is in development: no exchange, no writes (W2)", async () => {
   const result = await callback("instagram");
-  assert.equal(result.location.searchParams.get("oauth_connected"), "instagram");
+  assert.equal(result.status, 307);
+  assert.equal(result.location.pathname, "/media-kit");
+  assert.equal(result.location.searchParams.get("oauth_error"), "instagram");
+  assert.equal(result.location.searchParams.get("oauth_connected"), null);
+  assert.deepEqual(fetchCalls, [], "nothing is sent to Meta");
+  assert.deepEqual(state.saved, []);
+  assert.deepEqual(state.upserts, []);
+});
+
+test("a valid state cannot be replayed on the Instagram callback (platform swap, W2)", async () => {
+  // The state verifies (it names this creator), as one issued by the YouTube
+  // start route would; the platform in the URL is switched to Instagram.
+  state.stateValid = true;
+  const result = await callback("instagram");
+  assert.equal(result.location.searchParams.get("oauth_error"), "instagram");
+  assert.deepEqual(fetchCalls, []);
+  assert.deepEqual(state.saved, []);
+  assert.deepEqual(state.upserts, []);
+});
+
+test("YouTube still connects after the platform check (W2)", async () => {
+  const result = await callback("youtube");
+  assert.equal(result.location.searchParams.get("oauth_connected"), "youtube");
   assert.equal(state.saved.length, 1);
-  const saved = state.saved[0] as { tokens: Record<string, unknown> };
-  assert.equal(saved.tokens.scope, null);
-  assert.equal(saved.tokens.externalAccountId, "IG1");
   assert.equal(state.upserts.length, 1);
 });
 

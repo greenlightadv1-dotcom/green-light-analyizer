@@ -1,16 +1,28 @@
 # GREEN_LIGHT_IMPLEMENTATION_ROADMAP
 
-> **Status note, 2026-10-30 (supersedes the database and deployment facts below).**
+> **Status note, updated 2026-10-31 (supersedes the database and deployment facts below).**
 > This document is a snapshot from 2026-10-29. Since then, migration 0022 was
 > applied on 2026-10-29 and 0023 on 2026-10-30 (version `20261030171145`), so
-> 0001–0023 are all live. Production runs `main` at `24db05b`, which includes
-> D2–D6, G1, G2, the negotiation co-pilot and the §7.4 high-value rule.
+> 0001–0023 are all live. Production runs `main` at `5580a78` (deployment
+> `dpl_mBdwmQuq6HS8n32i7aRMYPWMKTfy`, 2026-10-31), which includes D2–D6, G1, G2,
+> the negotiation co-pilot, the §7.4 high-value rule and the platform-sync rate
+> limit.
 > `CRON_SECRET` is not set, so the daily YouTube cleanup is inactive. Anything
 > below that says 0022 is unapplied, or that these items are branch-only, is
 > historical. CLAUDE.md §16 is the current record.
 
 Staged plan for features **A–M** of the Master Product Evolution plan, built on the system as it actually exists on 2026-10-29.
 **Nothing in this file has been implemented.** Each stage needs the owner's approval before work starts, and every production migration needs the gate in §6.
+
+> **Addition, 2026-10-31.** `GREEN_LIGHT_MEDIA_KIT_AND_UX_PLAN.md` adds the
+> following, as stages UX-0 to UX-3 and MK-1 to MK-7. Each stage needs
+> approval. UX-0 is implemented locally only (1 November 2026): it is not
+> committed, pushed or deployed, and not verified in Production. No other
+> stage of that plan has been started.
+> - the Media Kit transformation;
+> - public and private views;
+> - the PDF feasibility study;
+> - the zero-confusion UX standard and its acceptance criteria.
 
 Companion documents:
 - `GREEN_LIGHT_MASTER_BRIEF.md`: system state.

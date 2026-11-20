@@ -1,7 +1,13 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/session";
+import { isPreviewBlockedRequest } from "@/lib/preview-guard";
 
 export async function proxy(request: NextRequest) {
+  // A Vercel preview never writes (lib/preview-guard.ts): it may share
+  // production's database while running code production's schema lacks.
+  if (isPreviewBlockedRequest(request.method, request.nextUrl.pathname)) {
+    return NextResponse.json({ error: "preview_read_only" }, { status: 503 });
+  }
   return updateSession(request);
 }
 

@@ -34,7 +34,7 @@ function GenerateDraftButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? t("inbox.generatingDraft") : t("inbox.generateDraft")}
     </button>
@@ -149,7 +149,7 @@ export function Composer({
           <div className="flex flex-wrap items-end gap-2">
             <GenerateDraftButton />
             {isCreator && !demo ? (
-              <label className="flex items-center gap-1.5 text-[11px] text-fg/50">
+              <label className="flex items-center gap-1.5 text-[11px] text-fg-muted">
                 {t("inbox.privateMinimum")}
                 <input
                   type="text"
@@ -158,20 +158,20 @@ export function Composer({
                   autoComplete="off"
                   placeholder="$"
                   aria-describedby={`${chatId}-minimum-note`}
-                  className="h-7 w-24 rounded-lg border border-fg/10 bg-fg/5 px-2 text-xs text-fg focus:border-brand-green/50 focus:outline-none"
+                  className="h-7 w-24 rounded-control border border-line-strong bg-surface px-2 text-xs text-fg focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
                 />
               </label>
             ) : null}
           </div>
           {isCreator && !demo ? (
-            <p id={`${chatId}-minimum-note`} className="mt-1 text-[11px] text-fg/35">
+            <p id={`${chatId}-minimum-note`} className="mt-1 text-[11px] text-fg-muted">
               {t("inbox.privateMinimumNote")}
             </p>
           ) : null}
         </form>
 
         {!demo && draftState.error ? (
-          <p className="mt-1.5 text-xs text-red-700 dark:text-red-300">{draftState.error}</p>
+          <p className="mt-1.5 text-xs text-danger">{draftState.error}</p>
         ) : null}
 
         {draft ? (
@@ -185,10 +185,10 @@ export function Composer({
               applies to audience data.
             */}
             {!demo && draftState.source === "template" ? (
-              <p className="mt-1.5 text-[11px] text-fg/35">{t("inbox.draftFromTemplate")}</p>
+              <p className="mt-1.5 text-[11px] text-fg-muted">{t("inbox.draftFromTemplate")}</p>
             ) : null}
             {!demo && draftState.analysis ? (
-              <div className="mt-2 space-y-1.5 border-t border-brand-green/15 pt-2 text-[11px] text-fg/55">
+              <div className="mt-2 space-y-1.5 border-t border-brand-green/15 pt-2 text-[11px] text-fg-muted">
                 <p>
                   <span className="font-medium text-fg/75">{t("inbox.negotiationStage")}:</span>{" "}
                   {t(STAGE_KEYS[draftState.analysis.stage])}
@@ -216,7 +216,7 @@ export function Composer({
                   {draftState.analysis.factors.map((f) => (
                     <li key={f.label} className="rounded-full border border-fg/10 px-2 py-0.5">
                       {f.label}: {f.value}{" "}
-                      <span className="text-fg/35">({t(PROVENANCE_KEYS[f.provenance])})</span>
+                      <span className="text-fg-muted">({t(PROVENANCE_KEYS[f.provenance])})</span>
                     </li>
                   ))}
                 </ul>
@@ -233,14 +233,14 @@ export function Composer({
                   </ul>
                 ) : null}
                 {draftState.analysis.minimumApplied ? <p>{t("inbox.minimumApplied")}</p> : null}
-                <p className="text-fg/40">{t("inbox.draftOnly")}</p>
+                <p className="text-fg-muted">{t("inbox.draftOnly")}</p>
               </div>
             ) : null}
             <div className="mt-2 flex items-center gap-2">
               <button
                 type="button"
                 onClick={useDraft}
-                className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-brand-green transition hover:bg-brand-green/20"
+                className="rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1 text-[11px] font-medium text-accent transition hover:bg-brand-green/20"
               >
                 {t("inbox.useDraft")}
               </button>
@@ -270,21 +270,21 @@ export function Composer({
             maxLength={4000}
             required
             placeholder={t("inbox.writeReply")}
-            className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none"
+            className="min-h-11 w-full min-w-0 flex-1 resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none"
           />
           <SendButton />
         </div>
 
         {state.error ? (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-300">
-          {state.error}
+        <p role="alert" className="text-xs text-danger">
+          {t(state.error)}
         </p>
       ) : null}
 
       {state.relayFailed ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.relayFailed")}
         </p>
@@ -293,7 +293,7 @@ export function Composer({
       {demoViolation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.contactRemovedDemo", { rules: ruleList(demoViolation) })}
         </p>
@@ -302,13 +302,13 @@ export function Composer({
       {state.violation ? (
         <p
           role="alert"
-          className="rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-700 dark:text-amber-100"
+          className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs leading-relaxed text-warning"
         >
           {t("inbox.contactRemovedLive", { rules: ruleList(state.violation.rules) })}
         </p>
       ) : null}
 
-      <p className="text-[11px] text-fg/30">
+      <p className="text-[11px] text-fg-muted">
         {t("inbox.maskingFooterNote")}
       </p>
       </form>

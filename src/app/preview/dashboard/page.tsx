@@ -6,6 +6,6 @@ export const metadata: Metadata = { title: "Dashboard · Preview" };
 
 export default function PreviewDashboard() {
   return (
-    <DashboardView profile={mockProfile} chats={mockChats} kits={mockKits} />
+    <DashboardView profile={mockProfile} chats={mockChats} kits={mockKits} basePath="/preview" />
   );
 }

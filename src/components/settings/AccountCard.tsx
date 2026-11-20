@@ -50,11 +50,11 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
 
   return (
     <GlassPanel className="p-6">
-      <h2 className="text-sm font-semibold text-fg">{t("settings.account")}</h2>
+      <h2 className="text-base font-semibold text-fg">{t("settings.account")}</h2>
 
       <dl className="mt-4 space-y-3 text-sm">
         <div>
-          <dt className="text-xs text-fg/45">{t("settings.email")}</dt>
+          <dt className="text-xs text-fg-muted">{t("settings.email")}</dt>
           {/*
             Safe here: this is the creator/company viewing their OWN profile.
             This value must never be rendered in a company's view of another
@@ -64,7 +64,7 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
           <dd className="text-fg">{profile.primary_email}</dd>
         </div>
         <div>
-          <dt className="text-xs text-fg/45">{t("settings.role")}</dt>
+          <dt className="text-xs text-fg-muted">{t("settings.role")}</dt>
           <dd className="text-fg capitalize">{profile.role}</dd>
         </div>
       </dl>
@@ -78,13 +78,13 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
           maxLength={200}
           required
         />
-        {nameState.error ? <Alert>{nameState.error}</Alert> : null}
+        {nameState.error ? <Alert>{t(nameState.error)}</Alert> : null}
         {nameState.saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
         <SaveButton label={t("settings.saveName")} demo={demo} />
       </form>
 
       <form action={demo ? undefined : passwordAction} className="mt-5 space-y-3 border-t border-fg/8 pt-4">
-        <h3 className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+        <h3 className="text-sm font-medium text-fg-muted">
           {t("settings.changePassword")}
         </h3>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -107,7 +107,7 @@ export function AccountCard({ profile, demo = false }: { profile: Profile; demo?
             required
           />
         </div>
-        <p className="text-xs text-fg/45">{t("settings.passwordHint")}</p>
+        <p className="text-xs text-fg-muted">{t("settings.passwordHint")}</p>
         {passwordState.error ? <Alert>{passwordState.error}</Alert> : null}
         {passwordState.saved ? <Alert tone="info">{t("settings.passwordUpdated")}</Alert> : null}
         <SaveButton label={t("settings.savePassword")} demo={demo} />

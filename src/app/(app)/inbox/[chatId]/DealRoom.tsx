@@ -80,10 +80,10 @@ export function DealRoom({
   }, [messages.length]);
 
   return (
-    <GlassPanel className="flex h-[calc(100vh-16rem)] min-h-96 flex-col overflow-hidden">
+    <GlassPanel className="flex h-[70dvh] min-h-80 flex-col overflow-hidden lg:h-[calc(100vh-16rem)] lg:min-h-96">
       <div className="flex-1 space-y-3 overflow-y-auto p-5">
         {messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-fg/35">
+          <p className="py-10 text-center text-sm text-fg-muted">
             {t("inbox.noMessagesYet")}
           </p>
         ) : (
@@ -109,7 +109,7 @@ export function DealRoom({
                         // its text stays literal white rather than the
                         // theme-reactive fg token — ink-on-navy in light
                         // mode would be close to unreadable.
-                        "w-full max-w-full border border-white/8 bg-navy-dark/50 text-white/80"
+                        "w-full max-w-full border border-white/8 bg-forest-strong text-white/80"
                       : mine
                         ? "bg-brand-green/15 text-fg"
                         : "bg-fg/6 text-fg/90"
@@ -120,7 +120,7 @@ export function DealRoom({
                   </p>
                   <div className="mt-1 flex items-center gap-2">
                     <span
-                      className={`text-[10px] ${system ? "text-white/35" : "text-fg/35"}`}
+                      className={`text-[10px] ${system ? "text-white/35" : "text-fg-muted"}`}
                     >
                       {formatTime(message.created_at)}
                     </span>
@@ -131,7 +131,7 @@ export function DealRoom({
                     ) : null}
                     {message.is_masked ? (
                       <span
-                        className="text-[10px] text-amber-700/70 dark:text-amber-200/70"
+                        className="text-[10px] text-warning/70"
                         title={t("inbox.filteredTitle")}
                       >
                         {t("inbox.filtered")}

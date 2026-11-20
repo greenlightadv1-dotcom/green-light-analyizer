@@ -41,18 +41,18 @@ export default function Error({
         </div>
 
         <GlassPanel className="p-7 sm:p-8">
-          <h1 className="text-xl font-semibold text-fg">{t("errors.errorTitle")}</h1>
-          <p className="mt-3 text-sm leading-relaxed text-fg/55">
+          <h1 className="text-2xl font-bold text-fg sm:text-3xl">{t("errors.errorTitle")}</h1>
+          <p className="mt-3 text-sm leading-relaxed text-fg-muted">
             {t("errors.errorBody")}
           </p>
 
           {error.digest ? (
             <div className="mt-5">
-              <p className="text-xs font-medium tracking-wide text-fg/70 uppercase">
+              <p className="text-sm font-medium text-fg-muted">
                 {t("errors.reference")}
               </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-navy-dark/70 px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
+                <code className="min-w-0 flex-1 rounded-xl border border-fg/10 bg-forest-strong px-3.5 py-2.5 font-mono text-sm break-all text-brand-green">
                   {error.digest}
                 </code>
                 <CopyButton value={error.digest} />
@@ -70,19 +70,19 @@ export default function Error({
             </button>
             <Link
               href="/"
-              className="text-xs text-fg/45 underline underline-offset-4 transition hover:text-fg/80"
+              className="text-xs text-fg-muted underline underline-offset-4 transition hover:text-fg/80"
             >
               {t("errors.backHome")}
             </Link>
           </div>
 
-          <p className="mt-6 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg/35">
+          <p className="mt-6 border-t border-fg/8 pt-4 text-[11px] leading-relaxed text-fg-muted">
             {t("errors.stillStuck")}{" "}
             <a
               href={DISCORD_INVITE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand-green underline underline-offset-2 hover:brightness-110"
+              className="text-accent underline underline-offset-2 hover:brightness-110"
             >
               {t("errors.discordSupport")}
             </a>

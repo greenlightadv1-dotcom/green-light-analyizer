@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import { DiscoverView } from "@/components/views/DiscoverView";
 import { requireRole } from "@/lib/auth";
 import { listCreatorDirectory } from "@/lib/deals/directory";
+import { filterDirectory, hasFreshVerifiedGeo, parseDiscoveryQuery } from "@/lib/discovery";
+import { getTaxonomy } from "@/lib/taxonomy-server";
+import { representationOf } from "@/lib/company-access-server";
+import { T } from "@/components/ui/T";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import type { DirectoryRow } from "@/lib/g/recommend";
+import type { DiscoverEntry } from "@/components/views/DiscoverView";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Discover creators" };
 /**
@@ -19,9 +27,59 @@ export const maxDuration = 60;
  * §3: "company: browses/creates offers to creators." Company-only (admin can
  * reach it too, for support/testing) — a creator has nothing to browse here.
  */
-export default async function DiscoverPage() {
-  await requireRole("company", "admin");
-  const creators = await listCreatorDirectory();
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const profile = await requireRole("company", "admin");
+  // 0034: a representative searches creators only when the company granted
+  // discovery.view (creator_directory() enforces the same in the database).
+  const rep = await representationOf(profile);
+  if (rep && !rep.scopes.includes("discovery.view")) {
+    return (
+      <GlassPanel className="p-6 text-sm text-fg">
+        <T k="team.discoveryLocked" vars={{ company: rep.companyName }} />
+      </GlassPanel>
+    );
+  }
+  const params = await searchParams;
+  const rows = (await listCreatorDirectory()) as unknown as DirectoryRow[];
+  const taxonomy = await getTaxonomy();
+  const query = parseDiscoveryQuery(params, taxonomy);
+  const now = new Date();
+  // Filtering, sorting and paging happen here, on the server, over the rows
+  // the RPC already authorized; the browser receives one page.
+  const { items, total, page, pages } = filterDirectory(rows, query, now, taxonomy);
+  const withFreshness = (r: DirectoryRow): DiscoverEntry =>
+    ({ ...r, freshVerified: hasFreshVerifiedGeo(r, now) }) as unknown as DiscoverEntry;
+  const selectedId = typeof params.creator === "string" ? params.creator : null;
+  const selectedRow = selectedId ? rows.find((r) => r.creator_id === selectedId) ?? null : null;
 
-  return <DiscoverView creators={creators} />;
+  // The company's own lists (RLS: shortlists are owner-only) and whether the
+  // selected creator is already in each. Missing tables (0028 not applied)
+  // simply mean no lists.
+  let shortlists: { id: string; name: string; hasCreator: boolean }[] | null = null;
+  if (profile.role === "company") {
+    const supabase = await createClient();
+    const { data: lists } = await supabase.from("shortlists").select("id, name").order("name").limit(20);
+    const { data: entries } = selectedRow && lists?.length
+      ? await supabase.from("shortlist_entries").select("shortlist_id").eq("creator_id", selectedRow.creator_id)
+      : { data: [] as { shortlist_id: string }[] };
+    const inList = new Set((entries ?? []).map((e) => e.shortlist_id));
+    shortlists = (lists ?? []).map((l) => ({ id: l.id, name: l.name, hasCreator: inList.has(l.id) }));
+  }
+
+  return (
+    <DiscoverView
+      shortlists={shortlists}
+      items={items.map(withFreshness)}
+      total={total}
+      page={page}
+      pages={pages}
+      query={query}
+      selected={selectedRow ? withFreshness(selectedRow) : null}
+      directoryEmpty={rows.length === 0}
+    />
+  );
 }

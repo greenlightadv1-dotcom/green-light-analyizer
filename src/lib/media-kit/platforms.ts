@@ -1,4 +1,4 @@
-import type { Platform, SubscriptionPlan } from "@/lib/types/database";
+import type { Platform } from "@/lib/types/database";
 
 /**
  * The §7.3 per-platform verification matrix, encoded.
@@ -51,54 +51,81 @@ export const VERIFICATION_SUPPORT: Record<Platform, VerificationSupport> = {
 };
 
 /**
- * §8 tier limits.
+ * Integration status — the single source of truth for what each platform
+ * actually does today (unified Creator Plan). The Pricing page, the Media Kit
+ * and Settings' connection list all read this, so a platform can never be
+ * advertised as working in one place while it is broken in another.
  *
- * Starter gets 2 platform connections and no verified audience geography; Pro
- * and Elite get every platform in the schema plus the opt-in OAuth analytics
- * connections. Verified geo is gated deliberately — §7.3 notes the OAuth review
- * lead time, and keeping it paid means an MVP launch never blocks on Google or
- * Meta turnaround.
+ *   available      — implemented and operational: YouTube's public stats sync
+ *                    and verified audience geography (YouTube Analytics OAuth)
+ *   in_development — code exists but the integration is not operational:
+ *                    Instagram, whose Meta app review is not complete, so its
+ *                    Connect action is withheld rather than left to fail
+ *   manual         — creators enter their own stats, labelled self-reported;
+ *                    there is no live integration (Twitch, Kick)
+ *   planned        — not built yet and not storable as a media kit (TikTok, X)
+ *
+ * Changing a status here is a product claim: only mark a platform
+ * "available" once its integration works end to end.
  */
-export const MAX_CONNECTIONS: Record<SubscriptionPlan, number> = {
-  Starter: 2,
-  Pro: PLATFORMS.length,
-  Elite: PLATFORMS.length,
+export type IntegrationStatus = "available" | "in_development" | "manual" | "planned";
+
+export type IntegrationPlatform = Platform | "tiktok" | "x";
+
+export const INTEGRATION_PLATFORMS: IntegrationPlatform[] = [
+  "youtube",
+  "instagram",
+  "twitch",
+  "kick",
+  "tiktok",
+  "x",
+];
+
+export const INTEGRATION_LABELS: Record<IntegrationPlatform, string> = {
+  ...PLATFORM_LABELS,
+  tiktok: "TikTok",
+  x: "X",
 };
 
-export function canVerifyAudience(plan: SubscriptionPlan): boolean {
-  return plan === "Pro" || plan === "Elite";
-}
+export const INTEGRATION_STATUS: Record<IntegrationPlatform, IntegrationStatus> = {
+  youtube: "available",
+  instagram: "in_development",
+  twitch: "manual",
+  kick: "manual",
+  tiktok: "planned",
+  x: "planned",
+};
 
-export function maxConnections(plan: SubscriptionPlan): number {
-  return MAX_CONNECTIONS[plan];
-}
+/**
+ * Connection ceiling — the same for every creator under the unified Creator
+ * Plan, whatever plan value is still stored on the profile. It is
+ * the number of platforms the media_kits schema accepts (four), the ceiling
+ * the paid tiers already had; it is not "unlimited".
+ */
+export const MAX_CONNECTIONS = PLATFORMS.length;
 
 /**
  * Whether a creator may add one more platform.
  *
  * `current` is how many kits they already have. Editing an existing kit is
- * always allowed — the limit is on connections, not on edits, so a creator who
- * downgrades never loses the ability to correct data they already entered.
+ * always allowed — the limit is on connections, not on edits.
  */
-export function canAddConnection(
-  plan: SubscriptionPlan,
-  current: number,
-): boolean {
-  return current < maxConnections(plan);
+export function canAddConnection(current: number): boolean {
+  return current < MAX_CONNECTIONS;
 }
 
 /**
  * Whether the "Connect analytics" affordance should appear at all.
  *
- * Both halves must hold: the platform has to expose the data (§7.3) and the
- * plan has to include it (§8). Failing either, the UI says which one — a
- * creator on Starter looking at Twitch should not be told to upgrade for
- * something upgrading cannot deliver.
+ * Every creator is eligible; what decides it is the platform. It must expose
+ * the data (§7.3) and its integration must actually be operational —
+ * Instagram supports verified geography in principle, but while its
+ * integration is in development the answer is "in-development", never a
+ * Connect button that fails at the provider.
  */
 export function verificationAvailability(
   platform: Platform,
-  plan: SubscriptionPlan,
-): "available" | "needs-upgrade" | "unsupported" {
+): "available" | "in-development" | "unsupported" {
   if (!VERIFICATION_SUPPORT[platform].supported) return "unsupported";
-  return canVerifyAudience(plan) ? "available" : "needs-upgrade";
+  return INTEGRATION_STATUS[platform] === "available" ? "available" : "in-development";
 }

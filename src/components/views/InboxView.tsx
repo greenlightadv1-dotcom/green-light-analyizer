@@ -68,7 +68,6 @@ export function InboxView({
       {chats.length === 0 ? (
         <EmptyState
           title={t("inbox.noRoomsTitle")}
-          spec="§5, §6.2"
           body={t("inbox.noRoomsBody")}
         />
       ) : (
@@ -84,10 +83,10 @@ export function InboxView({
                   type="button"
                   onClick={() => setSourceFilter(option)}
                   aria-pressed={active}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                  className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:focus-ring ${
                     active
-                      ? "border-brand-green/30 bg-brand-green/10 text-brand-green"
-                      : "border-fg/10 bg-fg/5 text-fg/60 hover:bg-fg/10 hover:text-fg"
+                      ? "border-forest bg-forest text-white dark:border-brand-green dark:bg-brand-green dark:text-ink"
+                      : "border-line-strong bg-surface text-fg-secondary hover:bg-surface-hover hover:text-fg"
                   }`}
                 >
                   {t(
@@ -103,7 +102,7 @@ export function InboxView({
             })}
 
             {spamCount > 0 ? (
-              <label className="ms-auto flex items-center gap-1.5 text-xs text-fg/50">
+              <label className="ms-auto flex items-center gap-1.5 text-xs text-fg-muted">
                 <input
                   type="checkbox"
                   checked={hideSpam}
@@ -117,45 +116,49 @@ export function InboxView({
 
           <div className="space-y-2.5">
             {visible.map((chat) => (
-              <GlassPanel key={chat.id} className="transition hover:bg-navy/45">
+              <GlassPanel key={chat.id} className="transition-colors hover:border-line-strong hover:bg-surface-soft">
+                {/* Two rows on every width: who and how much first, then the
+                    deliverable and the badges. One wrapping row used to squeeze
+                    the sender into a few characters on phones. */}
                 <Link
                   href={`${basePath}/inbox/${chat.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+                  className="block rounded-card p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green sm:px-5"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate text-sm font-medium text-fg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-semibold text-fg" dir="ltr" title={chat.sender_email}>
                         {chat.sender_email}
                       </p>
-                      <SourceBadge companyId={chat.company_id} />
-                      {!chat.is_likely_sponsorship ? (
-                        <span
-                          className="rounded-md bg-amber-300/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-200"
-                          title={t("inbox.possibleSpamTitle")}
-                        >
-                          {t("inbox.possibleSpam")}
-                        </span>
-                      ) : null}
+                      <p className="mt-0.5 truncate text-xs text-fg-muted">
+                        {chat.sponsorship_type?.replace(/_/g, " ") ?? t("inbox.unspecifiedDeliverable")}
+                        {chat.target_countries?.length
+                          ? ` · ${t("inbox.targeting", { countries: chat.target_countries.join(", ") })}`
+                          : ""}
+                      </p>
                     </div>
-                    <p className="mt-0.5 text-xs text-fg/40">
-                      {chat.sponsorship_type?.replace(/_/g, " ") ?? t("inbox.unspecifiedDeliverable")}
-                      {chat.target_countries?.length
-                        ? ` · ${t("inbox.targeting", { countries: chat.target_countries.join(", ") })}`
-                        : ""}
+                    <p className="shrink-0 text-base font-bold text-fg tabular-nums">
+                      {formatMoney(chat.offered_amount)}
                     </p>
                   </div>
-
-                  <p className="text-sm font-semibold text-fg tabular-nums">
-                    {formatMoney(chat.offered_amount)}
-                  </p>
-                  <StatusBadge status={chat.deal_status} />
-                  <RiskBadge risk={chat.ai_evaluation} />
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={chat.deal_status} />
+                    <RiskBadge risk={chat.ai_evaluation} />
+                    <SourceBadge companyId={chat.company_id} />
+                    {!chat.is_likely_sponsorship ? (
+                      <span
+                        className="rounded-full bg-warning/15 px-2.5 py-0.5 text-xs font-medium text-warning"
+                        title={t("inbox.possibleSpamTitle")}
+                      >
+                        {t("inbox.possibleSpam")}
+                      </span>
+                    ) : null}
+                  </div>
                 </Link>
               </GlassPanel>
             ))}
 
             {visible.length === 0 ? (
-              <p className="py-8 text-center text-sm text-fg/40">{t("inbox.noneMatchFilter")}</p>
+              <p className="py-8 text-center text-sm text-fg-muted">{t("inbox.noneMatchFilter")}</p>
             ) : null}
           </div>
         </>

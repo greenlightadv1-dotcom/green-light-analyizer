@@ -46,13 +46,40 @@ export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/complet
  * meta/llama-3.2-90b-vision-instruct. Same family as that model, so the
  * prompts carry over unchanged.
  *
- * Not verified against the live catalog from the environment this was written
- * in: integrate.api.nvidia.com is unreachable from it. `node
- * scripts/check-nvidia.mjs` lists what a given key can actually reach and
- * says whether this id is among them — a wrong id is not an error, it 404s
- * and the product quietly serves rule-based output.
+ * RETIRED. Checked against the live public catalog on 2026-11-20: this id is
+ * no longer listed, and chat completions answer 410 "reached its end of life
+ * on 2026-08-26". Every deployment that leaves NVIDIA_MODEL unset therefore
+ * serves rule-based output only. Choosing the replacement is the owner's
+ * decision (the model was picked on the client's instruction), so the value is
+ * left as it is and recorded in docs/G/NVIDIA_LIVE_CHECK.md. `node
+ * scripts/check-nvidia.mjs` lists what a given key can actually reach — a
+ * wrong id is not an error, it 404s/410s and the product quietly serves
+ * rule-based output.
  */
 export const NVIDIA_DEFAULT_MODEL = "meta/llama-3.3-70b-instruct";
+
+/**
+ * Statuses where a second attempt cannot possibly help, so spending the
+ * remaining budget on one only delays the fallback. A rejected credential, an
+ * unknown or retired model, or a malformed request is deterministic: it will
+ * be rejected again, identically.
+ *
+ * 410 is NVIDIA's answer for a model past its end of life ("The model '…' has
+ * reached its end of life on … and is no longer available"). Observed live on
+ * 2026-11-20 for NVIDIA_DEFAULT_MODEL itself; before it was listed here it was
+ * retried, spending the second attempt on a certain failure.
+ */
+export const NVIDIA_TERMINAL_STATUS: ReadonlySet<number> = new Set([400, 401, 403, 404, 410, 413, 415, 422]);
+
+/** 401 (no credential) and 403 (an invalid key, as NVIDIA answers it): the key is the problem. */
+export function isCredentialRejectedStatus(status: number | null): boolean {
+  return status === 401 || status === 403;
+}
+
+/** 404 (id not in the catalog) and 410 (id retired): the configured model cannot answer. */
+export function isModelUnavailableStatus(status: number | null): boolean {
+  return status === 404 || status === 410;
+}
 
 /**
  * The time budget, and why it is not simply 60 seconds.

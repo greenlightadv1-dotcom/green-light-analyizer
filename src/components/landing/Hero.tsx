@@ -2,55 +2,69 @@
 
 import { CtaLink } from "@/components/landing/CtaLink";
 import { useTranslation } from "@/components/LocaleProvider";
-import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
+
+const STEPS = [
+  { title: "landing.how1Title", body: "landing.how1Body" },
+  { title: "landing.how2Title", body: "landing.how2Body" },
+  { title: "landing.how3Title", body: "landing.how3Body" },
+] as const;
 
 /**
- * Ambient glow mesh scoped to the hero (spec point 3) — separate from the
- * global GlowOrbs (ui/GlowOrbs.tsx), which are tuned for the always-dark
- * authenticated app and would sit hidden behind this page's opaque
- * background anyway. Static rather than animated: this section doesn't need
- * its own motion budget on top of the page-entrance transition.
+ * Hero: a large confident headline on the warm canvas, and a deep-forest card
+ * describing how a deal moves through the product. The card is a process
+ * description, not sample data, so nothing on it can be mistaken for a real
+ * figure.
  */
-function HeroGlow() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="absolute -top-32 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(98,232,35,0.20)_0%,transparent_70%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(98,232,35,0.28)_0%,transparent_70%)]" />
-      <div className="absolute top-40 -right-40 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(41,62,97,0.16)_0%,transparent_70%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(41,62,97,0.6)_0%,transparent_70%)]" />
-    </div>
-  );
-}
-
 export function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden px-4 pt-20 pb-16 text-center sm:px-6 sm:pt-28 sm:pb-24">
-      <HeroGlow />
+    <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pb-24">
+      <div>
+        <p className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-fg-secondary ring-1 ring-line">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-brand-green" />
+          {t("landing.badge")}
+        </p>
 
-      <p className="mx-auto inline-flex items-center rounded-full border border-navy/15 bg-navy/5 px-3 py-1 text-xs font-medium tracking-wide text-navy uppercase dark:border-brand-green/25 dark:bg-brand-green/10 dark:text-brand-green">
-        {t("landing.badge")}
-      </p>
+        <h1 className="mt-6 text-5xl leading-[1.04] font-bold text-fg sm:text-6xl lg:text-7xl">
+          {t("landing.headline")}
+        </h1>
 
-      <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold tracking-tight text-ink sm:text-5xl md:text-6xl dark:text-white">
-        {t("landing.headline")}
-      </h1>
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-fg-muted">
+          {t("landing.subheadline")}
+        </p>
 
-      <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink/60 sm:text-lg dark:text-white/60">
-        {t("landing.subheadline")}
-      </p>
+        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <CtaLink href="/get-started" variant="primary" className="h-12 px-7 text-base sm:w-auto">
+            {t("landing.ctaRequestAccess")}
+          </CtaLink>
+          <CtaLink href="/login" variant="outline" className="h-12 px-7 text-base sm:w-auto">
+            {t("landing.ctaSignIn")}
+          </CtaLink>
+        </div>
 
-      <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <CtaLink href={DISCORD_INVITE_URL} external variant="primary" className="w-full sm:w-auto">
-          {t("landing.ctaRequestAccess")}
-        </CtaLink>
-        <CtaLink href="/login" variant="ghost" className="w-full sm:w-auto">
-          {t("landing.ctaSignIn")}
-        </CtaLink>
+        <p className="mt-4 text-sm text-fg-muted">{t("landing.noSignupNote")}</p>
       </div>
 
-      <p className="mt-4 text-xs text-ink/40 dark:text-white/35">
-        {t("landing.noSignupNote")}
-      </p>
+      <div className="surface-forest p-7 sm:p-9">
+        <h2 className="text-sm font-semibold text-white/70">{t("landing.howTitle")}</h2>
+        <ol className="mt-6 space-y-6">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="flex gap-4">
+              <span
+                aria-hidden
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-green text-base font-bold text-ink"
+              >
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="text-lg font-semibold text-white">{t(step.title)}</p>
+                <p className="mt-1 text-sm leading-relaxed text-white/70">{t(step.body)}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }

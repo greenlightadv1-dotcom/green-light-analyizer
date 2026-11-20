@@ -1,5 +1,7 @@
 "use client";
 
+import { AvatarUpload } from "@/components/uploads/AvatarUpload";
+
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/Alert";
@@ -11,7 +13,7 @@ import { saveCreatorProfile, type CreatorProfileState } from "@/lib/media-kit/ac
 import type { Profile } from "@/lib/auth";
 
 const textareaClass =
-  "w-full resize-y rounded-xl border border-fg/10 bg-fg/5 px-3.5 py-2.5 text-sm text-fg placeholder:text-fg/30 transition focus:border-brand-green/50 focus:ring-3 focus:ring-brand-green/15 focus:outline-none";
+  "w-full resize-y rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg placeholder:text-fg-subtle transition focus:border-forest focus:ring-3 focus:ring-brand-green/30 dark:focus:border-brand-green focus:outline-none";
 
 const SOCIAL_FIELDS = [
   { key: "youtube", labelKey: "mediaKit.socialYoutube", placeholder: "@handle" },
@@ -55,45 +57,23 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
   return (
     <form action={formAction} className="space-y-4">
       <GlassPanel className="p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("mediaKit.creatorProfile")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("mediaKit.creatorProfile")}</h2>
 
         <div className="mt-4 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-fg/10 bg-fg/5">
-              {profile.avatar_url ? (
-                // Arbitrary creator-supplied external URL; next/image needs a
-                // configured remote-pattern allowlist that can't cover an
-                // unknown host set.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-fg/30">
-                  {profile.full_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <Field
-                id="avatar_url"
-                name="avatar_url"
-                type="url"
-                label={t("mediaKit.avatarUrl")}
-                placeholder="https://…"
-                defaultValue={profile.avatar_url ?? ""}
-              />
-            </div>
-          </div>
+          {/* Drag-and-drop upload with preview, progress, replace and remove
+              (components/uploads). Replaces the old "paste an image link" field. */}
+          <AvatarUpload initialUrl={profile.avatar_url ?? null} />
 
           <div className="space-y-1.5">
-            <p className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+            <p className="block text-sm font-medium text-fg-muted">
               {t("mediaKit.nameLabel")}
             </p>
             <p className="text-sm text-fg">{profile.full_name}</p>
-            <p className="text-xs text-fg/40">{t("mediaKit.editNameInSettings")}</p>
+            <p className="text-xs text-fg-muted">{t("mediaKit.editNameInSettings")}</p>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="bio" className="block text-xs font-medium tracking-wide text-fg/70 uppercase">
+            <label htmlFor="bio" className="block text-sm font-medium text-fg-muted">
               {t("mediaKit.bio")}
             </label>
             <textarea
@@ -139,8 +119,8 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
       </GlassPanel>
 
       <GlassPanel className="p-6">
-        <h2 className="text-sm font-semibold text-fg">{t("mediaKit.socialAccounts")}</h2>
-        <p className="mt-1 text-xs text-fg/40">{t("mediaKit.socialAccountsNote")}</p>
+        <h2 className="text-base font-semibold text-fg">{t("mediaKit.socialAccounts")}</h2>
+        <p className="mt-1 text-xs text-fg-muted">{t("mediaKit.socialAccountsNote")}</p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {SOCIAL_FIELDS.map(({ key, labelKey, placeholder }) => (
@@ -156,7 +136,7 @@ export function CreatorProfileCard({ profile }: { profile: Profile }) {
         </div>
       </GlassPanel>
 
-      {state.error ? <Alert>{state.error}</Alert> : null}
+      {state.error ? <Alert>{t(state.error)}</Alert> : null}
       {state.saved ? <Alert tone="info">{t("common.saved")}</Alert> : null}
 
       <SaveButton />

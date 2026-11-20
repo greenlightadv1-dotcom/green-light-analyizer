@@ -14,49 +14,116 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
-   Green Light design tokens — CLAUDE.md §2.1
-   Exact hex values. Do not approximate, do not reintroduce #10B981.
+   Green Light design tokens — the 2026-11 visual identity (owner-approved
+   redesign; supersedes CLAUDE.md §2.1/§2.2 "Liquid Glass"). See
+   docs/DESIGN/GREEN_LIGHT_DESIGN_SYSTEM.md.
 
-   Tailwind v4 is CSS-configured, so this @theme block is the equivalent of the
-   `tailwind.config.js` sketch in the spec and produces the same utility names:
-     navy        -> bg-navy / text-navy
-     navy-dark   -> bg-navy-dark
-     brand-green -> text-brand-green / bg-brand-green
-     ink         -> text-ink
+   Warm off-white canvas, white rounded surfaces, near-black type, the brand
+   lime (#62E823, the logo's own green) for primary actions and highlights,
+   and a deep forest green for strong secondary surfaces. Utility names are
+   kept so existing markup re-themes from here:
+     brand-green -> the lime accent          forest / forest-strong -> deep green
+     navy / navy-dark -> now aliases of forest (legacy names, kept so existing
+                         "code block" and dark surfaces adopt the new palette)
+     canvas / surface / surface-soft -> page, card and quiet panel fills
 --------------------------------------------------------------------------- */
 @theme {
-  --color-navy: #293e61;
-  --color-navy-dark: #1f2e47;
   --color-brand-green: #62e823;
-  /* Always ink regardless of theme — e.g. text on the neon-green CTA fill,
-     which needs the same dark text in light or dark mode. Not the same
-     token as --color-fg below, which is the one that actually flips. */
-  --color-ink: #231f20;
+  --color-lime-soft: #e9fbdc;
+  --color-forest: #0f3b2c;
+  --color-forest-strong: #0a2a1f;
+  --color-forest-soft: #dce9e2;
+  --color-navy: #0f3b2c;
+  --color-navy-dark: #0a2a1f;
+  /* Always ink regardless of theme — text on lime fills. */
+  --color-ink: #0e1210;
+  --color-obsidian: #0b110e;
 
-  /* Base app background — deep obsidian shell the glass panels float on (§2.2) */
-  --color-obsidian: #0a0d14;
+  /* Readable green for text and icons on light surfaces (lime text on white
+     is ~1.6:1); in dark mode it becomes the lime itself. */
+  --color-accent: #276f0a;
 
-  /*
-   * Theme-reactive foreground token. Every "text-white/NN",
-   * "border-white/NN" and "bg-white/NN" utility across the dashboard (nearly
-   * all of them tints/opacity of a single foreground color, not literal
-   * brand white) uses --color-fg instead, so flipping this one variable
-   * under .dark re-themes the whole app — Tailwind still generates the
-   * full text-fg/border-fg/bg-fg/NN opacity-modifier utility set for any
-   * color registered here, same as it does for navy/brand-green/ink above.
-   * Literal, always-white surfaces (Logo's plate, landing page's white
-   * cards) keep using the real `white` token and are unaffected.
-   */
-  --color-fg: #231f20;
+  --color-canvas: #f4f3ee;
+  --color-surface: #ffffff;
+  --color-surface-soft: #efeee7;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+  /* Theme-reactive foreground; opacity utilities (text-fg/60 …) derive from it. */
+  --color-fg: #0e1210;
+
+  --font-sans: var(--font-manrope), var(--font-arabic), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --radius-glass: 20px;
+  /* Text, strongest to weakest. fg-muted is the floor for readable body copy
+     (#59645e on white is 6.1:1, AA); fg-subtle is decoration only. */
+  --color-fg-secondary: #2f3833;
+  --color-fg-muted: #59645e;
+  --color-fg-subtle: #8a948e;
+
+  /* Hairlines and quiet fills. */
+  --color-line: #e4e2d9;
+  --color-line-strong: #d2cfc3;
+  --color-surface-muted: color-mix(in srgb, var(--color-fg) 4%, transparent);
+  --color-surface-hover: color-mix(in srgb, var(--color-fg) 7%, transparent);
+
+  /* State colours (text AA on white and on canvas). */
+  --color-success: #19692f;
+  --color-warning: #8a5300;
+  --color-danger: #b42318;
+  --color-info: #0f3b2c;
+
+  /* Radii: chips (badges), controls (inputs), cards (surfaces), pills (buttons). */
+  --radius-chip: 0.5rem;
+  --radius-control: 0.875rem;
+  --radius-card: 24px;
+  --radius-glass: 24px;
+
+  --shadow-card: 0 1px 2px rgba(14, 18, 16, 0.04), 0 12px 32px -18px rgba(14, 18, 16, 0.14);
+  --shadow-overlay: 0 30px 80px -24px rgba(14, 18, 16, 0.35);
 }
 
 :root.dark {
-  --color-fg: #ffffff;
+  --color-fg: #f1f4f2;
+  --color-accent: #62e823;
+  --color-canvas: #0b110e;
+  --color-surface: #121a16;
+  --color-surface-soft: #18221d;
+  --color-fg-secondary: #d3dbd6;
+  --color-fg-muted: #a3b0a9;
+  --color-fg-subtle: #74817a;
+  --color-line: rgba(241, 244, 242, 0.09);
+  --color-line-strong: rgba(241, 244, 242, 0.16);
+  --color-forest-soft: #16302a;
+  --color-lime-soft: rgba(98, 232, 35, 0.12);
+  --color-navy: #16302a;
+  --color-navy-dark: #0e221b;
+  --color-success: #7ee05a;
+  --color-warning: #f5c56b;
+  --color-danger: #ff9b8f;
+  --color-info: #9fd9b9;
+}
+
+/* Keyboard focus, shared by every Phase 1 component. */
+@utility focus-ring {
+  outline: 2px solid var(--color-brand-green);
+  outline-offset: 2px;
+}
+
+/* Native <dialog> (Dialog / ConfirmDialog). The element is the panel; the
+   backdrop dims the page. Open state comes from showModal(), which also
+   makes the rest of the page inert and handles Escape. */
+.gl-dialog::backdrop {
+  background: rgba(14, 18, 16, 0.45);
+}
+.gl-dialog[open] {
+  animation: g-panel-in 0.18s ease-out;
+}
+
+/* Skeleton placeholder. Reduced motion (below) flattens the pulse. */
+@keyframes gl-pulse {
+  50% { opacity: 0.45; }
+}
+.gl-skeleton {
+  animation: gl-pulse 1.6s ease-in-out infinite;
 }
 
 :root {
@@ -72,82 +139,51 @@ body {
   height: 100%;
 }
 
-/*
- * Base app-shell background — a static mesh gradient in the exact §2.1
- * hexes, sitting under GlowOrbs' animated blobs and every glass panel.
- * Fixed to the viewport (not the page) so it reads as one ambient backdrop
- * rather than tiling as content scrolls taller than one screen. Light and
- * dark each get their own mesh — same brand hues, different base.
- */
+/* Flat warm canvas — no mesh gradients or glow (the redesign drops glassmorphism). */
 body {
-  background-color: #f6f7fb;
-  background-image:
-    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.14), transparent 60%),
-    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.12), transparent 55%),
-    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.08), transparent 60%),
-    linear-gradient(165deg, #eef1f7 0%, #f6f7fb 55%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: var(--color-canvas);
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-:root.dark body {
-  background-color: var(--color-obsidian);
-  background-image:
-    radial-gradient(1100px 750px at 12% -8%, rgba(98, 232, 35, 0.12), transparent 60%),
-    radial-gradient(950px 700px at 105% 15%, rgba(41, 62, 97, 0.65), transparent 55%),
-    radial-gradient(900px 800px at 25% 115%, rgba(98, 232, 35, 0.07), transparent 60%),
-    linear-gradient(165deg, #1f2e47 0%, #0a0d14 55%);
-}
-
 /* ---------------------------------------------------------------------------
-   "Liquid Glass" — §2.2. The dark recipe (:root.dark overrides below) is the
-   spec's, verbatim, plus a soft outer drop shadow (panels float above the
-   shell rather than sitting flush with it) and a hairline inset top
-   highlight (the standard glassmorphism "lit edge" cue). The light recipe
-   is the same idea in the light palette: navy-tinted glass over the app's
-   off-white mesh instead of white-tinted glass over obsidian.
+   Surfaces. The class names are historical (`glass-panel`), the recipe is the
+   new one: a solid rounded card with a hairline and a soft shadow, no blur.
+   `glass-panel-solid` is the same surface for nav rails and sticky headers.
 --------------------------------------------------------------------------- */
 @utility glass-panel {
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(41, 62, 97, 0.12);
-  border-radius: 20px;
-  box-shadow:
-    0 20px 40px -26px rgba(41, 62, 97, 0.35),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
-:root.dark .glass-panel {
-  background: rgba(41, 62, 97, 0.35); /* navy tint */
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 24px 48px -28px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-}
-
-/* Slightly denser variant for nav rails and sticky headers. */
 @utility glass-panel-solid {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(41, 62, 97, 0.14);
-  border-radius: 20px;
-  box-shadow:
-    0 20px 40px -26px rgba(41, 62, 97, 0.4),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
+:root.dark .glass-panel,
 :root.dark .glass-panel-solid {
-  background: rgba(31, 46, 71, 0.72);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 24px 48px -28px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 16px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* A lime highlight section (used sparingly: one per page at most). */
+@utility surface-lime {
+  background: var(--color-brand-green);
+  color: var(--color-ink);
+  border-radius: var(--radius-card);
+}
+
+/* A deep forest section for strong secondary emphasis (white text). */
+@utility surface-forest {
+  background: var(--color-forest);
+  color: #ffffff;
+  border-radius: var(--radius-card);
 }
 
 /* Green focus ring used across inputs and interactive glass surfaces. */
@@ -158,9 +194,13 @@ body {
 }
 
 ::selection {
-  background: rgba(98, 232, 35, 0.3);
-  color: #ffffff;
+  background: rgba(98, 232, 35, 0.35);
+  color: var(--color-ink);
 }
+
+/* Headings: confident, tight tracking (Latin only — Arabic keeps normal spacing). */
+:where(h1, h2, h3) { letter-spacing: -0.02em; }
+:where([dir="rtl"]) :where(h1, h2, h3) { letter-spacing: normal; }
 
 /* Motion (§2.2) is Framer Motion driven, but honour reduced-motion globally. */
 @media (prefers-reduced-motion: reduce) {
@@ -171,4 +211,53 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+ * G — wake, listening, thinking and speaking states, and the panel entrance.
+ * Transform/opacity only, so they stay cheap on mobile. The reduced-motion
+ * block above already flattens every animation for people who ask for that;
+ * the states stay readable without motion (text status + colour).
+ */
+@keyframes g-wake {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(98, 232, 35, 0.7); }
+  35% { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(98, 232, 35, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(98, 232, 35, 0); }
+}
+@keyframes g-ring {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes g-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes g-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@keyframes g-panel-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes g-blink {
+  50% { opacity: 0.35; }
+}
+.g-wake { animation: g-wake 0.9s ease-out 2; }
+.g-ring { animation: g-ring 1.4s ease-out infinite; }
+.g-spin { animation: g-spin 1.1s linear infinite; }
+.g-bar { animation: g-bar 0.8s ease-in-out infinite; transform-origin: bottom; }
+.g-panel-in { animation: g-panel-in 0.22s ease-out; }
+.g-blink { animation: g-blink 1.6s ease-in-out infinite; }
+
+/* Print (Media Kit PDF v1 via the browser's "Save as PDF"): plain white page,
+   dark text, no glass blur or shadows, which print engines render poorly. */
+@media print {
+  :root, :root.dark { --color-fg: #231f20; color-scheme: light; }
+  body, :root.dark body { background: #ffffff !important; background-image: none !important; }
+  .glass-panel, .glass-panel-solid, :root.dark .glass-panel, :root.dark .glass-panel-solid {
+    background: #ffffff !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    border-color: #d4d4d8 !important;
+  }
+  .gl-skeleton { animation: none; }
 }

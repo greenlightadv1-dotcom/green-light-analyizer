@@ -31,7 +31,7 @@ export async function updateDisplayName(
     .update({ full_name: fullName })
     .eq("id", profile.id);
 
-  if (error) return { error: "Could not update your name.", saved: false };
+  if (error) return { error: "actionErrors.nameNotChanged", saved: false };
 
   revalidatePath("/settings");
   return { error: null, saved: true };
@@ -103,7 +103,7 @@ export async function updateWhatsAppSettings(
     })
     .eq("id", profile.id);
 
-  if (error) return { error: "Could not update your WhatsApp settings.", saved: false };
+  if (error) return { error: "actionErrors.whatsappNotChanged", saved: false };
 
   revalidatePath("/settings");
   return { error: null, saved: true };

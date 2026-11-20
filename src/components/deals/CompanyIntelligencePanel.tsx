@@ -6,6 +6,7 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import { analyzeCompany, type CompanyIntelState } from "@/app/(app)/inbox/[chatId]/actions";
 import type { CompanyProfile } from "@/lib/ai/company-intel-types";
+import { normalizeCompanyProfile, normalizeSecurityCheck } from "@/lib/deals/intel-shape";
 import type { DealChat } from "@/lib/deals/queries";
 import type { OwnDomainHistory } from "@/lib/deals/company-intelligence";
 
@@ -31,9 +32,9 @@ import type { OwnDomainHistory } from "@/lib/deals/company-intelligence";
  * quietly blend an opinion into a measurement.
  */
 function trustScoreClass(score: number): string {
-  if (score >= 80) return "border-brand-green/30 bg-brand-green/10 text-brand-green";
-  if (score >= 50) return "border-amber-300/30 bg-amber-300/10 text-amber-700 dark:text-amber-200";
-  return "border-red-400/30 bg-red-500/10 text-red-700 dark:text-red-200";
+  if (score >= 80) return "border-success/30 bg-success/10 text-success";
+  if (score >= 50) return "border-warning/30 bg-warning/10 text-warning";
+  return "border-danger/30 bg-danger/10 text-danger";
 }
 
 function AnalyzeButton({ hasProfile, demo }: { hasProfile: boolean; demo: boolean }) {
@@ -45,7 +46,7 @@ function AnalyzeButton({ hasProfile, demo }: { hasProfile: boolean; demo: boolea
       // form with no action navigates the page away.
       type={demo ? "button" : "submit"}
       disabled={pending}
-      className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-1.5 text-xs text-fg/70 transition hover:bg-fg/10 hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending
         ? t("inbox.analyzingCompany")
@@ -68,7 +69,7 @@ function CompanyBrief({ profile }: { profile: CompanyProfile }) {
   return (
     <div className="mt-3 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-fg/45">{t("inbox.aiTrustRead")}</span>
+        <span className="text-xs text-fg-muted">{t("inbox.aiTrustRead")}</span>
         <span
           className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${trustScoreClass(profile.trustworthinessScore)}`}
         >
@@ -80,7 +81,7 @@ function CompanyBrief({ profile }: { profile: CompanyProfile }) {
         <>
           {profile.background ? (
             <div>
-              <h4 className="text-[11px] font-medium tracking-wide text-fg/45 uppercase">
+              <h4 className="text-xs font-medium text-fg-muted">
                 {t("inbox.aiBackground")}
               </h4>
               <p className="mt-1 text-xs leading-relaxed text-fg/65">{profile.background}</p>
@@ -88,7 +89,7 @@ function CompanyBrief({ profile }: { profile: CompanyProfile }) {
           ) : null}
           {profile.history ? (
             <div>
-              <h4 className="text-[11px] font-medium tracking-wide text-fg/45 uppercase">
+              <h4 className="text-xs font-medium text-fg-muted">
                 {t("inbox.aiHistory")}
               </h4>
               <p className="mt-1 text-xs leading-relaxed text-fg/65">{profile.history}</p>
@@ -99,20 +100,20 @@ function CompanyBrief({ profile }: { profile: CompanyProfile }) {
         // The model said it does not recognise the domain. Rendering the
         // absence plainly is the whole reason that flag exists — a hedged
         // paragraph here would read exactly like knowledge.
-        <p className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-xs leading-relaxed text-fg/55">
+        <p className="rounded-lg border border-fg/10 bg-fg/5 px-3 py-2 text-xs leading-relaxed text-fg-muted">
           {t("inbox.aiCompanyUnknown")}
         </p>
       )}
 
       {profile.signals.length ? (
         <div>
-          <h4 className="text-[11px] font-medium tracking-wide text-fg/45 uppercase">
+          <h4 className="text-xs font-medium text-fg-muted">
             {t("inbox.aiSignals")}
           </h4>
           <ul className="mt-1.5 space-y-1">
             {profile.signals.map((signal) => (
               <li key={signal} className="flex gap-1.5 text-xs leading-relaxed text-fg/65">
-                <span aria-hidden="true" className="text-fg/30">
+                <span aria-hidden="true" className="text-fg-muted">
                   •
                 </span>
                 <span>{signal}</span>
@@ -122,7 +123,7 @@ function CompanyBrief({ profile }: { profile: CompanyProfile }) {
         </div>
       ) : null}
 
-      <p className="text-[11px] text-fg/30">
+      <p className="text-[11px] text-fg-muted">
         {t("inbox.aiConfidence", { level: confidenceLabel })} ·{" "}
         {t("inbox.aiGeneratedAt", {
           date: new Date(profile.generatedAt).toLocaleDateString(),
@@ -152,26 +153,28 @@ export function CompanyIntelligencePanel({
   if (chat.company_id) {
     return (
       <GlassPanel className="p-5">
-        <h2 className="text-sm font-semibold text-fg">{t("inbox.companyIntelligence")}</h2>
-        <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1.5 text-xs font-medium text-brand-green">
+        <h2 className="text-base font-semibold text-fg">{t("inbox.companyIntelligence")}</h2>
+        <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-brand-green/30 bg-brand-green/10 px-2.5 py-1.5 text-xs font-medium text-accent">
           {t("inbox.verifiedCompanyAccount")}
         </p>
-        <p className="mt-2.5 text-xs leading-relaxed text-fg/45">
+        <p className="mt-2.5 text-xs leading-relaxed text-fg-muted">
           {t("inbox.verifiedCompanyAccountNote")}
         </p>
       </GlassPanel>
     );
   }
 
-  const security = chat.security_check;
+  // Both columns are jsonb: read them through the normalizer so a malformed
+  // row hides a field instead of crashing the room (lib/deals/intel-shape.ts).
+  const security = normalizeSecurityCheck(chat.security_check);
   // The freshly generated one wins over the cached column: after a re-run the
   // creator is looking at what they just asked for, not the previous answer.
-  const profile = intelState.profile ?? chat.company_profile;
+  const profile = normalizeCompanyProfile(intelState.profile ?? chat.company_profile);
 
   return (
     <GlassPanel className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-fg">{t("inbox.companyIntelligence")}</h2>
+        <h2 className="text-base font-semibold text-fg">{t("inbox.companyIntelligence")}</h2>
         {security?.trustScore !== null && security?.trustScore !== undefined ? (
           <span
             className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${trustScoreClass(security.trustScore)}`}
@@ -179,22 +182,22 @@ export function CompanyIntelligencePanel({
             {t("analyzer.trustPercent", { score: security.trustScore })}
           </span>
         ) : (
-          <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg/45">
+          <span className="rounded-full border border-fg/15 px-2.5 py-1 text-xs text-fg-muted">
             {t("analyzer.safetyScoreUnavailable")}
           </span>
         )}
       </div>
 
-      <p className="mt-1 text-[11px] tracking-wide text-fg/35 uppercase">
+      <p className="mt-1 text-xs font-medium text-fg-muted">
         {t("inbox.measuredTag")}
       </p>
 
-      <p className="mt-3 text-sm text-fg/60">
+      <p className="mt-3 text-sm text-fg-muted">
         {t("analyzer.domain")} <span className="text-fg">{security?.domain ?? domainHistory?.domain ?? "—"}</span>
       </p>
 
       {domainHistory?.isFreeEmail ? (
-        <p className="mt-2 rounded-lg border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-xs leading-relaxed text-amber-700 dark:text-amber-100">
+        <p className="mt-2 rounded-lg border border-warning/25 bg-warning/10 px-3 py-1.5 text-xs leading-relaxed text-warning">
           {t("inbox.freeEmailWarning")}
         </p>
       ) : null}
@@ -204,7 +207,7 @@ export function CompanyIntelligencePanel({
           {security.reasons.map((reason) => (
             <li
               key={reason}
-              className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-100"
+              className="rounded-lg border border-warning/20 bg-warning/5 px-3 py-1.5 text-xs text-warning"
             >
               {reason}
             </li>
@@ -215,36 +218,36 @@ export function CompanyIntelligencePanel({
       {security?.whois ? (
         <dl className="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
           <div>
-            <dt className="text-xs text-fg/45">{t("analyzer.companyOrg")}</dt>
+            <dt className="text-xs text-fg-muted">{t("analyzer.companyOrg")}</dt>
             <dd className="text-sm text-fg">{security.whois.registrantOrganization ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-fg/45">{t("analyzer.registrantCountry")}</dt>
+            <dt className="text-xs text-fg-muted">{t("analyzer.registrantCountry")}</dt>
             <dd className="text-sm text-fg">{security.whois.registrantCountry ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-xs text-fg/45">{t("analyzer.domainCreated")}</dt>
+            <dt className="text-xs text-fg-muted">{t("analyzer.domainCreated")}</dt>
             <dd className="text-sm text-fg">
               {security.whois.createdAt ? new Date(security.whois.createdAt).toLocaleDateString() : "—"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-fg/45">{t("analyzer.domainExpires")}</dt>
+            <dt className="text-xs text-fg-muted">{t("analyzer.domainExpires")}</dt>
             <dd className="text-sm text-fg">
               {security.whois.expiresAt ? new Date(security.whois.expiresAt).toLocaleDateString() : "—"}
             </dd>
           </div>
         </dl>
       ) : (
-        <p className="mt-4 text-xs text-fg/40">{t("analyzer.whoisUnavailable")}</p>
+        <p className="mt-4 text-xs text-fg-muted">{t("analyzer.whoisUnavailable")}</p>
       )}
 
       <div className="mt-4 border-t border-fg/8 pt-3">
-        <h3 className="text-xs font-medium tracking-wide text-fg/60 uppercase">
+        <h3 className="text-sm font-medium text-fg-muted">
           {t("inbox.yourHistory")}
         </h3>
         {domainHistory && domainHistory.dealCount > 0 ? (
-          <p className="mt-1.5 text-xs leading-relaxed text-fg/55">
+          <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
             {t("inbox.yourHistoryNote", {
               count: domainHistory.dealCount,
               agreed: domainHistory.agreedOrPaidCount,
@@ -254,17 +257,17 @@ export function CompanyIntelligencePanel({
               : ""}
           </p>
         ) : (
-          <p className="mt-1.5 text-xs leading-relaxed text-fg/40">{t("inbox.yourHistoryNone")}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">{t("inbox.yourHistoryNone")}</p>
         )}
       </div>
 
       {/* ── generated, below the rule, never mixed into the measured half ── */}
       <div className="mt-4 border-t border-fg/8 pt-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-xs font-medium tracking-wide text-fg/60 uppercase">
+          <h3 className="text-sm font-medium text-fg-muted">
             {t("inbox.aiCompanyBrief")}
           </h3>
-          <span className="rounded-full border border-fg/12 px-2 py-0.5 text-[10px] tracking-wide text-fg/40 uppercase">
+          <span className="rounded-full border border-fg/12 px-2 py-0.5 text-[10px] tracking-wide text-fg-muted uppercase">
             {t("inbox.aiGeneratedTag")}
           </span>
         </div>
@@ -272,13 +275,13 @@ export function CompanyIntelligencePanel({
         {profile ? (
           <CompanyBrief profile={profile} />
         ) : (
-          <p className="mt-1.5 text-xs leading-relaxed text-fg/45">
+          <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
             {t("inbox.aiCompanyIntro")}
           </p>
         )}
 
         {intelState.error ? (
-          <p role="alert" className="mt-2 text-xs text-red-700 dark:text-red-300">
+          <p role="alert" className="mt-2 text-xs text-danger">
             {intelState.error}
           </p>
         ) : null}
