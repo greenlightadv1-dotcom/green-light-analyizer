@@ -62,7 +62,7 @@ export function PricingView({ profile }: { profile: Profile }) {
           <p className="mt-2 text-xs font-medium leading-relaxed text-fg/65">
             {/*
               Historical, literal on purpose (W1): the one-time 10% change of
-              31 October 2026 is written into each dictionary, not built from
+              22 November 2026 is written into each dictionary, not built from
               CREATOR_COMMISSION or COMMISSION_EFFECTIVE_DATE, so a later rate
               or date change cannot rewrite it. Only the notice period for
               future changes is current policy, so only it is a parameter.

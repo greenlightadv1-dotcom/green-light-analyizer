@@ -32,10 +32,10 @@ export const CREATOR_COMMISSION = "10%";
  * could read them. Nothing computes or stores commission: settlement is
  * manual, so this date governs what the team charges, not code.
  */
-export const COMMISSION_EFFECTIVE_DATE = "2026-10-31";
+export const COMMISSION_EFFECTIVE_DATE = "2026-11-22";
 
 /**
- * The effective date written out for `locale`, e.g. "31 October 2026".
+ * The effective date written out for `locale`, e.g. "22 November 2026".
  * Plain "en" is written the en-GB way, the same as the Terms and
  * LEGAL_LAST_UPDATED, so the pricing page and the Terms show one date format.
  */

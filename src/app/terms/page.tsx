@@ -159,13 +159,13 @@ export default function TermsPage() {
       <p>
         {/*
           Historical record, written out literally on purpose (W1): this
-          sentence and §14's exception describe the one-time 31 October 2026
+          sentence and §14's exception describe the one-time 22 November 2026
           change. They must not follow CREATOR_COMMISSION or
           COMMISSION_EFFECTIVE_DATE, or a future rate change would silently
           inherit "no notice period". pricing-copy.test.ts enforces this.
         */}
         <strong>
-          This rate takes effect on 31 October 2026, with no notice period.
+          This rate takes effect on 22 November 2026, with no notice period.
         </strong>{" "}
         It applies to every deal agreed on or after that date, including a
         deal that was opened before that date but had not been agreed by it.
@@ -372,7 +372,7 @@ export default function TermsPage() {
       <p>
         {/* Historical, literal on purpose (W1): see the note in clause 6. */}
         One change is an exception to that notice period: the single 10%
-        commission in clause 6 took effect on 31 October 2026, the date this
+        commission in clause 6 took effect on 22 November 2026, the date this
         revision was published, without advance notice. Every future change that materially affects your rights
         or obligations, including any later change to the commission, is given
         the full notice described above.

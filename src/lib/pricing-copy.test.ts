@@ -111,7 +111,7 @@ test("the Terms state the single commission and no plan-dependent rate", () => {
 
 test("the effective date is a real calendar date and matches this Terms revision", () => {
   assert.match(COMMISSION_EFFECTIVE_DATE, /^\d{4}-\d{2}-\d{2}$/);
-  assert.equal(formatCommissionEffectiveDate("en-GB"), "31 October 2026");
+  assert.equal(formatCommissionEffectiveDate("en-GB"), "22 November 2026");
   // The Terms claim the rate took effect "the date this revision was
   // published", so the two dates must never drift apart.
   assert.equal(formatCommissionEffectiveDate("en-GB"), LEGAL_LAST_UPDATED);
@@ -125,11 +125,11 @@ test("the effective date is a real calendar date and matches this Terms revision
  * future changes, which is current policy, is a parameter.
  */
 const HISTORICAL_DATE: Record<string, string> = {
-  en: "31 October 2026",
-  ar: "31 أكتوبر 2026",
-  fr: "31 octobre 2026",
-  es: "31 de octubre de 2026",
-  de: "31. Oktober 2026",
+  en: "22 November 2026",
+  ar: "22 نوفمبر 2026",
+  fr: "22 novembre 2026",
+  es: "22 de noviembre de 2026",
+  de: "22. November 2026",
 };
 
 /** The same substitution LocaleProvider's t() performs. */
@@ -140,7 +140,7 @@ function interpolate(template: string, params: Record<string, string | number>):
 for (const [lang, dict] of Object.entries(DICTIONARIES)) {
   const text = dict.pricing.commissionEffective;
 
-  test(`${lang}: the pricing page's historical exception names 10% and 31 October 2026 literally`, () => {
+  test(`${lang}: the pricing page's historical exception names 10% and 22 November 2026 literally`, () => {
     assert.match(text, /10\s?%/);
     assert.ok(text.includes(HISTORICAL_DATE[lang]), `${lang} lacks the literal date`);
     assert.doesNotMatch(text, /\{date\}|\{pct\}/, "rate and date must not be parameters");
@@ -164,7 +164,7 @@ test("the historical date on Pricing matches the localized form of 2026-10-31", 
   for (const [lang, literal] of Object.entries(HISTORICAL_DATE)) {
     const tag = lang === "en" ? "en-GB" : lang;
     const formatted = new Intl.DateTimeFormat(tag, { dateStyle: "long", timeZone: "UTC" }).format(
-      new Date("2026-10-31T00:00:00Z"),
+      new Date("2026-11-22T00:00:00Z"),
     );
     assert.equal(literal, formatted, lang);
   }
@@ -181,12 +181,12 @@ test("PricingView passes only the notice period, never the live rate or date, to
 test("the pricing exception agrees with Terms §6 and §14", () => {
   const terms = readFileSync(new URL("../app/terms/page.tsx", import.meta.url), "utf8");
   // Same rate and date, literal on both sides.
-  assert.match(terms, /takes effect on 31 October 2026, with no notice period/);
-  assert.match(terms, /the single 10%\s+commission in clause 6 took effect on 31 October 2026/);
+  assert.match(terms, /takes effect on 22 November 2026, with no notice period/);
+  assert.match(terms, /the single 10%\s+commission in clause 6 took effect on 22 November 2026/);
   assert.ok(en.pricing.commissionEffective.includes("10%"));
-  assert.ok(en.pricing.commissionEffective.includes("31 October 2026"));
+  assert.ok(en.pricing.commissionEffective.includes("22 November 2026"));
   // Both protect deals agreed before the date.
-  assert.match(en.pricing.commissionEffective, /agreed before 31 October 2026 keeps the rate/);
+  assert.match(en.pricing.commissionEffective, /agreed before 22 November 2026 keeps the rate/);
   // Both keep notice for later changes, with the same number of days.
   assert.match(terms, /\{CHANGE_NOTICE_DAYS\} days&apos; notice/);
   assert.match(en.pricing.commissionEffective, /one-time change/);
@@ -196,7 +196,7 @@ test("the pricing exception agrees with Terms §6 and §14", () => {
 test("Terms §6 states the date and protects deals agreed before it", () => {
   const terms = readFileSync(new URL("../app/terms/page.tsx", import.meta.url), "utf8");
   const s6 = terms.slice(terms.indexOf("<h2>6. Commission</h2>"), terms.indexOf("<h2>7."));
-  assert.match(s6, /This rate takes effect on 31 October 2026, with no notice period\./);
+  assert.match(s6, /This rate takes effect on 22 November 2026, with no notice period\./);
   assert.match(s6, /including a\s+deal that was opened before that date but had not been agreed by it/);
   assert.match(s6, /keep the rate that applied when the\s+deal was agreed/);
 });
@@ -225,10 +225,10 @@ function noticeExceptionText(): { s6NoNotice: string; s14Exception: string } {
   return { s6NoNotice, s14Exception };
 }
 
-test("W1: the historical exception names 10% and 31 October 2026 literally", () => {
+test("W1: the historical exception names 10% and 22 November 2026 literally", () => {
   const { s6NoNotice, s14Exception } = noticeExceptionText();
-  assert.match(s6NoNotice, /takes effect on 31 October 2026, with no notice period/);
-  assert.match(s14Exception, /the single 10%\s+commission in clause 6 took effect on 31 October 2026/);
+  assert.match(s6NoNotice, /takes effect on 22 November 2026, with no notice period/);
+  assert.match(s14Exception, /the single 10%\s+commission in clause 6 took effect on 22 November 2026/);
 });
 
 test("W1: the exception is not wired to the current rate or date, so a future change cannot reuse it", () => {

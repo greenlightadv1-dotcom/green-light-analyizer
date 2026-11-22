@@ -501,7 +501,7 @@ const es: Dictionary = {
     creatorSummary: "Todos los creadores tienen el mismo acceso a todas las funciones de creador.",
     yourPlan: "Tu plan",
     commissionPerDeal: "de comisión en cada acuerdo completado",
-    commissionEffective: "La tarifa del 10% entró en vigor el 31 de octubre de 2026 para todos los creadores, como un cambio único sin plazo de preaviso. Cubre los acuerdos abiertos antes de esa fecha pero aún no cerrados; un acuerdo cerrado antes del 31 de octubre de 2026 mantiene la tarifa vigente cuando se cerró. Cualquier cambio posterior de la comisión se anunciará con al menos {days} días de antelación.",
+    commissionEffective: "La tarifa del 10% entró en vigor el 22 de noviembre de 2026 para todos los creadores, como un cambio único sin plazo de preaviso. Cubre los acuerdos abiertos antes de esa fecha pero aún no cerrados; un acuerdo cerrado antes del 22 de noviembre de 2026 mantiene la tarifa vigente cuando se cerró. Cualquier cambio posterior de la comisión se anunciará con al menos {days} días de antelación.",
     settlementNote: "Nuestro equipo lo liquida manualmente una vez acordado el trato. No hay pago dentro de la aplicación ni descuento automático.",
     featureAlias: "Un alias de entrada privado: las ofertas reenviadas a él se filtran, se valoran y se califica su riesgo",
     featureAnalyzer: "Analizador manual para las ofertas que llegan por cualquier otra vía",

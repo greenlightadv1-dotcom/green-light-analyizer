@@ -501,7 +501,7 @@ const de: Dictionary = {
     creatorSummary: "Jeder Creator erhält denselben Zugang zu allen Creator-Funktionen.",
     yourPlan: "Ihr Tarif",
     commissionPerDeal: "Provision auf jeden abgeschlossenen Deal",
-    commissionEffective: "Der Satz von 10 % gilt seit dem 31. Oktober 2026 für alle Creator, als einmalige Änderung ohne Ankündigungsfrist. Er umfasst Deals, die vorher eröffnet, aber noch nicht vereinbart wurden; ein vor dem 31. Oktober 2026 vereinbarter Deal behält den Satz, der bei seiner Vereinbarung galt. Jede spätere Änderung der Provision wird mindestens {days} Tage im Voraus angekündigt.",
+    commissionEffective: "Der Satz von 10 % gilt seit dem 22. November 2026 für alle Creator, als einmalige Änderung ohne Ankündigungsfrist. Er umfasst Deals, die vorher eröffnet, aber noch nicht vereinbart wurden; ein vor dem 22. November 2026 vereinbarter Deal behält den Satz, der bei seiner Vereinbarung galt. Jede spätere Änderung der Provision wird mindestens {days} Tage im Voraus angekündigt.",
     settlementNote: "Wird von unserem Team manuell abgerechnet, sobald ein Deal vereinbart ist. Es gibt keinen Checkout in der App und keinen automatischen Abzug.",
     featureAlias: "Eine private Eingangsadresse: weitergeleitete Angebote werden geprüft, bepreist und nach Risiko bewertet",
     featureAnalyzer: "Manueller Analyzer für Angebote, die auf anderem Weg ankommen",

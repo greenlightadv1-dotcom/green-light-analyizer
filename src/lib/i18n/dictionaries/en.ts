@@ -513,7 +513,7 @@ const en = {
     creatorSummary: "Every creator gets the same access to every creator feature.",
     yourPlan: "Your plan",
     commissionPerDeal: "commission on each completed deal",
-    commissionEffective: "The 10% rate took effect on 31 October 2026 for every creator, as a one-time change with no notice period. It covers deals opened before then but not yet agreed; a deal agreed before 31 October 2026 keeps the rate that applied when it was agreed. Any later change to the commission will be announced at least {days} days in advance.",
+    commissionEffective: "The 10% rate took effect on 22 November 2026 for every creator, as a one-time change with no notice period. It covers deals opened before then but not yet agreed; a deal agreed before 22 November 2026 keeps the rate that applied when it was agreed. Any later change to the commission will be announced at least {days} days in advance.",
     settlementNote: "Settled manually by our team once a deal is agreed. There is no in-app checkout and no automatic deduction.",
     featureAlias: "A private inbound alias: offers forwarded to it are screened, priced and risk-rated",
     featureAnalyzer: "Manual Analyzer for offers that arrive any other way",

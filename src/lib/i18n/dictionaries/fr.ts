@@ -501,7 +501,7 @@ const fr: Dictionary = {
     creatorSummary: "Chaque créateur a le même accès à toutes les fonctionnalités créateur.",
     yourPlan: "Votre offre",
     commissionPerDeal: "de commission sur chaque accord conclu",
-    commissionEffective: "Le taux de 10 % est entré en vigueur le 31 octobre 2026 pour tous les créateurs, en tant que changement ponctuel sans délai de préavis. Il couvre les accords ouverts avant cette date mais pas encore conclus ; un accord conclu avant le 31 octobre 2026 conserve le taux applicable au moment où il a été conclu. Tout changement ultérieur de la commission sera annoncé au moins {days} jours à l'avance.",
+    commissionEffective: "Le taux de 10 % est entré en vigueur le 22 novembre 2026 pour tous les créateurs, en tant que changement ponctuel sans délai de préavis. Il couvre les accords ouverts avant cette date mais pas encore conclus ; un accord conclu avant le 22 novembre 2026 conserve le taux applicable au moment où il a été conclu. Tout changement ultérieur de la commission sera annoncé au moins {days} jours à l'avance.",
     settlementNote: "Réglée manuellement par notre équipe une fois l'accord conclu. Il n'y a ni paiement dans l'application ni prélèvement automatique.",
     featureAlias: "Un alias de réception privé : les offres qui y sont transférées sont filtrées, chiffrées et évaluées en risque",
     featureAnalyzer: "Analyseur manuel pour les offres reçues par tout autre moyen",
