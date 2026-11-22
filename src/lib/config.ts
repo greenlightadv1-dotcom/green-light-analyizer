@@ -65,6 +65,13 @@ export function readConfigReport(): ConfigReport {
         "The only AI provider. Without it the Deal Co-Pilot falls back to a rule-based estimate, labelled as such in the UI, and replies fall back to written templates. Deals are still priced, just not by AI.",
     },
     {
+      name: "AI_ENDPOINT",
+      set: Boolean(process.env.AI_ENDPOINT),
+      required: false,
+      impact:
+        "Optional. Points the one AI call at another OpenAI-compatible host (e.g. Groq: https://api.groq.com/openai/v1/chat/completions); NVIDIA_API_KEY and NVIDIA_MODEL then hold that host's key and model. Unset, or not an https …/chat/completions URL, means NVIDIA.",
+    },
+    {
       name: "NVIDIA_MODEL",
       set: Boolean(process.env.NVIDIA_MODEL),
       required: false,

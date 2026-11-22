@@ -36,6 +36,32 @@ export type NvidiaProvider = {
 export const NVIDIA_ENDPOINT = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 /**
+ * AI_ENDPOINT: an optional override of the chat-completions URL, so the same
+ * OpenAI-compatible call can be pointed at another host (e.g. Groq,
+ * https://api.groq.com/openai/v1/chat/completions) by an environment change,
+ * with NVIDIA_API_KEY / NVIDIA_MODEL then holding that host's key and model.
+ * Owner decision, 2026-11-22: the free NVIDIA endpoint queues for longer than
+ * the function budget. Still exactly one provider at a time — this replaces
+ * the URL, it never adds a second one to fail over to.
+ *
+ * Only an https URL whose path ends in /chat/completions is accepted. Anything
+ * else (a typo, a plain http URL, a bare host) is ignored and the NVIDIA URL is
+ * used, so a malformed value can never send offer text somewhere unintended.
+ */
+export function resolveEndpoint(raw: string | undefined): string {
+  const value = (raw ?? "").replace(INVISIBLE, "").trim();
+  if (!value) return NVIDIA_ENDPOINT;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password) return NVIDIA_ENDPOINT;
+    if (!/\/chat\/completions\/?$/.test(url.pathname)) return NVIDIA_ENDPOINT;
+    return url.toString();
+  } catch {
+    return NVIDIA_ENDPOINT;
+  }
+}
+
+/**
  * Overridable per deployment via NVIDIA_MODEL, without a code change — and
  * NVIDIA_MODEL WINS, so this default only applies where that variable is unset.
  *
@@ -192,10 +218,15 @@ const NVAPI_PREFIX = "nvapi-";
  * would be six real characters of a live credential — and for a short typo'd
  * value it would be the whole thing.
  */
-export function describeKey(apiKey: string, notes: string[]): string {
-  const shape = apiKey.startsWith(NVAPI_PREFIX)
-    ? `${apiKey.length} chars, starts "${NVAPI_PREFIX}"`
-    : `${apiKey.length} chars, does not start "${NVAPI_PREFIX}" (an NGC or org key will not work here)`;
+export function describeKey(apiKey: string, notes: string[], endpoint = NVIDIA_ENDPOINT): string {
+  // The nvapi- remark is only meaningful against NVIDIA itself; another host
+  // (AI_ENDPOINT) issues keys of its own shape, so report just the length.
+  const shape =
+    endpoint !== NVIDIA_ENDPOINT
+      ? `${apiKey.length} chars`
+      : apiKey.startsWith(NVAPI_PREFIX)
+        ? `${apiKey.length} chars, starts "${NVAPI_PREFIX}"`
+        : `${apiKey.length} chars, does not start "${NVAPI_PREFIX}" (an NGC or org key will not work here)`;
   return notes.length ? `${shape}; stripped ${notes.join(", ")}` : shape;
 }
 
@@ -253,7 +284,7 @@ export function resolveNvidia(env: Env): NvidiaProvider | null {
   const reasoningEffort = cleanToken(env.NVIDIA_REASONING_EFFORT).value;
 
   return {
-    endpoint: NVIDIA_ENDPOINT,
+    endpoint: resolveEndpoint(env.AI_ENDPOINT),
     model: cleanToken(env.NVIDIA_MODEL).value || NVIDIA_DEFAULT_MODEL,
     apiKey,
     keyNotes,

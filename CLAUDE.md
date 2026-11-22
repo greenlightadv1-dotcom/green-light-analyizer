@@ -794,6 +794,16 @@ deal, not on company seats.
 > rather than 401. `GET /v1/models` is public, so it never validates a key.
 > No successful live model call has been made yet: no key was available.
 > Evidence and steps are in `docs/G/NVIDIA_LIVE_CHECK.md`.
+>
+> **Update — `AI_ENDPOINT` (owner decision, 2026-11-22).** The free NVIDIA
+> endpoint queued past the 32s attempt budget in production (Mistral Large 4,
+> reasoning low), so every analysis fell back to rules. The owner approved
+> pointing the one AI call at another OpenAI-compatible host. `AI_ENDPOINT`
+> (optional, https, path ending `/chat/completions`) replaces the URL;
+> `NVIDIA_API_KEY` / `NVIDIA_MODEL` then hold that host's key and model. Any
+> other value is ignored and NVIDIA is used. It is still one provider at a time,
+> with no failover chain. Planned: Groq, `openai/gpt-oss-120b`, Zero Data
+> Retention on, since Groq does not train on API data (§12).
 
 ---
 

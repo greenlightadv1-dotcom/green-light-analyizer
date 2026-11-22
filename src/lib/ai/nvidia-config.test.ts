@@ -217,3 +217,26 @@ test("an invalid key is diagnosed whether NVIDIA answers 401 or 403", async () =
   assert.equal(isCredentialRejectedStatus(429), false);
   assert.equal(isCredentialRejectedStatus(null), false);
 });
+
+test("AI_ENDPOINT overrides the URL only when it is an https chat-completions URL", async () => {
+  const { resolveEndpoint } = await import("./nvidia-config.ts");
+  const groq = "https://api.groq.com/openai/v1/chat/completions";
+  assert.equal(resolveNvidia({ NVIDIA_API_KEY: "k", AI_ENDPOINT: groq })?.endpoint, groq);
+  assert.equal(resolveEndpoint(` \u200F${groq}\u200F `), groq);
+  assert.equal(resolveEndpoint(undefined), NVIDIA_ENDPOINT);
+  assert.equal(resolveEndpoint(""), NVIDIA_ENDPOINT);
+  for (const bad of [
+    "http://api.groq.com/openai/v1/chat/completions",
+    "https://api.groq.com/openai/v1",
+    "api.groq.com/openai/v1/chat/completions",
+    "https://user:pw@api.groq.com/openai/v1/chat/completions",
+    "not a url",
+  ]) {
+    assert.equal(resolveEndpoint(bad), NVIDIA_ENDPOINT, bad);
+  }
+});
+
+test("describeKey drops the nvapi- remark for a non-NVIDIA endpoint", () => {
+  assert.equal(describeKey("gsk_abc", [], "https://api.groq.com/openai/v1/chat/completions"), "7 chars");
+  assert.match(describeKey("gsk_abc", []), /does not start "nvapi-"/);
+});

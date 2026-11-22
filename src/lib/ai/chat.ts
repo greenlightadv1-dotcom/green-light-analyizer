@@ -356,7 +356,7 @@ export async function chatJson<T>(
         // the value in the environment is not what someone thinks it is.
         log.error("nvidia.credential_rejected", {
           model: provider.model,
-          key_as_received: describeKey(provider.apiKey, provider.keyNotes),
+          key_as_received: describeKey(provider.apiKey, provider.keyNotes, provider.endpoint),
           hint: "if that length or prefix is not what you set, re-paste NVIDIA_API_KEY",
         });
       }
