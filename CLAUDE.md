@@ -1158,6 +1158,24 @@ else as a blocker.
    they do. It is not a §6 violation (that rule protects the creator), but it
    does give both sides a way around the platform.
 
+> **Update — release deployed: production at `aefe9db` (2026-11-22).** The
+> Supabase project had been paused by the Free plan's inactivity rule; it was
+> restored first. Migrations 0025–0041 were then applied to the live project as
+> one transaction (migration history name `release_0025_0041`), comments
+> stripped, after the same combined file passed the local harness (84/84). The
+> owner accepted applying without a backup (no real user data yet). Every
+> function, policy and trigger the release defines was fingerprinted
+> (`md5(pg_get_functiondef)`, policy and trigger definitions) and matches the
+> local reference exactly; row counts are unchanged and 0036's backfill left the
+> one old failed relay as `failed_permanent`. `main` was fast-forwarded from
+> `5580a78` to `aefe9db`, which also moves `LEGAL_LAST_UPDATED` and
+> `COMMISSION_EFFECTIVE_DATE` to 22 November 2026, the publication day (§8's
+> rule). Vercel production is READY; `/terms` shows the new date and
+> `/get-started` opens. Still open: `verification_reviewers` is empty, Supabase
+> Auth sign-up is not yet confirmed off, `NVIDIA_MODEL`/`CRON_SECRET`/
+> `ROLE_MAILBOX_FORWARD_TO` are unverified in Vercel, the `ENTITY_*` details,
+> malware scanning, and the signed-in smoke test.
+>
 > **Update — production at `5580a78` (2026-10-31).** `main` was fast-forwarded
 > from `24db05b` to `5580a78`. Vercel production deployment
 > `dpl_mBdwmQuq6HS8n32i7aRMYPWMKTfy` is READY on `www.greenlightadvs.com` and
