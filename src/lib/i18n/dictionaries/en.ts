@@ -389,7 +389,7 @@ const en = {
       unknown: "Not enough data",
       note: "From public YouTube statistics on your last sync, kept for at most 29 days. A count is shown only when the uploads fetched cover the whole period; hidden likes are shown as hidden, never as zero.",
       notSynced: "Sync from YouTube to see your top uploads and posting cadence.",
-      notForPlatform: "Not available for {platform}: there is no authorized API connection that provides per-post statistics.",
+      notForPlatform: "Per-post rankings and posting cadence are available for YouTube only. For {platform}, Green Light shows account-level figures only, in the card above, such as followers or the median views of recent videos, once the account is connected.",
     },
     title: "Media kit",
     description:

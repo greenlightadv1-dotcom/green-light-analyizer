@@ -377,7 +377,7 @@ const fr: Dictionary = {
       unknown: "Données insuffisantes",
       note: "D’après les statistiques publiques de YouTube lors de votre dernière synchronisation, conservées 29 jours au plus. Un nombre n’apparaît que si les vidéos récupérées couvrent toute la période ; les j’aime masqués sont indiqués comme masqués, jamais comme zéro.",
       notSynced: "Synchronisez depuis YouTube pour voir vos meilleures vidéos et votre rythme de publication.",
-      notForPlatform: "Indisponible pour {platform} : aucune connexion API autorisée ne fournit de statistiques par publication.",
+      notForPlatform: "Le classement par publication et le rythme de publication ne sont disponibles que pour YouTube. Pour {platform}, Green Light n'affiche que des chiffres au niveau du compte, dans la carte ci-dessus, comme les abonnés ou la médiane des vues des dernières vidéos, une fois le compte connecté.",
     },
     title: "Kit média",
     description:

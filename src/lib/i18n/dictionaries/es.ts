@@ -377,7 +377,7 @@ const es: Dictionary = {
       unknown: "Datos insuficientes",
       note: "Según las estadísticas públicas de YouTube de tu última sincronización, guardadas 29 días como máximo. Un recuento solo aparece si las subidas obtenidas cubren todo el periodo; los me gusta ocultos se muestran como ocultos, nunca como cero.",
       notSynced: "Sincroniza desde YouTube para ver tus mejores subidas y tu ritmo de publicación.",
-      notForPlatform: "No disponible para {platform}: no hay una conexión API autorizada que dé estadísticas por publicación.",
+      notForPlatform: "La clasificación por publicación y el ritmo de publicación solo están disponibles para YouTube. Para {platform}, Green Light muestra solo cifras de la cuenta, en la tarjeta de arriba, como seguidores o la mediana de vistas de los últimos vídeos, una vez conectada la cuenta.",
     },
     title: "Kit de medios",
     description:
