@@ -28,10 +28,23 @@ const PLANS: SubscriptionPlan[] = ["Starter", "Pro", "Elite"];
 /** Monthly / Quarterly / Yearly, per the admin renewal UI. "custom"/"none" are handled separately. */
 const DURATION_PRESETS = [30, 90, 365];
 
+/**
+ * 24 random base64url characters, then one of each class Supabase Auth's
+ * password policy requires (lower, upper, digit, symbol). base64url alone
+ * has no symbol about half the time, and the policy also applies to admin
+ * account creation.
+ */
 function temporaryPassword() {
-  const bytes = new Uint8Array(18);
+  const bytes = new Uint8Array(22);
   crypto.getRandomValues(bytes);
-  return Buffer.from(bytes).toString("base64url");
+  const pick = (set: string, b: number) => set[b % set.length];
+  return (
+    Buffer.from(bytes.subarray(0, 18)).toString("base64url") +
+    pick("abcdefghijkmnopqrstuvwxyz", bytes[18]) +
+    pick("ABCDEFGHJKLMNPQRSTUVWXYZ", bytes[19]) +
+    pick("23456789", bytes[20]) +
+    pick("!#$%*+-=?@^_", bytes[21])
+  );
 }
 
 /**
