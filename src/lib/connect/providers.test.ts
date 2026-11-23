@@ -55,6 +55,7 @@ test("TikTok uses client_key and comma-separated scopes, without PKCE on the web
   assert.equal(url.searchParams.get("client_key"), "cid");
   assert.equal(url.searchParams.get("client_id"), null);
   assert.equal(url.searchParams.get("scope"), "user.info.basic,user.info.profile,user.info.stats,video.list");
+  assert.equal(url.searchParams.get("disable_auto_auth"), "1");
   const body = tokenRequestBody("tiktok", { clientId: "cid", clientSecret: "s", code: "c", redirectUri: "r" });
   assert.equal(body.get("client_key"), "cid");
   assert.equal(body.get("grant_type"), "authorization_code");

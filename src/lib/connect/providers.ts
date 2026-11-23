@@ -103,7 +103,11 @@ export function buildAuthorizeUrl(
     params.set("code_challenge", input.codeChallenge);
     params.set("code_challenge_method", "S256");
   }
+  // Always show the consent screen, so the creator sees which account and
+  // which permissions they are granting, even when the platform remembers
+  // an earlier grant.
   if (platform === "twitch") params.set("force_verify", "true");
+  if (platform === "tiktok") params.set("disable_auto_auth", "1");
   return `${config.authorizeUrl}?${params.toString()}`;
 }
 
