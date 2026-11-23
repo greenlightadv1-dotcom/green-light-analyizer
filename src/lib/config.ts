@@ -178,6 +178,34 @@ export function readConfigReport(): ConfigReport {
       impact: "Same as META_APP_ID — both are needed together.",
     },
     {
+      name: "NEXT_PUBLIC_LIVE_CONNECTIONS",
+      set: Boolean(process.env.NEXT_PUBLIC_LIVE_CONNECTIONS),
+      required: false,
+      impact:
+        "Comma-separated platforms whose connection is switched on: instagram, twitch, kick, tiktok. A platform not listed is not offered, even with credentials. It is read at build time, so redeploy after changing it.",
+    },
+    {
+      name: "TWITCH_CLIENT_ID",
+      set: Boolean(process.env.TWITCH_CLIENT_ID) && Boolean(process.env.TWITCH_CLIENT_SECRET),
+      required: false,
+      impact:
+        "Twitch account connection (with TWITCH_CLIENT_SECRET). Without both, Twitch stays self-reported. Redirect URL to register: <app URL>/api/connect/twitch/callback.",
+    },
+    {
+      name: "KICK_CLIENT_ID",
+      set: Boolean(process.env.KICK_CLIENT_ID) && Boolean(process.env.KICK_CLIENT_SECRET),
+      required: false,
+      impact:
+        "Kick account connection (with KICK_CLIENT_SECRET). Without both, Kick stays self-reported. Redirect URL to register: <app URL>/api/connect/kick/callback.",
+    },
+    {
+      name: "TIKTOK_CLIENT_KEY",
+      set: Boolean(process.env.TIKTOK_CLIENT_KEY) && Boolean(process.env.TIKTOK_CLIENT_SECRET),
+      required: false,
+      impact:
+        "TikTok account connection (with TIKTOK_CLIENT_SECRET). Also needs TikTok's app review for user.info.stats and video.list. Redirect URL to register: <app URL>/api/connect/tiktok/callback.",
+    },
+    {
       name: "SUPABASE_WEBHOOK_SECRET",
       set: Boolean(process.env.SUPABASE_WEBHOOK_SECRET),
       required: false,

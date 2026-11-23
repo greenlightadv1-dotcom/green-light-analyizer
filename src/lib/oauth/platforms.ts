@@ -16,13 +16,13 @@ import type { OAuthPlatform } from "@/lib/types/database";
  * surface from Instagram with their own insights, not a second name for the
  * same connection, and the Settings connect list treats them separately.
  */
-export const OAUTH_PLACEHOLDER_PLATFORMS = ["x", "tiktok", "twitch", "facebook"] as const;
+// Twitch and TikTok left this list when their real account connections were
+// built (0042, src/lib/connect/); what remains has no connector at all.
+export const OAUTH_PLACEHOLDER_PLATFORMS = ["x", "facebook"] as const;
 export type OAuthPlaceholderPlatform = (typeof OAUTH_PLACEHOLDER_PLATFORMS)[number];
 
 export const OAUTH_PLACEHOLDER_LABELS: Record<OAuthPlaceholderPlatform, string> = {
   x: "X (Twitter)",
-  tiktok: "TikTok",
-  twitch: "Twitch",
   facebook: "Facebook",
 };
 

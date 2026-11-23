@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getOAuthConnection } from "./tokens";
+import { parseFollowerCountries } from "./instagram-demographics";
 import type { CountryShare } from "@/lib/types/database";
 
 /**
@@ -13,9 +14,19 @@ import type { CountryShare } from "@/lib/types/database";
  * on it.
  */
 
-const AUTH_URL = "https://www.facebook.com/v19.0/dialog/oauth";
-const TOKEN_URL = "https://graph.facebook.com/v19.0/oauth/access_token";
-const SCOPE = "instagram_basic,instagram_manage_insights,pages_show_list";
+/**
+ * One Graph API version for every call. v19.0 expired on 2026-05-21 and every
+ * call pinned to it would fail, so this was moved to v26.0 (released
+ * 2026-07-29, the latest when checked on 2026-11-23). Meta keeps a version
+ * for about two years; move it before that runs out.
+ */
+export const GRAPH_VERSION = "v26.0";
+const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+const AUTH_URL = `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`;
+const TOKEN_URL = `${GRAPH}/oauth/access_token`;
+// Instagram API with Facebook Login: insights need instagram_manage_insights
+// and pages_read_engagement as well as the account basics.
+const SCOPE = "instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement";
 
 function redirectUri(): string {
   const base = process.env.NEXT_PUBLIC_APP_URL;
@@ -40,6 +51,27 @@ export function buildAuthorizationUrl(state: string): string | null {
 
 type MetaTokenResponse = { access_token: string; expires_in?: number };
 
+async function tokenCall(params: URLSearchParams): Promise<MetaTokenResponse | null> {
+  try {
+    const response = await fetch(`${TOKEN_URL}?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return null;
+    const body: Partial<MetaTokenResponse> = await response.json();
+    return typeof body.access_token === "string" && body.access_token
+      ? { access_token: body.access_token, expires_in: body.expires_in }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Code → short-lived user token (about an hour) → long-lived token (about 60
+ * days, with its real expires_in). The second step used to be missing, so a
+ * stored token was treated as valid for 60 days while it really died within
+ * the hour and every later sync failed.
+ */
 export async function exchangeCodeForTokens(
   code: string,
 ): Promise<MetaTokenResponse | null> {
@@ -47,21 +79,20 @@ export async function exchangeCodeForTokens(
   const appSecret = process.env.META_APP_SECRET;
   if (!appId || !appSecret) return null;
 
-  try {
-    const params = new URLSearchParams({
+  const shortLived = await tokenCall(
+    new URLSearchParams({ client_id: appId, client_secret: appSecret, redirect_uri: redirectUri(), code }),
+  );
+  if (!shortLived) return null;
+
+  const longLived = await tokenCall(
+    new URLSearchParams({
+      grant_type: "fb_exchange_token",
       client_id: appId,
       client_secret: appSecret,
-      redirect_uri: redirectUri(),
-      code,
-    });
-    const response = await fetch(`${TOKEN_URL}?${params.toString()}`, {
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch {
-    return null;
-  }
+      fb_exchange_token: shortLived.access_token,
+    }),
+  );
+  return longLived ?? shortLived;
 }
 
 /**
@@ -74,7 +105,7 @@ export async function resolveInstagramBusinessAccountId(
 ): Promise<string | null> {
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
+      `${GRAPH}/me/accounts?fields=instagram_business_account&access_token=${encodeURIComponent(accessToken)}`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!response.ok) return null;
@@ -122,7 +153,7 @@ export async function fetchBasicMetrics(
 ): Promise<InstagramBasicMetrics | null> {
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v19.0/${igUserId}?fields=followers_count,media_count&access_token=${encodeURIComponent(accessToken)}`,
+      `${GRAPH}/${igUserId}?fields=followers_count,media_count&access_token=${encodeURIComponent(accessToken)}`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!response.ok) return null;
@@ -154,7 +185,7 @@ export async function fetchRecentCaptions(
 ): Promise<InstagramRecentPost[] | null> {
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v19.0/${igUserId}/media?fields=caption&limit=10&access_token=${encodeURIComponent(accessToken)}`,
+      `${GRAPH}/${igUserId}/media?fields=caption&limit=10&access_token=${encodeURIComponent(accessToken)}`,
       { signal: AbortSignal.timeout(10_000) },
     );
     if (!response.ok) return null;
@@ -170,34 +201,28 @@ export async function fetchRecentCaptions(
   }
 }
 
-/** Audience country breakdown via Instagram Graph API insights. */
+/**
+ * Audience country breakdown via `follower_demographics` (the old
+ * `audience_country` metric is retired). Parsed by instagram-demographics.ts.
+ */
 export async function fetchAudienceCountries(
   accessToken: string,
   igUserId: string,
 ): Promise<CountryShare[] | null> {
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/${igUserId}/insights?metric=audience_country&period=lifetime&access_token=${encodeURIComponent(accessToken)}`,
-      { signal: AbortSignal.timeout(10_000) },
-    );
+    const params = new URLSearchParams({
+      metric: "follower_demographics",
+      period: "lifetime",
+      metric_type: "total_value",
+      breakdown: "country",
+      timeframe: "last_90_days",
+      access_token: accessToken,
+    });
+    const response = await fetch(`${GRAPH}/${igUserId}/insights?${params.toString()}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!response.ok) return null;
-
-    const body: {
-      data?: { values?: { value?: Record<string, number> }[] }[];
-    } = await response.json();
-    const countryCounts = body.data?.[0]?.values?.[0]?.value;
-    if (!countryCounts) return null;
-
-    const total = Object.values(countryCounts).reduce((sum, n) => sum + n, 0);
-    if (total === 0) return null;
-
-    return Object.entries(countryCounts)
-      .map(([country, count]) => ({
-        country,
-        pct: Math.round((count / total) * 100),
-      }))
-      .sort((a, b) => b.pct - a.pct)
-      .slice(0, 10);
+    return parseFollowerCountries(await response.json());
   } catch {
     return null;
   }

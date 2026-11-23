@@ -1563,3 +1563,45 @@ Not deployed, and no migration. Status and evidence: `docs/G/G_PHASE1_STATUS.md`
   - suggestions follow the page;
   - `a11y-g-phase1.mjs` found 0 axe violations;
   - voice is unchanged and tested with a fake recognizer only.
+
+## 23. Platform account connections (2026-11-23, owner-approved)
+
+The owner approved building every platform connection (an exception to §16's
+freeze). **Migration 0042** (`platform_account_connections`) extends the
+platform checks and adds `media_kits.stats_synced_at`.
+
+- **Twitch, Kick, TikTok** (`src/lib/connect/`, `/api/connect/[platform]/start|callback`):
+  the creator signs in on the platform, which proves ownership; the account's
+  public counts then come from the official API, labelled as synced.
+  - Twitch: no scope at all; follower total, plus the median views of the last
+    20 past broadcasts.
+  - Kick: OAuth 2.1 with PKCE (the verifier is derived from the signed state,
+    nothing stored); the public API has no follower count, so Kick proves the
+    channel and keeps its name in sync only.
+  - TikTok: `user.info.basic/profile/stats` and `video.list`; followers,
+    video count, median views of the last 20 videos. Needs TikTok app review.
+  - None of them gives audience geography: that stays self-reported (§7.2).
+  - One platform account can back only one Green Light account (checked at the
+    callback, fail closed). The OAuth state is now bound to its flow
+    (`connect:<platform>`), so a state for one platform cannot finish another.
+  - Disconnect deletes the token and clears the synced counts.
+- **TikTok is now a storable platform** (`Platform`, `PLATFORMS`, five-platform
+  ceiling).
+- **Instagram:** Graph API moved from the expired v19.0 to **v26.0**, audience
+  geography reads `follower_demographics` (the retired `audience_country` is
+  gone), the scope gained `pages_read_engagement`, and the short-lived Meta
+  token is now exchanged for a long-lived one with its real expiry. Still
+  needs Meta App Review.
+- **Switching on:** a connection is offered only when the platform is listed
+  in `NEXT_PUBLIC_LIVE_CONNECTIONS` (instagram, twitch, kick, tiktok) **and**
+  its app credentials are set (`TWITCH_CLIENT_ID/SECRET`, `KICK_CLIENT_ID/SECRET`,
+  `TIKTOK_CLIENT_KEY/SECRET`, `META_APP_ID/SECRET`). Redirect URL to register:
+  `<app URL>/api/connect/<platform>/callback` (Instagram keeps
+  `/api/oauth/instagram/callback`).
+- **YouTube:** Google data-access verification is not done yet (100-user
+  lifetime cap, unverified-app screen). Submission pack:
+  `docs/RELEASE/GOOGLE_OAUTH_VERIFICATION.md`.
+- **Privacy Policy** gained §6a and names Groq as the AI processor; it now has
+  its own date (`PRIVACY_LAST_UPDATED`), separate from the Terms'.
+- **Not verified live:** no Twitch, Kick, TikTok or Meta app exists yet, so no
+  real call has been made. Shapes follow the official docs read on 2026-11-23.

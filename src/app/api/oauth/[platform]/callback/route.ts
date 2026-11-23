@@ -107,8 +107,11 @@ export async function GET(
   // rather than a structural `in` check on the union, which TS can't narrow
   // cleanly here since the two token shapes only differ by optional fields.
   const isGoogleToken = platform === "youtube";
+  // Both providers now return expires_in: Google's short-lived token, and the
+  // long-lived Meta token instagram.ts exchanges for (about 60 days). The
+  // 60-day fallback only covers a Meta response that omits it.
   const expiresInSeconds =
-    isGoogleToken && typeof tokens.expires_in === "number"
+    typeof tokens.expires_in === "number" && tokens.expires_in > 0
       ? tokens.expires_in
       : 60 * 24 * 60 * 60;
 
