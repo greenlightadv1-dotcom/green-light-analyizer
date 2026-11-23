@@ -35,9 +35,12 @@ export const config = {
      * route authenticates itself with CRON_SECRET and refuses every request
      * when it is unset (lib/cron-auth.ts).
      *
+     * .txt files in public/ (platform site-verification files such as TikTok's
+     * URL-prefix signature) must reach a signed-out verifier unredirected.
+     *
      * Auth route handlers are intentionally NOT excluded: the guard treats
      * /auth/* as public itself, so the session still refreshes on those.
      */
-    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|api/cron/|api/dev/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|branding/|api/webhooks/|api/cron/|api/dev/|preview|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt)$).*)",
   ],
 };
