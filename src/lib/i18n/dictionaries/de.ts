@@ -377,7 +377,6 @@ const de: Dictionary = {
       unknown: "Zu wenig Daten",
       note: "Aus öffentlichen YouTube-Statistiken deiner letzten Synchronisierung, höchstens 29 Tage gespeichert. Eine Anzahl erscheint nur, wenn die abgerufenen Uploads den ganzen Zeitraum abdecken; ausgeblendete Likes werden als ausgeblendet gezeigt, nie als null.",
       notSynced: "Synchronisiere mit YouTube, um deine meistgesehenen Uploads und deinen Upload-Rhythmus zu sehen.",
-      notForPlatform: "Ranking pro Beitrag und Veröffentlichungsrhythmus gibt es nur für YouTube. Für {platform} zeigt Green Light nur Kontowerte in der Karte oben, etwa Follower oder den Median der Aufrufe der letzten Videos, sobald das Konto verbunden ist.",
     },
     title: "Media-Kit",
     description:
@@ -421,7 +420,6 @@ const de: Dictionary = {
       syncNow: "Jetzt synchronisieren",
       disconnect: "Trennen",
       kickNote: "Die Kick-API liefert keine Followerzahl. Diese Verbindung belegt daher, dass der Kanal dir gehört, und hält seinen Namen aktuell.",
-      geoNote: "{platform} gibt Apps keine Zielgruppen-Geografie, daher bleibt diese Angabe selbst gemeldet.",
       connectedBanner: "{platform} ist verbunden. Seine Zahlen kommen jetzt aus der API von {platform}.",
       errors: {
         unavailable: "Diese Verbindung ist noch nicht freigeschaltet.",

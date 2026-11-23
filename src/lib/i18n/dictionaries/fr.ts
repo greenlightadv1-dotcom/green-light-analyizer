@@ -377,7 +377,6 @@ const fr: Dictionary = {
       unknown: "Données insuffisantes",
       note: "D’après les statistiques publiques de YouTube lors de votre dernière synchronisation, conservées 29 jours au plus. Un nombre n’apparaît que si les vidéos récupérées couvrent toute la période ; les j’aime masqués sont indiqués comme masqués, jamais comme zéro.",
       notSynced: "Synchronisez depuis YouTube pour voir vos meilleures vidéos et votre rythme de publication.",
-      notForPlatform: "Le classement par publication et le rythme de publication ne sont disponibles que pour YouTube. Pour {platform}, Green Light n'affiche que des chiffres au niveau du compte, dans la carte ci-dessus, comme les abonnés ou la médiane des vues des dernières vidéos, une fois le compte connecté.",
     },
     title: "Kit média",
     description:
@@ -421,7 +420,6 @@ const fr: Dictionary = {
       syncNow: "Synchroniser",
       disconnect: "Déconnecter",
       kickNote: "L'API de Kick ne fournit pas le nombre d'abonnés : cette connexion prouve que la chaîne est à vous et garde son nom à jour.",
-      geoNote: "{platform} ne donne aux applications aucune donnée géographique sur l'audience : elle reste déclarée par vous.",
       connectedBanner: "{platform} est connecté. Ses chiffres viennent désormais de l'API de {platform}.",
       errors: {
         unavailable: "Cette connexion n'est pas encore activée.",

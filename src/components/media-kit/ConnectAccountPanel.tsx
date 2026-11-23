@@ -108,16 +108,12 @@ export function ConnectAccountPanel({ platform, kit }: { platform: Platform; kit
         </>
       )}
 
-      <p className="mt-3 text-xs leading-relaxed text-fg-subtle">
-        {t("mediaKit.connect.geoNote", { platform: label })}
-      </p>
-
       {state.error ? (
         <div className="mt-2.5">
           <Alert>{t(state.error)}</Alert>
         </div>
       ) : null}
-      {state.synced ? <p className="mt-2.5 text-xs text-accent">{t("common.synced")}</p> : null}
+      {state.synced && connected ? <p className="mt-2.5 text-xs text-accent">{t("common.synced")}</p> : null}
     </div>
   );
 }

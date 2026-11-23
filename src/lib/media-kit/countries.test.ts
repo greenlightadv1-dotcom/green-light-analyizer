@@ -126,3 +126,14 @@ test("caps the list length", () => {
   const many = Array.from({ length: 11 }, (_, i) => `A${i} 1`).join("\n");
   assert.ok(!parseCountryShares(many).ok);
 });
+
+test("reads Arabic-Indic digits, the Arabic percent sign and the Arabic comma", () => {
+  assert.deepEqual(parseCountryShares("EG ٤٠٪، SA ٢٥"), {
+    ok: true,
+    value: [
+      { country: "EG", pct: 40 },
+      { country: "SA", pct: 25 },
+    ],
+  });
+  assert.deepEqual(parseCountryShares("AE ۱۵"), { ok: true, value: [{ country: "AE", pct: 15 }] });
+});

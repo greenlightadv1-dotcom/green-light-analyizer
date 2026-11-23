@@ -197,9 +197,8 @@ function ConnectionRow({
  * own either: reach, category and self-reported audience geography (§7.1)
  * are still edited on the Media Kit, beside the data they describe.
  *
- * Only platforms with a working connector are listed — the rest are the
- * OAuthPlaceholderCard's job, so no control here points at a route that
- * cannot complete.
+ * Only platforms with a working connector are listed, so no control here
+ * points at a route that cannot complete.
  */
 export function SocialConnections({
   connections = {},

@@ -147,7 +147,7 @@ await page.keyboard.press("Escape");
 await page.goto(BASE + "/register?journey=company", { waitUntil: "networkidle" });
 check(new URL(page.url()).pathname === "/get-started", "/register redirects to Get Started (no account before approval)");
 // Media Kit content performance (0035): source and sync time shown, hidden likes never 0%,
-// uncovered windows say "Not enough data", other platforms explain why there is nothing.
+// uncovered windows say "Not enough data"; other platforms show no empty panel.
 await page.goto(BASE + "/preview/media-kit", { waitUntil: "networkidle" });
 const panel = page.locator("[data-content-panel]").first();
 check(await panel.isVisible(), "content performance panel renders for YouTube");
@@ -155,7 +155,7 @@ check((await panel.innerText()).includes("YouTube Data API"), "panel names its s
 check((await panel.innerText()).includes("likes hidden"), "hidden likes are shown as hidden");
 check(!(await panel.innerText()).includes("0% engagement"), "hidden likes are never shown as 0%");
 check((await panel.innerText()).includes("Not enough data"), "an uncovered 90-day window is not guessed");
-check(await page.getByText(/Not available for (Twitch|Kick|Instagram)/).count() >= 1, "non-YouTube platforms explain why there is no per-post data");
+check((await page.locator("[data-content-panel]").count()) === 1, "only YouTube shows a content performance panel");
 await browser.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

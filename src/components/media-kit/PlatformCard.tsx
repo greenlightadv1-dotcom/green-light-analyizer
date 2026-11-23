@@ -54,7 +54,9 @@ export function PlatformCard({
     saveMediaKit,
     { error: null, savedPlatform: null },
   );
-  const [open, setOpen] = useState(!kit);
+  // Closed by default: an empty form for every platform not yet added made the
+  // page a wall of inputs. The creator opens one by choosing to add it.
+  const [open, setOpen] = useState(false);
 
   const saved = state.savedPlatform === platform && !state.error;
 
@@ -81,7 +83,11 @@ export function PlatformCard({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="text-xs text-fg-muted transition hover:text-fg/80"
+          className={
+            kit || open
+              ? "text-xs text-fg-muted transition hover:text-fg/80"
+              : "inline-flex items-center rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs font-medium text-fg-secondary transition-colors hover:bg-surface-hover hover:text-fg focus-visible:focus-ring"
+          }
         >
           {open ? t("common.close") : kit ? t("common.edit") : t("common.add")}
         </button>

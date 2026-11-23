@@ -2,28 +2,18 @@
 
 import { useTranslation } from "@/components/LocaleProvider";
 import { cadence, topContent } from "@/lib/youtube/content-analytics";
-import { PLATFORM_LABELS } from "@/lib/media-kit/platforms";
 import type { KitVideo } from "@/lib/media-kit/queries";
-import type { Platform } from "@/lib/types/database";
 
 /**
  * Top content and posting cadence (0035). YouTube only, from the uploads the
  * YouTube Data API returned on the last sync, with the source and sync time
  * shown. Anything the data cannot support is shown as unavailable, never as
- * zero, and other platforms say why they have no figures.
+ * zero. Other platforms do not render this panel.
  */
-export function ContentPerformancePanel({ videos, complete, unavailablePlatform }: { videos: KitVideo[]; complete: boolean; unavailablePlatform?: Platform }) {
+export function ContentPerformancePanel({ videos, complete }: { videos: KitVideo[]; complete: boolean }) {
   const { t, locale } = useTranslation();
   const nf = new Intl.NumberFormat(locale);
   const df = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
-  if (unavailablePlatform) {
-    return (
-      <section className="rounded-control border border-line bg-surface-muted p-3 text-xs text-fg-muted">
-        <h4 className="mb-1 text-sm font-semibold text-fg">{t("mediaKit.content.title")}</h4>
-        {t("mediaKit.content.notForPlatform", { platform: PLATFORM_LABELS[unavailablePlatform] ?? unavailablePlatform })}
-      </section>
-    );
-  }
   if (!videos.length) {
     return (
       <section className="rounded-control border border-line bg-surface-muted p-3 text-xs text-fg-muted">
