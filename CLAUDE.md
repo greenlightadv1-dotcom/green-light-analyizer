@@ -1135,6 +1135,15 @@ else as a blocker.
 > accurate pricing and legal copy, the role-based authorization that change
 > requires, the support channels and published hours, and their tests and
 > docs (see §8's update). It does not cover unrelated feature work.
+>
+> **Approved exception (2026-11-23): Media Kit de-clutter.** The owner asked
+> for the crowded `/media-kit` page to be simplified before launch. Unadded
+> platform forms start closed (one "Add" button each), the shareable-link card
+> shows only once a link exists, categories and documents sit in a collapsed
+> section, and the "Coming soon" card, TikTok's repeated geography note and the
+> non-YouTube "Content performance" placeholder are gone. The audience field now
+> accepts Arabic-Indic digits, `٪` and `،`. No schema, action or labelling
+> change; verified/self-reported tags are untouched.
 
 **Definition of Done ("Launch Ready")** — all of these must be true:
 1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,

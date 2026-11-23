@@ -377,7 +377,6 @@ const es: Dictionary = {
       unknown: "Datos insuficientes",
       note: "Según las estadísticas públicas de YouTube de tu última sincronización, guardadas 29 días como máximo. Un recuento solo aparece si las subidas obtenidas cubren todo el periodo; los me gusta ocultos se muestran como ocultos, nunca como cero.",
       notSynced: "Sincroniza desde YouTube para ver tus mejores subidas y tu ritmo de publicación.",
-      notForPlatform: "La clasificación por publicación y el ritmo de publicación solo están disponibles para YouTube. Para {platform}, Green Light muestra solo cifras de la cuenta, en la tarjeta de arriba, como seguidores o la mediana de vistas de los últimos vídeos, una vez conectada la cuenta.",
     },
     title: "Kit de medios",
     description:
@@ -421,7 +420,6 @@ const es: Dictionary = {
       syncNow: "Sincronizar ahora",
       disconnect: "Desconectar",
       kickNote: "La API de Kick no ofrece el número de seguidores, así que esta conexión demuestra que el canal es tuyo y mantiene su nombre actualizado.",
-      geoNote: "{platform} no da a las aplicaciones la geografía de la audiencia, así que esa información sigue siendo autodeclarada.",
       connectedBanner: "{platform} conectado. Sus cifras ahora vienen de la API de {platform}.",
       errors: {
         unavailable: "Esta conexión aún no está activada.",

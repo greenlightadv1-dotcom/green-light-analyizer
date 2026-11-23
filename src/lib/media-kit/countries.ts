@@ -27,8 +27,21 @@ export function formatCountryShares(shares: CountryShare[] | null): string {
   return shares.map((s) => `${s.country} ${s.pct}`).join("\n");
 }
 
+/**
+ * Arabic phone keyboards type Arabic-Indic digits (٠-٩, or ۰-۹ in the Persian
+ * range), the Arabic percent sign and the Arabic comma by default. Fold them
+ * to their ASCII forms so "EG ٤٠٪، SA ٢٥" reads the same as "EG 40%, SA 25".
+ */
+export function normalizeArabicInput(input: string): string {
+  return input
+    .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/\u066A/g, "%")
+    .replace(/\u060C/g, ",");
+}
+
 export function parseCountryShares(input: string): ParseResult {
-  const trimmed = input.trim();
+  const trimmed = normalizeArabicInput(input).trim();
   if (!trimmed) return { ok: true, value: [] };
 
   // Scan for code/percentage pairs rather than splitting on separators first.

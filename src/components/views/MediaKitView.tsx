@@ -13,7 +13,6 @@ import { ContentPerformancePanel } from "@/components/media-kit/ContentPerforman
 import type { KitVideo } from "@/lib/media-kit/queries";
 import type { MediaKitSnapshot } from "@/lib/types/database";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
-import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
 import { ConnectAccountPanel } from "@/components/media-kit/ConnectAccountPanel";
 import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
@@ -98,17 +97,32 @@ export function MediaKitView({
       ) : null}
       {connectError ? <ConnectErrorBanner value={connectError} /> : null}
 
-      <div className="mb-4 grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* The link card is empty until the profile is saved, so it only takes
+          space once there is a link to share. */}
+      {profile.shareable_slug ? (
+        <div className="mb-4 grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <CreatorProfileCard profile={profile} />
+          </div>
+          <ShareableLinkCard slug={profile.shareable_slug} />
+        </div>
+      ) : (
+        <div className="mb-4">
           <CreatorProfileCard profile={profile} />
         </div>
-        <ShareableLinkCard slug={profile.shareable_slug} />
-      </div>
+      )}
 
       {/* Feature 3: the controlled classification Discovery and G filter on. */}
-      <GlassPanel as="section" className="mb-4 p-5 sm:p-6">
-        <h2 className="text-base font-semibold text-fg">{t("onboarding.step.classification.title")}</h2>
-        <p className="mt-1 mb-4 text-sm text-fg/60">{t("onboarding.step.classification.body")}</p>
+      {/* Collapsed: set once in Get set up, edited here only when needed. */}
+      <GlassPanel as="details" className="group mb-4 p-5 sm:p-6">
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+          <span>
+            <span className="block text-base font-semibold text-fg">{t("onboarding.step.classification.title")}</span>
+            <span className="mt-1 block text-sm text-fg/60">{t("onboarding.step.classification.body")}</span>
+          </span>
+          <span aria-hidden className="mt-0.5 text-lg leading-none text-fg-muted transition-transform group-open:rotate-90 rtl:-scale-x-100">›</span>
+        </summary>
+        <div className="mt-4" />
         <ClassificationForm
           demo={demo}
           initial={{
@@ -220,9 +234,7 @@ export function MediaKitView({
                       <YoutubeSyncPanel kit={kit} snapshots={snapshots.filter((s) => s.media_kit_id === kit.id)} />
                       <ContentPerformancePanel videos={videos.filter((v) => v.media_kit_id === kit.id)} complete={kit.recent_videos_complete === true} />
                     </>
-                  ) : (
-                    <ContentPerformancePanel unavailablePlatform={platform} videos={[]} complete={false} />
-                  )}
+                  ) : null}
 
                   {platform === "instagram" &&
                   kit.analytics_oauth_connected === true ? (
@@ -235,9 +247,6 @@ export function MediaKitView({
         })}
       </div>
 
-      <div className="mt-4">
-        <OAuthPlaceholderCard />
-      </div>
     </>
   );
 }
