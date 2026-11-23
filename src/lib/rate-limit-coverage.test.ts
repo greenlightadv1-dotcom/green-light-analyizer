@@ -57,6 +57,7 @@ const GUARDED: [file: string, fn: string, action: string][] = [
   ["app/(app)/shortlists/actions.ts", "createShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "renameShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "deleteShortlist", "shortlist_write"],
+  ["lib/connect/actions.ts", "syncConnectedAccount", "platform_sync"],
   ["app/(app)/shortlists/actions.ts", "addToShortlist", "shortlist_write"],
   ["app/(app)/shortlists/actions.ts", "removeFromShortlist", "shortlist_write"],
   ["app/(app)/portfolio/actions.ts", "savePortfolioItem", "portfolio_write"],

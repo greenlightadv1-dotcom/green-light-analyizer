@@ -6,6 +6,7 @@ import {
   SECURITY_EMAIL,
   operatorIdentity,
   PRIVACY_EMAIL,
+  PRIVACY_LAST_UPDATED,
   RETENTION,
 } from "@/lib/constants/legal";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
@@ -20,6 +21,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
+      lastUpdated={PRIVACY_LAST_UPDATED}
       summary="What we collect, why we collect it, who processes it on our behalf, how long we keep it, and how to get it deleted. Written to describe what the software actually does rather than to reserve every right we could."
     >
       <h2>1. Who is responsible for your data</h2>
@@ -335,6 +337,28 @@ export default function PrivacyPage() {
         deliver the message.
       </p>
 
+      <h2>6a. Twitch, Kick and TikTok accounts</h2>
+      <p>
+        If you connect a Twitch, Kick or TikTok account, you sign in on that
+        platform&apos;s own site and we receive an access token for your
+        account. With it we read only: your account&apos;s id and handle, and
+        where the platform provides them your follower count, your number of
+        videos and the view counts of your most recent videos (we store their
+        median). We ask for no permission to post, message or change anything,
+        and these platforms give us no information about where your audience
+        is, so that part of your media kit stays self-reported.
+      </p>
+      <p>
+        We use the connection to show that the account is yours and to keep
+        those numbers current in your media kit and in the price
+        recommendations made for your offers. We do not use it for advertising
+        and we do not sell or transfer it. One platform account can be
+        connected to only one Green Light account. Disconnecting in your media
+        kit deletes the token and clears the synced numbers immediately; you
+        can also remove Green Light from the app permissions in your Twitch,
+        Kick or TikTok settings.
+      </p>
+
       <h2>7. Who else processes your data</h2>
       <p>
         We do not sell personal data and we do not share it for advertising. We
@@ -354,8 +378,9 @@ export default function PrivacyPage() {
           platform email on a creator&apos;s behalf.
         </li>
         <li>
-          <strong>NVIDIA</strong> — the AI service that produces price
+          <strong>Groq</strong> — the AI service that produces price
           recommendations, risk ratings and draft replies (see section 4).
+          Before 23 November 2026 this was <strong>NVIDIA</strong>.
         </li>
         <li>
           <strong>Google</strong> — YouTube statistics and analytics you have
@@ -364,6 +389,10 @@ export default function PrivacyPage() {
         <li>
           <strong>Meta</strong> — Instagram insights you have connected, and
           WhatsApp notification delivery if you opted in.
+        </li>
+        <li>
+          <strong>Twitch, Kick and TikTok</strong> — only if you connect an
+          account there (section 6a).
         </li>
         <li>
           <strong>IP2WHOIS</strong> — public domain registration lookups for

@@ -70,10 +70,20 @@ export const SUPPORT_EMAIL = "support@greenlightadvs.com";
 export const SECURITY_EMAIL = "security@greenlightadvs.com";
 
 /**
- * Both documents carry the same date so a reader can tell at a glance whether
- * they are looking at one revision or two. Update on every substantive change.
+ * The Terms' revision date. The Terms state that the 10% rate took effect on
+ * the date that revision was published, so this must stay equal to
+ * COMMISSION_EFFECTIVE_DATE (pricing-copy.test.ts) until the Terms themselves
+ * change. Update on every substantive change to the Terms.
  */
 export const LEGAL_LAST_UPDATED = "22 November 2026";
+
+/**
+ * The Privacy Policy's own revision date. It moved apart from the Terms on
+ * 23 November 2026, when section 6a (Twitch, Kick and TikTok connections) was
+ * added and the Terms did not change. Update on every substantive change to
+ * the Privacy Policy.
+ */
+export const PRIVACY_LAST_UPDATED = "23 November 2026";
 
 /** Notice given before a material change takes effect. */
 export const CHANGE_NOTICE_DAYS = 30;

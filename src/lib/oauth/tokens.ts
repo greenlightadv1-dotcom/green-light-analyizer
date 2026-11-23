@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { OAuthPlatform } from "@/lib/types/database";
+import type { TokenPlatform } from "@/lib/types/database";
 
 export type StoredTokens = {
   accessToken: string;
@@ -19,7 +19,7 @@ export type StoredTokens = {
 
 export async function saveOAuthTokens(
   creatorId: string,
-  platform: OAuthPlatform,
+  platform: TokenPlatform,
   tokens: StoredTokens,
 ): Promise<void> {
   const service = createAdminClient();
@@ -40,7 +40,7 @@ export async function saveOAuthTokens(
 
 export async function getOAuthConnection(
   creatorId: string,
-  platform: OAuthPlatform,
+  platform: TokenPlatform,
 ) {
   const service = createAdminClient();
   const { data } = await service
@@ -54,7 +54,7 @@ export async function getOAuthConnection(
 
 export async function deleteOAuthConnection(
   creatorId: string,
-  platform: OAuthPlatform,
+  platform: TokenPlatform,
 ): Promise<void> {
   const service = createAdminClient();
   await service

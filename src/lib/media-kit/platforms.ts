@@ -9,13 +9,14 @@ import type { Platform } from "@/lib/types/database";
  * rather than offering a "Connect" button everywhere and failing later.
  */
 
-export const PLATFORMS: Platform[] = ["youtube", "twitch", "kick", "instagram"];
+export const PLATFORMS: Platform[] = ["youtube", "twitch", "kick", "instagram", "tiktok"];
 
 export const PLATFORM_LABELS: Record<Platform, string> = {
   youtube: "YouTube",
   twitch: "Twitch",
   kick: "Kick",
   instagram: "Instagram",
+  tiktok: "TikTok",
 };
 
 export type VerificationSupport = {
@@ -46,7 +47,12 @@ export const VERIFICATION_SUPPORT: Record<Platform, VerificationSupport> = {
   kick: {
     supported: false,
     source: "none",
-    note: "Kick has no official public API for audience demographics, so audience geography here stays self-reported.",
+    note: "Kick's official API exposes no audience demographics, so audience geography here stays self-reported.",
+  },
+  tiktok: {
+    supported: false,
+    source: "none",
+    note: "TikTok's Display API exposes no audience demographics, so audience geography here stays self-reported.",
   },
 };
 
@@ -57,13 +63,16 @@ export const VERIFICATION_SUPPORT: Record<Platform, VerificationSupport> = {
  * advertised as working in one place while it is broken in another.
  *
  *   available      — implemented and operational: YouTube's public stats sync
- *                    and verified audience geography (YouTube Analytics OAuth)
+ *                    and verified audience geography (YouTube Analytics OAuth);
+ *                    Twitch, Kick and TikTok once their account connection is
+ *                    switched on (see liveConnections below)
  *   in_development — code exists but the integration is not operational:
  *                    Instagram, whose Meta app review is not complete, so its
  *                    Connect action is withheld rather than left to fail
  *   manual         — creators enter their own stats, labelled self-reported;
- *                    there is no live integration (Twitch, Kick)
- *   planned        — not built yet and not storable as a media kit (TikTok, X)
+ *                    there is no live integration (Twitch, Kick, TikTok until
+ *                    switched on)
+ *   planned        — not built yet and not storable as a media kit (X)
  *
  * Changing a status here is a product claim: only mark a platform
  * "available" once its integration works end to end.
@@ -83,24 +92,60 @@ export const INTEGRATION_PLATFORMS: IntegrationPlatform[] = [
 
 export const INTEGRATION_LABELS: Record<IntegrationPlatform, string> = {
   ...PLATFORM_LABELS,
-  tiktok: "TikTok",
   x: "X",
 };
 
-export const INTEGRATION_STATUS: Record<IntegrationPlatform, IntegrationStatus> = {
-  youtube: "available",
-  instagram: "in_development",
-  twitch: "manual",
-  kick: "manual",
-  tiktok: "planned",
-  x: "planned",
-};
+/**
+ * Integrations the operator has switched on, from NEXT_PUBLIC_LIVE_CONNECTIONS
+ * (comma-separated: instagram, twitch, kick, tiktok). It is a build-time public
+ * value because the Pricing page and the Media Kit render on the client.
+ *
+ * Built and switched on are different things: Twitch, Kick and TikTok
+ * connections (0042) and the Instagram connector are in the code, but each
+ * needs a registered app, and Instagram and TikTok also need the platform's
+ * app review. Until the operator lists a platform here it is not offered, so
+ * the product never shows a Connect button that fails at the provider. The
+ * server routes check the platform's credentials as well.
+ */
+export function liveConnections(raw: string | undefined): Set<IntegrationPlatform> {
+  const allowed = new Set<IntegrationPlatform>(["instagram", "twitch", "kick", "tiktok"]);
+  return new Set(
+    (raw ?? "")
+      .split(",")
+      .map((p) => p.trim().toLowerCase())
+      .filter((p): p is IntegrationPlatform => allowed.has(p as IntegrationPlatform)),
+  );
+}
+
+export function integrationStatusFor(
+  live: Set<IntegrationPlatform>,
+): Record<IntegrationPlatform, IntegrationStatus> {
+  return {
+    youtube: "available",
+    instagram: live.has("instagram") ? "available" : "in_development",
+    twitch: live.has("twitch") ? "available" : "manual",
+    kick: live.has("kick") ? "available" : "manual",
+    tiktok: live.has("tiktok") ? "available" : "manual",
+    x: "planned",
+  };
+}
+
+export const INTEGRATION_STATUS: Record<IntegrationPlatform, IntegrationStatus> =
+  integrationStatusFor(liveConnections(process.env.NEXT_PUBLIC_LIVE_CONNECTIONS));
+
+/** Twitch, Kick and TikTok: the account connection (0042) is switched on. */
+export function accountConnectAvailable(platform: Platform): boolean {
+  return (
+    (platform === "twitch" || platform === "kick" || platform === "tiktok") &&
+    INTEGRATION_STATUS[platform] === "available"
+  );
+}
 
 /**
  * Connection ceiling — the same for every creator under the unified Creator
  * Plan, whatever plan value is still stored on the profile. It is
- * the number of platforms the media_kits schema accepts (four), the ceiling
- * the paid tiers already had; it is not "unlimited".
+ * the number of platforms the media_kits schema accepts (five since 0042 added
+ * TikTok); it is not "unlimited".
  */
 export const MAX_CONNECTIONS = PLATFORMS.length;
 

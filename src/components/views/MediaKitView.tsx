@@ -14,6 +14,7 @@ import type { KitVideo } from "@/lib/media-kit/queries";
 import type { MediaKitSnapshot } from "@/lib/types/database";
 import { InstagramSyncPanel } from "@/components/media-kit/InstagramSyncPanel";
 import { OAuthPlaceholderCard } from "@/components/media-kit/OAuthPlaceholderCard";
+import { ConnectAccountPanel } from "@/components/media-kit/ConnectAccountPanel";
 import { Alert } from "@/components/ui/Alert";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
@@ -23,6 +24,7 @@ import {
   MAX_CONNECTIONS,
   PLATFORMS,
   PLATFORM_LABELS,
+  accountConnectAvailable,
   canAddConnection,
 } from "@/lib/media-kit/platforms";
 import type { Profile } from "@/lib/auth";
@@ -37,6 +39,8 @@ export function MediaKitView({
   videos = [],
   oauthConnected = null,
   oauthError = null,
+  accountConnected = null,
+  connectError = null,
   demo = false,
 }: {
   profile: Profile;
@@ -50,6 +54,9 @@ export function MediaKitView({
   /** Set right after a successful /api/oauth/[platform]/callback redirect. */
   oauthConnected?: string | null;
   oauthError?: string | null;
+  /** Set after /api/connect/[platform]/callback (0042): a platform, or "platform:reason". */
+  accountConnected?: string | null;
+  connectError?: string | null;
 }) {
   const { t } = useTranslation();
   const byPlatform = kitByPlatform(kits);
@@ -81,6 +88,15 @@ export function MediaKitView({
           </Alert>
         </div>
       ) : null}
+
+      {accountConnected && PLATFORMS.includes(accountConnected as Platform) ? (
+        <div className="mb-4">
+          <Alert tone="info">
+            {t("mediaKit.connect.connectedBanner", { platform: PLATFORM_LABELS[accountConnected as Platform] })}
+          </Alert>
+        </div>
+      ) : null}
+      {connectError ? <ConnectErrorBanner value={connectError} /> : null}
 
       <div className="mb-4 grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -170,6 +186,10 @@ export function MediaKitView({
                 }
               />
 
+              {accountConnectAvailable(platform) && !blocked && !demo ? (
+                <ConnectAccountPanel platform={platform} kit={kit} />
+              ) : null}
+
               {kit ? (
                 <GlassPanel className="space-y-4 p-5">
                   {/*
@@ -215,19 +235,24 @@ export function MediaKitView({
         })}
       </div>
 
-      {/*
-        §7.3 lists TikTok in the verification matrix as declared-only, but the
-        §10 platform CHECK constraint does not include it, so it cannot be
-        stored. Flagged rather than silently widened — adding a platform is a
-        product decision.
-      */}
-      <p className="mt-6 text-xs leading-relaxed text-fg-muted">
-        {t("mediaKit.tiktokNote")}
-      </p>
-
       <div className="mt-4">
         <OAuthPlaceholderCard />
       </div>
     </>
+  );
+}
+
+const CONNECT_ERRORS = ["unavailable", "denied", "state", "token", "account", "taken", "save", "reconnect"] as const;
+
+/** `connect_error=<platform>:<reason>` from the connect callback; unknown values show nothing. */
+function ConnectErrorBanner({ value }: { value: string }) {
+  const { t } = useTranslation();
+  const [platform, reason] = value.split(":");
+  if (!PLATFORMS.includes(platform as Platform)) return null;
+  if (!(CONNECT_ERRORS as readonly string[]).includes(reason)) return null;
+  return (
+    <div className="mb-4">
+      <Alert>{t(`mediaKit.connect.errors.${reason}`, { platform: PLATFORM_LABELS[platform as Platform] })}</Alert>
+    </div>
   );
 }

@@ -12,7 +12,7 @@ import type { SecurityCheckResult } from "@/lib/security/types";
 export type Role = "creator" | "company" | "admin";
 export type Region = "MENA" | "International";
 export type SubscriptionPlan = "Starter" | "Pro" | "Elite";
-export type Platform = "youtube" | "twitch" | "kick" | "instagram";
+export type Platform = "youtube" | "twitch" | "kick" | "instagram" | "tiktok";
 export type DealStatus =
   | "new"
   | "negotiating"
@@ -245,6 +245,8 @@ type MediaKit = {
   /** The last sync returned the whole upload list (0035). */
   recent_videos_complete?: boolean | null;
   recent_views_sample?: number | null;
+  /** 0042: when the counts above last came from a connected Twitch/Kick/TikTok account. */
+  stats_synced_at?: string | null;
   /** AI-generated, supplementary to content_category (migration 0016). */
   content_tags: string[] | null;
 };
@@ -331,6 +333,12 @@ type PromoCode = {
 
 export type OAuthPlatform = "youtube" | "instagram";
 
+/** Account-connection OAuth (0042): proves ownership and syncs public counts, never geography. */
+export type ConnectPlatform = "twitch" | "kick" | "tiktok";
+
+/** Every platform oauth_connections may hold a token for (0015 + 0042). */
+export type TokenPlatform = OAuthPlatform | ConnectPlatform;
+
 /**
  * YouTube Analytics / Instagram Graph API OAuth tokens (migration 0015). No
  * RLS policy for `authenticated` at all -- server-only, like PromoCode.
@@ -338,7 +346,7 @@ export type OAuthPlatform = "youtube" | "instagram";
 type OAuthConnection = {
   id: string;
   creator_id: string;
-  platform: OAuthPlatform;
+  platform: TokenPlatform;
   access_token: string;
   refresh_token: string | null;
   expires_at: string;
@@ -355,7 +363,7 @@ export type MediaKitSnapshot = {
   media_kit_id: string;
   creator_id: string;
   platform: Platform;
-  source: "youtube_data_api" | "instagram_graph_api";
+  source: "youtube_data_api" | "instagram_graph_api" | "twitch_helix_api" | "kick_public_api" | "tiktok_display_api";
   captured_on: string;
   captured_at: string;
   subscriber_count: number | null;

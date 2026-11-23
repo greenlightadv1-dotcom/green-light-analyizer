@@ -94,9 +94,15 @@ test("Instagram is refused for creators too while its integration is in developm
   assert.match(body.error, /in development/);
 });
 
-test("Twitch remains a placeholder (501), not a live integration", async () => {
+test("the analytics OAuth route does not serve Twitch: its account connection lives at /api/connect (0042)", async () => {
   asProfile("creator", "Elite");
   const res = await start(new Request("https://app.test/api/oauth/twitch/start"), params("twitch"));
+  assert.equal(res.status, 404);
+});
+
+test("X stays a placeholder (501), not a live integration", async () => {
+  asProfile("creator", "Elite");
+  const res = await start(new Request("https://app.test/api/oauth/x/start"), params("x"));
   assert.equal(res.status, 501);
 });
 

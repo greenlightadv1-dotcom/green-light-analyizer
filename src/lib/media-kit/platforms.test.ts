@@ -8,6 +8,8 @@ import {
   PLATFORMS,
   VERIFICATION_SUPPORT,
   canAddConnection,
+  integrationStatusFor,
+  liveConnections,
   verificationAvailability,
 } from "./platforms.ts";
 
@@ -18,6 +20,7 @@ test("§7.3: only YouTube and Instagram can ever be verified", () => {
   assert.equal(VERIFICATION_SUPPORT.instagram.supported, true);
   assert.equal(VERIFICATION_SUPPORT.twitch.supported, false);
   assert.equal(VERIFICATION_SUPPORT.kick.supported, false);
+  assert.equal(VERIFICATION_SUPPORT.tiktok.supported, false);
 });
 
 test("every platform in the schema has a matrix entry", () => {
@@ -27,26 +30,26 @@ test("every platform in the schema has a matrix entry", () => {
   }
 });
 
-test("Creator Plan: one four-platform ceiling for every creator, not unlimited", () => {
-  assert.equal(MAX_CONNECTIONS, 4);
+test("Creator Plan: one five-platform ceiling for every creator, not unlimited", () => {
+  assert.equal(MAX_CONNECTIONS, 5);
   assert.equal(MAX_CONNECTIONS, PLATFORMS.length);
   assert.equal(Number.isFinite(MAX_CONNECTIONS), true);
 });
 
 test("the connection ceiling is inclusive at the boundary", () => {
   assert.equal(canAddConnection(0), true);
-  assert.equal(canAddConnection(3), true, "the fourth connection is allowed");
-  assert.equal(canAddConnection(4), false, "a fifth connection is refused");
-  assert.equal(canAddConnection(5), false);
+  assert.equal(canAddConnection(4), true, "the fifth connection is allowed");
+  assert.equal(canAddConnection(5), false, "a sixth connection is refused");
+  assert.equal(canAddConnection(6), false);
 });
 
-test("integration status: YouTube available, Instagram in development, Twitch/Kick manual, TikTok/X planned", () => {
+test("integration status with nothing switched on: YouTube available, Instagram in development, the rest manual, X planned", () => {
   assert.deepEqual(INTEGRATION_STATUS, {
     youtube: "available",
     instagram: "in_development",
     twitch: "manual",
     kick: "manual",
-    tiktok: "planned",
+    tiktok: "manual",
     x: "planned",
   });
   for (const p of PLATFORMS) assert.ok(INTEGRATION_PLATFORMS.includes(p), `${p} has no status`);
@@ -64,4 +67,18 @@ test("verification availability depends on the platform, never on a plan", () =>
   // No API exists: no plan, and no upgrade, could deliver it.
   assert.equal(verificationAvailability("twitch"), "unsupported");
   assert.equal(verificationAvailability("kick"), "unsupported");
+});
+
+test("NEXT_PUBLIC_LIVE_CONNECTIONS switches on only known connectable platforms", () => {
+  assert.deepEqual([...liveConnections(" Twitch, kick ,x,youtube,bogus,")].sort(), ["kick", "twitch"]);
+  assert.equal(liveConnections(undefined).size, 0);
+  const status = integrationStatusFor(liveConnections("instagram,twitch,kick,tiktok"));
+  assert.deepEqual(status, {
+    youtube: "available",
+    instagram: "available",
+    twitch: "available",
+    kick: "available",
+    tiktok: "available",
+    x: "planned",
+  });
 });

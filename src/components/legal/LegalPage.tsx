@@ -18,10 +18,13 @@ import {
 export function LegalPage({
   title,
   summary,
+  lastUpdated = LEGAL_LAST_UPDATED,
   children,
 }: {
   title: string;
   summary: string;
+  /** Defaults to the Terms' date; the Privacy Policy passes its own. */
+  lastUpdated?: string;
   children: ReactNode;
 }) {
   return (
@@ -38,7 +41,7 @@ export function LegalPage({
           {summary}
         </p>
         <p className="mt-4 font-mono text-xs text-fg-muted">
-          Last updated {LEGAL_LAST_UPDATED}
+          Last updated {lastUpdated}
         </p>
       </header>
 

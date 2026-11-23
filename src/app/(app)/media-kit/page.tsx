@@ -25,11 +25,11 @@ export const maxDuration = 60;
 export default async function MediaKitPage({
   searchParams,
 }: {
-  searchParams: Promise<{ oauth_connected?: string; oauth_error?: string }>;
+  searchParams: Promise<{ oauth_connected?: string; oauth_error?: string; account_connected?: string; connect_error?: string }>;
 }) {
   const profile = await requireCreatorFeatures();
   const [kits, snapshots, videos] = await Promise.all([listMediaKits(profile.id), listSnapshots(profile.id), listKitVideos(profile.id)]);
-  const { oauth_connected, oauth_error } = await searchParams;
+  const { oauth_connected, oauth_error, account_connected, connect_error } = await searchParams;
 
   return (
     <MediaKitView
@@ -39,6 +39,8 @@ export default async function MediaKitPage({
       videos={videos}
       oauthConnected={oauth_connected ?? null}
       oauthError={oauth_error ?? null}
+      accountConnected={account_connected ?? null}
+      connectError={connect_error ?? null}
     />
   );
 }

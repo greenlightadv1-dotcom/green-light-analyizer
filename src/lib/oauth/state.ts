@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -21,9 +21,14 @@ function secret(): string {
  * SUPABASE_SERVICE_ROLE_KEY -- already a server-only secret nothing outside
  * this codebase ever sees, so this adds no new secret to manage.
  */
-export function signOAuthState(creatorId: string): string {
+export function signOAuthState(creatorId: string, purpose?: string): string {
   const payload = JSON.stringify({
     creatorId,
+    // Binds the state to one flow (e.g. "connect:kick"), so a state issued
+    // for one platform cannot complete another platform's callback. Absent
+    // for the original YouTube/Instagram analytics flow, which checks it the
+    // same way: undefined must match undefined.
+    ...(purpose ? { purpose } : {}),
     nonce: randomBytes(9).toString("base64url"),
     ts: Date.now(),
   });
@@ -37,7 +42,11 @@ export function signOAuthState(creatorId: string): string {
  * for `expectedCreatorId` — the caller who is completing the callback must
  * be the same one who started it, not just anyone with a captured URL.
  */
-export function verifyOAuthState(state: string, expectedCreatorId: string): boolean {
+export function verifyOAuthState(
+  state: string,
+  expectedCreatorId: string,
+  expectedPurpose?: string,
+): boolean {
   const [encoded, signature] = state.split(".");
   if (!encoded || !signature) return false;
 
@@ -47,10 +56,11 @@ export function verifyOAuthState(state: string, expectedCreatorId: string): bool
   if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
 
   try {
-    const payload: { creatorId?: string; ts?: number } = JSON.parse(
+    const payload: { creatorId?: string; ts?: number; purpose?: string } = JSON.parse(
       Buffer.from(encoded, "base64url").toString("utf8"),
     );
     if (payload.creatorId !== expectedCreatorId) return false;
+    if (payload.purpose !== expectedPurpose) return false;
     if (typeof payload.ts !== "number" || Date.now() - payload.ts > MAX_AGE_MS) {
       return false;
     }
@@ -58,4 +68,19 @@ export function verifyOAuthState(state: string, expectedCreatorId: string): bool
   } catch {
     return false;
   }
+}
+
+/**
+ * The PKCE code verifier for a signed state (RFC 7636), derived rather than
+ * stored: HMAC of the state under the same server secret. The start route
+ * sends its S256 challenge, the callback re-derives the verifier from the
+ * state the provider echoes back, and nothing has to be kept between the two
+ * requests. 43 base64url characters, the RFC's minimum length.
+ */
+export function pkceVerifierForState(state: string): string {
+  return createHmac("sha256", secret()).update(`pkce:${state}`).digest("base64url");
+}
+
+export function pkceChallenge(verifier: string): string {
+  return createHash("sha256").update(verifier).digest("base64url");
 }
