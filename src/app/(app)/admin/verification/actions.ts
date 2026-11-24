@@ -10,6 +10,7 @@ import { decisionEmail } from "@/lib/verification/email";
 import { sendSystemNotification } from "@/lib/resend";
 import { siteUrl } from "@/lib/constants/site";
 import { verificationErrorKey } from "@/lib/verification/rules";
+import { activationWhatsAppText, whatsappDigits } from "@/lib/verification/whatsapp";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 /**
@@ -181,4 +182,30 @@ export async function flagForEnhancedReview(_prev: ActionResult | null, fd: Form
   revalidatePath("/admin/verification");
   revalidatePath(`/admin/verification/${caseId}`);
   return OK;
+}
+
+export type WhatsAppActivationState = { ok: boolean; url: string | null; link: string | null; errorKey: string | null };
+
+/**
+ * Issue a fresh one-time activation link, email it, and hand it back so the
+ * reviewer can also send it on WhatsApp (owner decision, 2026-11-24). The
+ * email and the WhatsApp message carry the same link; any earlier link stops
+ * working. Nothing is sent from our side on WhatsApp: the reviewer's own
+ * WhatsApp opens with the message ready (wa.me), and they press send.
+ */
+export async function activationForWhatsApp(_prev: WhatsAppActivationState | null, fd: FormData): Promise<WhatsAppActivationState> {
+  const none = (errorKey: string): WhatsAppActivationState => ({ ok: false, url: null, link: null, errorKey });
+  const { admin, reviewer } = await requireReviewer();
+  if (!reviewer) return none("adminVerification.notReviewer");
+  const caseId = String(fd.get("case_id") ?? "");
+  if (!UUID.test(caseId)) return none("ui.errors.invalid");
+  const { data: row } = await createAdminClient().from("verification_cases").select("access_request_id, profile_id, details").eq("id", caseId).maybeSingle();
+  if (!row?.access_request_id || row.profile_id) return none("activation.errors.already_activated");
+  const r = await sendActivationLink(row.access_request_id, admin.id);
+  revalidatePath(`/admin/verification/${caseId}`);
+  if (!r.link) return none(r.errorKey ?? "ui.errors.generic");
+  const details = (row.details ?? {}) as Record<string, unknown>;
+  const phone = whatsappDigits(details.phone ?? details.contact_phone);
+  const text = activationWhatsAppText(r.link);
+  return { ok: true, link: r.link, url: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : null, errorKey: null };
 }

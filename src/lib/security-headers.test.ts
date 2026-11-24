@@ -6,15 +6,15 @@ import { readFileSync } from "node:fs";
  * The Permissions-Policy header decides whether the browser lets a page use
  * the camera or microphone at all. A blanket camera=() silently broke the
  * identity capture flow, and microphone=() broke G's voice input. Guard both.
+ * Neither may ever be opened to other origins.
  */
 const config = readFileSync(new URL("../../next.config.ts", import.meta.url), "utf8");
 
-test("camera is allowed only on the identity-capture pages, same origin only", () => {
-  assert.match(config, /camera=\$\{camera\}/);
-  assert.match(config, /PERMISSIONS_POLICY\("\(\)"\)/, "default is camera=()");
-  const paths = /CAMERA_PATHS = \[([^\]]+)\]/.exec(config)?.[1] ?? "";
-  for (const p of ['"/apply"', '"/verification"']) assert.ok(paths.includes(p), `${p} may use the camera`);
-  for (const p of ['"/dashboard"', '"/:path*"', '"/"']) assert.ok(!paths.includes(p), `${p} must not get the camera`);
+test("camera is same-origin only, on every page, never a wildcard", () => {
+  // Site-wide on purpose: Next.js navigates client-side, so a per-page header
+  // only applies to the page that was loaded first (see next.config.ts).
+  assert.match(config, /camera=\(self\)/);
+  assert.doesNotMatch(config, /camera=\(\)/);
   assert.doesNotMatch(config, /camera=\*/);
 });
 

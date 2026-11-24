@@ -6,7 +6,8 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { clientKey } from "@/lib/client-key";
-import { JOURNEY_KIND, sendResumeLink } from "@/lib/verification/application";
+import { redirect } from "next/navigation";
+import { JOURNEY_KIND, issueResumeLink, sendResumeLink, setApplicationCookie } from "@/lib/verification/application";
 
 /** What the applicant typed, echoed back so a failed submit keeps it (React resets the form). */
 export type ApplyValues = Record<(typeof ECHO)[number], string>;
@@ -25,10 +26,15 @@ export type ApplyState =
  * Get Started, step 1: open an application (docs/ACCOUNT_ACTIVATION_FLOW.md).
  *
  * It never creates an auth user or a profile. It writes one access_requests
- * row and one verification case through the service role, then emails a
- * one-time link that lets the applicant continue (identity details,
- * documents, submission). Nothing continues without opening that link, so
- * the applicant must control the address before anything else happens.
+ * row and one verification case through the service role and emails a link.
+ *
+ * A NEW application opens in this browser straight away (owner decision,
+ * 2026-11-24): the resume cookie is set and the applicant lands on the
+ * step-by-step form at /apply. The emailed link is still what proves they
+ * control the address, and the database refuses submission until it is
+ * opened (verification_submit_guard). An address that already has an open
+ * application gets only the emailed link, never the cookie, so typing
+ * someone else's email cannot open their application.
  *
  * Public, so it is guarded by a honeypot field, a per-address rate limit
  * (hashed client address) and server-side validation. An address that
@@ -69,9 +75,17 @@ export async function submitAccessRequest(_prev: ApplyState, formData: FormData)
     return { status: "error", code: "unavailable", values: echo(formData) };
   }
 
+  const duplicate = error?.code === "23505";
+  if (requestId && !duplicate) {
+    const raw = await issueResumeLink(requestId, parsed.value.email);
+    if (!raw) return { status: "error", code: "email_failed", values: echo(formData) };
+    await setApplicationCookie(raw);
+    log.info("access_request.received", { journey: parsed.value.journey, duplicate: false });
+    redirect("/apply");
+  }
   if (requestId && !(await sendResumeLink(requestId, parsed.value.email))) {
     return { status: "error", code: "email_failed", values: echo(formData) };
   }
-  log.info("access_request.received", { journey: parsed.value.journey, duplicate: error?.code === "23505" });
+  log.info("access_request.received", { journey: parsed.value.journey, duplicate });
   return { status: "submitted" };
 }

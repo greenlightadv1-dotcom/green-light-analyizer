@@ -1144,6 +1144,18 @@ else as a blocker.
 > non-YouTube "Content performance" placeholder are gone. The audience field now
 > accepts Arabic-Indic digits, `٪` and `،`. No schema, action or labelling
 > change; verified/self-reported tags are untouched.
+>
+> **Approved exception (2026-11-24): application flow.** A new Get Started
+> application opens the step-by-step `/apply` form at once (the resume cookie
+> is set by `submitAccessRequest`); an address that already has an open
+> application still gets only the emailed link. Submission still requires the
+> emailed link to be opened (`verification_submit_guard`). After approval the
+> reviewer can also send the one-time activation link on WhatsApp
+> (`activationForWhatsApp`: a fresh link, also emailed, opened in the
+> reviewer's own WhatsApp via `wa.me`; no WhatsApp API, no password in any
+> message). `Permissions-Policy` now allows `camera=(self)` site-wide: Next.js
+> navigates client-side, so the per-page header blocked capture after a soft
+> navigation.
 
 **Definition of Done ("Launch Ready")** — all of these must be true:
 1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,

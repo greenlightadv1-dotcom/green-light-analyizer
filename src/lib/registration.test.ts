@@ -23,6 +23,10 @@ test("no code path signs a visitor up before approval", () => {
   // Step 1 writes an application and a case, never an auth user or profile.
   const gs = src("app/get-started/actions.ts");
   assert.doesNotMatch(gs, /auth\.admin\.createUser|from\("profiles"\)\.insert/);
+  // A new application opens in this browser; an address that already has one
+  // gets only the emailed link, never the resume cookie.
+  assert.match(gs, /if \(requestId && !duplicate\) \{[\s\S]*?setApplicationCookie\(raw\)[\s\S]*?redirect\("\/apply"\)/);
+  assert.equal(gs.match(/setApplicationCookie\(/g)?.length, 1, "the cookie is set in one place only");
   // The only createUser outside the admin console is activation, which the database gates on approval.
   const act = src("app/activate/actions.ts");
   assert.match(act, /activation_claim/);
