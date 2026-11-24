@@ -15,8 +15,9 @@ import { FIELDS, missingDocuments, missingFields } from "@/lib/verification/rule
 import { duplicateMatches, writeMatchKeys } from "@/lib/verification/match-keys-server";
 import { VERIFICATION_TONE } from "@/lib/verification/display";
 import { addInternalNote, flagForEnhancedReview, resendActivation, reviewVerification } from "../actions";
+import { siteUrl } from "@/lib/constants/site";
 import { WhatsAppActivationButton } from "@/components/verification/WhatsAppActivationButton";
-import { whatsappDigits } from "@/lib/verification/whatsapp";
+import { approvedWhatsAppText, whatsappDigits } from "@/lib/verification/whatsapp";
 
 const SIGNAL_LABEL = { id_number: "ID document number", name_dob: "legal name and date of birth", phone: "WhatsApp number", registration_number: "commercial registration number", tax_number: "tax number" } as const;
 
@@ -234,6 +235,22 @@ export default async function AdminVerificationCase({ params }: { params: Promis
         <GlassPanel className="h-fit space-y-4 p-5">
           <h2 className="text-base font-semibold text-fg">Decision</h2>
           {!open ? <p className="text-sm text-fg-muted">This case is not waiting for a decision.</p> : null}
+          {c.status === "approved" && c.profile_id ? (() => {
+            const phone = whatsappDigits(details.phone ?? details.contact_phone);
+            const text = approvedWhatsAppText(`${siteUrl().replace(/\/+$/, "")}/login`);
+            return (
+              <div className="space-y-2 rounded-control border border-success/30 bg-success/10 p-3 text-xs text-fg">
+                <p>Approved. The account is active and the applicant was emailed. You can also tell them on WhatsApp.</p>
+                {phone ? (
+                  <a href={`https://wa.me/${phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center rounded-control bg-[#25D366] px-3 py-2 text-xs font-semibold text-ink hover:brightness-95 focus-visible:focus-ring">
+                    Tell them on WhatsApp
+                  </a>
+                ) : (
+                  <p className="text-fg-muted">No valid WhatsApp number on this case.</p>
+                )}
+              </div>
+            );
+          })() : null}
           {awaitingActivation ? (
             <div className="space-y-2 rounded-control border border-info/30 bg-info/10 p-3 text-xs text-fg">
               <p>Approved. The applicant was emailed a one-time link to create the account; no account exists until they use it.</p>

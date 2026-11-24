@@ -78,12 +78,22 @@ export const SECURITY_EMAIL = "security@greenlightadvs.com";
 export const LEGAL_LAST_UPDATED = "22 November 2026";
 
 /**
+ * The Terms' own revision date from 24 November 2026, when section 2 changed
+ * to describe self-opened accounts that stay on hold until approval. The
+ * commission sentence still names its own date (COMMISSION_EFFECTIVE_DATE /
+ * LEGAL_LAST_UPDATED), which did not move. Update on every substantive change
+ * to the Terms.
+ */
+export const TERMS_LAST_UPDATED = "24 November 2026";
+
+/**
  * The Privacy Policy's own revision date. It moved apart from the Terms on
  * 23 November 2026, when section 6a (Twitch, Kick and TikTok connections) was
- * added and the Terms did not change. Update on every substantive change to
+ * added and the Terms did not change; on 24 November 2026 section 12 changed
+ * to describe self-opened accounts. Update on every substantive change to
  * the Privacy Policy.
  */
-export const PRIVACY_LAST_UPDATED = "23 November 2026";
+export const PRIVACY_LAST_UPDATED = "24 November 2026";
 
 /** Notice given before a material change takes effect. */
 export const CHANGE_NOTICE_DAYS = 30;

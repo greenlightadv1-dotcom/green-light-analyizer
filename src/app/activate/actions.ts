@@ -83,7 +83,7 @@ export async function activateAccount(_prev: ActivateState, fd: FormData): Promi
   }
   log.info("activation.completed", { journey: result.journey });
   // What the creator chose to make public (photo, main handle, categories); best effort.
-  if (result.journey === "creator") await carryOverPublicProfile(result.userId, result.requestId);
+  if (result.journey === "creator") await carryOverPublicProfile(result.userId, { requestId: result.requestId });
   await clearApplicationCookie();
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email: result.email, password });

@@ -1,11 +1,9 @@
 /**
  * Get Started applications (features 1 and 2).
  *
- * Green Light stays admin-gated (CLAUDE.md §4, Terms §2): a visitor never
- * creates an account. "Get Started" collects one application per journey;
- * an admin reviews it and creates the account from it, reusing what the
- * applicant typed, and the forced first-login password reset follows as
- * before.
+ * Get Started opens a pending account per journey (owner decision,
+ * 2026-11-24; app/get-started/actions.ts). It stays on hold until a
+ * verification reviewer approves it (Terms §2).
  *
  * Pure — unit-tested in access-requests.test.ts.
  */

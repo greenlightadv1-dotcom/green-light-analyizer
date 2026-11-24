@@ -11,6 +11,7 @@ import { sendSystemNotification } from "@/lib/resend";
 import { siteUrl } from "@/lib/constants/site";
 import { verificationErrorKey } from "@/lib/verification/rules";
 import { activationWhatsAppText, whatsappDigits } from "@/lib/verification/whatsapp";
+import { carryOverPublicProfile } from "@/lib/verification/carry-over";
 import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 
 /**
@@ -102,6 +103,9 @@ export async function reviewVerification(_prev: ActionResult | null, fd: FormDat
       emailed = (await sendSystemNotification({ to: req.email, ...mail, ctaUrl: `${siteUrl().replace(/\/+$/, "")}/get-started` })).ok;
     }
   } else if (row && row.profile_id && (action === "approve" || action === "reject" || action === "request_info")) {
+    // An account that signed up on Get Started: its public photo, handle and
+    // categories move onto the profile when it is approved.
+    if (action === "approve" && row.kind === "creator_kyc") await carryOverPublicProfile(row.profile_id, { caseId });
     emailed = await notifyDecision({ profile_id: row.profile_id, kind: row.kind }, action === "approve" ? "approved" : action === "reject" ? "rejected" : "needs_info", note);
   }
   revalidatePath("/admin/verification");

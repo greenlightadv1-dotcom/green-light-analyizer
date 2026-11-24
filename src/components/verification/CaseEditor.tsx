@@ -423,9 +423,40 @@ function StatusPanel({ c, application }: { c: CaseView; application: boolean }) 
         </div>
       ) : null}
       {c.status === "rejected" ? <p className="text-xs text-fg-muted">{t("verification.wizard.rejectedHelp")}</p> : null}
+      {c.status === "approved" || c.status === "submitted" || c.status === "under_review" ? <LockedDetails c={c} /> : null}
       {c.status === "rejected" && application ? (
         <p className="text-sm"><Link href="/get-started" className="text-accent underline">{t("verification.wizard.startNew")}</Link></p>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * What the person submitted, read-only (owner decision, 2026-11-24): once a
+ * case is submitted the details cannot be edited (EDITABLE in rules.ts,
+ * enforced by saveVerificationDetails and the database), and after approval
+ * they stay locked. The ID number is only ever shown as its stored hint.
+ */
+function LockedDetails({ c }: { c: CaseView }) {
+  const { t } = useTranslation();
+  const steps = STEPS[c.kind].filter((s) => s.id !== "review" && s.fields.length);
+  return (
+    <div className="mt-2 space-y-3 border-t border-line pt-3">
+      <p className="text-xs text-fg-muted">{t("verification.wizard.locked")}</p>
+      {steps.map((s) => (
+        <dl key={s.id} className="grid gap-2 text-sm sm:grid-cols-2">
+          {FIELDS[c.kind].filter((f) => s.fields.includes(f.key)).map((f) => {
+            const v = c.details?.[f.key] ?? "";
+            const shown = f.type === "multiselect" ? v.split(",").filter(Boolean).map((o) => t(`taxonomy.category.${o}`)).join(", ") : f.type === "select" && v ? t(`verification.option.platform.${v}`) : v;
+            return (
+              <div key={f.key}>
+                <dt className="text-xs text-fg-muted">{t(`verification.field.${f.key}`)}</dt>
+                <dd dir="auto" className="[overflow-wrap:anywhere] whitespace-pre-wrap text-fg">{v ? shown : "—"}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      ))}
     </div>
   );
 }

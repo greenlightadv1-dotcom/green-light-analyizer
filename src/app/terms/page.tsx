@@ -10,6 +10,7 @@ import {
   PRIVACY_EMAIL,
   RETENTION,
   SUPPORT_EMAIL,
+  TERMS_LAST_UPDATED,
 } from "@/lib/constants/legal";
 import { CREATOR_COMMISSION } from "@/lib/plans";
 import { DISCORD_INVITE_URL } from "@/lib/constants/contact";
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <LegalPage
+      lastUpdated={TERMS_LAST_UPDATED}
       title="Terms of Service"
       summary="The agreement between you and Green Light. It covers who may hold an account, how commission works, what happens to a deal, and the one rule that ends an account permanently."
     >
@@ -50,17 +52,22 @@ export default function TermsPage() {
         them for that company.
       </p>
 
-      <h2>2. Accounts are created by us, not by you</h2>
+      <h2>2. How an account is opened</h2>
       <p>
-        Green Light has no public sign-up. Every account is created manually by
-        an administrator after review. There is no form anywhere on this site
-        that creates an account, and there is no way to self-register.
+        You can open an account on the Get Started page with your own email
+        address and password, or an administrator can open one for you. An
+        account you open yourself stays on hold: it can only complete the
+        verification steps until our team has reviewed your details and
+        documents by hand and approved it. We may decline an account without
+        giving reasons.
       </p>
       <p>
-        When an account is created we issue a temporary password. You must
-        replace it the first time you sign in — the rest of the product is
-        unreachable until you do. You are responsible for keeping your password
-        confidential and for everything done through your account. Tell us at{" "}
+        The personal details you submit for verification are locked once you
+        submit them. To correct them, contact us. When an administrator opens
+        an account for you, we issue a temporary password that you must
+        replace the first time you sign in. You are responsible for keeping
+        your password confidential and for everything done through your
+        account. Tell us at{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> if you believe
         someone else has access to it.
       </p>

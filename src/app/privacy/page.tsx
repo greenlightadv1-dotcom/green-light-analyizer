@@ -616,9 +616,10 @@ export default function PrivacyPage() {
 
       <h2>12. Children</h2>
       <p>
-        Green Light is not offered to anyone under 18, and accounts are created
-        only by an administrator after verifying the applicant, so there is no
-        route by which a child can register. We do not knowingly collect
+        Green Light is not offered to anyone under 18. An account someone
+        opens on Get Started stays on hold until our team has reviewed their
+        details and documents by hand and approved it, and we do not approve
+        an account we believe belongs to a child. We do not knowingly collect
         personal data from children, and we do not process the data of a child
         under Article 12 of the PDPL, which requires the consent of a guardian.
       </p>

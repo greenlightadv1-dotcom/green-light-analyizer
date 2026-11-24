@@ -20,14 +20,12 @@ test("no code path signs a visitor up before approval", () => {
   assert.ok(!existsSync(new URL("../app/register/actions.ts", import.meta.url)), "register action removed");
   assert.ok(!existsSync(new URL("../app/auth/confirm/route.ts", import.meta.url)), "sign-up confirmation route removed");
   assert.match(src("app/register/page.tsx"), /redirect\("\/get-started"\)/);
-  // Step 1 writes an application and a case, never an auth user or profile.
+  // Step 1 creates a pending account (never active) with a verification case.
   const gs = src("app/get-started/actions.ts");
-  assert.doesNotMatch(gs, /auth\.admin\.createUser|from\("profiles"\)\.insert/);
-  // A new application opens in this browser; an address that already has one
-  // gets only the emailed link, never the resume cookie.
-  assert.match(gs, /if \(requestId && !duplicate\) \{[\s\S]*?setApplicationCookie\(raw\)[\s\S]*?redirect\("\/apply"\)/);
-  assert.equal(gs.match(/setApplicationCookie\(/g)?.length, 1, "the cookie is set in one place only");
-  // The only createUser outside the admin console is activation, which the database gates on approval.
+  assert.match(gs, /auth\.admin\.createUser/);
+  assert.match(gs, /account_status: "pending_verification"/);
+  assert.match(gs, /passwordProblems\(password\)/, "the applicant's password meets the same rules");
+  // Activation (the older emailed-link path) is still gated by the database on approval.
   const act = src("app/activate/actions.ts");
   assert.match(act, /activation_claim/);
   assert.match(act, /activation_complete/);

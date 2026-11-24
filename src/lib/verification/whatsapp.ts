@@ -25,3 +25,15 @@ export function activationWhatsAppText(link: string, hours: number = ACTIVATION_
     link,
   ].join("\n");
 }
+
+/** For an account that signed up itself: approved, sign in. No link that grants access, just the sign-in page. */
+export function approvedWhatsAppText(loginUrl: string): string {
+  return [
+    "Green Light ✅",
+    "تمت الموافقة على حسابك. تقدر تسجّل الدخول دلوقتي بإيميلك وكلمة السر اللي اخترتها:",
+    loginUrl,
+    "",
+    "Your account is approved. You can sign in now with your email and the password you chose:",
+    loginUrl,
+  ].join("\n");
+}
