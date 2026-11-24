@@ -70,3 +70,19 @@ export function highValueBasisUsd(
   );
   return valid.length ? Math.max(...valid) : 0;
 }
+
+/**
+ * D6: with no reach figures on file (no average views or concurrent
+ * viewers), a price has nothing to stand on, so the rating is held below
+ * green. Missing data never makes an offer red by itself. Applied to the
+ * model's answer as well as the rule-based one: the model was rating
+ * no-data creators green.
+ */
+export function holdRiskWithoutReach(
+  risk: AiEvaluation,
+  avgViews: number | null | undefined,
+  avgCcv: number | null | undefined,
+): AiEvaluation {
+  const hasReach = (avgViews ?? 0) > 0 || (avgCcv ?? 0) > 0;
+  return !hasReach && risk === "green" ? "yellow" : risk;
+}

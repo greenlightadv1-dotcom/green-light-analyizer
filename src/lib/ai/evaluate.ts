@@ -4,7 +4,7 @@ import type { EvaluationInput, EvaluationResult } from "./types";
 import { AiUnavailableError } from "./chat";
 import { log } from "@/lib/log";
 import { evaluateWithModel } from "./price-model";
-import { capRiskByVerification, highValueBasisUsd } from "./rules";
+import { capRiskByVerification, highValueBasisUsd, holdRiskWithoutReach } from "./rules";
 import { heuristicEvaluate } from "./heuristic";
 
 export { capRiskByVerification, HIGH_VALUE_DEAL_USD } from "./rules";
@@ -38,14 +38,19 @@ export async function evaluateOffer(
     // AiUnavailableError when there is no key, so "unconfigured" and "failed"
     // arrive on the same path and are told apart by the error itself.
     const raw = await evaluateWithModel(input, options);
+    const held = holdRiskWithoutReach(raw.risk, input.avg_views, input.avg_ccv);
     const capped = capRiskByVerification(
-      raw.risk,
+      held,
       input.audience_verified,
       highValueBasisUsd(raw.recommended_price_usd, input.offered_amount_usd),
     );
 
     return {
       ...raw,
+      reasoning:
+        held !== raw.risk
+          ? `${raw.reasoning} Rating held at yellow: no reach figures are on file for this creator yet, so the price has nothing to stand on.`
+          : raw.reasoning,
       risk: capped.risk,
       risk_capped: capped.risk_capped,
       geo_basis: input.audience_verified
