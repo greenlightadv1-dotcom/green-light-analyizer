@@ -64,9 +64,12 @@ function contentSecurityPolicy(): string {
   ].join("; ");
 }
 
-const PERMISSIONS_POLICY = (camera: "()" | "(self)") =>
-  `camera=${camera}, microphone=(self), geolocation=(), payment=(), usb=()`;
-const CAMERA_PATHS = ["/apply", "/apply/:path*", "/verification", "/verification/:path*", "/preview/apply", "/preview/verification"];
+// Camera and microphone: this site only, never a frame or third party, and
+// the browser still asks the person before either starts. The camera used to
+// be allowed on the capture pages alone, but Next.js navigates client-side:
+// a document first loaded at /login or /get-started kept its camera ban after
+// moving to /apply or /verification, so identity capture failed there.
+const PERMISSIONS_POLICY = "camera=(self), microphone=(self), geolocation=(), payment=(), usb=()";
 
 const nextConfig: NextConfig = {
   // Next advertises itself in an X-Powered-By header on every response. It
@@ -105,22 +108,16 @@ const nextConfig: NextConfig = {
           // Same-origin only, never an embedded or third-party frame:
           //   - microphone: G's voice input and the opt-in "Hey G" phrase
           //     (getUserMedia / Web Speech), started only by the person.
-          //   - camera: denied here and allowed only on the identity-capture
-          //     pages below.
+          //   - camera: Live Camera Capture of identity images
+          //     (docs/CREATOR_KYC_SPEC.md), started only by the person.
           // Everything else is denied rather than inherited by a future script.
           {
             key: "Permissions-Policy",
-            value: PERMISSIONS_POLICY("()"),
+            value: PERMISSIONS_POLICY,
           },
           { key: "X-DNS-Prefetch-Control", value: "on" },
         ],
       },
-      // Live Camera Capture of identity images (docs/CREATOR_KYC_SPEC.md). A
-      // later matching rule overrides the header above for these paths only.
-      ...CAMERA_PATHS.map((source) => ({
-        source,
-        headers: [{ key: "Permissions-Policy", value: PERMISSIONS_POLICY("(self)") }],
-      })),
     ];
   },
 };

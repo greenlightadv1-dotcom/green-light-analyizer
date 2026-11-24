@@ -15,6 +15,8 @@ import { FIELDS, missingDocuments, missingFields } from "@/lib/verification/rule
 import { duplicateMatches, writeMatchKeys } from "@/lib/verification/match-keys-server";
 import { VERIFICATION_TONE } from "@/lib/verification/display";
 import { addInternalNote, flagForEnhancedReview, resendActivation, reviewVerification } from "../actions";
+import { WhatsAppActivationButton } from "@/components/verification/WhatsAppActivationButton";
+import { whatsappDigits } from "@/lib/verification/whatsapp";
 
 const SIGNAL_LABEL = { id_number: "ID document number", name_dob: "legal name and date of birth", phone: "WhatsApp number", registration_number: "commercial registration number", tax_number: "tax number" } as const;
 
@@ -235,6 +237,7 @@ export default async function AdminVerificationCase({ params }: { params: Promis
           {awaitingActivation ? (
             <div className="space-y-2 rounded-control border border-info/30 bg-info/10 p-3 text-xs text-fg">
               <p>Approved. The applicant was emailed a one-time link to create the account; no account exists until they use it.</p>
+              <WhatsAppActivationButton caseId={c.id} hasPhone={!!whatsappDigits(details.phone ?? details.contact_phone)} />
               <ConfirmActionForm action={resendActivation} hidden={{ case_id: c.id }} trigger={{ labelKey: "adminVerification.resendActivation" }} triggerClassName={`${btn} border border-line bg-surface-muted text-fg`} titleKey="adminVerification.resendTitle" bodyKey="adminVerification.resendBody" confirmKey="adminVerification.confirm" successKey="adminVerification.done" />
             </div>
           ) : null}

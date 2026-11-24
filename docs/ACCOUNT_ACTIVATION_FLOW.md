@@ -24,10 +24,10 @@ No Supabase Auth user and no profile exist before a reviewer approves the applic
 
 | Step | Where | What happens | Account? |
 |---|---|---|---|
-| 1. Start | `/get-started/<journey>`, `submitAccessRequest` | Writes one `access_requests` row and one `verification_cases` row (`access_request_id`, `profile_id` NULL). Emails a resume link. The answer is identical for a new or an already-open address. | No |
+| 1. Start | `/get-started/<journey>`, `submitAccessRequest` | Writes one `access_requests` row and one `verification_cases` row (`access_request_id`, `profile_id` NULL). Emails a resume link. **Since 2026-11-24 (owner decision):** a new application also sets the resume cookie and redirects to `/apply`, so the steps start at once; an already-open address gets only the email, never the cookie. Submission still needs the emailed link opened (proof of the address). | No |
 | 2. Continue | `/apply/continue?token=…` | The database checks the resume token. The raw token moves into an httpOnly cookie, and the page redirects so the token leaves the URL. | No |
 | 3. Complete | `/apply` and `/api/applications/documents` | Identity details, then documents (camera-only for a creator), consent, submit. Every write is scoped to the application the cookie resolves to. | No |
-| 4. Review | `/admin/verification` (reviewers only) | Start review, request information (emails a fresh resume link plus the note), reject (emails the reason; revokes links), or approve. | No |
+| 4. Review | `/admin/verification` (reviewers only) | Start review, request information (emails a fresh resume link plus the note), reject (emails the reason; revokes links), or approve. After approval the reviewer can also send the activation link on WhatsApp: a fresh link (also emailed), opened in the reviewer's own WhatsApp via `wa.me` (`activationForWhatsApp`). | No |
 | 5. Approval email | `sendActivationLink` | A one-time activation token (48 h) is issued by `application_token_issue`. The database refuses unless the actor is a reviewer and every case is approved. A new link revokes earlier ones. No password is emailed. | No |
 | 6. Activate | `/activate?token=…`, `activateAccount` | Reading the page checks the token without spending it. Submitting sets the person's own password and runs `runActivation` (below). | **Created here** |
 | 7. Signed in | | The session is created and the person lands on `/onboarding`. The data from the application is already on the profile and the case. | Yes |

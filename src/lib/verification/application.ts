@@ -113,6 +113,18 @@ export async function clearApplicationCookie(): Promise<void> {
  * token is never logged.
  */
 export async function sendResumeLink(requestId: string, email: string, infoRequest: string | null = null): Promise<boolean> {
+  return (await issueResumeLink(requestId, email, infoRequest)) !== null;
+}
+
+/**
+ * Same as sendResumeLink, and returns the raw token so Get Started can open
+ * the application in this browser at once (owner decision, 2026-11-24). Only
+ * for a brand-new application: a duplicate address never gets a token back,
+ * or anyone could open someone else's application by typing their email.
+ * Opening the emailed link is still what verifies the address, and
+ * submission still requires it (verification_submit_guard).
+ */
+export async function issueResumeLink(requestId: string, email: string, infoRequest: string | null = null): Promise<string | null> {
   const token = newToken();
   const service = createAdminClient();
   const { error } = await service.rpc("application_token_issue", {
@@ -120,12 +132,12 @@ export async function sendResumeLink(requestId: string, email: string, infoReque
   });
   if (error) {
     log.error("application.resume_issue_failed", { error });
-    return false;
+    return null;
   }
   const link = `${siteUrl().replace(/\/+$/, "")}/apply/continue?token=${token.raw}`;
   const sent = await sendSystemNotification({ to: email, ...resumeEmail(link, RESUME_TTL_SECONDS / 86400, infoRequest) });
   if (!sent.ok) log.error("application.resume_email_failed", { reason: sent.error });
-  return sent.ok;
+  return sent.ok ? token.raw : null;
 }
 
 /**
@@ -133,7 +145,7 @@ export async function sendResumeLink(requestId: string, email: string, infoReque
  * database refuses unless the actor is a verification reviewer and every case
  * of the application is approved; a new link revokes any earlier one.
  */
-export async function sendActivationLink(requestId: string, actorId: string): Promise<{ ok: boolean; errorKey: string | null }> {
+export async function sendActivationLink(requestId: string, actorId: string): Promise<{ ok: boolean; errorKey: string | null; link?: string }> {
   const service = createAdminClient();
   const { data: request } = await service.from("access_requests").select("id, email, journey").eq("id", requestId).maybeSingle();
   if (!request) return { ok: false, errorKey: "activation.errors.not_found" };
@@ -149,7 +161,8 @@ export async function sendActivationLink(requestId: string, actorId: string): Pr
   const sent = await sendSystemNotification({ to: request.email, ...activationEmail(JOURNEY_KIND[request.journey], link, ACTIVATION_TTL_HOURS) });
   if (!sent.ok) {
     log.error("application.activation_email_failed", { reason: sent.error });
-    return { ok: false, errorKey: "activation.errors.email_failed" };
+    // The link exists either way; the admin can still send it on WhatsApp.
+    return { ok: false, errorKey: "activation.errors.email_failed", link };
   }
-  return { ok: true, errorKey: null };
+  return { ok: true, errorKey: null, link };
 }
