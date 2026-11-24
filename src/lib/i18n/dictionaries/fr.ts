@@ -1122,6 +1122,7 @@ const fr: Dictionary = {
       too_long: "Trop long.",
       weak: "Utilisez au moins 10 caractères avec majuscules, minuscules, un chiffre et un symbole.",
       mismatch: "Les deux mots de passe ne correspondent pas.",
+      contact: "Un nom ne peut pas contenir d'e-mail, de numéro de téléphone ou de lien. Le contact passe par Green Light.",
     },
     error: {
       invalid: "Certains champs sont à corriger.",
@@ -1424,6 +1425,7 @@ const fr: Dictionary = {
     nicheUnavailable: "Le service d'IA n'a pas pu proposer de niche pour le moment ; rien n'a changé. Vous pouvez choisir une catégorie vous-même dans le formulaire ci-dessus, ou réessayer plus tard.",
     nicheNotSaved: "Une niche a été proposée mais n'a pas pu être enregistrée ; votre catégorie est inchangée. Réessayez.",
     nameNotChanged: "Votre nom n'a pas changé : la mise à jour n'a pas été acceptée. Réessayez ; si le problème persiste, contactez le support.",
+    nameHasContact: "Votre nom ne peut pas contenir d'e-mail, de numéro de téléphone ou de lien : l'autre partie le voit, et le contact passe par Green Light.",
     whatsappNotChanged: "Vos réglages WhatsApp n'ont pas changé : la mise à jour n'a pas été acceptée. Réessayez ; si le problème persiste, contactez le support.",
     messageNotSent: "Votre message n'a pas été envoyé et rien n'a été enregistré. Réessayez de l'envoyer.",
     dealRoomNotCreated: "L'espace de négociation n'a pas été créé ; rien n'a été ajouté à votre boîte. Réessayez « Ouvrir un salon de deal pour cette offre » dans un instant.",

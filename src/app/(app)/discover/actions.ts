@@ -224,9 +224,9 @@ export async function sendOfferToCreator(
     .insert({
       creator_id: creatorId,
       company_id: profile.id,
-      // The company IS the sponsor here — unlike a pasted/emailed offer,
-      // there is a real platform account behind this address.
-      sender_email: profile.primary_email,
+      // Never the company's real email (0043 enforces it): in-app rooms show
+      // the company's name, and both sides talk only through the platform.
+      sender_email: profile.full_name,
       deal_status: "new",
       offered_amount:
         offeredAmount ?? (Number.isFinite(price) && price > 0 ? price : null),

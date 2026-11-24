@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
 import { isValidWhatsAppNumber } from "@/lib/whatsapp";
+import { nameHasContact } from "@/lib/name-contact";
 
 /** Matches set-password/actions.ts's forced-reset policy. */
 const MIN_PASSWORD_LENGTH = 10;
@@ -20,6 +21,7 @@ export async function updateDisplayName(
   const fullName = String(formData.get("full_name") ?? "").trim();
   if (!fullName) return { error: "Enter your name.", saved: false };
   if (fullName.length > 200) return { error: "That name is too long.", saved: false };
+  if (nameHasContact(fullName)) return { error: "actionErrors.nameHasContact", saved: false };
 
   // The user's own client, not the service role — full_name is the one column
   // migration 0003 grants UPDATE on to `authenticated`, scoped by RLS to the

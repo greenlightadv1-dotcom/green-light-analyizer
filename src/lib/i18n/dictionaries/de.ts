@@ -1122,6 +1122,7 @@ const de: Dictionary = {
       too_long: "Zu lang.",
       weak: "Mindestens 10 Zeichen mit Groß- und Kleinbuchstaben, einer Zahl und einem Sonderzeichen.",
       mismatch: "Die beiden Passwörter stimmen nicht überein.",
+      contact: "Ein Name darf keine E-Mail, Telefonnummer oder keinen Link enthalten. Kontakt läuft über Green Light.",
     },
     error: {
       invalid: "Einige Felder müssen korrigiert werden.",
@@ -1424,6 +1425,7 @@ const de: Dictionary = {
     nicheUnavailable: "Der KI-Dienst konnte gerade keine Nische vorschlagen; nichts wurde geändert. Du kannst oben im Formular selbst eine Kategorie wählen oder es später erneut versuchen.",
     nicheNotSaved: "Eine Nische wurde vorgeschlagen, konnte aber nicht gespeichert werden; deine Kategorie ist unverändert. Versuch es erneut.",
     nameNotChanged: "Dein Name wurde nicht geändert: Die Änderung wurde nicht angenommen. Versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
+    nameHasContact: "Dein Name darf keine E-Mail, Telefonnummer oder keinen Link enthalten: Die andere Seite sieht ihn, und Kontakt läuft über Green Light.",
     whatsappNotChanged: "Deine WhatsApp-Einstellungen wurden nicht geändert: Die Änderung wurde nicht angenommen. Versuch es erneut; wenn es weiter fehlschlägt, wende dich an den Support.",
     messageNotSent: "Deine Nachricht wurde nicht gesendet und nichts wurde gespeichert. Versuch sie erneut zu senden.",
     dealRoomNotCreated: "Der Deal-Raum wurde nicht erstellt; deinem Postfach wurde nichts hinzugefügt. Versuch „Deal-Raum für dieses Angebot öffnen“ gleich noch einmal.",

@@ -25,7 +25,7 @@ trap cleanup EXIT
 RUN=()
 if [ "$(id -u)" = 0 ]; then chown -R postgres "$WORK"; RUN=(runuser -u postgres --); fi
 
-"${RUN[@]}" "$BIN/initdb" -D "$WORK/data" -U postgres -A trust >/dev/null
+"${RUN[@]}" "$BIN/initdb" -D "$WORK/data" -U postgres -A trust -E UTF8 --locale=C >/dev/null  # UTF8 like Supabase
 "${RUN[@]}" "$BIN/pg_ctl" -D "$WORK/data" -o "-k $WORK -p $PORT -c listen_addresses=''" -l "$WORK/log" -w start >/dev/null
 export PGHOST="$WORK" PGPORT="$PORT" PGUSER=postgres PGDATABASE=postgres
 q() { psql -XqAt -v ON_ERROR_STOP=1 "$@"; }
