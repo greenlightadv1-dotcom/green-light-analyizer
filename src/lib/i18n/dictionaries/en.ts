@@ -1134,6 +1134,7 @@ const en = {
       too_long: "Too long.",
       weak: "Use at least 10 characters with upper- and lower-case letters, a number and a symbol.",
       mismatch: "The two passwords don't match.",
+      contact: "Names can't include an email, phone number or link. Contact happens through Green Light.",
     },
     error: {
       invalid: "Some fields need attention.",
@@ -1436,6 +1437,7 @@ const en = {
     nicheUnavailable: "The AI service could not suggest a niche right now, so nothing was changed. You can pick a category yourself in the form above, or try again later.",
     nicheNotSaved: "A niche was suggested but could not be saved, so your category is unchanged. Try again.",
     nameNotChanged: "Your name was not changed: the update was not accepted. Try again; if it keeps failing, contact support.",
+    nameHasContact: "Your name can't include an email, phone number or link: the other side of a deal sees it, and contact happens through Green Light.",
     whatsappNotChanged: "Your WhatsApp settings were not changed: the update was not accepted. Try again; if it keeps failing, contact support.",
     messageNotSent: "Your message was not sent and nothing was stored. Try sending it again.",
     dealRoomNotCreated: "The deal room was not created, so nothing was added to your inbox. Try “Open a deal room for this offer” again in a moment.",

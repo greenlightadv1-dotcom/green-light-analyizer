@@ -8,6 +8,8 @@
  * Pure — unit-tested in access-requests.test.ts.
  */
 
+import { nameHasContact } from "./name-contact.ts";
+
 export const JOURNEYS = ["creator", "company", "company_representative"] as const;
 export type Journey = (typeof JOURNEYS)[number];
 
@@ -31,7 +33,7 @@ export type AccessRequestInput = {
   message: string | null;
 };
 
-export type FieldError = "required" | "invalid" | "too_long";
+export type FieldError = "required" | "invalid" | "too_long" | "contact";
 export type ParsedRequest =
   | { ok: true; value: AccessRequestInput }
   | { ok: false; errors: Partial<Record<keyof AccessRequestInput | "form", FieldError>> };
@@ -59,6 +61,7 @@ export function parseAccessRequest(form: FormData | Map<string, string>): Parsed
   if (!full_name) errors.full_name = "required";
   else if (full_name.length < 2) errors.full_name = "invalid";
   else if (full_name.length > 120) errors.full_name = "too_long";
+  else if (nameHasContact(full_name)) errors.full_name = "contact";
 
   const email = str(form, "email").toLowerCase();
   if (!email) errors.email = "required";
@@ -67,6 +70,7 @@ export function parseAccessRequest(form: FormData | Map<string, string>): Parsed
   const company_name = str(form, "company_name") || null;
   if (journey !== "creator" && !company_name) errors.company_name = "required";
   else if (company_name && company_name.length > 120) errors.company_name = "too_long";
+  else if (company_name && nameHasContact(company_name)) errors.company_name = "contact";
 
   let website = str(form, "website") || null;
   if (website) {

@@ -1122,6 +1122,7 @@ const es: Dictionary = {
       too_long: "Demasiado largo.",
       weak: "Usa al menos 10 caracteres con mayúsculas, minúsculas, un número y un símbolo.",
       mismatch: "Las dos contraseñas no coinciden.",
+      contact: "Un nombre no puede incluir un correo, un teléfono o un enlace. El contacto se hace a través de Green Light.",
     },
     error: {
       invalid: "Algunos campos necesitan revisión.",
@@ -1424,6 +1425,7 @@ const es: Dictionary = {
     nicheUnavailable: "El servicio de IA no pudo sugerir un nicho ahora, así que no cambió nada. Puedes elegir una categoría tú mismo en el formulario de arriba o intentarlo más tarde.",
     nicheNotSaved: "Se sugirió un nicho pero no se pudo guardar, así que tu categoría no cambió. Inténtalo de nuevo.",
     nameNotChanged: "Tu nombre no cambió: la actualización no se aceptó. Inténtalo de nuevo; si sigue fallando, contacta con soporte.",
+    nameHasContact: "Tu nombre no puede incluir un correo, un teléfono o un enlace: la otra parte lo ve, y el contacto se hace a través de Green Light.",
     whatsappNotChanged: "Tu configuración de WhatsApp no cambió: la actualización no se aceptó. Inténtalo de nuevo; si sigue fallando, contacta con soporte.",
     messageNotSent: "Tu mensaje no se envió y no se guardó nada. Intenta enviarlo de nuevo.",
     dealRoomNotCreated: "La sala de negociación no se creó, así que no se añadió nada a tu bandeja. Vuelve a intentar «Abrir una sala de deal para esta oferta» en un momento.",

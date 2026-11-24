@@ -1191,10 +1191,15 @@ else as a blocker.
    `ENTITY_ADDRESS` and `ENTITY_REGISTRATION` in
    `src/lib/constants/legal.ts` are filled with the owner's real details, and
    never invented.
-7. The owner has decided whether in-app (Discover) deals keep showing the
-   company's real email (`deal_chats.sender_email`) to the creator. Today
-   they do. It is not a §6 violation (that rule protects the creator), but it
-   does give both sides a way around the platform.
+7. ~~The owner has decided whether in-app (Discover) deals keep showing the
+   company's real email to the creator.~~ **Decided 2026-11-24: hidden.**
+   Migration 0043 makes `deal_chats.sender_email` the company's display name
+   on every room with a `company_id` (a trigger, so Discover, accepted
+   invitations and any future path all get it; existing rooms scrubbed).
+   Display names on `profiles` can no longer carry an email, a phone number
+   (7+ digits, Arabic-Indic included) or a link, in the app
+   (`lib/name-contact.ts`) and in the database (same trigger migration),
+   because the other side of a deal sees them.
 
 > **Update — release deployed: production at `aefe9db` (2026-11-22).** The
 > Supabase project had been paused by the Free plan's inactivity rule; it was
