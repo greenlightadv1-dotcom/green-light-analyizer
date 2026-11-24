@@ -1201,6 +1201,25 @@ else as a blocker.
    (`lib/name-contact.ts`) and in the database (same trigger migration),
    because the other side of a deal sees them.
 
+> **Update — production smoke test passed (2026-11-24).** Run on
+> `www.greenlightadvs.com` with the Smoke Test accounts (the owner signed in;
+> every check was confirmed in the live database):
+> - mail to the creator's alias opened a deal room, priced by the real model
+>   (this run found the model rating a no-data creator green; D6 now applies
+>   to the model path too);
+> - the creator's reply with a phone number, a `wa.me` link and an email was
+>   masked before storage, logged in `violation_logs` (no automatic ban) and
+>   relayed by email (`relay_status = sent`);
+> - the company completed its details, previewed and sent a Discover offer;
+>   the room shows the company's name, not its email (0043), and the offer's
+>   email and phone were masked;
+> - creator moved the deal to `agreed`; neither party is offered `paid`; the
+>   admin marked it `paid`.
+> Also verified: every required Vercel variable is set, including
+> `CRON_SECRET`, `NVIDIA_MODEL`/`AI_ENDPOINT` and `ROLE_MAILBOX_FORWARD_TO`.
+> Still open for item 5–6: Supabase Pro vs Free, the `ENTITY_*` details;
+> and malware scanning (§21).
+
 > **Update — release deployed: production at `aefe9db` (2026-11-22).** The
 > Supabase project had been paused by the Free plan's inactivity rule; it was
 > restored first. Migrations 0025–0041 were then applied to the live project as
