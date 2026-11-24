@@ -110,7 +110,7 @@ Added:
 - **"Still missing":** fields and documents.
 - **Labels saying which notes the applicant sees.** Every reviewer note (approve, request information, reject) is shown or emailed to the applicant. There is no internal-only note.
 
-**Admin-created accounts:** a creator or company created at `/admin/users` now starts as `pending_verification`, confined to `/verification` after the forced password change. Creators get a `creator_kyc` case opened; companies choose company or representative there. Admin accounts stay `active`. Existing accounts are **not** changed.
+**Admin-created accounts (owner decision, 2026-11-24, replaces the earlier rule):** an account created at `/admin/users` is `active` at once, after the forced password change, and no verification case is opened for it. Verification details are collected only from applicants, on `/get-started` → `/apply`, before a reviewer approves them.
 
 ## Database (0039, isolated stack only)
 
