@@ -1514,7 +1514,9 @@ Not deployed. **Migration 0039 is applied to the isolated stack only.** Full des
   - duplicate signals: same phone, name and date of birth, registration or tax number, or email;
   - a "still missing" list;
   - note labels say which notes the applicant sees;
-  - admin-created creator and company accounts start `pending_verification`.
+  - admin-created accounts are `active` at once with no verification case
+    (owner decision, 2026-11-24, replacing "start `pending_verification`").
+    Verification details are collected only on `/get-started` → `/apply`.
 - **No promised review time.** The "24 hours" copy was removed.
 - **Owner decisions:** PENDING_OWNER_DECISIONS §14.
 
