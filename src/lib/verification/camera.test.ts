@@ -1,15 +1,36 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { checkCameraJpeg, isCameraDocType, CAMERA_LIMITS } from "./camera.ts";
+import { checkCameraJpeg, exifHasCameraMetadata, isCameraDocType, CAMERA_LIMITS } from "./camera.ts";
 
 function seg(marker: number, payload: number[]): number[] {
   const len = payload.length + 2;
   return [0xff, marker, len >> 8, len & 0xff, ...payload];
 }
-function jpeg({ width = 1280, height = 720, exif = false }: { width?: number; height?: number; exif?: boolean } = {}): Uint8Array {
+/** A big-endian TIFF block with one IFD0 holding the given tags (value 0). */
+function tiff(tags: number[], exifIfdTags?: number[]): number[] {
+  const entries = [...tags, ...(exifIfdTags ? [0x8769] : [])];
+  const ifd0Len = 2 + entries.length * 12 + 4;
+  const exifOffset = 8 + ifd0Len;
+  const out = [0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8, 0, entries.length];
+  for (const tag of entries) {
+    const value = tag === 0x8769 ? exifOffset : 0;
+    out.push(tag >> 8, tag & 0xff, 0, 4, 0, 0, 0, 1, (value >>> 24) & 0xff, (value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff);
+  }
+  out.push(0, 0, 0, 0);
+  if (exifIfdTags) {
+    out.push(0, exifIfdTags.length);
+    for (const tag of exifIfdTags) out.push(tag >> 8, tag & 0xff, 0, 4, 0, 0, 0, 1, 0, 0, 0, 0);
+    out.push(0, 0, 0, 0);
+  }
+  return out;
+}
+const EXIF_HEADER = [0x45, 0x78, 0x69, 0x66, 0, 0];
+
+function jpeg({ width = 1280, height = 720, exif = false, exifBlock }: { width?: number; height?: number; exif?: boolean; exifBlock?: number[] } = {}): Uint8Array {
   const parts = [0xff, 0xd8];
   parts.push(...seg(0xe0, [0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0])); // APP0 JFIF (what a canvas writes)
-  if (exif) parts.push(...seg(0xe1, [0x45, 0x78, 0x69, 0x66, 0, 0, 0x4d, 0x4d, 0, 0x2a])); // APP1 Exif (what cameras/galleries write)
+  if (exif) parts.push(...seg(0xe1, [0x45, 0x78, 0x69, 0x66, 0, 0, 0x4d, 0x4d, 0, 0x2a])); // APP1 Exif, truncated (malformed)
+  if (exifBlock) parts.push(...seg(0xe1, [...EXIF_HEADER, ...exifBlock]));
   parts.push(...seg(0xc0, [8, height >> 8, height & 0xff, width >> 8, width & 0xff, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1]));
   parts.push(...seg(0xda, [3, 1, 0, 2, 0x11, 3, 0x11, 0, 0x3f, 0]));
   parts.push(0x12, 0x34, 0xff, 0xd9);
@@ -21,8 +42,32 @@ test("a canvas-style JPEG within bounds is accepted, with its dimensions", () =>
   assert.deepEqual(checkCameraJpeg(jpeg({ width: 640, height: 480 })), { ok: true, width: 640, height: 480 });
 });
 
-test("an EXIF-bearing image (camera app or gallery) is refused", () => {
+test("a malformed EXIF block is refused", () => {
   assert.deepEqual(checkCameraJpeg(jpeg({ exif: true })), { ok: false, error: "not_camera" });
+});
+
+test("camera metadata in EXIF (make, model, dates, GPS, exposure) is refused", () => {
+  for (const tag of [0x010f, 0x0110, 0x0132, 0x8825]) {
+    assert.deepEqual(checkCameraJpeg(jpeg({ exifBlock: tiff([0x0112, tag]) })), { ok: false, error: "not_camera" }, tag.toString(16));
+  }
+  for (const tag of [0x9003, 0x829a, 0xa434]) {
+    assert.deepEqual(checkCameraJpeg(jpeg({ exifBlock: tiff([0x0112], [0xa001, tag]) })), { ok: false, error: "not_camera" }, tag.toString(16));
+  }
+});
+
+test("Safari's canvas EXIF (orientation, colour space, pixel size only) is accepted", () => {
+  // iOS Safari writes this on canvas.toBlob('image/jpeg') captures.
+  const block = tiff([0x0112, 0x011a, 0x011b, 0x0128], [0xa001, 0xa002, 0xa003]);
+  assert.deepEqual(checkCameraJpeg(jpeg({ exifBlock: block })), { ok: true, width: 1280, height: 720 });
+  assert.equal(exifHasCameraMetadata(new Uint8Array(block)), false);
+});
+
+test("an EXIF IFD pointer loop is treated as malformed", () => {
+  const block = tiff([0x0112], [0xa001]);
+  // Point the Exif IFD back at IFD0.
+  block[10 + 12 + 8 + 3] = 8;
+  block[10 + 12 + 8 + 2] = 0;
+  assert.equal(exifHasCameraMetadata(new Uint8Array(block)), true);
 });
 
 test("PNG, PDF, WebP, empty and truncated files are refused", () => {

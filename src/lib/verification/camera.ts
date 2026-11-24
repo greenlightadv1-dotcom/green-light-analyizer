@@ -5,10 +5,12 @@
  *
  * What this can and cannot establish, stated plainly:
  * - It CAN reject anything that is not a well-formed JPEG within size and
- *   dimension bounds, and anything carrying an EXIF (APP1 "Exif") segment.
- *   A browser canvas never writes EXIF, while phone-gallery and camera-app
- *   photos almost always do, so EXIF is a strong sign the file did not come
- *   from the in-page capture.
+ *   dimension bounds, and anything whose EXIF (APP1 "Exif") segment carries
+ *   camera metadata: make, model, capture date, exposure settings or GPS.
+ *   Camera-app and phone-gallery photos almost always carry those. A browser
+ *   canvas never does, but Safari on iOS/macOS still writes a small EXIF
+ *   block on canvas JPEGs (colour space, pixel size), so EXIF alone is not a
+ *   sign of a gallery photo. A malformed EXIF block is refused.
  * - It CANNOT prove the image came from a live camera. A determined person
  *   can strip EXIF from a gallery photo. This is Live Camera Capture as a
  *   user-interface flow, NOT liveness detection, face matching or proof that
@@ -50,7 +52,7 @@ export function checkCameraJpeg(bytes: Uint8Array): CameraCheck {
     if (len < 2 || i + 2 + len > bytes.length) return { ok: false, error: "corrupt" };
     const seg = i + 4;
     if (marker === 0xe1 && len >= 8 && bytes[seg] === 0x45 && bytes[seg + 1] === 0x78 && bytes[seg + 2] === 0x69 && bytes[seg + 3] === 0x66 && bytes[seg + 4] === 0 && bytes[seg + 5] === 0) {
-      return { ok: false, error: "not_camera" };
+      if (exifHasCameraMetadata(bytes.subarray(seg + 6, i + 2 + len))) return { ok: false, error: "not_camera" };
     }
     if (SOF.has(marker)) {
       if (len < 7) return { ok: false, error: "corrupt" };
@@ -64,4 +66,55 @@ export function checkCameraJpeg(bytes: Uint8Array): CameraCheck {
   if (width < CAMERA_LIMITS.minWidth || height < CAMERA_LIMITS.minHeight) return { ok: false, error: "too_small" };
   if (width > CAMERA_LIMITS.maxSide || height > CAMERA_LIMITS.maxSide) return { ok: false, error: "too_large" };
   return { ok: true, width, height };
+}
+
+/**
+ * Tags only a camera or a photo library writes. Safari's canvas encoder
+ * writes none of them (it writes colour space and pixel dimensions).
+ */
+const CAMERA_TAGS = new Set([
+  0x010f, // Make
+  0x0110, // Model
+  0x0132, // DateTime
+  0x8825, // GPS IFD pointer
+  0x829a, // ExposureTime
+  0x829d, // FNumber
+  0x8827, // ISO
+  0x9003, // DateTimeOriginal
+  0x9004, // DateTimeDigitized
+  0x920a, // FocalLength
+  0xa433, // LensMake
+  0xa434, // LensModel
+]);
+const EXIF_IFD_POINTER = 0x8769;
+
+/** True when the TIFF block carries camera metadata, or cannot be read. */
+export function exifHasCameraMetadata(tiff: Uint8Array): boolean {
+  if (tiff.length < 8) return true;
+  const little = tiff[0] === 0x49 && tiff[1] === 0x49;
+  const big = tiff[0] === 0x4d && tiff[1] === 0x4d;
+  if (!little && !big) return true;
+  const u16 = (o: number) => (little ? tiff[o] | (tiff[o + 1] << 8) : (tiff[o] << 8) | tiff[o + 1]);
+  const u32 = (o: number) =>
+    (little
+      ? tiff[o] | (tiff[o + 1] << 8) | (tiff[o + 2] << 16) | (tiff[o + 3] << 24)
+      : (tiff[o] << 24) | (tiff[o + 1] << 16) | (tiff[o + 2] << 8) | tiff[o + 3]) >>> 0;
+  if (u16(2) !== 0x2a) return true;
+
+  const visited = new Set<number>();
+  const walk = (offset: number, depth: number): boolean => {
+    if (depth > 2 || visited.has(offset)) return true;
+    visited.add(offset);
+    if (offset < 8 || offset + 2 > tiff.length) return true;
+    const count = u16(offset);
+    if (count > 512 || offset + 2 + count * 12 > tiff.length) return true;
+    for (let n = 0; n < count; n++) {
+      const e = offset + 2 + n * 12;
+      const tag = u16(e);
+      if (CAMERA_TAGS.has(tag)) return true;
+      if (tag === EXIF_IFD_POINTER && walk(u32(e + 8), depth + 1)) return true;
+    }
+    return false;
+  };
+  return walk(u32(4), 0);
 }
