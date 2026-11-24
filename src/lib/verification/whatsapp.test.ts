@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { activationWhatsAppText, whatsappDigits } from "./whatsapp.ts";
+import { activationWhatsAppText, approvedWhatsAppText, whatsappDigits } from "./whatsapp.ts";
 
 test("whatsappDigits keeps international digits only", () => {
   assert.equal(whatsappDigits("+201012345678"), "201012345678");
@@ -22,4 +22,10 @@ test("the activation message carries the link in both languages and no password"
   assert.equal(text.split(link).length - 1, 2);
   assert.match(text, /48/);
   assert.doesNotMatch(text, /password:/i);
+});
+
+test("the approval message points at the sign-in page and carries no secret", () => {
+  const text = approvedWhatsAppText("https://www.greenlightadvs.com/login");
+  assert.match(text, /\/login/);
+  assert.doesNotMatch(text, /token=|password:/i);
 });

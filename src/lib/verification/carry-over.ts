@@ -9,8 +9,8 @@ import { BUCKET } from "./documents-server";
 import { publicProfileFromDetails } from "./public-profile";
 
 /**
- * After activation, carry what a creator chose to make PUBLIC on their
- * application into the new profile (docs/REGISTRATION_ONBOARDING_FLOW.md):
+ * After activation (an application) or approval (an account's own case),
+ * carry what a creator chose to make PUBLIC into the profile (docs/REGISTRATION_ONBOARDING_FLOW.md):
  *
  * - the public profile photo: copied from the private verification bucket
  *   into the public avatars bucket through the same checks as a normal avatar
@@ -22,16 +22,11 @@ import { publicProfileFromDetails } from "./public-profile";
  * failure is logged and the creator can set these on their profile. Nothing
  * here touches portfolio visibility, which the creator chooses themselves.
  */
-export async function carryOverPublicProfile(userId: string, requestId: string): Promise<void> {
+export async function carryOverPublicProfile(userId: string, where: { requestId: string } | { caseId: string }): Promise<void> {
   try {
     const service = createAdminClient();
-    const { data: c } = await service
-      .from("verification_cases")
-      .select("id, details")
-      .eq("access_request_id", requestId)
-      .eq("kind", "creator_kyc")
-      .eq("profile_id", userId)
-      .maybeSingle();
+    const base = service.from("verification_cases").select("id, details").eq("kind", "creator_kyc").eq("profile_id", userId);
+    const { data: c } = await ("requestId" in where ? base.eq("access_request_id", where.requestId) : base.eq("id", where.caseId)).maybeSingle();
     if (!c) return;
 
     const pub = publicProfileFromDetails(c.details ?? {});
@@ -66,8 +61,8 @@ export async function carryOverPublicProfile(userId: string, requestId: string):
       log.warn("activation.photo_store_failed", { reason: stored.error });
       return;
     }
-    const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/${UPLOAD_RULES.avatar.bucket}/`;
-    const { error } = await service.from("profiles").update({ avatar_url: `${base}${stored.file.path}` }).eq("id", userId).is("avatar_url", null);
+    const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/${UPLOAD_RULES.avatar.bucket}/`;
+    const { error } = await service.from("profiles").update({ avatar_url: `${publicBase}${stored.file.path}` }).eq("id", userId).is("avatar_url", null);
     if (error) {
       await service.storage.from(UPLOAD_RULES.avatar.bucket).remove([stored.file.path]);
       log.warn("activation.photo_profile_failed", { error });

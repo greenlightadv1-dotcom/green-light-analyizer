@@ -12,34 +12,20 @@ import { HONEYPOT_FIELD, type Journey } from "@/lib/access-requests";
 const PLATFORMS = ["youtube", "twitch", "kick", "instagram", "tiktok", "x", "other"] as const;
 
 /**
- * One application per journey (features 1–2). Client checks mirror the
- * server's (lib/access-requests.ts), which stays authoritative; on an error
- * the form keeps what was typed (inputs are uncontrolled with defaultValue
- * from the submitted data).
+ * Step 1 of Get Started: the account itself (name, email, password and the
+ * journey's basics). Submitting creates a pending account and opens the
+ * verification steps (app/get-started/actions.ts). Client checks mirror the
+ * server's, which stay authoritative; on an error the form keeps what was
+ * typed, except the password.
  */
 export function ApplicationForm({ journey }: { journey: Journey }) {
   const { t } = useTranslation();
   const [state, action, pending] = useActionState<ApplyState, FormData>(submitAccessRequest, { status: "idle" });
-  const errors = state.status === "invalid" ? state.errors : {};
+  const errors = state.status === "invalid" ? state.errors : ({} as Extract<ApplyState, { status: "invalid" }>["errors"]);
   const err = (k: keyof typeof errors) => (errors[k] ? t(`getStarted.fieldError.${errors[k]}`) : undefined);
   // React resets a form after its action runs; the server echoes what was
   // typed so a failed submit never makes the applicant start again.
   const v = state.status === "invalid" || state.status === "error" ? state.values : null;
-
-  if (state.status === "submitted") {
-    return (
-      <div className="glass-panel p-6 text-center sm:p-8" role="status">
-        <h2 className="text-lg font-semibold text-fg">{t("getStarted.submittedTitle")}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-fg/60">{t("getStarted.submittedBody")}</p>
-        <p className="mt-3 text-xs text-fg-muted">
-          {t("getStarted.resendHint")} <Link href="/apply" className="text-accent underline">{t("getStarted.resendLink")}</Link>.
-        </p>
-        <Link href="/" className="mt-5 inline-block text-sm font-medium text-accent underline-offset-2 hover:underline">
-          {t("getStarted.backHome")}
-        </Link>
-      </div>
-    );
-  }
 
   const company = journey !== "creator";
 
@@ -101,22 +87,20 @@ export function ApplicationForm({ journey }: { journey: Journey }) {
         </>
       )}
 
-      <div className="space-y-1.5">
-        <label htmlFor="message" className="block text-sm font-medium text-fg-muted">
-          {t("getStarted.message")}
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          defaultValue={v?.message}
-          rows={3}
-          maxLength={1000}
-          className="w-full rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-fg focus:border-forest focus:ring-3 focus:ring-brand-green/30 focus:outline-none dark:focus:border-brand-green"
-        />
-        <p className="text-xs text-fg-muted">{err("message") ?? t("getStarted.optional")}</p>
-      </div>
+      <Field id="password" name="password" type="password" label={t("getStarted.password")} required minLength={10} maxLength={72} autoComplete="new-password" dir="ltr" hint={errors.password ? t("getStarted.fieldError.weak") : t("getStarted.passwordHint")} aria-invalid={!!errors.password} />
+      <Field id="password_confirm" name="password_confirm" type="password" label={t("getStarted.passwordConfirm")} required minLength={10} maxLength={72} autoComplete="new-password" dir="ltr" hint={errors.password_confirm ? t("getStarted.fieldError.mismatch") : undefined} aria-invalid={!!errors.password_confirm} />
 
-      {state.status === "error" ? <Alert>{t(`getStarted.error.${state.code}`)}</Alert> : null}
+      {state.status === "error" ? (
+        <Alert>
+          {t(`getStarted.error.${state.code}`)}
+          {state.code === "email_taken" ? (
+            <>
+              {" "}
+              <Link href="/login" className="underline">{t("getStarted.signInInstead")}</Link>
+            </>
+          ) : null}
+        </Alert>
+      ) : null}
       {state.status === "invalid" ? <Alert>{t("getStarted.error.invalid")}</Alert> : null}
 
       <p className="text-xs leading-relaxed text-fg-muted">

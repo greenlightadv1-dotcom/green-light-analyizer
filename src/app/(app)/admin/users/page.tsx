@@ -79,7 +79,7 @@ export default async function AdminUsersPage({
     <>
       <SectionHeader
         title="Accounts"
-        description="Green Light is admin-gated. Every creator and company account is opened here — there is no public sign-up."
+        description="Accounts you open here are active at once. People can also open their own account on Get Started; those stay on hold until a reviewer approves them under Verification."
       />
 
       <div className="grid gap-4 lg:grid-cols-5">

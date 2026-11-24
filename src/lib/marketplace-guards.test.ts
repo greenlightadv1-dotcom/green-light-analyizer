@@ -27,11 +27,14 @@ function body(file: string, name: string): string {
   return source.slice(start, next === -1 ? undefined : next);
 }
 
-test("Get Started never creates an auth user or a profile (admin-gated, §4)", () => {
+test("Get Started creates only a PENDING account that a reviewer must approve (owner decision, 2026-11-24)", () => {
   const src = read("app/get-started/actions.ts");
-  assert.ok(!/auth\.admin\.createUser|\.from\("profiles"\)/.test(src), "applications must only write access_requests");
-  assert.match(src, /\.from\("access_requests"\)\.insert/);
+  assert.match(src, /account_status: "pending_verification"/);
+  assert.doesNotMatch(src, /account_status: "active"/, "a signed-up account is never active before approval");
+  assert.doesNotMatch(src, /auth\.signUp/, "public sign-up stays off; the server creates the user");
+  assert.match(src, /\.from\("verification_cases"\)/, "every signed-up account gets a case to fill in");
   assert.match(src, /HONEYPOT_FIELD/);
+  assert.match(src, /consumeRateLimit\("access_request"/);
   assert.match(read("lib/supabase/session.ts"), /"\/get-started"/, "Get Started must be public");
 });
 

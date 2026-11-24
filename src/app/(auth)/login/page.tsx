@@ -27,9 +27,8 @@ export default async function LoginPage({
       <ForgotPasswordLink />
 
       {/*
-        §4.1 — admin-gated: there is no self-signup anywhere in this product,
-        so this panel offers a support route rather than a "create account"
-        link. Payments are confirmed via Discord tickets (§4.3), not in-app
+        Accounts are opened on Get Started (held until a reviewer approves
+        them) or by an admin; this panel points there and to support. Payments are confirmed via Discord tickets (§4.3), not in-app
         billing.
       */}
       <AccessNote />

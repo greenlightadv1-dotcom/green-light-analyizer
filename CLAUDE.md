@@ -1145,17 +1145,24 @@ else as a blocker.
 > accepts Arabic-Indic digits, `٪` and `،`. No schema, action or labelling
 > change; verified/self-reported tags are untouched.
 >
-> **Approved exception (2026-11-24): application flow.** A new Get Started
-> application opens the step-by-step `/apply` form at once (the resume cookie
-> is set by `submitAccessRequest`); an address that already has an open
-> application still gets only the emailed link. Submission still requires the
-> emailed link to be opened (`verification_submit_guard`). After approval the
-> reviewer can also send the one-time activation link on WhatsApp
-> (`activationForWhatsApp`: a fresh link, also emailed, opened in the
-> reviewer's own WhatsApp via `wa.me`; no WhatsApp API, no password in any
-> message). `Permissions-Policy` now allows `camera=(self)` site-wide: Next.js
-> navigates client-side, so the per-page header blocked capture after a soft
-> navigation.
+> **Approved exception (2026-11-24): self-opened accounts (owner decision).**
+> Get Started now opens the account itself: name, email, the applicant's own
+> password (`passwordProblems`) and the journey's basics. `submitAccessRequest`
+> creates the auth user server-side (`auth.admin.createUser`, email confirmed,
+> public sign-up stays OFF), a profile with `account_status:
+> "pending_verification"` and the journey's verification case, signs the
+> person in and sends them to `/verification` — no emailed link anywhere.
+> The account is confined to `/verification` until a reviewer approves the
+> case, which activates it (`verification_transition`); approval also carries
+> the creator's public photo, handle and categories onto the profile. Details
+> are locked once submitted and shown read-only (`LockedDetails`). Reviewers
+> get a "Tell them on WhatsApp" link (wa.me, no API) for approved accounts.
+> Terms §2 and Privacy §12 were rewritten (`TERMS_LAST_UPDATED`,
+> `PRIVACY_LAST_UPDATED` 24 November 2026; wording for legal review). Admin-
+> created accounts stay active at once. The older application → activation
+> link path (`/apply`, tokens) still works for applications opened before.
+> `Permissions-Policy` allows `camera=(self)` site-wide, because Next.js
+> navigates client-side and a per-page header blocked capture.
 
 **Definition of Done ("Launch Ready")** — all of these must be true:
 1. `main` carries every fix, CI-equivalent checks pass (`npm test`, `tsc`,
