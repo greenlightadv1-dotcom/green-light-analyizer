@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { capRiskByVerification, HIGH_VALUE_DEAL_USD, highValueBasisUsd } from "./rules.ts";
+import { capRiskByVerification, HIGH_VALUE_DEAL_USD, highValueBasisUsd, holdRiskWithoutReach } from "./rules.ts";
 
 /**
  * §7.4: "unverified audience data should never by itself produce a green
@@ -67,4 +67,13 @@ test("a high offer caps an unverified green even when the recommendation is low"
 
 test("verified geography still keeps green whatever the basis", () => {
   assert.equal(capRiskByVerification("green", true, highValueBasisUsd(200, 50_000)).risk, "green");
+});
+
+test("D6: no reach on file holds green at yellow, never makes it red", () => {
+  assert.equal(holdRiskWithoutReach("green", 0, 0), "yellow");
+  assert.equal(holdRiskWithoutReach("green", null, undefined), "yellow");
+  assert.equal(holdRiskWithoutReach("yellow", 0, 0), "yellow");
+  assert.equal(holdRiskWithoutReach("red", 0, 0), "red");
+  assert.equal(holdRiskWithoutReach("green", 5000, 0), "green");
+  assert.equal(holdRiskWithoutReach("green", 0, 300), "green");
 });
