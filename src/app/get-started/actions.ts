@@ -87,7 +87,6 @@ export async function submitAccessRequest(_prev: ApplyState, formData: FormData)
     primary_email: a.email,
     must_change_password: false,
     account_status: "pending_verification",
-    ...(a.company_name ? { company_name: a.company_name } : {}),
     ...(a.website ? { company_website: a.website } : {}),
   });
   if (profileError) {

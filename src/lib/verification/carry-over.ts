@@ -61,8 +61,8 @@ export async function carryOverPublicProfile(userId: string, where: { requestId:
       log.warn("activation.photo_store_failed", { reason: stored.error });
       return;
     }
-    const base = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/${UPLOAD_RULES.avatar.bucket}/`;
-    const { error } = await service.from("profiles").update({ avatar_url: `${base}${stored.file.path}` }).eq("id", userId).is("avatar_url", null);
+    const publicBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/${UPLOAD_RULES.avatar.bucket}/`;
+    const { error } = await service.from("profiles").update({ avatar_url: `${publicBase}${stored.file.path}` }).eq("id", userId).is("avatar_url", null);
     if (error) {
       await service.storage.from(UPLOAD_RULES.avatar.bucket).remove([stored.file.path]);
       log.warn("activation.photo_profile_failed", { error });
