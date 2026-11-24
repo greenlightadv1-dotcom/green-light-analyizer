@@ -17,8 +17,12 @@ export function LandingNav() {
   return (
     <div className="sticky top-4 z-40 mx-auto w-full max-w-6xl px-4 sm:px-6">
       <nav className="glass-panel-solid flex items-center justify-between gap-3 rounded-full py-2 ps-5 pe-2">
-        <Link href="/" aria-label="Green Light home" className="rounded-full focus-visible:focus-ring">
+        <Link href="/" aria-label="Green Light home" className="flex items-center gap-2 rounded-full focus-visible:focus-ring">
           <ThemedLogo size={30} />
+          {/* The product name in text, next to the mark: Google's OAuth
+              branding review checks that the consent screen's app name
+              appears on the home page. */}
+          <span className="text-base font-bold tracking-tight text-fg" dir="ltr">Green Light</span>
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">

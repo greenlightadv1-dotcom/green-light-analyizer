@@ -34,6 +34,7 @@ export function ContactFooter() {
       <div className="glass-panel flex flex-col items-center gap-6 px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-start">
         <div className="flex items-center gap-3">
           <ThemedLogo size={28} />
+          <span className="text-sm font-bold tracking-tight text-fg" dir="ltr">Green Light</span>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
