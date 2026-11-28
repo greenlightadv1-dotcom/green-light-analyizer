@@ -44,7 +44,7 @@ afterEach(() => {
   Object.assign(console, realLog);
 });
 
-test("invalid_grant deletes the token and clears only YouTube verified geography", async () => {
+test("invalid_grant deletes the token and every piece of the creator's YouTube API data", async () => {
   tokenResponse = { status: 400, body: { error: "invalid_grant", error_description: "Token has been expired or revoked." } };
   assert.equal(await getValidAccessToken("creator-1"), null);
 
@@ -58,7 +58,22 @@ test("invalid_grant deletes the token and clears only YouTube verified geography
     verified_top_countries: null,
     verified_geo_synced_at: null,
     analytics_oauth_connected: false,
+    subscriber_count: null,
+    channel_view_count: null,
+    media_count: null,
+    recent_median_views: null,
+    recent_views_sample: null,
+    youtube_stats_synced_at: null,
+    engagement_rate: null,
+    recent_videos_complete: null,
   });
+  assert.deepEqual(
+    state.deletes.map((d: { table: string; filters: unknown }) => [d.table, d.filters]),
+    [
+      ["media_kit_videos", [["creator_id", "creator-1"], ["platform", "youtube"]]],
+      ["media_kit_snapshots", [["creator_id", "creator-1"], ["platform", "youtube"]]],
+    ],
+  );
   assert.deepEqual(state.saved, [], "no token is saved");
 });
 

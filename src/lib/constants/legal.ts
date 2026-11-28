@@ -93,7 +93,7 @@ export const TERMS_LAST_UPDATED = "24 November 2026";
  * to describe self-opened accounts. Update on every substantive change to
  * the Privacy Policy.
  */
-export const PRIVACY_LAST_UPDATED = "24 November 2026";
+export const PRIVACY_LAST_UPDATED = "28 November 2026";
 
 /** Notice given before a material change takes effect. */
 export const CHANGE_NOTICE_DAYS = 30;

@@ -59,10 +59,22 @@ export type IntakeOutcome = {
 };
 
 /** Opening summary posted into the room, from the platform rather than a user. */
-function summaryMessage(
+/**
+ * When the price used the creator's verified YouTube Analytics geography, the
+ * model's free-text reasoning can quote it ("46% of your verified audience").
+ * Deal rooms are kept after an account closes (Privacy §9), and YouTube API
+ * data may not be (YouTube API Services Developer Policies III.D.3/III.E.4,
+ * Google's verification review of 2026-11-26), so that reasoning is not
+ * stored: the room keeps Green Light's own price and rating, and a note.
+ */
+export const YOUTUBE_REASONING_NOTE =
+  "Priced against your verified YouTube audience. The detailed reasoning is not kept in the deal room, because it can quote your YouTube Analytics figures, which Green Light keeps only in your media kit. Paste the offer into the Manual Analyzer to see it in full.";
+
+export function summaryMessage(
   evaluation: EvaluationResult,
   offered: number | null,
   attachments: string,
+  usedYoutubeData = false,
 ): string {
   const lines = [
     `Deal Co-Pilot — ${evaluation.risk.toUpperCase()}`,
@@ -72,7 +84,7 @@ function summaryMessage(
       : "No amount was stated in the message.",
     `Recommended: $${evaluation.recommended_price_usd.toLocaleString("en-US")} (fair range $${evaluation.price_range_usd.low.toLocaleString("en-US")}–$${evaluation.price_range_usd.high.toLocaleString("en-US")}).`,
     "",
-    evaluation.reasoning,
+    usedYoutubeData ? YOUTUBE_REASONING_NOTE : evaluation.reasoning,
   ];
 
   if (evaluation.risk_capped) {
@@ -575,6 +587,7 @@ export async function processInboundEmail(
         evaluation,
         offered,
         summarizeAttachments(email.attachments),
+        audienceVerified,
       ),
       is_masked: false,
     });

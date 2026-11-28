@@ -35,6 +35,7 @@ export function reset() {
   state.upserts = [];
   state.updates = [];
   state.deleted = [];
+  state.deletes = [];
   state.connection = null;
   state.stateValid = true;
   state.profile = DEFAULT_PROFILE;
@@ -72,6 +73,20 @@ export function createAdminClient() {
         async upsert(row, options) {
           state.upserts.push({ table, row, options });
           return { data: null, error: null };
+        },
+        delete() {
+          const entry = { table, filters: [] };
+          (state.deletes ??= []).push(entry);
+          const chain = {
+            eq(column, value) {
+              entry.filters.push([column, value]);
+              return chain;
+            },
+            then(resolve) {
+              resolve({ data: null, error: null });
+            },
+          };
+          return chain;
         },
         update(row) {
           const entry = { table, row, filters: [] };

@@ -346,3 +346,23 @@ test("a failed forward is recorded as an error", async () => {
   assert.equal(out.status, "rejected");
   assert.ok(logs.some((l) => l.includes("inbound.role_mailbox_forward_failed")));
 });
+
+test("YouTube review: a room priced on verified YouTube geography does not store the model's reasoning", async () => {
+  const { summaryMessage, YOUTUBE_REASONING_NOTE } = await import("../intake.ts");
+  const evaluation = {
+    risk: "yellow",
+    recommended_price_usd: 300,
+    price_range_usd: { low: 250, high: 350 },
+    reasoning: "The sponsor targets Egypt and Algeria, about 46% of the creator's verified audience.",
+    engine: "model",
+    risk_capped: false,
+  } as unknown as Parameters<typeof summaryMessage>[0];
+
+  const withYoutube = summaryMessage(evaluation, 500, "", true);
+  assert.ok(!withYoutube.includes("46%"), "YouTube-derived figure stored");
+  assert.ok(withYoutube.includes(YOUTUBE_REASONING_NOTE));
+  assert.ok(withYoutube.includes("Recommended: $300"));
+
+  const withoutYoutube = summaryMessage(evaluation, 500, "", false);
+  assert.ok(withoutYoutube.includes("46%"), "reasoning kept when no YouTube data was used");
+});
