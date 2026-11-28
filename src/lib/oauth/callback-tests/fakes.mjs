@@ -15,6 +15,7 @@ export const DEFAULT_PROFILE = { id: PROFILE_ID, role: "creator", subscription_p
  *   upserts: { table: string, row: unknown, options: unknown }[],
  *   updates: { table: string, row: unknown, filters: [string, unknown][] }[],
  *   deleted: { creatorId: string, platform: string }[],
+ *   deletes: { table: string, filters: [string, unknown][] }[],
  *   connection: Record<string, unknown> | null,
  *   stateValid: boolean,
  *   profile: Record<string, unknown>,
@@ -25,6 +26,7 @@ export const state = {
   upserts: [],
   updates: [],
   deleted: [],
+  deletes: [],
   connection: null,
   stateValid: true,
   profile: DEFAULT_PROFILE,
@@ -76,7 +78,7 @@ export function createAdminClient() {
         },
         delete() {
           const entry = { table, filters: [] };
-          (state.deletes ??= []).push(entry);
+          state.deletes.push(entry);
           const chain = {
             eq(column, value) {
               entry.filters.push([column, value]);

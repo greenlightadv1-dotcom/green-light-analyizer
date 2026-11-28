@@ -68,7 +68,7 @@ test("invalid_grant deletes the token and every piece of the creator's YouTube A
     recent_videos_complete: null,
   });
   assert.deepEqual(
-    state.deletes.map((d: { table: string; filters: unknown }) => [d.table, d.filters]),
+    state.deletes.map((d) => [d.table, d.filters]),
     [
       ["media_kit_videos", [["creator_id", "creator-1"], ["platform", "youtube"]]],
       ["media_kit_snapshots", [["creator_id", "creator-1"], ["platform", "youtube"]]],
