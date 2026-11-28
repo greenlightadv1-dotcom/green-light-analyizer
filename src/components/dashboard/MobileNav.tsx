@@ -8,7 +8,9 @@ import { useTranslation } from "@/components/LocaleProvider";
 import type { Role } from "@/lib/types/database";
 import { emitG } from "@/components/g/events";
 import { NavLinks } from "./NavLinks";
+import type { BadgeHref } from "@/lib/notifications/rules";
 import { MOBILE_TABS, isActivePath } from "./nav";
+import { useNavBadges } from "./useNavBadges";
 import Link from "next/link";
 
 const ICONS: Record<string, string> = {
@@ -30,7 +32,12 @@ function TabIcon({ name }: { name: string }) {
   );
 }
 
-function TabLink({ href, label, active, icon }: { href: string; label: string; active: boolean; icon: string }) {
+/** A small green light on a tab icon when its page has something new. */
+function TabDot({ on }: { on: boolean }) {
+  return on ? <span aria-hidden className="absolute -end-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-brand-green" /> : null;
+}
+
+function TabLink({ href, label, active, icon, dot = false }: { href: string; label: string; active: boolean; icon: string; dot?: boolean }) {
   return (
     <li className="flex justify-center">
       <Link
@@ -40,8 +47,9 @@ function TabLink({ href, label, active, icon }: { href: string; label: string; a
           active ? "font-semibold text-fg" : "font-medium text-fg-muted hover:text-fg"
         }`}
       >
-        <span className={`flex h-8 w-12 items-center justify-center rounded-full ${active ? "bg-lime-soft text-accent" : ""}`}>
+        <span className={`relative flex h-8 w-12 items-center justify-center rounded-full ${active ? "bg-lime-soft text-accent" : ""}`}>
           <TabIcon name={icon} />
+          <TabDot on={dot} />
         </span>
         {label}
       </Link>
@@ -78,6 +86,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1
 export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: string }) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const badges = useNavBadges(basePath);
   const isClient = useIsClient();
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const open = openedOn !== null && openedOn === pathname;
@@ -126,6 +135,11 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
     };
   }, [open]);
 
+  const tabHrefs = new Set<string>(MOBILE_TABS[role].map((tab) => tab.href));
+  const hasDot = (href: string) => (badges[href as BadgeHref] ?? 0) > 0;
+  // "More" lights up when a page that is only in the drawer has something new.
+  const moreDot = Object.entries(badges).some(([href, n]) => !tabHrefs.has(href) && (n ?? 0) > 0);
+
   return (
     <>
       {/* Phone tab bar: the role's three main destinations, G, and More (the
@@ -137,7 +151,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
       >
         <ul className="mx-auto grid max-w-lg grid-cols-5">
           {MOBILE_TABS[role].slice(0, 2).map((tab) => (
-            <TabLink key={tab.href} href={`${basePath}${tab.href}`} label={t(tab.labelKey)} active={isActivePath(pathname, `${basePath}${tab.href}`)} icon={tab.href} />
+            <TabLink key={tab.href} href={`${basePath}${tab.href}`} label={t(tab.labelKey)} active={isActivePath(pathname, `${basePath}${tab.href}`)} icon={tab.href} dot={hasDot(tab.href)} />
           ))}
           <li className="flex justify-center">
             <button
@@ -150,7 +164,7 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
             </button>
           </li>
           {MOBILE_TABS[role].slice(2).map((tab) => (
-            <TabLink key={tab.href} href={`${basePath}${tab.href}`} label={t(tab.labelKey)} active={isActivePath(pathname, `${basePath}${tab.href}`)} icon={tab.href} />
+            <TabLink key={tab.href} href={`${basePath}${tab.href}`} label={t(tab.labelKey)} active={isActivePath(pathname, `${basePath}${tab.href}`)} icon={tab.href} dot={hasDot(tab.href)} />
           ))}
           <li className="flex justify-center">
             <button
@@ -162,7 +176,10 @@ export function MobileNav({ role, basePath = "" }: { role: Role; basePath?: stri
               aria-controls={open ? panelId : undefined}
               className="flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-fg-muted focus-visible:focus-ring"
             >
-              <TabIcon name="more" />
+              <span className="relative">
+                <TabIcon name="more" />
+                <TabDot on={moreDot} />
+              </span>
               {t("nav.tabMore")}
             </button>
           </li>

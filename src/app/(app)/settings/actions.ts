@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfile } from "@/lib/auth";
+import { closeAccount, passwordMatches } from "@/lib/account/close";
+import { confirmWordMatches } from "@/lib/account/close-rules";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { OK, fail, type ActionResult } from "@/lib/ui/action-result";
 import { isValidWhatsAppNumber } from "@/lib/whatsapp";
 import { nameHasContact } from "@/lib/name-contact";
 
@@ -109,4 +113,31 @@ export async function updateWhatsAppSettings(
 
   revalidatePath("/settings");
   return { error: null, saved: true };
+}
+
+/**
+ * Settings → Delete account (migration 0044). Creators and companies only;
+ * the person retypes their password and a confirmation word, so a session
+ * left open on another device cannot close the account. The actor is the
+ * session's own profile, never anything in the form.
+ */
+export async function closeMyAccount(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const profile = await requireProfile();
+  if (profile.role === "admin") return fail("settings.deleteAccount.errorAdmin");
+  if (!confirmWordMatches(formData.get("confirm_word"))) return fail("settings.deleteAccount.errorWord");
+
+  const limit = await consumeRateLimit("account_close", profile.id);
+  if (!limit.allowed) return fail("settings.deleteAccount.errorRateLimited");
+
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const email = auth.user?.email ?? "";
+  if (!(await passwordMatches(email, String(formData.get("password") ?? "")))) {
+    return fail("settings.deleteAccount.errorPassword");
+  }
+
+  const result = await closeAccount(profile.id);
+  if (!result.ok) return fail(result.errorKey);
+  await supabase.auth.signOut().catch(() => {});
+  return OK;
 }

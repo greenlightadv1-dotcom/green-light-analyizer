@@ -733,6 +733,11 @@ export type Database = {
     };
     Views: Record<never, never>;
     Functions: {
+      /** 0044: service_role only. Raises 'account:<code>' on refusal. */
+      close_account: {
+        Args: { p_profile: string };
+        Returns: undefined;
+      };
       /** SECURITY DEFINER RPC (migration 0010) — see CreatorDirectoryEntry. */
       creator_directory: {
         Args: Record<string, never>;

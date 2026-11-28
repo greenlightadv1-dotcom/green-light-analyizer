@@ -40,3 +40,40 @@ export function badgeText(unread: number): string {
   if (!Number.isFinite(unread) || unread <= 0) return "";
   return unread > 9 ? "9+" : String(Math.floor(unread));
 }
+
+/** The nav links that carry a notification dot (nav.ts hrefs). */
+export type BadgeHref =
+  | "/inbox"
+  | "/opportunities"
+  | "/briefs"
+  | "/collaborations"
+  | "/admin/requests"
+  | "/admin/verification"
+  | "/admin/violations";
+export type NavBadges = Partial<Record<BadgeHref, number>>;
+
+/**
+ * Unread notifications → the nav link each one belongs to. Messages are the
+ * deal inbox; invitations are a creator's opportunities and a company's
+ * briefs; terms, deliverables and status are the collaboration. A category
+ * this does not know gives no dot rather than a dot in the wrong place.
+ */
+export function navBadgesFromUnread(rows: { category: string }[], role: Role): NavBadges {
+  const out: NavBadges = {};
+  const add = (href: BadgeHref) => {
+    out[href] = (out[href] ?? 0) + 1;
+  };
+  for (const { category } of rows) {
+    if (category === "messages") add("/inbox");
+    else if (category === "invitations") add(role === "company" ? "/briefs" : "/opportunities");
+    else if (category === "terms" || category === "deliverables" || category === "status") add("/collaborations");
+  }
+  return out;
+}
+
+/** The rooms with an unread message, from unread notifications. */
+export function unreadChatIds(rows: { kind: string; chat_id?: string | null }[]): Set<string> {
+  const ids = new Set<string>();
+  for (const r of rows) if (r.kind === "message_received" && r.chat_id && UUID.test(r.chat_id)) ids.add(r.chat_id);
+  return ids;
+}

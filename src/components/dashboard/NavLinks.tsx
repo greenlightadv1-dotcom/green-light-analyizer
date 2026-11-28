@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Role } from "@/lib/types/database";
+import { NotificationDot } from "@/components/ui/NotificationDot";
+import type { BadgeHref } from "@/lib/notifications/rules";
 import { isActivePath, navSectionsForRole, sectionLabelKey } from "./nav";
+import { useNavBadges } from "./useNavBadges";
 
 /**
  * The role-filtered link list, shared by the desktop Sidebar and the mobile
@@ -25,6 +28,7 @@ export function NavLinks({
 }) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const badges = useNavBadges(basePath);
 
   return (
     <nav className="flex flex-col gap-4">
@@ -39,19 +43,21 @@ export function NavLinks({
               {items.map((item) => {
                 const href = `${basePath}${item.href}`;
                 const active = isActivePath(pathname, href);
+                const count = badges[item.href as BadgeHref] ?? 0;
                 return (
                   <li key={item.href}>
                     <Link
                       href={href}
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
-                      className={`flex items-center rounded-full px-4 py-2 text-sm transition-colors focus-visible:focus-ring ${
+                      className={`flex items-center justify-between gap-2 rounded-full px-4 py-2 text-sm transition-colors focus-visible:focus-ring ${
                         active
                           ? "bg-forest font-semibold text-white dark:bg-brand-green dark:text-ink"
                           : "text-fg-secondary hover:bg-surface-hover hover:text-fg"
                       }`}
                     >
-                      {t(item.labelKey)}
+                      <span>{t(item.labelKey)}</span>
+                      <NotificationDot count={count} label={t("notifications.navUnread", { count })} />
                     </Link>
                   </li>
                 );

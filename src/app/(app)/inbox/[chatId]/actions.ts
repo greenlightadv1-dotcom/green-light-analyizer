@@ -16,6 +16,7 @@ import { extractDomain } from "@/lib/security/check";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireProfile } from "@/lib/auth";
+import { markChatRead } from "@/lib/notifications/badges";
 import { getDealChat, latestIncomingMessage, listMessages } from "@/lib/deals/queries";
 import { draftIsAcceptable, readPrivateMinimum } from "@/lib/deals/negotiation";
 import { planNegotiation, type NegotiationAnalysis } from "@/lib/deals/negotiation-context";
@@ -414,4 +415,17 @@ export async function analyzeCompany(
 
   revalidatePath(`/inbox/${chatId}`);
   return { error: null, profile: result.profile };
+}
+
+/**
+ * A message arrived while the room was open: it has been seen, so the room's
+ * unread light goes out. Only for a room the caller can read (RLS via
+ * getDealChat), and only the caller's own notification.
+ */
+export async function markRoomRead(chatId: string): Promise<void> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chatId)) return;
+  const profile = await requireProfile();
+  const chat = await getDealChat(chatId);
+  if (!chat) return;
+  await markChatRead(profile.id, chatId);
 }

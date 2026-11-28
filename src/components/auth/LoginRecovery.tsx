@@ -21,3 +21,13 @@ export function ResetDoneNotice() {
     </p>
   );
 }
+
+/** After Settings → Delete account: the account is gone, say so plainly. */
+export function AccountClosedNotice() {
+  const { t } = useTranslation();
+  return (
+    <p role="status" data-testid="account-closed" className="mt-4 rounded-lg border border-line bg-surface-muted px-3 py-2 text-sm text-fg">
+      {t("settings.deleteAccount.done")}
+    </p>
+  );
+}

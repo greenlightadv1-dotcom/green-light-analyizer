@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { NotificationDot } from "@/components/ui/NotificationDot";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { RiskBadge } from "@/components/deals/RiskBadge";
@@ -25,8 +26,11 @@ export function InboxView({
   chats,
   held = null,
   basePath = "",
+  unreadIds = [],
 }: {
   chats: DealChatListItem[];
+  /** Rooms with a message this person has not opened yet. */
+  unreadIds?: string[];
   /**
    * Deliveries the screener held back. Null for anyone but a creator — only
    * creators hold an inbound alias.
@@ -36,6 +40,7 @@ export function InboxView({
   basePath?: string;
 }) {
   const { t } = useTranslation();
+  const unread = useMemo(() => new Set(unreadIds), [unreadIds]);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [hideSpam, setHideSpam] = useState(false);
 
@@ -126,8 +131,9 @@ export function InboxView({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-[15px] font-semibold text-fg" dir="ltr" title={chat.sender_email}>
-                        {chat.sender_email}
+                      <p className="flex items-center gap-2 text-[15px] font-semibold text-fg">
+                        {unread.has(chat.id) ? <NotificationDot count={1} label={t("notifications.roomUnread")} showCount={false} /> : null}
+                        <span className="truncate" dir="ltr" title={chat.sender_email}>{chat.sender_email}</span>
                       </p>
                       <p className="mt-0.5 truncate text-xs text-fg-muted">
                         {chat.sponsorship_type?.replace(/_/g, " ") ?? t("inbox.unspecifiedDeliverable")}

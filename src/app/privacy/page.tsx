@@ -525,7 +525,14 @@ export default function PrivacyPage() {
         time without affecting what we did before you withdrew it.
       </p>
       <p>
-        <strong>To delete your data:</strong> write to{" "}
+        <strong>To delete your data:</strong> use{" "}
+        <strong>Settings → Delete account</strong>. It takes effect at once:
+        your connected platforms and all YouTube API data, your media kit,
+        portfolio, content plan, photo and documents are deleted, your profile
+        is anonymised, and you can no longer sign in. Deal rooms and their
+        messages stay for the other side, under the name &quot;Deleted
+        account&quot;, for the periods in section 9. While a deal is agreed or
+        disputed it must be settled first. You can also write to{" "}
         <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> from the address
         on your account, or ask in the support channel. We will confirm, close
         the account, and delete your personal data within 30 days — and any

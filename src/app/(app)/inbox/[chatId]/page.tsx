@@ -6,6 +6,7 @@ import { getOwnHistoryWithDomain } from "@/lib/deals/company-intelligence";
 import { getDealChat, listMessages } from "@/lib/deals/queries";
 import { buildOfferContextBlock } from "@/lib/deals/reply-template";
 import { planNegotiation } from "@/lib/deals/negotiation-context";
+import { markChatRead } from "@/lib/notifications/badges";
 
 export const metadata: Metadata = { title: "Deal room" };
 /**
@@ -44,9 +45,11 @@ export default async function DealRoomPage({
 
   // Company & Domain Intelligence (§3): only meaningful for an external
   // sender — an in-app deal's company_id is already a real platform account.
+  // Opening the room reads it: its unread-message light goes out.
   const [messages, domainHistory] = await Promise.all([
     listMessages(chatId),
     chat.company_id ? Promise.resolve(null) : getOwnHistoryWithDomain(chat.sender_email, chatId),
+    markChatRead(profile.id, chatId),
   ]);
 
   // The one-click Direct Reply is composed here, from the deal's own columns,
