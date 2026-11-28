@@ -147,17 +147,22 @@ export async function disconnectAnalytics(formData: FormData): Promise<void> {
   if (!PLATFORMS.includes(platform)) return;
 
   const service = createAdminClient();
-  await service
-    .from("media_kits")
-    .update({
-      ...clearedVerifiedGeo({ disconnect: true }),
-      last_synced_at: new Date().toISOString(),
-    })
-    .eq("creator_id", profile.id)
-    .eq("platform", platform);
+  if (platform === "youtube") {
+    // Every piece of YouTube API data, not just the badge (Privacy §5).
+    await youtubeOAuth.purgeYouTubeData(profile.id);
+  } else {
+    await service
+      .from("media_kits")
+      .update({
+        ...clearedVerifiedGeo({ disconnect: true }),
+        last_synced_at: new Date().toISOString(),
+      })
+      .eq("creator_id", profile.id)
+      .eq("platform", platform);
 
-  if (isRealOAuthPlatform(platform)) {
-    await deleteOAuthConnection(profile.id, platform);
+    if (isRealOAuthPlatform(platform)) {
+      await deleteOAuthConnection(profile.id, platform);
+    }
   }
 
   revalidatePath("/media-kit");

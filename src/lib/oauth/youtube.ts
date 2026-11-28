@@ -3,7 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
 import { deleteOAuthConnection, getOAuthConnection, saveOAuthTokens } from "./tokens";
-import { clearedVerifiedGeo, isRevokedGrant } from "./youtube-freshness";
+import { clearedVerifiedGeo, clearedYouTubeStats, isRevokedGrant } from "./youtube-freshness";
 import {
   REPORTS_ENDPOINT,
   audienceGeoFromReport,
@@ -111,21 +111,47 @@ async function refreshAccessToken(refreshToken: string): Promise<RefreshResult> 
 }
 
 /**
- * The creator revoked access (or Google otherwise refuses the grant): delete
- * the token and every piece of YouTube API data derived from it — the
- * verified geography on their YouTube media kit — as the YouTube API
- * policies require (youtube-freshness.ts). Public stats and anything the
- * creator typed in are left alone.
+ * Delete every piece of YouTube API data Green Light holds for a creator: the
+ * stored token, the verified geography, the synced public statistics (and
+ * engagement_rate, whose provenance is mixed and unrecorded, so it is cleared
+ * rather than risk keeping a synced value), the stored recent uploads and the
+ * growth snapshots. What the creator typed in themselves (handle, avg_views,
+ * declared countries, category) stays.
+ *
+ * Used on an in-app disconnect and when Google reports the grant revoked, the
+ * two moments the Privacy Policy (section 5) and Google's verification review
+ * of 2026-11-26 require it. Every step runs even if an earlier one fails, and
+ * each failure is logged; the daily freshness job is the backstop.
  */
-export async function clearRevokedYouTubeConnection(creatorId: string): Promise<void> {
+export async function purgeYouTubeData(creatorId: string): Promise<void> {
   const service = createAdminClient();
   const { error } = await service
     .from("media_kits")
-    .update(clearedVerifiedGeo({ disconnect: true }))
+    .update({
+      ...clearedVerifiedGeo({ disconnect: true }),
+      ...clearedYouTubeStats(),
+      engagement_rate: null,
+      recent_videos_complete: null,
+    })
     .eq("creator_id", creatorId)
     .eq("platform", "youtube");
-  if (error) log.error("youtube_oauth.revoked_cleanup_failed", { creator_id: creatorId, error });
+  if (error) log.error("youtube_data.purge_kit_failed", { creator_id: creatorId, error });
+
+  for (const table of ["media_kit_videos", "media_kit_snapshots"] as const) {
+    const { error: deleteError } = await service
+      .from(table)
+      .delete()
+      .eq("creator_id", creatorId)
+      .eq("platform", "youtube");
+    if (deleteError) log.error("youtube_data.purge_rows_failed", { creator_id: creatorId, table, error: deleteError });
+  }
+
   await deleteOAuthConnection(creatorId, "youtube");
+}
+
+/** Google refuses the grant (revoked or expired for good): purge it all. */
+export async function clearRevokedYouTubeConnection(creatorId: string): Promise<void> {
+  await purgeYouTubeData(creatorId);
   log.info("youtube_oauth.revoked_grant_cleared", { creator_id: creatorId });
 }
 

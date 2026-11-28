@@ -206,11 +206,10 @@ export default function PrivacyPage() {
       <p>
         We instruct that this content is used for that evaluation only. We do
         not sell it, do not use it to train models, and do not send it anywhere
-        else. <strong>One limitation we state plainly rather than bury:</strong>{" "}
-        our current AI provider&apos;s terms allow it to retain submitted
-        content for a limited period — up to 30 days on the tier we use — for
-        its own security monitoring. That is the provider&apos;s retention, not
-        ours, and we are reviewing it.
+        else. Our AI provider, Groq, does not retain the content it is sent,
+        and we have turned on its Zero Data Retention setting, so it keeps no
+        copy for its own monitoring either: the content exists there only while
+        the result is produced.
       </p>
       <p>
         These recommendations do not produce a legal or similarly significant
@@ -257,9 +256,7 @@ export default function PrivacyPage() {
         data, and the public subscriber, view and video counts we sync, are
         deleted once they have not been refreshed from YouTube for 30 days (a
         daily job removes them before that point, and verified data stops being
-        used as verified as soon as it is 30 days old). If Google tells us your authorization has been
-        revoked or can no longer be refreshed, we delete the stored tokens and
-        the verified data derived from them.
+        used as verified as soon as it is 30 days old).
       </p>
       <p>
         Green Light&apos;s use of information received from Google APIs adheres
@@ -302,18 +299,39 @@ export default function PrivacyPage() {
         .
       </p>
       <p>
-        Disconnecting the account in your media kit settings immediately deletes
-        the stored access tokens, clears the verified figures, and returns your
-        audience geography to self-reported. In addition to that, you can revoke
-        Green Light&apos;s access to your data at any time from the{" "}
-        <a
-          href="https://security.google.com/settings/security/permissions"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Google security settings page
-        </a>
-        ; when you do, we delete the data described above. Questions or
+        <strong>Deleting your YouTube data.</strong> All YouTube API data we
+        store about you — the tokens, your channel ID, the verified country
+        percentages and the synced channel statistics — is deleted, everywhere
+        we or our service providers hold it, including backups:
+      </p>
+      <ul>
+        <li>
+          <strong>within 7 calendar days</strong> when you disconnect YouTube in
+          Green Light (your live data is deleted the moment you disconnect;
+          backups follow within 7 days), when you close your account, or when you
+          ask us to delete your data;
+        </li>
+        <li>
+          <strong>within 30 calendar days</strong> when you revoke Green
+          Light&apos;s access from the{" "}
+          <a
+            href="https://security.google.com/settings/security/permissions"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google security settings page
+          </a>{" "}
+          (a daily job checks every stored authorization with Google and deletes
+          the data as soon as Google reports it revoked).
+        </li>
+      </ul>
+      <p>
+        YouTube API data is always <strong>deleted, never anonymised and
+        kept</strong>. It is not part of the deal records we keep after an
+        account closes (section 9): those keep Green Light&apos;s own price
+        recommendation and risk rating, but no YouTube figures and no metric
+        calculated from them, and a deal room priced on your verified YouTube
+        audience does not store the reasoning that quotes it. Questions or
         complaints about how we handle Google user data can be sent to{" "}
         <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>.
       </p>
@@ -471,9 +489,11 @@ export default function PrivacyPage() {
         <li>
           <strong>Data from YouTube</strong> — verified audience data and synced
           public channel statistics are deleted once they have not been
-          refreshed for 30 days; verified data and tokens are also deleted when
-          your YouTube authorization is revoked (section 5). Figures you typed
-          into your media kit yourself are not affected.
+          refreshed for 30 days, and all YouTube API data is deleted within 7
+          days of a disconnection, account closure or deletion request and within
+          30 days of a revocation from your Google account (section 5). It is
+          never kept in closed-account deal records. Figures you typed into your
+          media kit yourself are not affected.
         </li>
         <li>
           <strong>Rate-limit counters</strong> — overwritten continuously; they
@@ -489,10 +509,11 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p>
-        When a retention period ends, data is deleted or irreversibly
-        anonymised. Backups are rotated on a rolling cycle and a deletion
-        propagates to them within 35 days; a restored backup is re-processed for
-        deletions before it is returned to service.
+        When a retention period ends, data is deleted. Other data may instead be
+        irreversibly anonymised; YouTube API data never is — it is always
+        deleted. Backups are kept for at most 7 days, so a deletion reaches them
+        within 7 days; a restored backup is re-processed for deletions before it
+        is returned to service.
       </p>
 
       <h2>10. Your rights</h2>
@@ -507,10 +528,12 @@ export default function PrivacyPage() {
         <strong>To delete your data:</strong> write to{" "}
         <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a> from the address
         on your account, or ask in the support channel. We will confirm, close
-        the account, and delete your personal data within 30 days, apart from
-        the records in section 9 that we are keeping for a stated period and
-        anything we must retain by law. You can delete connected platform data
-        yourself at any time by disconnecting the account in your media kit.
+        the account, and delete your personal data within 30 days — and any
+        YouTube API data within 7 days — apart from the records in section 9
+        that we are keeping for a stated period and anything we must retain by
+        law (neither of which contains YouTube API data). You can delete
+        connected platform data yourself at any time by disconnecting the
+        account in Green Light.
       </p>
       <h3>If the GDPR or UK GDPR applies to you</h3>
       <p>

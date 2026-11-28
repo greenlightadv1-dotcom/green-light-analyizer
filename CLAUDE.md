@@ -993,6 +993,21 @@ ALTER TABLE public.deal_chats ENABLE ROW LEVEL SECURITY;
 
 ---
 
+> **Update — Google verification review (2026-11-28).** Google asked that all
+> stored YouTube API data, backups and processors included, be deleted within 7
+> days of a disconnect, account closure or deletion request and within 30 days
+> of a revocation, and that none of it be kept (or anonymised) in closed-account
+> deal records. Now: `purgeYouTubeData` (`src/lib/oauth/youtube.ts`) runs on an
+> in-app YouTube disconnect and on `invalid_grant`, and clears verified
+> geography, the synced stats, `engagement_rate` (mixed provenance, so cleared),
+> the stored uploads and the YouTube snapshots, then deletes the token. An email
+> deal room priced on verified YouTube geography stores `YOUTUBE_REASONING_NOTE`
+> instead of the model's reasoning (`intake.ts`), since that text can quote the
+> figures. Account deletion already cascades every YouTube table. The Privacy
+> Policy §4/§5/§9/§10 says so (`PRIVACY_LAST_UPDATED` 28 November 2026) and
+> states that Groq Zero Data Retention is on, which the owner switches on in
+> the Groq console (Data Controls); merge only once it is.
+
 ## 13. Open questions to confirm before building further
 - Exact escrow/payout mechanics once a deal reaches `paid` (currently
   manual via Discord — confirm if/when this should become automated).
