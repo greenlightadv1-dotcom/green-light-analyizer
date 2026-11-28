@@ -6,6 +6,8 @@ import { GlassPanel } from "@/components/ui/GlassPanel";
 import { useTranslation } from "@/components/LocaleProvider";
 import type { Message } from "@/lib/deals/queries";
 import { Composer } from "./Composer";
+import { markRoomRead } from "./actions";
+import { refreshNavBadges } from "@/components/dashboard/useNavBadges";
 
 function formatTime(iso: string | null) {
   if (!iso) return "";
@@ -66,6 +68,10 @@ export function DealRoom({
           setMessages((prev) =>
             prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming],
           );
+          // Read on arrival: the room is open in front of them.
+          if (incoming.sender_id !== currentUserId) {
+            void markRoomRead(chatId).then(() => refreshNavBadges(true)).catch(() => {});
+          }
         },
       )
       .subscribe();
@@ -73,7 +79,7 @@ export function DealRoom({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId, demo]);
+  }, [chatId, demo, currentUserId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

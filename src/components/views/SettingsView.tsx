@@ -2,6 +2,7 @@
 
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { AccountCard } from "@/components/settings/AccountCard";
+import { DeleteAccountCard } from "@/components/settings/DeleteAccountCard";
 import { InboundAliasCard } from "@/components/settings/InboundAliasCard";
 import { SocialConnections } from "@/components/settings/SocialConnections";
 import { WhatsAppSettingsCard } from "@/components/settings/WhatsAppSettingsCard";
@@ -70,6 +71,12 @@ export function SettingsView({
         <div className="lg:col-span-2">
           <InboundAliasCard alias={profile.inbound_alias} />
         </div>
+
+        {profile.role !== "admin" ? (
+          <div className="lg:col-span-2">
+            <DeleteAccountCard demo={demo} />
+          </div>
+        ) : null}
       </div>
     </>
   );

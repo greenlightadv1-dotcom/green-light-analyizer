@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ForgotPasswordLink, ResetDoneNotice } from "@/components/auth/LoginRecovery";
+import { AccountClosedNotice, ForgotPasswordLink, ResetDoneNotice } from "@/components/auth/LoginRecovery";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { AccessNote } from "./AccessNote";
 import { LoginForm } from "./LoginForm";
@@ -10,9 +10,9 @@ export const metadata: Metadata = { title: "Sign in" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; reset?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string; closed?: string }>;
 }) {
-  const { next, reset } = await searchParams;
+  const { next, reset, closed } = await searchParams;
 
   return (
     <GlassPanel className="p-7 sm:p-8">
@@ -22,6 +22,7 @@ export default async function LoginPage({
       </p>
 
       {reset === "done" ? <ResetDoneNotice /> : null}
+      {closed === "1" ? <AccountClosedNotice /> : null}
 
       <LoginForm next={next} />
       <ForgotPasswordLink />

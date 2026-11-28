@@ -1674,3 +1674,34 @@ platform checks and adds `media_kits.stats_synced_at`.
   its own date (`PRIVACY_LAST_UPDATED`), separate from the Terms'.
 - **Not verified live:** no Twitch, Kick, TikTok or Meta app exists yet, so no
   real call has been made. Shapes follow the official docs read on 2026-11-23.
+
+## 24. Unread lights and self-service account deletion (2026-11-28, owner-requested)
+
+Migration **0044** (`unread_email_rooms_and_account_closure`).
+
+- **Unread state.** Email rooms now notify their creator: any message the
+  creator did not write (the opening summary, a relayed sponsor reply) leaves
+  the one unread `message_received` row per room that 0030 keeps for in-app
+  rooms. Opening a room marks it read (`markChatRead`, service role, scoped to
+  the session's id), and so does a message arriving while it is open
+  (`markRoomRead`).
+- **Notification lights.** `/api/nav-badges` returns per-link counts
+  (`navBadgesFromUnread`: messages → Inbox; invitations → Opportunities for a
+  creator, Briefs for a company; terms/deliverables/status → Collaborations).
+  Admins get pending work instead: open applications, cases awaiting a
+  decision (reviewers only) and unreviewed violations. `useNavBadges` shares
+  one fetch per navigation across the Sidebar, the mobile drawer and the tab
+  bar; `NotificationDot` is the pulsing green light, and the Inbox list shows
+  it on each unread room.
+- **Delete account** (Settings, creators and companies; admins refused). The
+  person retypes their password and a confirmation word (`DELETE` or `حذف`);
+  rate limit `account_close`. `close_account()` refuses an account with an
+  agreed or disputed deal, then in one transaction deletes every platform
+  token and media kit (YouTube API data included), the portfolio, content
+  plan, shortlists, settings, notifications and team links, anonymises the
+  profile ("Deleted account", undeliverable address, no alias/slug/WhatsApp)
+  and bans it with reason `account_closed`. The server then deletes the
+  person's own files (`avatars`, `creator-documents`) and moves the auth user
+  to the undeliverable address, banned. Deal rooms, messages, violations and
+  verification cases stay under Privacy §9; none holds YouTube API data.
+  Privacy §10 describes the button.

@@ -47,7 +47,8 @@ export type RateLimitAction =
   | "activation"
   | "password_reset"
   | "password_reset_client"
-  | "team_write";
+  | "team_write"
+  | "account_close";
 
 type Rule = { limit: number; windowSeconds: number; label: string };
 
@@ -183,6 +184,11 @@ const RULES: Record<RateLimitAction, Rule[]> = {
   password_reset_client: [
     { limit: 30, windowSeconds: HOUR, label: "hour" },
     { limit: 100, windowSeconds: DAY, label: "day" },
+  ],
+  // Closing one's own account (0044): each attempt checks a password.
+  account_close: [
+    { limit: 5, windowSeconds: HOUR, label: "hour" },
+    { limit: 10, windowSeconds: DAY, label: "day" },
   ],
   // Representative scopes and company edits by a representative (0034).
   team_write: [

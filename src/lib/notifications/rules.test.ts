@@ -45,3 +45,23 @@ test("server actions scope every write to the session's own id", () => {
   assert.match(src, /profile_id: profile\.id/);
   assert.doesNotMatch(src, /fd\.get\("(recipient_id|profile_id|href|next)"\)/, "no target or owner from the form");
 });
+
+test("nav badges: each category lands on its own link, per role", async () => {
+  const { navBadgesFromUnread } = await import("./rules.ts");
+  const rows = [{ category: "messages" }, { category: "messages" }, { category: "invitations" }, { category: "terms" }, { category: "deliverables" }, { category: "unknown" }];
+  assert.deepEqual(navBadgesFromUnread(rows, "creator"), { "/inbox": 2, "/opportunities": 1, "/collaborations": 2 });
+  assert.deepEqual(navBadgesFromUnread(rows, "company"), { "/inbox": 2, "/briefs": 1, "/collaborations": 2 });
+  assert.deepEqual(navBadgesFromUnread([], "creator"), {});
+});
+
+test("unread chat ids: only message notifications with a valid room id", async () => {
+  const { unreadChatIds } = await import("./rules.ts");
+  const id = "11111111-1111-4111-8111-111111111111";
+  const ids = unreadChatIds([
+    { kind: "message_received", chat_id: id },
+    { kind: "message_received", chat_id: "not-a-uuid" },
+    { kind: "terms_proposed", chat_id: id.replace("1111-4", "2222-4") },
+    { kind: "message_received", chat_id: null },
+  ]);
+  assert.deepEqual([...ids], [id]);
+});

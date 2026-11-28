@@ -3,6 +3,7 @@ import { InboxView } from "@/components/views/InboxView";
 import { requireProfile } from "@/lib/auth";
 import { listDealChats } from "@/lib/deals/queries";
 import { listHeldDeliveries } from "@/lib/email/held-queries";
+import { loadUnreadChatIds } from "@/lib/notifications/badges";
 
 export const metadata: Metadata = { title: "Deal inbox" };
 
@@ -18,10 +19,10 @@ export const metadata: Metadata = { title: "Deal inbox" };
  * alias, so only creators get the panel.
  */
 export default async function InboxPage() {
-  const [profile, chats] = await Promise.all([requireProfile(), listDealChats()]);
+  const [profile, chats, unread] = await Promise.all([requireProfile(), listDealChats(), loadUnreadChatIds()]);
 
   const held =
     profile.role === "creator" ? await listHeldDeliveries(profile.id) : null;
 
-  return <InboxView chats={chats} held={held} />;
+  return <InboxView chats={chats} held={held} unreadIds={[...unread]} />;
 }
